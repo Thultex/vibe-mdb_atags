@@ -1,0 +1,8 @@
+2026-04-22
+- collectAtags auf v1.22 angehoben
+- Fix: negative Zahlenformen werden wieder korrekt erkannt
+  tag-2
+  yay-2,3
+  emo-12,32
+- Fix: colon-Werte wie tag: 5 werden im JScript-Host wieder korrekt als Wert gelesen
+- Testdatei test_collectAtags.js ergänzt, um die dokumentierten Tag-Formen gesammelt zu prüfen

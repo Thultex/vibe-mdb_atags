@@ -1,6 +1,6 @@
 /*
 ========================================
-collectAtags v1.21 (sys 2.00)
+collectAtags v1.22 (sys 2.00)
 ========================================
 
 Änderungen
@@ -251,7 +251,7 @@ function collectAtags(cfg) {
       var rxQuotedTag = /(^|[\s\n\r])(?:'([^']+)'|"([^"]+)")#/g;
       var mq;
       while ((mq = rxQuotedTag.exec(parseLine)) !== null) {
-        var rawQuotedName = mq[2] != null ? mq[2] : (mq[3] || "");
+        var rawQuotedName = mq[2] != null && mq[2] !== "" ? mq[2] : (mq[3] || "");
         rawQuotedName = normalizeTagName(rawQuotedName);
         if (!rawQuotedName) continue;
 
@@ -272,7 +272,7 @@ function collectAtags(cfg) {
       var m1;
       while ((m1 = rxColon.exec(parseLine)) !== null) {
         var name1 = m1[2];
-        var raw1 = m1[3] != null ? m1[3] : (m1[4] || "");
+        var raw1 = m1[3] != null && m1[3] !== "" ? m1[3] : (m1[4] || "");
         raw1 = String(raw1).replace(/^\s+|\s+$/g, "");
 
         if (!name1) continue;
@@ -328,15 +328,19 @@ function collectAtags(cfg) {
       while ((mn = rxNum.exec(parseLine)) !== null) {
         var nameN = mn[2];
         var rawN = mn[3] || "";
+        var fullTokenN = String(mn[0] || "").substring(String(mn[1] || "").length);
 
         if (!nameN || !rawN) continue;
 
-        // Regex prefers the longest tag name, so "yay-2,3" becomes
-        // name="yay-" and value="2,3". Shift the trailing minus back
-        // to the numeric part so signed decimals stay supported.
-        if (/\-$/.test(nameN) && /^\d+(?:[.,]\d+)?$/.test(rawN)) {
-          nameN = nameN.replace(/\-$/, "");
-          rawN = "-" + rawN;
+        // Regex prefers the longest possible tag name, so negative suffixes
+        // like "tag-2" or "emo-12,32" can be split incorrectly. Re-split the
+        // full token at the final negative numeric suffix.
+        if (/^\d+(?:[.,]\d+)?$/.test(rawN)) {
+          var negSplit = fullTokenN.match(/^([A-Za-zÃ„Ã–ÃœÃ¤Ã¶Ã¼ÃŸ_][A-Za-zÃ„Ã–ÃœÃ¤Ã¶Ã¼ÃŸ0-9_\-]*?)(-\d+(?:[.,]\d+)?)$/);
+          if (negSplit && negSplit[1]) {
+            nameN = negSplit[1];
+            rawN = negSplit[2];
+          }
         }
 
         if (!nameN) continue;
