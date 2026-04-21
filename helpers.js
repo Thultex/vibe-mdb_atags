@@ -1,9 +1,10 @@
 /*
 ========================================
-Atag Helpers v1.01 (sys 2.00)
+Atag Helpers v1.02 (sys 2.00)
 ========================================
 
 Änderungen
+- shortenTableHeaders mit 0 kürzt jetzt auf 12 Zeichen + "."
 - vollständig: alle vom Exporter benötigten Helper enthalten
 - Markdown Sort ergänzt (fix für getSortedMarkdownItems Fehler)
 - zentrale Wrapper + Bulk integriert

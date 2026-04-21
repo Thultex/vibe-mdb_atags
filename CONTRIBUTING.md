@@ -164,3 +164,8 @@ Vor Abschluss einer Änderung kurz prüfen:
 - `CHANGELOG.md` ergänzt
 - Test oder Verifikationshinweis vorhanden
 - README angepasst, wenn sich Nutzung oder unterstützte Formen ändern
+
+Optionaler Repo-Check:
+
+- `powershell -ExecutionPolicy Bypass -File .\check_versioning.ps1`
+- prüft bei geänderten Moduldateien, ob die Dateiversion erhöht wurde und ob `CHANGELOG.md` mit geändert ist
