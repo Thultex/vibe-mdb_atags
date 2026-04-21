@@ -1,10 +1,11 @@
 $ErrorActionPreference = "Stop"
 
 $moduleFiles = @(
-  "collectAtags.js",
-  "exportAtags.js",
-  "helpers.js",
-  "restoreAtags.js"
+  "core/collectAtags.js",
+  "core/exportAtags.js",
+  "core/helpers.js",
+  "core/restoreAtags.js",
+  "addons/tagPairParser.js"
 )
 
 function Get-VersionLine {
@@ -40,7 +41,8 @@ foreach ($path in $changedModules) {
 
   $oldContent = git show ("HEAD:" + $path) 2>$null
   if ($LASTEXITCODE -ne 0 -or -not $oldContent) {
-    $errors += "Konnte HEAD-Version von $path nicht lesen."
+    # Neues oder umbenanntes Modul ohne direkten HEAD-Pfad:
+    # Changelog bleibt Pflicht, aber ein Versionsvergleich ist hier nicht möglich.
     continue
   }
 

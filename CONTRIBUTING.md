@@ -113,14 +113,14 @@ Die Versionsnummer im Dateikopf ist dateibezogen.
 
 Das bedeutet:
 
-- `collectAtags.js`, `exportAtags.js`, `helpers.js` und `restoreAtags.js` dürfen unterschiedliche Versionsstände haben.
+- `core/collectAtags.js`, `core/exportAtags.js`, `core/helpers.js`, `core/restoreAtags.js` und `addons/tagPairParser.js` dürfen unterschiedliche Versionsstände haben.
 - Nur die Datei bekommt einen Versionssprung, die tatsächlich geändert wurde.
 - Wenn mehrere Module geändert werden, wird jede betroffene Datei separat angehoben.
 
 Beispiele:
 
-- Parser-Fix nur in `collectAtags.js`: nur `collectAtags` bekommt die nächste Version.
-- Export-Änderung nur in `exportAtags.js`: nur `exportAtags` bekommt die nächste Version.
+- Parser-Fix nur in `core/collectAtags.js`: nur `collectAtags` bekommt die nächste Version.
+- Export-Änderung nur in `core/exportAtags.js`: nur `exportAtags` bekommt die nächste Version.
 
 ## Changelog-Regeln
 
@@ -141,7 +141,7 @@ Empfohlene Form:
 - collectAtags auf v1.22 angehoben
 - Fix: negative Zahlenformen werden wieder korrekt erkannt
 - Fix: colon-Werte wie tag: 5 werden im JScript-Host wieder korrekt als Wert gelesen
-- Test/Doku: test_collectAtags.js ergänzt
+- Test/Doku: `tests/test_collectAtags.js` ergänzt
 ```
 
 ## Wann Changelog Pflicht Ist

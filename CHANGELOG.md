@@ -19,9 +19,15 @@
 
 ## 2026-04-22
 
-- `Tag Pair Parser` auf `v1.00` ergänzt
-- Architektur: Tag-Pair-Logik als separates Add-on in `tagPairParser.js`, ohne direkten Hook in `applyTags()` / `bulkApplyTags()`
-- Test/Doku: `test_tagPairParser.js` und `README.md` für die Add-on-Nutzung ergänzt
+- `Addon Tag Pair Parser` auf `v1.00` ergänzt
+- Architektur: Tag-Pair-Logik als separates Add-on in `addons/tagPairParser.js`, ohne direkten Hook in `applyTags()` / `bulkApplyTags()`
+- Test/Doku: `tests/test_tagPairParser.js` und `README.md` für die Add-on-Nutzung ergänzt
+
+## 2026-04-22
+
+- Struktur: flache Ordnerstruktur mit `core/`, `addons/` und `tests/` eingeführt
+- Move: Kernmodule nach `core/collectAtags.js`, `core/exportAtags.js`, `core/helpers.js`, `core/restoreAtags.js` verschoben
+- Move: Tests nach `tests/test_collectAtags.js` und `tests/test_tagPairParser.js` verschoben, Referenzen in Doku und `check_versioning.ps1` angepasst
 
 ## 2026-04-22
 

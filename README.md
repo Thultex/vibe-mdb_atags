@@ -4,28 +4,28 @@ ATAG SYSTEM (sys 2.00)
 PFLEGE / VERSIONIERUNG
 ----------------------------------------
 
-Jede funktionale Änderung wird an zwei Stellen dokumentiert:
+Jede funktionale Ã„nderung wird an zwei Stellen dokumentiert:
 
-- direkt in der geänderten Datei über die kurze Versionsinfo im Kopfblock
-- zusätzlich im `CHANGELOG.md` als Repo-Verlauf
+- direkt in der geÃ¤nderten Datei Ã¼ber die kurze Versionsinfo im Kopfblock
+- zusÃ¤tzlich im `CHANGELOG.md` als Repo-Verlauf
 
 Regeln:
 
-- Modulversion pro geänderter Datei anheben
-- Änderungen im Kopfblock kurz und konkret notieren
-- Changelog mit Datum, Versionssprung und Wirkung ergänzen
+- Modulversion pro geÃ¤nderter Datei anheben
+- Ã„nderungen im Kopfblock kurz und konkret notieren
+- Changelog mit Datum, Versionssprung und Wirkung ergÃ¤nzen
 
 Details siehe `CONTRIBUTING.md`.
 
 ZIEL
 ----------------------------------------
-Freitext → strukturierte Daten → flexible Exporte
+Freitext â†’ strukturierte Daten â†’ flexible Exporte
 
 - Tags + Werte extrahieren
 - Links / Mail / Tel erkennen
 - Row-Kontext (z. B. "5h: emo3") verarbeiten
 - Mehrfachwerte aggregieren
-- Alias-System unterstützen
+- Alias-System unterstÃ¼tzen
 - Hybrid-Tag-System (Parser + manuell)
 - Export in tags / md / rows_md / rows_html / json
 
@@ -34,13 +34,13 @@ ARCHITEKTUR
 ----------------------------------------
 
 Textfelder
-   ↓
+   â†“
 collectAtags()
-   ↓
-result.items   ← Single Source of Truth
-   ↓
+   â†“
+result.items   â† Single Source of Truth
+   â†“
 exportAtags()
-   ↓
+   â†“
 Ziel-Felder
 
 
@@ -66,24 +66,21 @@ DATENMODELL (items)
 DATEIEN / MODULE
 ----------------------------------------
 
-Atag Helpers v1.00 (sys 2.00)
-- alle Helper-Funktionen
-- applyTags()
-- bulkApplyTags()
+`core/`
+- `collectAtags.js`
+- `exportAtags.js`
+- `helpers.js`
+- `restoreAtags.js`
 
-collectAtags vX (sys 2.00)
-- Parser
-- Alias-System
-- Row-Erkennung
-- erzeugt result.items
+`addons/`
+- `tagPairParser.js`
 
-exportAtags vX (sys 2.00)
-- Exportlogik
-- md / rows_md / rows_html / tags / json
+`tests/`
+- `test_collectAtags.js`
+- `test_tagPairParser.js`
 
-restoreAtags vX (sys 2.00)
-- JSON → Felder
-- Typkonvertierung
+
+
 
 
 PIPELINE (DETAIL)
@@ -115,7 +112,7 @@ Optional als Add-on vor `collectAtags()`:
 
 - `applyTagPairParser()`
 - `bulkApplyTagPairParser()`
-- Add-on in `tagPairParser.js`
+- Add-on in `addons/tagPairParser.js`
 - kein direkter Hook in `applyTags()` / `bulkApplyTags()`
 
 Beispiel:
@@ -157,11 +154,11 @@ rows:
 ROW-SYSTEM
 ----------------------------------------
 
-Prefix definiert Kontext für restliche Zeile
+Prefix definiert Kontext fÃ¼r restliche Zeile
 
 5h: emo3 emo1
-→ rowValue = 5
-→ rowUnit = h
+â†’ rowValue = 5
+â†’ rowUnit = h
 
 Speicherung je item:
 - rowValue
@@ -188,11 +185,11 @@ md
 rows_md
 - Markdown-Tabelle
 - rechte Spaltenausrichtung
-- optionale Header-Kürzung
+- optionale Header-KÃ¼rzung
 
 rows_html
 - HTML Tabelle
-- rechtsbündige Zahlen
+- rechtsbÃ¼ndige Zahlen
 
 json
 - { tag: value }
@@ -201,7 +198,7 @@ json
 MARKDOWN-REGELN
 ----------------------------------------
 
-- "  \n" für Zeilenumbruch
+- "  \n" fÃ¼r Zeilenumbruch
 - 2 Spaces vor [Liste]
 - Links klickbar
 - Sortierung:
@@ -238,8 +235,8 @@ ALIAS-SYSTEM
 
 @@emo: Emotion
 
-- nur gültig im Tag-Kontext
-- keine Ersetzung im Fließtext
+- nur gÃ¼ltig im Tag-Kontext
+- keine Ersetzung im FlieÃŸtext
 - nur erlaubte Tagformen
 
 
@@ -261,15 +258,15 @@ Effekt:
 
 APPLY / BULK
 
-bulkApplyTags() unterstützt optional `result`, analog zu applyTags():
+bulkApplyTags() unterstÃ¼tzt optional `result`, analog zu applyTags():
 
-- `result` als Objekt → wird für alle Einträge verwendet
-- `result` als Array → pro Eintrag per Index
-- `result` als Funktion `(entryObj, index, allEntries)` → dynamisch pro Eintrag
+- `result` als Objekt â†’ wird fÃ¼r alle EintrÃ¤ge verwendet
+- `result` als Array â†’ pro Eintrag per Index
+- `result` als Funktion `(entryObj, index, allEntries)` â†’ dynamisch pro Eintrag
 
-Wenn `result` fehlt oder leer ist, wird automatisch `collectAtags()` je Eintrag ausgeführt.
+Wenn `result` fehlt oder leer ist, wird automatisch `collectAtags()` je Eintrag ausgefÃ¼hrt.
 
-Zusätzlich gibt es `bulkExportAtags()` im Helper-Modul mit identischem `result`-Verhalten.
+ZusÃ¤tzlich gibt es `bulkExportAtags()` im Helper-Modul mit identischem `result`-Verhalten.
 ----------------------------------------
 
 applyTags({
@@ -302,7 +299,7 @@ PRINZIPIEN
 ----------------------------------------
 
 - items = einzige Wahrheit
-- Parser ≠ Export strikt getrennt
+- Parser â‰  Export strikt getrennt
 - Helper zentralisiert
 - keine Doppel-Logik
 - deterministische Outputs
