@@ -197,7 +197,7 @@ function shortenTableWord(s, maxLen) {
   var n = Number(maxLen);
 
   if (isNaN(n) || n < 0) return str;
-  if (n === 0) n = 9;
+  if (n === 0) n = 12;
 
   if (str.length <= n) return str;
   return str.substring(0, n) + ".";

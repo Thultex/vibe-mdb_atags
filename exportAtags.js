@@ -22,9 +22,9 @@ exportAtags v1.33 (sys 2.00)
   - bei rowAggregateMode null nur Werte / Listen
 - rows_md / rows_html mit optionaler Header-Kürzung
 - shortenTableHeaders:
-  - -1 = aus
-  - 0 = 9 Zeichen + "."
-  - n = n Zeichen + "."
+- -1 = aus
+- 0 = 12 Zeichen + "."
+- n = n Zeichen + "."
 
 Voraussetzung
 - Atag Helpers geladen
@@ -233,7 +233,7 @@ function buildAtagRowsMarkdown(items, cfg) {
   var mode = cfg && cfg.rowAggregateMode != null ? cfg.rowAggregateMode : "avg";
   var includeUnits = !(cfg && cfg.rowIncludeUnits === false);
   var decimals = cfg && cfg.rowAggregateDecimals != null ? cfg.rowAggregateDecimals : 1;
-  var shortenHeaders = cfg && cfg.shortenTableHeaders != null ? cfg.shortenTableHeaders : -1;
+  var shortenHeaders = cfg && cfg.shortenTableHeaders != null ? cfg.shortenTableHeaders : 0;
 
   if (!rows.length || !tagOrder.length) return "";
 
@@ -290,12 +290,12 @@ function buildAtagRowsHtml(items, cfg) {
   var mode = cfg && cfg.rowAggregateMode != null ? cfg.rowAggregateMode : "avg";
   var includeUnits = !(cfg && cfg.rowIncludeUnits === false);
   var decimals = cfg && cfg.rowAggregateDecimals != null ? cfg.rowAggregateDecimals : 1;
-  var shortenHeaders = cfg && cfg.shortenTableHeaders != null ? cfg.shortenTableHeaders : -1;
+  var shortenHeaders = cfg && cfg.shortenTableHeaders != null ? cfg.shortenTableHeaders : 0;
 
   if (!rows.length || !tagOrder.length) return "";
 
   var html = [];
-  html.push("<table>");
+  html.push('<table style="font-family:sans-serif;">');
   html.push("<thead>");
   html.push("<tr>");
   html.push('<th style="text-align:left;">rval</th>');
