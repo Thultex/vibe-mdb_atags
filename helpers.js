@@ -1,10 +1,10 @@
 /*
 ========================================
-Atag Helpers v1.02 (sys 2.00)
+Atag Helpers v1.03 (sys 2.00)
 ========================================
 
 Änderungen
-- shortenTableHeaders mit 0 kürzt jetzt auf 12 Zeichen + "."
+- shortenTableHeaders mit 0 kürzt jetzt auf 10 Zeichen + "."
 - vollständig: alle vom Exporter benötigten Helper enthalten
 - Markdown Sort ergänzt (fix für getSortedMarkdownItems Fehler)
 - zentrale Wrapper + Bulk integriert
@@ -198,7 +198,7 @@ function shortenTableWord(s, maxLen) {
   var n = Number(maxLen);
 
   if (isNaN(n) || n < 0) return str;
-  if (n === 0) n = 12;
+  if (n === 0) n = 10;
 
   if (str.length <= n) return str;
   return str.substring(0, n) + ".";

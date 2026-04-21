@@ -1,12 +1,12 @@
 /*
 ========================================
-exportAtags v1.34 (sys 2.00)
+exportAtags v1.35 (sys 2.00)
 ========================================
 
 Änderungen
 - HTML-Tabellen nutzen Sans-Serif-Schrift
 - shortenTableHeaders standardmäßig auf 0 gesetzt
-- 0 kürzt Tabellen-Header jetzt auf 12 Zeichen + "."
+- 0 kürzt Tabellen-Header jetzt auf 10 Zeichen + "."
 - nutzt ausgelagerte Helper aus Atag Helpers
 - Export für:
   - tags
@@ -26,7 +26,7 @@ exportAtags v1.34 (sys 2.00)
 - rows_md / rows_html mit optionaler Header-Kürzung
 - shortenTableHeaders:
 - -1 = aus
-- 0 = 12 Zeichen + "."
+- 0 = 10 Zeichen + "."
 - n = n Zeichen + "."
 
 Voraussetzung

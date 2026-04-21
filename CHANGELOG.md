@@ -19,6 +19,12 @@
 
 ## 2026-04-22
 
+- `exportAtags` auf `v1.35` angehoben
+- `Atag Helpers` auf `v1.03` angehoben
+- Fix: `shortenTableHeaders: 0` bedeutet jetzt 10 Zeichen plus `.`
+
+## 2026-04-22
+
 - `exportAtags` auf `v1.34` angehoben
 - `Atag Helpers` auf `v1.02` angehoben
 - Fix: `rows_html` rendert Tabellen jetzt mit Sans-Serif-Schrift

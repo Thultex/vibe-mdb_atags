@@ -204,7 +204,7 @@ Optionen:
 - rowIncludeUnits
 - rowAggregateMode
 - rowAggregateDecimals
-- shortenTableHeaders (`0` = Standard, 12 Zeichen + ".")
+- shortenTableHeaders (`0` = Standard, 10 Zeichen + ".")
 
 
 ALIAS-SYSTEM
