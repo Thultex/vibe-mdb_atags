@@ -331,6 +331,16 @@ function collectAtags(cfg) {
 
         if (!nameN || !rawN) continue;
 
+        // Regex prefers the longest tag name, so "yay-2,3" becomes
+        // name="yay-" and value="2,3". Shift the trailing minus back
+        // to the numeric part so signed decimals stay supported.
+        if (/\-$/.test(nameN) && /^\d+(?:[.,]\d+)?$/.test(rawN)) {
+          nameN = nameN.replace(/\-$/, "");
+          rawN = "-" + rawN;
+        }
+
+        if (!nameN) continue;
+
         // emo1,2 ohne Vorzeichen soll NICHT erlaubt sein
         if (/^\d+[.,]\d+$/.test(rawN)) continue;
 
