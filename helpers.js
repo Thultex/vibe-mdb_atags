@@ -9,6 +9,26 @@ Atag Helpers v1.01 (sys 2.00)
 - zentrale Wrapper + Bulk integriert
 - keine Abhängigkeiten mehr außerhalb
 
+Anwendung
+
+bulkApplyTags() gibt ein result-Array zurück.
+Dieses Array kann in weiteren bulkApplyTags()- oder bulkExportAtags()-Aufrufen wiederverwendet werden.
+
+result = bulkApplyTags({
+  textFields: ["Notiz", "Atag Aliases"],
+  targetField: "tags",
+  targetFieldType: "tags",
+  preserveForeignTagsField: "Tags User",
+  parserOwnedTagsField: "Tags Parser"
+});
+
+bulkApplyTags({
+  textFields: ["Notiz", "Atag Aliases"],
+  targetField: "Atag MD",
+  targetFieldType: "md",
+  result: result
+});
+
 ========================================
 */
 
@@ -240,6 +260,7 @@ function resolveBulkResult(externalResult, entryObj, index, allEntries) {
 function bulkApplyTags(cfg) {
   var all = lib().entries();
   var externalResult = cfg ? cfg.result : null;
+  var results = [];
 
   for (var i = 0; i < all.length; i++) {
     var e = all[i];
@@ -252,6 +273,8 @@ function bulkApplyTags(cfg) {
         excludeNames: cfg.excludeNames || []
       });
     }
+
+    results.push(result);
 
     exportAtags({
       entryObj: e,
@@ -267,11 +290,14 @@ function bulkApplyTags(cfg) {
       shortenTableHeaders: cfg.shortenTableHeaders
     });
   }
+
+  return results;
 }
 
 function bulkExportAtags(cfg) {
   var all = lib().entries();
   var externalResult = cfg ? cfg.result : null;
+  var results = [];
 
   for (var i = 0; i < all.length; i++) {
     var e = all[i];
@@ -284,6 +310,8 @@ function bulkExportAtags(cfg) {
         excludeNames: cfg.excludeNames || []
       });
     }
+
+    results.push(result);
 
     exportAtags({
       entryObj: e,
@@ -299,4 +327,6 @@ function bulkExportAtags(cfg) {
       shortenTableHeaders: cfg.shortenTableHeaders
     });
   }
+
+  return results;
 }
