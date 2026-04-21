@@ -19,6 +19,12 @@
 
 ## 2026-04-22
 
+- `Tag Pair Parser` auf `v1.00` ergänzt
+- Architektur: Tag-Pair-Logik als separates Add-on in `tagPairParser.js`, ohne direkten Hook in `applyTags()` / `bulkApplyTags()`
+- Test/Doku: `test_tagPairParser.js` und `README.md` für die Add-on-Nutzung ergänzt
+
+## 2026-04-22
+
 - `exportAtags` auf `v1.35` angehoben
 - `Atag Helpers` auf `v1.03` angehoben
 - Fix: `shortenTableHeaders: 0` bedeutet jetzt 10 Zeichen plus `.`

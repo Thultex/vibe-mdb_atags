@@ -108,6 +108,32 @@ PIPELINE (DETAIL)
    md / tags / json / rows
 
 
+TAG-PAIR PREPROCESSING
+----------------------------------------
+
+Optional als Add-on vor `collectAtags()`:
+
+- `applyTagPairParser()`
+- `bulkApplyTagPairParser()`
+- Add-on in `tagPairParser.js`
+- kein direkter Hook in `applyTags()` / `bulkApplyTags()`
+
+Beispiel:
+
+```js
+applyTagPairParser({
+  tagField: "Tags",
+  targetTextField: "Notiz"
+});
+```
+
+Effekt:
+
+- `["emo", "1,23"]` im Tag-Feld wird zu `emo#1,23` im Textfeld
+- der Wert-Tag wird aus dem Tag-Feld entfernt
+- danach kann separat die normale `collectAtags()`-Pipeline laufen
+
+
 TAG-FORMEN
 ----------------------------------------
 
