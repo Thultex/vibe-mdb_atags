@@ -218,6 +218,16 @@ Effekt:
 
 
 APPLY / BULK
+
+bulkApplyTags() unterstützt optional `result`, analog zu applyTags():
+
+- `result` als Objekt → wird für alle Einträge verwendet
+- `result` als Array → pro Eintrag per Index
+- `result` als Funktion `(entryObj, index, allEntries)` → dynamisch pro Eintrag
+
+Wenn `result` fehlt oder leer ist, wird automatisch `collectAtags()` je Eintrag ausgeführt.
+
+Zusätzlich gibt es `bulkExportAtags()` im Helper-Modul mit identischem `result`-Verhalten.
 ----------------------------------------
 
 applyTags({

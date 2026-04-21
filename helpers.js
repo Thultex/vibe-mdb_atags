@@ -221,17 +221,69 @@ function applyTags(cfg) {
 }
 
 // ===== BULK =====
+function resolveBulkResult(externalResult, entryObj, index, allEntries) {
+  if (typeof externalResult === "function") {
+    return externalResult(entryObj, index, allEntries);
+  }
+
+  if (Array.isArray(externalResult)) {
+    return externalResult[index] || null;
+  }
+
+  if (externalResult && typeof externalResult === "object") {
+    return externalResult;
+  }
+
+  return null;
+}
+
 function bulkApplyTags(cfg) {
   var all = lib().entries();
+  var externalResult = cfg ? cfg.result : null;
 
   for (var i = 0; i < all.length; i++) {
     var e = all[i];
+    var result = resolveBulkResult(externalResult, e, i, all);
 
-    var result = collectAtags({
+    if (!result) {
+      result = collectAtags({
+        entryObj: e,
+        textFields: cfg.textFields || [],
+        excludeNames: cfg.excludeNames || []
+      });
+    }
+
+    exportAtags({
       entryObj: e,
-      textFields: cfg.textFields || [],
-      excludeNames: cfg.excludeNames || []
+      result: result,
+      targetField: cfg.targetField,
+      targetFieldType: cfg.targetFieldType,
+      mergeWithExistingTags: cfg.mergeWithExistingTags,
+      preserveForeignTagsField: cfg.preserveForeignTagsField,
+      parserOwnedTagsField: cfg.parserOwnedTagsField,
+      rowAggregateMode: cfg.rowAggregateMode,
+      rowIncludeUnits: cfg.rowIncludeUnits,
+      rowAggregateDecimals: cfg.rowAggregateDecimals,
+      shortenTableHeaders: cfg.shortenTableHeaders
     });
+  }
+}
+
+function bulkExportAtags(cfg) {
+  var all = lib().entries();
+  var externalResult = cfg ? cfg.result : null;
+
+  for (var i = 0; i < all.length; i++) {
+    var e = all[i];
+    var result = resolveBulkResult(externalResult, e, i, all);
+
+    if (!result) {
+      result = collectAtags({
+        entryObj: e,
+        textFields: cfg.textFields || [],
+        excludeNames: cfg.excludeNames || []
+      });
+    }
 
     exportAtags({
       entryObj: e,
