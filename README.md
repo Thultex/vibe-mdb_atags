@@ -1,6 +1,22 @@
 ATAG SYSTEM (sys 2.00)
 ========================================
 
+PFLEGE / VERSIONIERUNG
+----------------------------------------
+
+Jede funktionale Änderung wird an zwei Stellen dokumentiert:
+
+- direkt in der geänderten Datei über die kurze Versionsinfo im Kopfblock
+- zusätzlich im `CHANGELOG.md` als Repo-Verlauf
+
+Regeln:
+
+- Modulversion pro geänderter Datei anheben
+- Änderungen im Kopfblock kurz und konkret notieren
+- Changelog mit Datum, Versionssprung und Wirkung ergänzen
+
+Details siehe `CONTRIBUTING.md`.
+
 ZIEL
 ----------------------------------------
 Freitext → strukturierte Daten → flexible Exporte
