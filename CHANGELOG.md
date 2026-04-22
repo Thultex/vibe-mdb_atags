@@ -19,6 +19,12 @@
 
 ## 2026-04-23
 
+- `exportAtags` auf `v1.37` angehoben
+- Optimierung: `rows_md` und `rows_html` nutzen vorberechnete Summen/Zähler statt pro Tag erneut Werte-Arrays aufzubauen
+- Verifikation: Row-Markdown- und HTML-Ausgabe direkt im WSH-Host geprüft
+
+## 2026-04-23
+
 - `Addon Global Field Sync` auf `v1.00` ergänzt
 - Feature: neues unabhängiges Add-on `addons/globalFieldSync.js` mit `syncFieldTo`, `syncFieldBack` und `syncFieldAll`
 - Feature: mehrere Felder und optionale Konfliktbehandlung über `overwrite: true` unterstützt
