@@ -223,22 +223,25 @@ function collectAtags(cfg) {
 
   var items = [];
   var seen = {};
+  var cachedTexts = [];
   var fullText = [];
   var li;
 
   for (li = 0; li < textFields.length; li++) {
     var tv = entryObj.field(textFields[li]);
-    if (tv) fullText.push(String(tv));
+    var strVal = tv == null ? "" : String(tv);
+
+    cachedTexts.push(strVal);
+    if (strVal) fullText.push(strVal);
   }
 
   var joinedText = fullText.join("\n");
   var aliasMap = buildAliasMap(joinedText);
 
-  for (li = 0; li < textFields.length; li++) {
-    var text = entryObj.field(textFields[li]);
-    if (!text) continue;
+  for (li = 0; li < cachedTexts.length; li++) {
+    var str = cachedTexts[li];
+    if (!str) continue;
 
-    var str = String(text);
     var lines = str.split(/\r?\n/);
 
     for (var ln = 0; ln < lines.length; ln++) {

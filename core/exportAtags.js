@@ -1,9 +1,10 @@
 /*
 ========================================
-exportAtags v1.36 (sys 2.00)
+exportAtags v1.37 (sys 2.00)
 ========================================
 
 Änderungen
+- rows exports reuse precomputed aggregate data to reduce repeated scans and temp arrays
 - ganze Zahlen bleiben in Exporten ohne `,0`, solange kein echter Dezimalwert pro Tag vorkam
 - HTML-Tabellen nutzen Sans-Serif-Schrift
 - shortenTableHeaders standardmäßig auf 0 gesetzt
@@ -119,6 +120,7 @@ function collectAtagRowTableData(items) {
   var tagOrder = [];
   var tagSeen = {};
   var tagHasDecimal = {};
+  var tagAgg = {};
 
   for (var i = 0; i < items.length; i++) {
     var it = items[i];
@@ -147,13 +149,23 @@ function collectAtagRowTableData(items) {
       tagHasDecimal[it.name] = true;
     }
 
+    if (!tagAgg[it.name]) {
+      tagAgg[it.name] = {
+        sum: 0,
+        count: 0
+      };
+    }
+
+    tagAgg[it.name].sum += num;
+    tagAgg[it.name].count += 1;
     rows[rowIndexMap[rowKey]].values[it.name] = num;
   }
 
   return {
     rows: rows,
     tagOrder: tagOrder,
-    tagHasDecimal: tagHasDecimal
+    tagHasDecimal: tagHasDecimal,
+    tagAgg: tagAgg
   };
 }
 
@@ -246,6 +258,7 @@ function buildAtagRowsMarkdown(items, cfg) {
   var rows = data.rows;
   var tagOrder = data.tagOrder;
   var tagHasDecimal = data.tagHasDecimal || {};
+  var tagAgg = data.tagAgg || {};
   var mode = cfg && cfg.rowAggregateMode != null ? cfg.rowAggregateMode : "avg";
   var includeUnits = !(cfg && cfg.rowIncludeUnits === false);
   var decimals = cfg && cfg.rowAggregateDecimals != null ? cfg.rowAggregateDecimals : 1;
@@ -281,14 +294,11 @@ function buildAtagRowsMarkdown(items, cfg) {
     var aggCells = [mode];
 
     for (var tk = 0; tk < tagOrder.length; tk++) {
-      var vals = [];
-
-      for (var rk = 0; rk < rows.length; rk++) {
-        var vv = rows[rk].values[tagOrder[tk]];
-        if (vv != null) vals.push(vv);
+      var aggInfo = tagAgg[tagOrder[tk]];
+      var agg = null;
+      if (aggInfo && aggInfo.count) {
+        agg = mode === "sum" ? aggInfo.sum : (aggInfo.sum / aggInfo.count);
       }
-
-      var agg = computeAggregate(vals, mode);
       aggCells.push(agg == null ? "" : formatTagNumberLocale(agg, decimals, !!tagHasDecimal[tagOrder[tk]]));
     }
 
@@ -304,6 +314,7 @@ function buildAtagRowsHtml(items, cfg) {
   var rows = data.rows;
   var tagOrder = data.tagOrder;
   var tagHasDecimal = data.tagHasDecimal || {};
+  var tagAgg = data.tagAgg || {};
   var mode = cfg && cfg.rowAggregateMode != null ? cfg.rowAggregateMode : "avg";
   var includeUnits = !(cfg && cfg.rowIncludeUnits === false);
   var decimals = cfg && cfg.rowAggregateDecimals != null ? cfg.rowAggregateDecimals : 1;
@@ -351,14 +362,11 @@ function buildAtagRowsHtml(items, cfg) {
     html.push('<td style="text-align:left;">' + escapeHtml(mode) + "</td>");
 
     for (var tk = 0; tk < tagOrder.length; tk++) {
-      var vals = [];
-
-      for (var rk = 0; rk < rows.length; rk++) {
-        var vv = rows[rk].values[tagOrder[tk]];
-        if (vv != null) vals.push(vv);
+      var aggInfo = tagAgg[tagOrder[tk]];
+      var agg = null;
+      if (aggInfo && aggInfo.count) {
+        agg = mode === "sum" ? aggInfo.sum : (aggInfo.sum / aggInfo.count);
       }
-
-      var agg = computeAggregate(vals, mode);
       html.push(
         '<td style="text-align:right;">' +
         escapeHtml(agg == null ? "" : formatTagNumberLocale(agg, decimals, !!tagHasDecimal[tagOrder[tk]])) +

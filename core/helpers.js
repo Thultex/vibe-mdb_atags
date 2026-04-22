@@ -1,9 +1,10 @@
 /*
 ========================================
-Atag Helpers v1.05 (sys 2.00)
+Atag Helpers v1.06 (sys 2.00)
 ========================================
 
 Changes
+- bulk helpers can skip collecting result arrays via `collectResults: false`
 - add number-format helpers for integer-aware exports
 - rebuilt from the last editor-safe helper version
 - kept current export-required helpers, but simplified source structure
@@ -327,9 +328,11 @@ function resolveBulkResult(externalResult, entryObj, index, allEntries) {
 }
 
 function bulkApplyTags(cfg) {
+  cfg = cfg || {};
   var all = lib().entries();
-  var externalResult = cfg ? cfg.result : null;
-  var results = [];
+  var externalResult = cfg.result;
+  var collectResults = cfg.collectResults !== false;
+  var results = collectResults ? [] : null;
   var i;
   var e;
   var result;
@@ -346,7 +349,7 @@ function bulkApplyTags(cfg) {
       });
     }
 
-    results.push(result);
+    if (collectResults) results.push(result);
 
     exportAtags({
       entryObj: e,
@@ -367,9 +370,11 @@ function bulkApplyTags(cfg) {
 }
 
 function bulkExportAtags(cfg) {
+  cfg = cfg || {};
   var all = lib().entries();
-  var externalResult = cfg ? cfg.result : null;
-  var results = [];
+  var externalResult = cfg.result;
+  var collectResults = cfg.collectResults !== false;
+  var results = collectResults ? [] : null;
   var i;
   var e;
   var result;
@@ -386,7 +391,7 @@ function bulkExportAtags(cfg) {
       });
     }
 
-    results.push(result);
+    if (collectResults) results.push(result);
 
     exportAtags({
       entryObj: e,
