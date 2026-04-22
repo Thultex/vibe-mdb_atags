@@ -17,6 +17,26 @@
 - Test/Doku: ...
 ```
 
+## 2026-04-23
+
+- `Addon Global Field Sync` auf `v1.00` ergänzt
+- Feature: neues unabhängiges Add-on `addons/globalFieldSync.js` mit `syncFieldTo`, `syncFieldBack` und `syncFieldAll`
+- Feature: mehrere Felder und optionale Konfliktbehandlung über `overwrite: true` unterstützt
+
+## 2026-04-23
+
+- `collectAtags` auf `v1.23` angehoben
+- Feature: inverse Aliase unterstützt, z. B. `@@emo: -down, froh` mit `down2 -> emo-2`
+- Verifikation: inverse Alias-Auflösung direkt im WSH-Host geprüft
+
+## 2026-04-23
+
+- `exportAtags` auf `v1.36` angehoben
+- `Atag Helpers` auf `v1.05` angehoben
+- Fix: reine Integer-Tags werden in `md`, `rows_md` und `rows_html` ohne `,0` ausgegeben
+- Fix: Dezimalstellen bleiben sichtbar, wenn echte Dezimalwerte vorkommen oder das Aggregat nicht ganzzahlig ist
+- Verifikation: Exportausgabe direkt im WSH-Host geprüft
+
 ## 2026-04-22
 
 - `Addon Tag Pair Parser` auf `v1.00` ergänzt

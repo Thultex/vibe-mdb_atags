@@ -1,9 +1,10 @@
 /*
 ========================================
-Atag Helpers v1.04 (sys 2.00)
+Atag Helpers v1.05 (sys 2.00)
 ========================================
 
 Changes
+- add number-format helpers for integer-aware exports
 - rebuilt from the last editor-safe helper version
 - kept current export-required helpers, but simplified source structure
 - removed compact arrow-heavy helper code to stay friendlier to the MDB editor
@@ -32,6 +33,25 @@ function formatNumberLocale(n, decimals) {
   if (n == null || isNaN(n)) return "";
   var d = decimals == null ? 1 : decimals;
   return Number(n).toFixed(d).replace(".", ",");
+}
+
+function isWholeNumber(n) {
+  return typeof n === "number" && isFinite(n) && Math.floor(n) === n;
+}
+
+function itemHasDecimalValue(item) {
+  if (!item) return false;
+
+  var raw = item.attrText != null && item.attrText !== "" ? item.attrText : item.rawText;
+  if (raw == null || raw === "") return false;
+
+  return /[.,]\d+/.test(String(raw));
+}
+
+function formatTagNumberLocale(n, decimals, forceDecimal) {
+  if (n == null || isNaN(n)) return "";
+  if (!forceDecimal && isWholeNumber(Number(n))) return String(Number(n)).replace(".", ",");
+  return formatNumberLocale(n, decimals);
 }
 
 // ===== META =====

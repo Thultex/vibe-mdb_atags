@@ -1,47 +1,17 @@
 /*
 ========================================
-collectAtags v1.22 (sys 2.00)
+collectAtags v1.23 (sys 2.00)
 ========================================
 
-Änderungen
-- Verhalten wieder näher am alten Parser
-- normale Wörter werden nicht mehr als Tags erkannt
-- einfache Tags nur noch explizit:
-  - #tag
-  - tag#
-  - 'quoted tag'#
-- Alias-Ersetzung nur in echten Tag-Kontexten
-- Dezimalzahlen weiter unterstützt
-- Row-System bleibt aktiv
-- test#string und test#5, bleiben erlaubt
-- freie Wörter wie "running" werden nicht mehr als Tag erkannt
+Changes
+- keep parser behavior close to the old version
+- explicit tags only for simple tag detection
+- alias replacement only in real tag contexts
+- inverse aliases supported for numeric values
+- decimal values still supported
+- row system stays active
 
-Anwendung
-
-var result = collectAtags({
-  entryObj: entry(),
-  textFields: ["Alias", "Notiz"]
-});
-
-applyTags({
-  textFields: ["Alias", "Notiz"],
-  targetField: "Atag MD",
-  targetFieldType: "md"
-});
-
-Beispiele
-
-#test
-emo3
-emo+1,3
-emo-12,32
-gfk: 1,4
-test#string
-test#5,
-'Four Tops'#
-@@run: running
-2,2h: emo3
-5h: emo1
+========================================
 */
 
 // ===== CORE =====
@@ -121,6 +91,27 @@ function collectAtags(cfg) {
     return { attrText: s, attrValue: s };
   }
 
+  function invertNormalizedAttr(norm) {
+    if (!norm || typeof norm.attrValue !== "number" || isNaN(norm.attrValue)) {
+      return norm;
+    }
+
+    var n = -norm.attrValue;
+    var text;
+
+    if (n === 0) {
+      text = "0";
+    } else {
+      text = String(n).replace(".", ",");
+      if (n > 0) text = "+" + text;
+    }
+
+    return {
+      attrText: text,
+      attrValue: n
+    };
+  }
+
   function addItem(items, seen, name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw) {
     var key = String(name).toLowerCase() +
       "|" + String(attrText) +
@@ -181,13 +172,23 @@ function collectAtags(cfg) {
 
       for (var j = 0; j < parts.length; j++) {
         var alias = String(parts[j] || "").replace(/^\s+|\s+$/g, "");
+        var invert = false;
 
         if (!alias) continue;
 
+        if (alias.charAt(0) === "-") {
+          invert = true;
+          alias = alias.substring(1);
+        }
+
+        if (!alias) continue;
         if (/[:#"'@]/.test(alias)) continue;
         if (!/^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*$/.test(alias)) continue;
 
-        map[alias.toLowerCase()] = baseName;
+        map[alias.toLowerCase()] = {
+          name: baseName,
+          invert: invert
+        };
       }
     }
 
@@ -196,7 +197,16 @@ function collectAtags(cfg) {
 
   function resolveAlias(name, aliasMap) {
     var key = String(name || "").toLowerCase();
-    return aliasMap[key] || name;
+    var aliasInfo = aliasMap[key];
+
+    if (!aliasInfo) {
+      return {
+        name: name,
+        invert: false
+      };
+    }
+
+    return aliasInfo;
   }
 
   function detectRowPrefix(line) {
@@ -255,7 +265,8 @@ function collectAtags(cfg) {
         rawQuotedName = normalizeTagName(rawQuotedName);
         if (!rawQuotedName) continue;
 
-        rawQuotedName = resolveAlias(rawQuotedName, aliasMap);
+        var quotedAlias = resolveAlias(rawQuotedName, aliasMap);
+        rawQuotedName = quotedAlias.name;
 
         if (isExcluded(rawQuotedName)) continue;
 
@@ -278,12 +289,14 @@ function collectAtags(cfg) {
         if (!name1) continue;
         if (/^\d+$/.test(name1)) continue;
 
-        name1 = resolveAlias(name1, aliasMap);
+        var alias1 = resolveAlias(name1, aliasMap);
+        name1 = alias1.name;
 
         if (isExcluded(name1)) continue;
         if (/^\/\//.test(raw1)) continue;
 
         var norm1 = normalizeAttr(raw1);
+        if (alias1.invert) norm1 = invertNormalizedAttr(norm1);
 
         addItem(
           items, seen,
@@ -306,11 +319,13 @@ function collectAtags(cfg) {
 
         if (!nameH || rawH === "") continue;
 
-        nameH = resolveAlias(nameH, aliasMap);
+        var aliasH = resolveAlias(nameH, aliasMap);
+        nameH = aliasH.name;
 
         if (isExcluded(nameH)) continue;
 
         var normH = normalizeAttr(rawH);
+        if (aliasH.invert) normH = invertNormalizedAttr(normH);
 
         addItem(
           items, seen,
@@ -336,7 +351,7 @@ function collectAtags(cfg) {
         // like "tag-2" or "emo-12,32" can be split incorrectly. Re-split the
         // full token at the final negative numeric suffix.
         if (/^\d+(?:[.,]\d+)?$/.test(rawN)) {
-          var negSplit = fullTokenN.match(/^([A-Za-zÃ„Ã–ÃœÃ¤Ã¶Ã¼ÃŸ_][A-Za-zÃ„Ã–ÃœÃ¤Ã¶Ã¼ÃŸ0-9_\-]*?)(-\d+(?:[.,]\d+)?)$/);
+          var negSplit = fullTokenN.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*?)(-\d+(?:[.,]\d+)?)$/);
           if (negSplit && negSplit[1]) {
             nameN = negSplit[1];
             rawN = negSplit[2];
@@ -345,15 +360,17 @@ function collectAtags(cfg) {
 
         if (!nameN) continue;
 
-        // emo1,2 ohne Vorzeichen soll NICHT erlaubt sein
+        // emo1,2 without an explicit sign is not allowed
         if (/^\d+[.,]\d+$/.test(rawN)) continue;
 
-        nameN = resolveAlias(nameN, aliasMap);
+        var aliasN = resolveAlias(nameN, aliasMap);
+        nameN = aliasN.name;
 
         if (isExcluded(nameN)) continue;
         if (isInsideQuotes(parseLine, mn.index)) continue;
 
         var normN = normalizeAttr(rawN);
+        if (aliasN.invert) normN = invertNormalizedAttr(normN);
 
         addItem(
           items, seen,
@@ -372,7 +389,8 @@ function collectAtags(cfg) {
         var nameS = ms[2] || ms[4] || "";
         if (!nameS) continue;
 
-        nameS = resolveAlias(nameS, aliasMap);
+        var aliasS = resolveAlias(nameS, aliasMap);
+        nameS = aliasS.name;
 
         if (isExcluded(nameS)) continue;
 

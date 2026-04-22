@@ -1,9 +1,10 @@
 /*
 ========================================
-exportAtags v1.35 (sys 2.00)
+exportAtags v1.36 (sys 2.00)
 ========================================
 
 Änderungen
+- ganze Zahlen bleiben in Exporten ohne `,0`, solange kein echter Dezimalwert pro Tag vorkam
 - HTML-Tabellen nutzen Sans-Serif-Schrift
 - shortenTableHeaders standardmäßig auf 0 gesetzt
 - 0 kürzt Tabellen-Header jetzt auf 10 Zeichen + "."
@@ -117,6 +118,7 @@ function collectAtagRowTableData(items) {
   var rowIndexMap = {};
   var tagOrder = [];
   var tagSeen = {};
+  var tagHasDecimal = {};
 
   for (var i = 0; i < items.length; i++) {
     var it = items[i];
@@ -141,12 +143,17 @@ function collectAtagRowTableData(items) {
       tagOrder.push(it.name);
     }
 
+    if (itemHasDecimalValue(it)) {
+      tagHasDecimal[it.name] = true;
+    }
+
     rows[rowIndexMap[rowKey]].values[it.name] = num;
   }
 
   return {
     rows: rows,
-    tagOrder: tagOrder
+    tagOrder: tagOrder,
+    tagHasDecimal: tagHasDecimal
   };
 }
 
@@ -173,6 +180,7 @@ function buildAtagNormalMarkdown(items, cfg) {
   var normalLines = [];
   var rowMap = {};
   var rowOrder = [];
+  var rowHasDecimal = {};
   var aggMode = cfg && cfg.rowAggregateMode !== undefined ? cfg.rowAggregateMode : "avg";
   var decimals = cfg && cfg.rowAggregateDecimals != null ? cfg.rowAggregateDecimals : 1;
 
@@ -195,6 +203,10 @@ function buildAtagNormalMarkdown(items, cfg) {
       rowOrder.push(it.name);
     }
 
+    if (itemHasDecimalValue(it)) {
+      rowHasDecimal[it.name] = true;
+    }
+
     rowMap[it.name].push(num);
   }
 
@@ -204,12 +216,12 @@ function buildAtagNormalMarkdown(items, cfg) {
     var listParts = [];
 
     for (var k = 0; k < vals.length; k++) {
-      listParts.push(formatNumberLocale(vals[k], decimals));
+      listParts.push(formatTagNumberLocale(vals[k], decimals, !!rowHasDecimal[name]));
     }
 
     if (aggMode === "avg" || aggMode === "sum") {
       var agg = computeAggregate(vals, aggMode);
-      var line = name + ": " + formatNumberLocale(agg, decimals);
+      var line = name + ": " + formatTagNumberLocale(agg, decimals, !!rowHasDecimal[name]);
 
       if (listParts.length > 1) {
         line += "  [" + listParts.join(", ") + "]";
@@ -233,6 +245,7 @@ function buildAtagRowsMarkdown(items, cfg) {
   var data = collectAtagRowTableData(items);
   var rows = data.rows;
   var tagOrder = data.tagOrder;
+  var tagHasDecimal = data.tagHasDecimal || {};
   var mode = cfg && cfg.rowAggregateMode != null ? cfg.rowAggregateMode : "avg";
   var includeUnits = !(cfg && cfg.rowIncludeUnits === false);
   var decimals = cfg && cfg.rowAggregateDecimals != null ? cfg.rowAggregateDecimals : 1;
@@ -258,7 +271,7 @@ function buildAtagRowsMarkdown(items, cfg) {
 
     for (var tj = 0; tj < tagOrder.length; tj++) {
       var v = r.values[tagOrder[tj]];
-      cells.push(v == null ? "" : formatNumberLocale(v, decimals));
+      cells.push(v == null ? "" : formatTagNumberLocale(v, decimals, !!tagHasDecimal[tagOrder[tj]]));
     }
 
     lines.push("| " + cells.join(" | ") + " |");
@@ -276,7 +289,7 @@ function buildAtagRowsMarkdown(items, cfg) {
       }
 
       var agg = computeAggregate(vals, mode);
-      aggCells.push(agg == null ? "" : formatNumberLocale(agg, decimals));
+      aggCells.push(agg == null ? "" : formatTagNumberLocale(agg, decimals, !!tagHasDecimal[tagOrder[tk]]));
     }
 
     lines.push("| " + aggCells.join(" | ") + " |");
@@ -290,6 +303,7 @@ function buildAtagRowsHtml(items, cfg) {
   var data = collectAtagRowTableData(items);
   var rows = data.rows;
   var tagOrder = data.tagOrder;
+  var tagHasDecimal = data.tagHasDecimal || {};
   var mode = cfg && cfg.rowAggregateMode != null ? cfg.rowAggregateMode : "avg";
   var includeUnits = !(cfg && cfg.rowIncludeUnits === false);
   var decimals = cfg && cfg.rowAggregateDecimals != null ? cfg.rowAggregateDecimals : 1;
@@ -324,7 +338,7 @@ function buildAtagRowsHtml(items, cfg) {
       var v = r.values[tagOrder[tj]];
       html.push(
         '<td style="text-align:right;">' +
-        escapeHtml(v == null ? "" : formatNumberLocale(v, decimals)) +
+        escapeHtml(v == null ? "" : formatTagNumberLocale(v, decimals, !!tagHasDecimal[tagOrder[tj]])) +
         "</td>"
       );
     }
@@ -347,7 +361,7 @@ function buildAtagRowsHtml(items, cfg) {
       var agg = computeAggregate(vals, mode);
       html.push(
         '<td style="text-align:right;">' +
-        escapeHtml(agg == null ? "" : formatNumberLocale(agg, decimals)) +
+        escapeHtml(agg == null ? "" : formatTagNumberLocale(agg, decimals, !!tagHasDecimal[tagOrder[tk]])) +
         "</td>"
       );
     }
