@@ -1,10 +1,10 @@
 /*
 ========================================
-collectAtags v1.25 (sys 2.00)
+collectAtags v1.26 (sys 2.00)
 ========================================
 
 Changes
-- alias definitions allow a trailing dot only on the alias base tag in `@@tag.: ...`
+- alias definitions allow a trailing dot on the base tag and preserve it for export, e.g. `@@tag.: ...`
 - keep parser behavior close to the old version
 - explicit tags only for simple tag detection
 - alias replacement only in real tag contexts
@@ -157,7 +157,7 @@ function collectAtags(cfg) {
       var m = line.match(/^@@([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*\.?)\s*:\s*(.+)$/);
       if (!m) continue;
 
-      var baseName = normalizeTagName(String(m[1] || "").replace(/\.+$/g, ""));
+      var baseName = normalizeTagName(m[1]);
       if (!baseName) continue;
       if (isExcluded(baseName)) continue;
 
