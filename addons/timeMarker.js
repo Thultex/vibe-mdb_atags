@@ -1,0 +1,301 @@
+/*
+========================================
+Shared Script: Time Marker
+v1.22
+========================================
+
+Änderungen
+- Add-on wieder eingebunden
+- optionales Stundenlimit ergänzt
+- Standardlimit auf 30 Stunden gesetzt
+
+Beispiele
+
+Input:
+test
+
+Output:
+2: test
+
+
+Input:
+test
+test2
+
+Output:
+2:
+
+test
+test2
+
+
+Input:
+1: info
+test
+
+Output:
+1: info
+2:
+
+test
+
+
+Standard Aufruf
+
+appendTimeMarker({
+  targetTextField: "Notiz",
+  sourceMode: "realtime",
+  stepHours: 0.5,
+  roundMode: "round",
+  insertMode: "time_block_top",
+  maxHours: 30
+});
+*/
+
+function toDateSafe(v) {
+  if (v == null || v === "") return null;
+
+  try {
+    if (typeof v === "number") {
+      var n = v;
+      if (n < 100000000000) n = n * 1000;
+
+      var dNum = new Date(n);
+      if (!isNaN(dNum.getTime())) return dNum;
+    }
+
+    var d = new Date(v);
+    if (!isNaN(d.getTime())) return d;
+  } catch (e) {}
+
+  return null;
+}
+
+function toNumberSafe(v) {
+  if (v == null || v === "") return null;
+
+  if (typeof v === "number") {
+    if (isNaN(v)) return null;
+    return v;
+  }
+
+  var s = String(v).replace(",", ".").replace(/^\s+|\s+$/g, "");
+  if (!s) return null;
+
+  var n = parseFloat(s);
+  if (isNaN(n)) return null;
+
+  return n;
+}
+
+function hoursDiff(d1, d2) {
+  if (!d1 || !d2) return null;
+  return (d1.getTime() - d2.getTime()) / 3600000;
+}
+
+function getRealtimeHours() {
+  var d = new Date();
+  return d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600;
+}
+
+function stepHoursValue(hours, step, mode) {
+  if (hours == null) return null;
+  if (step == null || step <= 0) return hours;
+
+  var inv = 1 / step;
+  var x = hours * inv + 1e-9;
+
+  if (mode === "ceil") return Math.ceil(x) / inv;
+  if (mode === "floor") return Math.floor(x) / inv;
+
+  return Math.round(x) / inv;
+}
+
+function formatHourLabel(hours) {
+  if (hours == null) return null;
+
+  var h = Math.round(hours * 1000000) / 1000000;
+  var i = Math.round(h);
+
+  if (Math.abs(h - i) < 0.000001) return String(i);
+
+  var s = String(h).replace(".", ",");
+  s = s.replace(/0+$/, "");
+  s = s.replace(/,$/, "");
+
+  return s;
+}
+
+function parseLeadingHour(line) {
+  if (!line) return null;
+
+  var m = String(line).match(/^\s*(\d+(?:[.,]\d+)?)\s*:/);
+  if (!m) return null;
+
+  return parseFloat(m[1].replace(",", "."));
+}
+
+function isTimestampLine(line) {
+  return parseLeadingHour(line) != null;
+}
+
+function hasSameOrLaterLine(text, targetHour) {
+  if (!text) return false;
+
+  var lines = String(text).split(/\r?\n/);
+
+  for (var i = 0; i < lines.length; i++) {
+    var h = parseLeadingHour(lines[i]);
+    if (isNaN(h)) continue;
+
+    if (h >= targetHour) return true;
+  }
+
+  return false;
+}
+
+function normalizeLines(text) {
+  var raw = text ? String(text).split(/\r?\n/) : [];
+  var out = [];
+
+  for (var i = 0; i < raw.length; i++) {
+    var line = String(raw[i]);
+    if (line.replace(/^\s+|\s+$/g, "") !== "") {
+      out.push(line);
+    }
+  }
+
+  return out;
+}
+
+function splitTextBlocks(text) {
+  var raw = normalizeLines(text);
+
+  var timeLines = [];
+  var otherLines = [];
+
+  for (var i = 0; i < raw.length; i++) {
+    var line = raw[i];
+
+    if (isTimestampLine(line)) timeLines.push(line);
+    else otherLines.push(line);
+  }
+
+  return {
+    timeLines: timeLines,
+    otherLines: otherLines
+  };
+}
+
+function buildTimeBlockText(timeLines, otherLines) {
+  if (!timeLines.length && !otherLines.length) return "";
+  if (!timeLines.length) return otherLines.join("\n");
+  if (!otherLines.length) return timeLines.join("\n");
+
+  return timeLines.join("\n") + "\n\n" + otherLines.join("\n");
+}
+
+function getSourceHours(entryObj, cfg) {
+  if (cfg.sourceMode === "realtime") {
+    return getRealtimeHours();
+  }
+
+  if (cfg.sourceMode === "realtime_since") {
+    var start = toDateSafe(entryObj.field(cfg.startDatetimeField));
+    if (!start) return null;
+
+    return hoursDiff(new Date(), start);
+  }
+
+  if (cfg.sourceMode === "datetime") {
+    var d = toDateSafe(entryObj.field(cfg.sourceDatetimeField));
+    if (!d) return null;
+
+    return d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600;
+  }
+
+  if (cfg.sourceMode === "hours") {
+    return toNumberSafe(entryObj.field(cfg.sourceHoursField));
+  }
+
+  return null;
+}
+
+function shouldSkipForMaxHours(rawHours, steppedHours, maxHours) {
+  var max = toNumberSafe(maxHours);
+  if (max == null) return false;
+  if (max < 0) return false;
+
+  if (rawHours != null && rawHours > max) return true;
+  if (steppedHours != null && steppedHours > max) return true;
+
+  return false;
+}
+
+function resolveMaxHours(cfg) {
+  if (cfg && Object.prototype.hasOwnProperty.call(cfg, "maxHours")) {
+    return cfg.maxHours;
+  }
+
+  return 30;
+}
+
+function insertIntoTimeBlockTop(text, newLine) {
+  var blocks = splitTextBlocks(text);
+
+  if (blocks.timeLines.length === 0 && blocks.otherLines.length === 1) {
+    return newLine + blocks.otherLines[0];
+  }
+
+  blocks.timeLines.push(newLine);
+
+  return buildTimeBlockText(blocks.timeLines, blocks.otherLines);
+}
+
+function insertSimple(text, newLine, insertMode) {
+  if (!text) return newLine;
+
+  if (insertMode === "prepend") {
+    return newLine + "\n" + text;
+  }
+
+  return text + "\n" + newLine;
+}
+
+function appendTimeMarker(cfg) {
+  cfg = cfg || {};
+
+  var e = cfg.entryObj || entry();
+  if (!e || !cfg.targetTextField) return;
+
+  var text = e.field(cfg.targetTextField);
+  if (text == null) text = "";
+  text = String(text);
+
+  var rawHours = getSourceHours(e, cfg);
+  if (rawHours == null) return;
+
+  var stepped = stepHoursValue(
+    rawHours,
+    cfg.stepHours != null ? cfg.stepHours : 0.5,
+    cfg.roundMode || "round"
+  );
+
+  if (shouldSkipForMaxHours(rawHours, stepped, resolveMaxHours(cfg))) {
+    return;
+  }
+
+  if (hasSameOrLaterLine(text, stepped)) return;
+
+  var newLine = formatHourLabel(stepped) + ": ";
+  var insertMode = cfg.insertMode || "append";
+  var newText;
+
+  if (insertMode === "time_block_top") {
+    newText = insertIntoTimeBlockTop(text, newLine);
+  } else {
+    newText = insertSimple(text, newLine, insertMode);
+  }
+
+  e.set(cfg.targetTextField, newText);
+}

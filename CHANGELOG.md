@@ -19,6 +19,13 @@
 
 ## 2026-04-23
 
+- `Shared Script: Time Marker` auf `v1.22` ergÃ¤nzt
+- Feature: `addons/timeMarker.js` wieder eingebunden und `appendTimeMarker()` dokumentiert
+- Feature: optionales Stundenlimit Ã¼ber `maxHours` mit Standardwert `30` ergÃ¤nzt
+- Test/Doku: `tests/test_timeMarker.js` und `README.md` erweitert
+
+## 2026-04-23
+
 - `exportAtags` auf `v1.37` angehoben
 - Optimierung: `rows_md` und `rows_html` nutzen vorberechnete Summen/Zähler statt pro Tag erneut Werte-Arrays aufzubauen
 - Verifikation: Row-Markdown- und HTML-Ausgabe direkt im WSH-Host geprüft

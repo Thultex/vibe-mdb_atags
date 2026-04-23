@@ -7,7 +7,12 @@ Dieses Repo nutzt zwei Ebenen von Versionsinfo:
 
 Eine funktionale Änderung ist erst sauber dokumentiert, wenn beide Stellen gepflegt wurden.
 
-Die Repo-Struktur bleibt bewusst flach, solange der Umfang klein bleibt. Doku-Dateien, Kern-Skripte und kleine Tests liegen daher gemeinsam im Root.
+Die Repo-Struktur ist in Bereiche gegliedert:
+
+- `core/` für Kernmodule
+- `addons/` für optionale Erweiterungen
+- `tests/` für Host-nahe Testskripte
+- Doku-Dateien wie `README.md`, `CHANGELOG.md` und `CONTRIBUTING.md` im Repo-Root
 
 ## Kurze Versionsinfos Im Dateikopf
 
@@ -113,7 +118,7 @@ Die Versionsnummer im Dateikopf ist dateibezogen.
 
 Das bedeutet:
 
-- `core/collectAtags.js`, `core/exportAtags.js`, `core/helpers.js`, `core/restoreAtags.js` und `addons/tagPairParser.js` dürfen unterschiedliche Versionsstände haben.
+- `core/collectAtags.js`, `core/exportAtags.js`, `core/helpers.js`, `core/restoreAtags.js`, `addons/tagPairParser.js` und `addons/globalFieldSync.js` dürfen unterschiedliche Versionsstände haben.
 - Nur die Datei bekommt einen Versionssprung, die tatsächlich geändert wurde.
 - Wenn mehrere Module geändert werden, wird jede betroffene Datei separat angehoben.
 
@@ -154,6 +159,18 @@ Changelog pflegen bei:
 - Tests oder wichtige Doku für die Änderung ergänzt werden
 
 Im Zweifel lieber dokumentieren.
+
+## Test-Und Verifikations-Regeln
+
+Tests und Verifikation sollen zur Groesse und zum Risiko der Aenderung passen.
+
+Regeln:
+
+- Nicht fuer jede kleine oder klar lokale Aenderung automatisch eine neue Testdatei anlegen.
+- Bestehende Tests bevorzugt erweitern, wenn dort schon passender Schutz existiert.
+- Neue Tests vor allem dann anlegen, wenn Verhalten riskant ist, leicht wieder kaputtgehen kann oder mehrere Pfade absichert.
+- Kleine Aenderungen duerfen auch nur mit Syntax-Check, kurzer Laufzeitpruefung oder gezielter manueller Verifikation abgeschlossen werden.
+- Wenn kein extra Test angelegt wird, reicht im Changelog oder in der Abschlussnotiz ein kurzer Verifikationshinweis.
 
 ## Abschluss-Check
 

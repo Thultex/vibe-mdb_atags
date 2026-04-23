@@ -1,52 +1,59 @@
-ATAG SYSTEM (sys 2.00)
-========================================
+# ATAG System (sys 2.00)
 
-PFLEGE / VERSIONIERUNG
-----------------------------------------
+## Inhalt
 
-Jede funktionale Ã„nderung wird an zwei Stellen dokumentiert:
+- [Pflege & Versionierung](#pflege--versionierung)
+- [Ziel](#ziel)
+- [Architektur](#architektur)
+- [Module](#module)
+- [Add-on Nutzung](#add-on-nutzung)
+- [Syntax & Regeln](#syntax--regeln)
+- [Export](#export)
 
-- direkt in der geÃ¤nderten Datei Ã¼ber die kurze Versionsinfo im Kopfblock
-- zusÃ¤tzlich im `CHANGELOG.md` als Repo-Verlauf
+## Pflege & Versionierung
+
+Jede funktionale Änderung wird an zwei Stellen dokumentiert:
+
+- direkt in der geänderten Datei über die kurze Versionsinfo im Kopfblock
+- zusätzlich im `CHANGELOG.md` als Repo-Verlauf
 
 Regeln:
 
-- Modulversion pro geÃ¤nderter Datei anheben
-- Ã„nderungen im Kopfblock kurz und konkret notieren
-- Changelog mit Datum, Versionssprung und Wirkung ergÃ¤nzen
+- Modulversion pro geänderter Datei anheben
+- Änderungen im Kopfblock kurz und konkret notieren
+- Changelog mit Datum, Versionssprung und Wirkung ergänzen
 
 Details siehe `CONTRIBUTING.md`.
 
-ZIEL
-----------------------------------------
-Freitext â†’ strukturierte Daten â†’ flexible Exporte
+## Ziel
+
+Freitext → strukturierte Daten → flexible Exporte.
 
 - Tags + Werte extrahieren
 - Links / Mail / Tel erkennen
-- Row-Kontext (z. B. "5h: emo3") verarbeiten
+- Row-Kontext (z. B. `5h: emo3`) verarbeiten
 - Mehrfachwerte aggregieren
-- Alias-System unterstÃ¼tzen
+- Alias-System unterstützen (inkl. inverse Aliase)
 - Hybrid-Tag-System (Parser + manuell)
-- Export in tags / md / rows_md / rows_html / json
+- Export in `tags` / `md` / `rows_md` / `rows_html` / `json`
 
+## Architektur
 
-ARCHITEKTUR
-----------------------------------------
-
+```text
 Textfelder
-   â†“
+   ↓
 collectAtags()
-   â†“
-result.items   â† Single Source of Truth
-   â†“
+   ↓
+result.items   ← Single Source of Truth
+   ↓
 exportAtags()
-   â†“
+   ↓
 Ziel-Felder
+```
 
+**Datenmodell (`items`)**
 
-DATENMODELL (items)
-----------------------------------------
-
+```js
 {
   items: [
     {
@@ -54,65 +61,65 @@ DATENMODELL (items)
       attrText: "+3",
       attrValue: 3,
       rawText: "3",
-
       rowValue: 5,
       rowUnit: "h",
       rowRaw: "5h"
     }
   ]
 }
+```
 
+**Pipeline (Detail)**
 
-DATEIEN / MODULE
-----------------------------------------
-
-`core/`
-- `collectAtags.js`
-- `exportAtags.js`
-- `helpers.js`
-- `restoreAtags.js`
-
-`addons/`
-- `tagPairParser.js`
-
-`tests/`
-- `test_collectAtags.js`
-- `test_tagPairParser.js`
-
-
-
-
-
-PIPELINE (DETAIL)
-----------------------------------------
-
-1. RAW TEXT
-   "5h: emo3, emo1"
-
-2. PARSER
-   collectAtags()
-
-3. ITEMS
+1. RAW TEXT: `5h: emo3, emo1`
+2. PARSER: `collectAtags()`
+3. ITEMS:
+   ```js
    [
      { emo: 3, rowValue: 5 },
      { emo: 1, rowValue: 5 }
    ]
+   ```
+4. EXPORT: `exportAtags()`
+5. OUTPUT: `md` / `tags` / `json` / `rows`
 
-4. EXPORT
-   exportAtags()
+## Module
 
-5. OUTPUT
-   md / tags / json / rows
+**Core**
 
+- `core/collectAtags.js`
+- `core/exportAtags.js`
+- `core/helpers.js`
+- `core/restoreAtags.js`
 
-TAG-PAIR PREPROCESSING
-----------------------------------------
+**Add-ons**
+- `addons/tagPairParser.js` (Parser-Preprocessing)
+  - `applyTagPairParser()`
+  - `bulkApplyTagPairParser()`
+- `addons/globalFieldSync.js` (Feld-Synchronisation)
+  - `syncFieldTo()`
+  - `syncFieldBack()`
+  - `syncFieldAll()`
+  - optionales Überschreiben über `overwrite: true`
+- `addons/timeMarker.js` (Zeitmarker fÃ¼r Textfelder)
+  - `appendTimeMarker()`
+  - optionales Stundenlimit Ã¼ber `maxHours` (Default: `30`)
+- `core/restoreAtags.js` (Restore-Helfer, historisch im `core/` abgelegt)
+  - `restoreAtags()`
+  - `bulkRestoreAtags()`
+
+**Tests**
+
+- `tests/test_collectAtags.js`
+- `tests/test_tagPairParser.js`
+- `tests/test_timeMarker.js`
+
+## Add-on Nutzung
+
+**Tag-Pair Preprocessing**
 
 Optional als Add-on vor `collectAtags()`:
 
-- `applyTagPairParser()`
-- `bulkApplyTagPairParser()`
-- Add-on in `addons/tagPairParser.js`
 - kein direkter Hook in `applyTags()` / `bulkApplyTags()`
 
 Beispiel:
@@ -130,10 +137,49 @@ Effekt:
 - der Wert-Tag wird aus dem Tag-Feld entfernt
 - danach kann separat die normale `collectAtags()`-Pipeline laufen
 
+**Global Field Sync**
 
-TAG-FORMEN
-----------------------------------------
+Unabhängig vom Parser nutzbar, um Felder zu spiegeln:
 
+- Synchronisierung einzelner oder mehrerer Felder
+- Konfliktbehandlung über `overwrite: true`
+
+**Restore Add-on (JSON → Felder)**
+
+Die Restore-Funktionen sind das dritte Add-on/Utility im Stack und werden aus historischen Gründen in `core/restoreAtags.js` geführt.
+
+- `restoreAtags()` für Einzel- oder Auto-Restore aus einem JSON-Feld
+- `bulkRestoreAtags()` für Restore über die gesamte Bibliothek
+- unterstützt `force_type: null | "text" | "list"`
+
+**Time Marker**
+
+FÃ¼gt Zeitmarker wie `2:` oder `30,5:` in ein Textfeld ein und gruppiert sie bei `insertMode: "time_block_top"` oberhalb des restlichen Texts.
+
+- unterstÃ¼tzt `sourceMode: "realtime" | "realtime_since" | "datetime" | "hours"`
+- rundet Ã¼ber `stepHours` und `roundMode`
+- stoppt optional ab `maxHours` Stunden; Standard ist `30`
+- `maxHours: null` deaktiviert das Limit
+
+Beispiel:
+
+```js
+appendTimeMarker({
+  targetTextField: "Notiz",
+  sourceMode: "hours",
+  sourceHoursField: "Stunden",
+  stepHours: 0.5,
+  roundMode: "round",
+  insertMode: "time_block_top",
+  maxHours: 30
+});
+```
+
+## Syntax & Regeln
+
+**Tag-Formen**
+
+```text
 #tag
 tag3
 tag+3
@@ -145,61 +191,60 @@ tag: "text"
 
 alias:
 @@emo: Emotion
+@@mood.: gut, -down
 
 rows:
 5h: emo3
 2,5: focus+1
+```
 
+**Row-System**
 
-ROW-SYSTEM
-----------------------------------------
+Prefix definiert Kontext für restliche Zeile:
 
-Prefix definiert Kontext fÃ¼r restliche Zeile
-
-5h: emo3 emo1
-â†’ rowValue = 5
-â†’ rowUnit = h
+`5h: emo3 emo1`
+→ `rowValue = 5`
+→ `rowUnit = h`
 
 Speicherung je item:
-- rowValue
-- rowUnit
-- rowRaw
+
+- `rowValue`
+- `rowUnit`
+- `rowRaw`
 
 Aggregation:
-- avg (default)
-- sum
-- null
 
+- `avg` (default)
+- `sum`
+- `null`
 
-EXPORT-TYPEN
-----------------------------------------
+**Alias-System**
 
-tags
-- nur Tag-Namen + Metatags
+```text
+@@emo: Emotion
+@@mood.: gut, -down
+```
 
-md
-- normale Ausgabe
-- Aggregat + [Einzelwerte]
-- kein [] bei Einzelwert
+- nur gültig im Tag-Kontext
+- keine Ersetzung im Fließtext
+- nur erlaubte Tagformen
+- Basistags mit abschließendem Punkt sind erlaubt (z. B. `mood.`)
+- inverse Aliase mit Präfix `-` kehren numerische Werte um (`down2` → `mood.-2`)
 
-rows_md
-- Markdown-Tabelle
-- rechte Spaltenausrichtung
-- optionale Header-KÃ¼rzung
+## Export
 
-rows_html
-- HTML Tabelle
-- rechtsbÃ¼ndige Zahlen
+**Export-Typen**
 
-json
-- { tag: value }
+- `tags`: nur Tag-Namen + Metatags
+- `md`: normale Ausgabe, Aggregat + `[Einzelwerte]`, kein `[]` bei Einzelwert
+- `rows_md`: Markdown-Tabelle mit rechter Spaltenausrichtung und optionaler Header-Kürzung
+- `rows_html`: HTML-Tabelle mit rechtsbündigen Zahlen
+- `json`: `{ tag: value }`
 
+**Markdown-Regeln**
 
-MARKDOWN-REGELN
-----------------------------------------
-
-- "  \n" fÃ¼r Zeilenumbruch
-- 2 Spaces vor [Liste]
+- `"  \n"` für Zeilenumbruch
+- 2 Spaces vor `[Liste]`
 - Links klickbar
 - Sortierung:
   1. links / tel / mail
@@ -207,15 +252,12 @@ MARKDOWN-REGELN
   3. text
   4. tags
 
-- Einzelwert:
-  emo: 1,0
+Beispiele:
 
-- Mehrfach:
-  emo: 2,0  [3,0, 1,0]
+- Einzelwert: `emo: 1,0`
+- Mehrfach: `emo: 2,0  [3,0, 1,0]`
 
-
-ROWS-TABELLE
-----------------------------------------
+**Rows-Tabelle**
 
 | rval | emo |
 | :--- | ---: |
@@ -224,83 +266,8 @@ ROWS-TABELLE
 | avg  | 2,0 |
 
 Optionen:
-- rowIncludeUnits
-- rowAggregateMode
-- rowAggregateDecimals
-- shortenTableHeaders (`0` = Standard, 10 Zeichen + ".")
 
-
-ALIAS-SYSTEM
-----------------------------------------
-
-@@emo: Emotion
-
-- nur gÃ¼ltig im Tag-Kontext
-- keine Ersetzung im FlieÃŸtext
-- nur erlaubte Tagformen
-
-
-HYBRID TAG SYSTEM
-----------------------------------------
-
-Felder:
-- Tags Parser
-- Tags Extern
-
-Logik:
-foreign = existing - parser_old
-final = foreign + parser_new
-
-Effekt:
-- Parser steuert eigene Tags
-- manuelle bleiben stabil
-
-
-APPLY / BULK
-
-bulkApplyTags() unterstÃ¼tzt optional `result`, analog zu applyTags():
-
-- `result` als Objekt â†’ wird fÃ¼r alle EintrÃ¤ge verwendet
-- `result` als Array â†’ pro Eintrag per Index
-- `result` als Funktion `(entryObj, index, allEntries)` â†’ dynamisch pro Eintrag
-
-Wenn `result` fehlt oder leer ist, wird automatisch `collectAtags()` je Eintrag ausgefÃ¼hrt.
-
-ZusÃ¤tzlich gibt es `bulkExportAtags()` im Helper-Modul mit identischem `result`-Verhalten.
-----------------------------------------
-
-applyTags({
-  textFields,
-  targetField,
-  targetFieldType
-})
-
-bulkApplyTags({
-  textFields,
-  targetField,
-  targetFieldType
-})
-
-
-VERSIONIERUNG
-----------------------------------------
-
-System:
-sys 2.00
-
-Dateien:
-Atag Helpers v1.00 (sys 2.00)
-collectAtags vX (sys 2.00)
-exportAtags vX (sys 2.00)
-restoreAtags vX (sys 2.00)
-
-
-PRINZIPIEN
-----------------------------------------
-
-- items = einzige Wahrheit
-- Parser â‰  Export strikt getrennt
-- Helper zentralisiert
-- keine Doppel-Logik
-- deterministische Outputs
-- erweiterbar ohne Breaking Changes
+- `rowIncludeUnits`
+- `rowAggregateMode`
+- `rowAggregateDecimals`
+- `shortenTableHeaders` (`0` = Standard, 10 Zeichen + `.`)
