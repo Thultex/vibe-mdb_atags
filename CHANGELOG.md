@@ -19,9 +19,16 @@
 
 ## 2026-04-23
 
-- `Shared Script: Time Marker` auf `v1.22` ergÃ¤nzt
+- `Addon Global Field Sync` auf `v1.01` angehoben
+- Fix: `syncFieldBack()` schreibt leere aktuelle Feldwerte nicht mehr in den ersten Eintrag zurück
+- Fix: `syncFieldTo()` und `syncFieldAll()` suchen bei leerem ersten Eintrag im selben Feld die ersten 20 Einträge nach einem gefüllten Wert ab
+- Test/Doku: `tests/test_globalFieldSync.js` ergänzt und Mojibake in `README.md` für den Time-Marker-Bereich korrigiert
+
+## 2026-04-23
+
+- `Shared Script: Time Marker` auf `v1.22` ergänzt
 - Feature: `addons/timeMarker.js` wieder eingebunden und `appendTimeMarker()` dokumentiert
-- Feature: optionales Stundenlimit Ã¼ber `maxHours` mit Standardwert `30` ergÃ¤nzt
+- Feature: optionales Stundenlimit über `maxHours` mit Standardwert `30` ergänzt
 - Test/Doku: `tests/test_timeMarker.js` und `README.md` erweitert
 
 ## 2026-04-23

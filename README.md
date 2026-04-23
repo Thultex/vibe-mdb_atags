@@ -101,9 +101,9 @@ Ziel-Felder
   - `syncFieldBack()`
   - `syncFieldAll()`
   - optionales Überschreiben über `overwrite: true`
-- `addons/timeMarker.js` (Zeitmarker fÃ¼r Textfelder)
+- `addons/timeMarker.js` (Zeitmarker für Textfelder)
   - `appendTimeMarker()`
-  - optionales Stundenlimit Ã¼ber `maxHours` (Default: `30`)
+  - optionales Stundenlimit über `maxHours` (Default: `30`)
 - `core/restoreAtags.js` (Restore-Helfer, historisch im `core/` abgelegt)
   - `restoreAtags()`
   - `bulkRestoreAtags()`
@@ -154,10 +154,10 @@ Die Restore-Funktionen sind das dritte Add-on/Utility im Stack und werden aus hi
 
 **Time Marker**
 
-FÃ¼gt Zeitmarker wie `2:` oder `30,5:` in ein Textfeld ein und gruppiert sie bei `insertMode: "time_block_top"` oberhalb des restlichen Texts.
+Fügt Zeitmarker wie `2:` oder `30,5:` in ein Textfeld ein und gruppiert sie bei `insertMode: "time_block_top"` oberhalb des restlichen Texts.
 
-- unterstÃ¼tzt `sourceMode: "realtime" | "realtime_since" | "datetime" | "hours"`
-- rundet Ã¼ber `stepHours` und `roundMode`
+- unterstützt `sourceMode: "realtime" | "realtime_since" | "datetime" | "hours"`
+- rundet über `stepHours` und `roundMode`
 - stoppt optional ab `maxHours` Stunden; Standard ist `30`
 - `maxHours: null` deaktiviert das Limit
 

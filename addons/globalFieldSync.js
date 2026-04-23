@@ -1,9 +1,11 @@
 /*
 ========================================
-Addon Global Field Sync v1.00 (sys 2.00)
+Addon Global Field Sync v1.01 (sys 2.00)
 ========================================
 
 Changes
+- skip back-sync for empty current values
+- fallback to first non-empty source value within first 20 entries
 - add independent field sync addon
 - sync from first entry to current entry
 - sync from current entry back to first entry
@@ -87,6 +89,38 @@ function getFirstSyncEntry() {
   return all[0];
 }
 
+function getSyncEntries() {
+  var all = lib().entries();
+  if (!all || !all.length) return [];
+  return all;
+}
+
+function resolveSyncSourceValue(cfg) {
+  cfg = cfg || {};
+
+  var sourceEntry = cfg.sourceEntry;
+  var fieldName = cfg.fieldName;
+  var sourceVal = sourceEntry ? sourceEntry.field(fieldName) : null;
+  var fallbackEntries = cfg.fallbackEntries;
+  var fallbackLimit = cfg.fallbackLimit;
+  var i;
+  var scanVal;
+
+  if (!isEmptySyncValue(sourceVal) || !fallbackEntries || !fallbackEntries.length) {
+    return sourceVal;
+  }
+
+  if (fallbackLimit == null || fallbackLimit < 1) fallbackLimit = fallbackEntries.length;
+  if (fallbackLimit > fallbackEntries.length) fallbackLimit = fallbackEntries.length;
+
+  for (i = 0; i < fallbackLimit; i++) {
+    scanVal = fallbackEntries[i].field(fieldName);
+    if (!isEmptySyncValue(scanVal)) return scanVal;
+  }
+
+  return sourceVal;
+}
+
 function syncFieldsBetweenEntries(cfg) {
   cfg = cfg || {};
 
@@ -94,6 +128,9 @@ function syncFieldsBetweenEntries(cfg) {
   var targetEntry = cfg.targetEntry;
   var fields = normalizeSyncFields(cfg.fields);
   var overwrite = cfg.overwrite === true;
+  var skipEmptySource = cfg.skipEmptySource === true;
+  var fallbackEntries = cfg.fallbackEntries;
+  var fallbackLimit = cfg.fallbackLimit;
   var updated = [];
   var skipped = [];
   var conflicts = [];
@@ -108,8 +145,18 @@ function syncFieldsBetweenEntries(cfg) {
 
   for (var i = 0; i < fields.length; i++) {
     var fieldName = fields[i];
-    var sourceVal = sourceEntry.field(fieldName);
+    var sourceVal = resolveSyncSourceValue({
+      sourceEntry: sourceEntry,
+      fieldName: fieldName,
+      fallbackEntries: fallbackEntries,
+      fallbackLimit: fallbackLimit
+    });
     var targetVal = targetEntry.field(fieldName);
+
+    if (skipEmptySource && isEmptySyncValue(sourceVal)) {
+      skipped.push(fieldName);
+      continue;
+    }
 
     if (syncValuesEqual(sourceVal, targetVal)) {
       skipped.push(fieldName);
@@ -137,12 +184,15 @@ function syncFieldTo(cfg) {
 
   var currentEntry = cfg.entryObj || entry();
   var firstEntry = getFirstSyncEntry();
+  var all = getSyncEntries();
 
   return syncFieldsBetweenEntries({
     sourceEntry: firstEntry,
     targetEntry: currentEntry,
     fields: cfg.fields,
-    overwrite: cfg.overwrite
+    overwrite: cfg.overwrite,
+    fallbackEntries: all,
+    fallbackLimit: 20
   });
 }
 
@@ -156,7 +206,8 @@ function syncFieldBack(cfg) {
     sourceEntry: currentEntry,
     targetEntry: firstEntry,
     fields: cfg.fields,
-    overwrite: cfg.overwrite
+    overwrite: cfg.overwrite,
+    skipEmptySource: true
   });
 }
 
@@ -164,7 +215,7 @@ function syncFieldAll(cfg) {
   cfg = cfg || {};
 
   var firstEntry = getFirstSyncEntry();
-  var all = lib().entries();
+  var all = getSyncEntries();
   var fields = normalizeSyncFields(cfg.fields);
   var overwrite = cfg.overwrite === true;
   var out = [];
@@ -178,7 +229,9 @@ function syncFieldAll(cfg) {
       sourceEntry: firstEntry,
       targetEntry: all[i],
       fields: fields,
-      overwrite: overwrite
+      overwrite: overwrite,
+      fallbackEntries: all,
+      fallbackLimit: 20
     }));
   }
 
