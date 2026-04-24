@@ -25,6 +25,14 @@
 
 ## 2026-04-25
 
+- `collectAtags` auf `v1.28` angehoben
+- Fix: Quoted Hash-Tags wie `"test das hier"#4,1` und `'und das'#7` übernehmen den Wert nach `#`
+- Fix: Quoted Hash-Tags übernehmen auch gequotete Textwerte wie `'und das'#'das das'`
+- Fix: Hash-, Simple- und Colon-Tags innerhalb längerer Quotes werden ignoriert
+- Test: `tests/test_collectAtags.js` um Quoted-Hash-Werte erweitert
+
+## 2026-04-25
+
 - `exportAtags` auf `v1.38` angehoben
 - `Atag Helpers` auf `v1.07` angehoben
 - Feature: Tag-Ausgaben werden alphabetisch sortiert; normales Markdown behält die Typ-Gruppen und sortiert darin alphabetisch

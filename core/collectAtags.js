@@ -1,9 +1,10 @@
 /*
 ========================================
-collectAtags v1.27 (sys 2.00)
+collectAtags v1.28 (sys 2.00)
 ========================================
 
 Changes
+- quoted hash tags can carry values, e.g. `"tag name"#4,1`
 - precompute quote state per parsed line and expose small quote helpers for text rewrites
 - alias definitions allow a trailing dot on the base tag and preserve it for export, e.g. `@@tag.: ...`
 - keep parser behavior close to the old version
@@ -283,12 +284,14 @@ function collectAtags(cfg) {
 
       quoteState = buildAtagQuoteState(parseLine);
 
-      // quoted tag: 'Four Tops'#
-      var rxQuotedTag = /(^|[\s\n\r])(?:'([^']+)'|"([^"]+)")#/g;
+      // quoted tag: 'Four Tops'# / "Four Tops"#4,1 / 'Four Tops'#'text value'
+      var rxQuotedTag = /(^|[\s,;.!?()\[\]{}\n\r])(?:'([^']+)'|"([^"]+)")#(?:'([^']*)'|"([^"]*)"|([^\s;.!?()\[\]{}]*))?/g;
       var mq;
       while ((mq = rxQuotedTag.exec(parseLine)) !== null) {
         var rawQuotedName = mq[2] != null && mq[2] !== "" ? mq[2] : (mq[3] || "");
+        var rawQuotedAttr = mq[4] != null && mq[4] !== "" ? mq[4] : (mq[5] != null && mq[5] !== "" ? mq[5] : (mq[6] || ""));
         rawQuotedName = normalizeTagName(rawQuotedName);
+        rawQuotedAttr = String(rawQuotedAttr).replace(/,+$/g, "");
         if (!rawQuotedName) continue;
 
         var quotedAlias = resolveAlias(rawQuotedName, aliasMap);
@@ -296,10 +299,13 @@ function collectAtags(cfg) {
 
         if (isExcluded(rawQuotedName)) continue;
 
+        var normQuoted = normalizeAttr(rawQuotedAttr);
+        if (quotedAlias.invert) normQuoted = invertNormalizedAttr(normQuoted);
+
         addItem(
           items, seen,
           rawQuotedName,
-          null, null, "",
+          normQuoted.attrText, normQuoted.attrValue, rawQuotedAttr,
           currentRowValue, currentRowUnit, currentRowRaw
         );
       }
@@ -313,6 +319,7 @@ function collectAtags(cfg) {
         raw1 = String(raw1).replace(/^\s+|\s+$/g, "");
 
         if (!name1) continue;
+        if (isInsideAtagQuoteState(quoteState, m1.index)) continue;
         if (/^\d+$/.test(name1)) continue;
 
         var alias1 = resolveAlias(name1, aliasMap);
@@ -344,6 +351,7 @@ function collectAtags(cfg) {
         rawH = String(rawH).replace(/,+$/g, "");
 
         if (!nameH || rawH === "") continue;
+        if (isInsideAtagQuoteState(quoteState, mh.index)) continue;
 
         var aliasH = resolveAlias(nameH, aliasMap);
         nameH = aliasH.name;
@@ -414,6 +422,7 @@ function collectAtags(cfg) {
       while ((ms = rxSimpleTag.exec(parseLine)) !== null) {
         var nameS = ms[2] || ms[4] || "";
         if (!nameS) continue;
+        if (isInsideAtagQuoteState(quoteState, ms.index)) continue;
 
         var aliasS = resolveAlias(nameS, aliasMap);
         nameS = aliasS.name;
