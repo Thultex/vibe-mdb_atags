@@ -19,6 +19,12 @@
 
 ## 2026-04-25
 
+- `collectAtags` auf `v1.27` angehoben
+- Intern: Quote-Zustand wird pro Parse-Zeile vorberechnet und ueber kleine Helper wiederverwendbar gemacht
+- Test: `tests/test_collectAtags.js` um Quote-Regressionsfaelle fuer numerische Kurz-Tags ergaenzt
+
+## 2026-04-25
+
 - `exportAtags` auf `v1.38` angehoben
 - `Atag Helpers` auf `v1.07` angehoben
 - Feature: Tag-Ausgaben werden alphabetisch sortiert; normales Markdown behält die Typ-Gruppen und sortiert darin alphabetisch

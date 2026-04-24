@@ -3,7 +3,6 @@
 ## Index
 
 - Later
-  - `#7` Quote-Checks in `collectAtags()` vorkalkulieren
   - `#8` `addons/readableAtagText.js`
 
 ## Detail
@@ -17,26 +16,6 @@ leer
 leer
 
 ### Later
-
-#### `#7` Quote-Checks in `collectAtags()` vorkalkulieren
-
-##### Ziel
-
-- den wiederholten Quote-Scan pro Treffer entfernen
-- die Quote-Erkennung als kleinen, wiederverwendbaren Helper kapseln
-- Parser-Verhalten unveraendert lassen
-
-##### Ablauf
-
-- in `core/collectAtags.js` den bisherigen `isInsideQuotes(str, pos)`-Pfad durch vorberechnete Quote-Information pro `parseLine` ersetzen
-- die neue Quote-Hilfe so klein halten, dass sie spaeter auch von einem Text-Rewrite-Add-on genutzt werden kann
-- keine groessere Parser-Refaktorierung im selben Schritt
-- bestehende Parser-Tests laufen lassen und bei Bedarf um einen gezielten Quote-Fall ergaenzen
-
-##### Warum zuerst
-
-- das reduziert Risiko und doppelte Logik fuer spaetere Text-Umschreibungen
-- `#8` soll dieselbe Quote-Regel wiederverwenden statt eine zweite Heuristik einzufuehren
 
 #### `#8` `addons/readableAtagText.js`
 

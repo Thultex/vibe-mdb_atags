@@ -108,5 +108,8 @@ assertItem("hash-text", "test#string", "test", "string", "string", null, null);
 assertItem("row-plus", "5h: emo3", "emo", "+3", 3, 5, "h");
 assertItem("row-decimal", "2,5: focus+1", "focus", "+1", 1, 2.5, null);
 assertMissing("unsigned-decimal-disallowed", "emo1,2", "emo");
+assertMissing("quoted-num-token-single", "'emo3'", "emo");
+assertMissing("quoted-num-token-double", "\"emo3\"", "emo");
+assertItem("quote-outside-token", "\"emo3\" focus2", "focus", "+2", 2, null, null);
 
 print("OK");

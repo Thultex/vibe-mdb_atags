@@ -1,9 +1,10 @@
 /*
 ========================================
-collectAtags v1.26 (sys 2.00)
+collectAtags v1.27 (sys 2.00)
 ========================================
 
 Changes
+- precompute quote state per parsed line and expose small quote helpers for text rewrites
 - alias definitions allow a trailing dot on the base tag and preserve it for export, e.g. `@@tag.: ...`
 - keep parser behavior close to the old version
 - explicit tags only for simple tag detection
@@ -14,6 +15,37 @@ Changes
 
 ========================================
 */
+
+function buildAtagQuoteState(str) {
+  var s = String(str || "");
+  var state = [];
+  var inSingle = false;
+  var inDouble = false;
+  var i;
+  var ch;
+
+  for (i = 0; i <= s.length; i++) {
+    state[i] = inSingle || inDouble;
+
+    if (i >= s.length) break;
+
+    ch = s.charAt(i);
+    if (ch === "'" && !inDouble) inSingle = !inSingle;
+    else if (ch === '"' && !inSingle) inDouble = !inDouble;
+  }
+
+  return state;
+}
+
+function isInsideAtagQuoteState(state, pos) {
+  var p = Number(pos);
+
+  if (!state || isNaN(p)) return false;
+  if (p < 0) p = 0;
+  if (p >= state.length) p = state.length - 1;
+
+  return !!state[p];
+}
 
 // ===== CORE =====
 function collectAtags(cfg) {
@@ -133,19 +165,6 @@ function collectAtags(cfg) {
     });
   }
 
-  function isInsideQuotes(str, pos) {
-    var inSingle = false;
-    var inDouble = false;
-
-    for (var i = 0; i < pos; i++) {
-      var ch = str.charAt(i);
-      if (ch === "'" && !inDouble) inSingle = !inSingle;
-      else if (ch === '"' && !inSingle) inDouble = !inDouble;
-    }
-
-    return inSingle || inDouble;
-  }
-
   function buildAliasMap(text) {
     var map = {};
     var lines = String(text || "").split(/\r?\n/);
@@ -253,6 +272,7 @@ function collectAtags(cfg) {
       var currentRowUnit = null;
       var currentRowRaw = null;
       var parseLine = line;
+      var quoteState;
 
       if (rowCtx) {
         currentRowValue = rowCtx.rowValue;
@@ -260,6 +280,8 @@ function collectAtags(cfg) {
         currentRowRaw = rowCtx.rowRaw;
         parseLine = rowCtx.rest;
       }
+
+      quoteState = buildAtagQuoteState(parseLine);
 
       // quoted tag: 'Four Tops'#
       var rxQuotedTag = /(^|[\s\n\r])(?:'([^']+)'|"([^"]+)")#/g;
@@ -371,7 +393,7 @@ function collectAtags(cfg) {
         nameN = aliasN.name;
 
         if (isExcluded(nameN)) continue;
-        if (isInsideQuotes(parseLine, mn.index)) continue;
+        if (isInsideAtagQuoteState(quoteState, mn.index)) continue;
 
         var normN = normalizeAttr(rawN);
         if (aliasN.invert) normN = invertNormalizedAttr(normN);
