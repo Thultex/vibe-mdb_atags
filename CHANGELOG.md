@@ -17,6 +17,15 @@
 - Test/Doku: ...
 ```
 
+## 2026-04-25
+
+- `exportAtags` auf `v1.38` angehoben
+- `Atag Helpers` auf `v1.07` angehoben
+- Feature: Tag-Ausgaben werden alphabetisch sortiert; normales Markdown behält die Typ-Gruppen und sortiert darin alphabetisch
+- Fix: Export-Helfer vermeiden `String.prototype.trim()` für WSH-Kompatibilität
+- Fix: JSON-Export nutzt einen lokalen Stringifier für ältere WSH-Hosts ohne `JSON.stringify`
+- Test: `tests/test_exportAtags.js` ergänzt für `tags`, `md`, `rows_md`, `text` und `json`
+
 ## 2026-04-23
 
 - `Addon Global Field Sync` auf `v1.01` angehoben

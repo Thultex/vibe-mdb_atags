@@ -1,9 +1,10 @@
 /*
 ========================================
-exportAtags v1.37 (sys 2.00)
+exportAtags v1.38 (sys 2.00)
 ========================================
 
 Änderungen
+- exports sort tags alphabetically; markdown keeps type groups and sorts alphabetically inside each group
 - rows exports reuse precomputed aggregate data to reduce repeated scans and temp arrays
 - ganze Zahlen bleiben in Exporten ohne `,0`, solange kein echter Dezimalwert pro Tag vorkam
 - HTML-Tabellen nutzen Sans-Serif-Schrift
@@ -390,13 +391,14 @@ function exportAtags(cfg) {
 
   var result = cfg.result || {};
   var items = result.items || [];
+  var sortedItems = sortItemsByTagName(items);
   var targetField = cfg.targetField;
   var targetFieldType = cfg.targetFieldType;
 
   if (targetFieldType === "tags") {
-    var parsedTags = uniqueTagNames(items, true);
-    var metaTags = collectMetaTags(items);
-    parsedTags = mergeTagLists(parsedTags, metaTags);
+    var parsedTags = uniqueTagNames(sortedItems, true);
+    var metaTags = collectMetaTags(sortedItems);
+    parsedTags = sortTagNames(mergeTagLists(parsedTags, metaTags));
 
     var existingTags = entryObj.field(targetField);
     var doMerge = !(cfg && cfg.mergeWithExistingTags === false);
@@ -406,22 +408,22 @@ function exportAtags(cfg) {
       var parserField = cfg.parserOwnedTagsField;
 
       var lastParserTags = entryObj.field(parserField);
-      var currentForeignTags = subtractTagLists(existingTags, lastParserTags);
+      var currentForeignTags = sortTagNames(subtractTagLists(existingTags, lastParserTags));
 
       entryObj.set(foreignField, currentForeignTags);
       entryObj.set(parserField, parsedTags);
-      entryObj.set(targetField, mergeTagLists(currentForeignTags, parsedTags));
+      entryObj.set(targetField, sortTagNames(mergeTagLists(currentForeignTags, parsedTags)));
       return;
     }
 
-    if (doMerge) entryObj.set(targetField, mergeTagLists(existingTags, parsedTags));
+    if (doMerge) entryObj.set(targetField, sortTagNames(mergeTagLists(existingTags, parsedTags)));
     else entryObj.set(targetField, parsedTags);
 
     return;
   }
 
   if (targetFieldType === "text") {
-    entryObj.set(targetField, buildAtagTextLines(items).join("\n"));
+    entryObj.set(targetField, buildAtagTextLines(sortedItems).join("\n"));
     return;
   }
 
@@ -431,17 +433,17 @@ function exportAtags(cfg) {
   }
 
   if (targetFieldType === "rows_md") {
-    entryObj.set(targetField, buildAtagRowsMarkdown(items, cfg));
+    entryObj.set(targetField, buildAtagRowsMarkdown(sortedItems, cfg));
     return;
   }
 
   if (targetFieldType === "rows_html") {
-    entryObj.set(targetField, buildAtagRowsHtml(items, cfg));
+    entryObj.set(targetField, buildAtagRowsHtml(sortedItems, cfg));
     return;
   }
 
   if (targetFieldType === "json") {
-    entryObj.set(targetField, JSON.stringify(buildValueMap(items)));
+    entryObj.set(targetField, stringifyValueMap(buildValueMap(sortedItems)));
     return;
   }
 }
