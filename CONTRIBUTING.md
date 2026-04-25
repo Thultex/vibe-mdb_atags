@@ -109,6 +109,7 @@ Pflege-Regeln für diese Headerform:
 - Neue Änderungen werden im Abschnitt `Änderungen` oben ergänzt, damit die jüngste Änderung zuerst sichtbar ist.
 - Die Punkte im Abschnitt `Änderungen` bleiben kurz, konkret und nutzen die vorhandene Schreibweise der Datei.
 - Beispiele in `Anwendung` oder `Beispiele` werden angepasst, wenn sich Signatur, typische Nutzung oder unterstützte Formen geändert haben.
+- Neue oder geänderte Konfigurationsoptionen werden in den jeweiligen Usage-/Beispielblöcken der betroffenen Datei mit korrigiert, damit kopierbare Beispiele aktuell bleiben.
 - Wenn ein Header stark gewachsen ist, wird er gekürzt, aber nicht in ein neues freies Format umgebaut.
 - Ziel ist Konsistenz zwischen den Dateien, nicht perfekte Einheitlichkeit auf Kosten der vorhandenen Struktur.
 
@@ -181,6 +182,7 @@ Vor Abschluss einer Änderung kurz prüfen:
 - `CHANGELOG.md` ergänzt
 - Test oder Verifikationshinweis vorhanden
 - README angepasst, wenn sich Nutzung oder unterstützte Formen ändern
+- Usage-/Beispielblöcke in betroffenen Script-Dateien angepasst, wenn Konfigurationsoptionen, Signaturen oder typische Aufrufe geändert wurden
 
 Optionaler Repo-Check:
 

@@ -65,6 +65,17 @@ function assertItem(label, input, expectedName, expectedAttrText, expectedAttrVa
   if (String(item.rowUnit) !== String(expectedRowUnit)) fail(label + ": rowUnit expected '" + expectedRowUnit + "' but got '" + item.rowUnit + "'");
 }
 
+function assertDisplayName(label, input, expectedName, expectedDisplayName) {
+  var result = collectAtags({
+    entryObj: makeEntry({ Note: input }),
+    textFields: ["Note"]
+  });
+  var item = findItem(result.items, expectedName);
+
+  if (!item) fail(label + ": item '" + expectedName + "' not found in " + input);
+  if (item.displayName !== expectedDisplayName) fail(label + ": displayName expected '" + expectedDisplayName + "' but got '" + item.displayName + "'");
+}
+
 function assertSimpleTag(label, input, expectedName) {
   var result = collectAtags({
     entryObj: makeEntry({ Note: input }),
@@ -119,5 +130,19 @@ assertMissing("quoted-simple-hash-inside-text", "10: Kopfruhe1, Innere_Anspannun
 assertMissing("quoted-hash-value-inside-text", "10: Kopfruhe1, Innere_Anspannung1 geringer, Klarheit1, ' das hier# sollte aber nicht#23 drin sein'", "nicht");
 assertMissing("quoted-colon-inside-text", "'tag: 5'", "tag");
 assertItem("quoted-text-outside-row", "10: Kopfruhe1, Innere_Anspannung1 geringer, Klarheit1, ' das hier# sollte aber nicht#23 drin sein'", "Kopfruhe", "+1", 1, 10, null);
+assertItem("alias-short", "@@Kopfschmerzen (ks): Kopfschmerz, Kschm\nks2", "Kopfschmerzen", "+2", 2, null, null);
+assertDisplayName("alias-short-display", "@@Kopfschmerzen (ks): Kopfschmerz, Kschm\nKopfschmerz2", "Kopfschmerzen", "ks");
+assertItem("alias-short-without-list", "@@Wirkung (Wk)\nWk++", "Wirkung", "+2", 2, null, null);
+assertDisplayName("alias-short-without-list-display", "@@Wirkung (Wk)\nWirkung++", "Wirkung", "Wk");
+assertItem("alias-declaration-without-short", "@@Gut\n| Gut\u207F", "Gut", null, null, null, null);
+assertItem("readable-row-superscript", "@@Wirkung (Wk)\n0,7: Text\n| Angst\u207B\u00B2 Stress\u2070 Scham\u207B\u2070\u2075 Wk\u207A\u00B2  Gut\u207F W\u00E4rme\u207F", "Angst", "-2", -2, 0.7, null);
+assertItem("readable-row-decimal-superscript", "0,7: Text\n| Scham\u207B\u2070\u2075", "Scham", "-0,5", -0.5, 0.7, null);
+assertItem("readable-row-alias-superscript", "@@Wirkung (Wk)\n0,7: Text\n| Wk\u207A\u00B2", "Wirkung", "+2", 2, 0.7, null);
+assertItem("readable-row-alias-plusplus", "@@Wirkung (Wk)\n0,7: Text\n| Wk\u207A\u207A", "Wirkung", "+2", 2, 0.7, null);
+assertSimpleTag("readable-row-bare-superscript", "0,7: Text\n| Gut\u207F", "Gut");
+assertItem("readable-global-number", "|| tag\u207A\u00B9  test: 12,5  info: \"neuer lauf\"  trial\u207F", "tag", "+1", 1, null, null);
+assertItem("readable-global-decimal", "|| tag\u207A\u00B9  info: \"neuer lauf\" test: 12,5  trial\u207F", "test", "12,5", 12.5, null, null);
+assertItem("readable-global-text", "|| tag\u207A\u00B9  test: 12,5  info: \"neuer lauf\"  trial\u207F", "info", "neuer lauf", "neuer lauf", null, null);
+assertSimpleTag("readable-global-bare", "|| tag\u207A\u00B9  test: 12,5  info: \"neuer lauf\"  trial\u207F", "trial");
 
 print("OK");

@@ -1,10 +1,12 @@
 /*
 ========================================
-exportAtags v1.38 (sys 2.10)
+exportAtags v1.40 (sys 2.10)
 ========================================
 
 Änderungen
 - exports sort tags alphabetically; markdown keeps type groups and sorts alphabetically inside each group
+- table exports use alias short display names by default, with optional long or both-name headers
+- examples show `enabled: true`
 - rows exports reuse precomputed aggregate data to reduce repeated scans and temp arrays
 - ganze Zahlen bleiben in Exporten ohne `,0`, solange kein echter Dezimalwert pro Tag vorkam
 - HTML-Tabellen nutzen Sans-Serif-Schrift
@@ -31,6 +33,10 @@ exportAtags v1.38 (sys 2.10)
 - -1 = aus
 - 0 = 10 Zeichen + "."
 - n = n Zeichen + "."
+- tableHeaderNames:
+- "short" = alias short/display name (default)
+- "long" = canonical tag name
+- "both" = short (canonical)
 
 Voraussetzung
 - Atag Helpers geladen
@@ -39,30 +45,35 @@ Voraussetzung
 Beispiele
 
 applyTags({
+  enabled: true,
   textFields: ["Alias", "Notiz"],
   targetField: "Atags",
   targetFieldType: "tags"
 });
 
 applyTags({
+  enabled: true,
   textFields: ["Alias", "Notiz"],
   targetField: "Atag Debug",
   targetFieldType: "text"
 });
 
 applyTags({
+  enabled: true,
   textFields: ["Alias", "Notiz"],
   targetField: "Atag MD",
   targetFieldType: "md"
 });
 
 applyTags({
+  enabled: true,
   textFields: ["Alias", "Notiz"],
   targetField: "Atag JSON",
   targetFieldType: "json"
 });
 
 applyTags({
+  enabled: true,
   textFields: ["Alias", "Notiz"],
   targetField: "Atag Rows MD",
   targetFieldType: "rows_md",
@@ -73,6 +84,7 @@ applyTags({
 });
 
 applyTags({
+  enabled: true,
   textFields: ["Alias", "Notiz"],
   targetField: "Atag Rows Html",
   targetFieldType: "rows_html",
@@ -83,6 +95,7 @@ applyTags({
 });
 
 applyTags({
+  enabled: true,
   textFields: ["Alias", "Notiz"],
   targetField: "Atags",
   targetFieldType: "tags",
@@ -122,6 +135,7 @@ function collectAtagRowTableData(items) {
   var tagSeen = {};
   var tagHasDecimal = {};
   var tagAgg = {};
+  var tagDisplay = {};
 
   for (var i = 0; i < items.length; i++) {
     var it = items[i];
@@ -144,6 +158,7 @@ function collectAtagRowTableData(items) {
     if (!tagSeen[it.name]) {
       tagSeen[it.name] = true;
       tagOrder.push(it.name);
+      tagDisplay[it.name] = it.displayName || it.name;
     }
 
     if (itemHasDecimalValue(it)) {
@@ -165,6 +180,7 @@ function collectAtagRowTableData(items) {
   return {
     rows: rows,
     tagOrder: tagOrder,
+    tagDisplay: tagDisplay,
     tagHasDecimal: tagHasDecimal,
     tagAgg: tagAgg
   };
@@ -258,6 +274,7 @@ function buildAtagRowsMarkdown(items, cfg) {
   var data = collectAtagRowTableData(items);
   var rows = data.rows;
   var tagOrder = data.tagOrder;
+  var tagDisplay = data.tagDisplay || {};
   var tagHasDecimal = data.tagHasDecimal || {};
   var tagAgg = data.tagAgg || {};
   var mode = cfg && cfg.rowAggregateMode != null ? cfg.rowAggregateMode : "avg";
@@ -272,7 +289,7 @@ function buildAtagRowsMarkdown(items, cfg) {
   var aligns = [":---"];
 
   for (var t = 0; t < tagOrder.length; t++) {
-    header.push(shortenTableWord(tagOrder[t], shortenHeaders));
+    header.push(shortenTableWord(buildAtagTagHeaderLabel(tagOrder[t], tagDisplay[tagOrder[t]], cfg), shortenHeaders));
     aligns.push("---:");
   }
 
@@ -314,6 +331,7 @@ function buildAtagRowsHtml(items, cfg) {
   var data = collectAtagRowTableData(items);
   var rows = data.rows;
   var tagOrder = data.tagOrder;
+  var tagDisplay = data.tagDisplay || {};
   var tagHasDecimal = data.tagHasDecimal || {};
   var tagAgg = data.tagAgg || {};
   var mode = cfg && cfg.rowAggregateMode != null ? cfg.rowAggregateMode : "avg";
@@ -332,7 +350,7 @@ function buildAtagRowsHtml(items, cfg) {
   for (var t = 0; t < tagOrder.length; t++) {
     html.push(
       '<th style="text-align:right;">' +
-      escapeHtml(shortenTableWord(tagOrder[t], shortenHeaders)) +
+      escapeHtml(shortenTableWord(buildAtagTagHeaderLabel(tagOrder[t], tagDisplay[tagOrder[t]], cfg), shortenHeaders)) +
       "</th>"
     );
   }
@@ -446,4 +464,14 @@ function exportAtags(cfg) {
     entryObj.set(targetField, stringifyValueMap(buildValueMap(sortedItems)));
     return;
   }
+}
+
+function buildAtagTagHeaderLabel(tagName, displayName, cfg) {
+  var mode = cfg && cfg.tableHeaderNames ? String(cfg.tableHeaderNames).toLowerCase() : "short";
+  var longName = String(tagName || "");
+  var shortName = String(displayName || tagName || "");
+
+  if (mode === "long") return longName;
+  if (mode === "both" && shortName && shortName !== longName) return shortName + " (" + longName + ")";
+  return shortName || longName;
 }

@@ -7,7 +7,8 @@ $moduleFiles = @(
   "core/restoreAtags.js",
   "addons/tagPairParser.js",
   "addons/globalFieldSync.js",
-  "addons/timeMarker.js"
+  "addons/timeMarker.js",
+  "addons/readableAtagText.js"
 )
 
 function Get-VersionLine {

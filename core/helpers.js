@@ -1,6 +1,6 @@
 /*
 ========================================
-Atag Helpers v1.07 (sys 2.10)
+Atag Helpers v1.09 (sys 2.10)
 ========================================
 
 Changes
@@ -12,6 +12,8 @@ Changes
 - rebuilt from the last editor-safe helper version
 - kept current export-required helpers, but simplified source structure
 - removed compact arrow-heavy helper code to stay friendlier to the MDB editor
+- pass tableHeaderNames through export wrappers
+- add `enabled: false` no-op shell for apply/export helpers
 
 ========================================
 */
@@ -350,6 +352,9 @@ function escapeHtml(s) {
 
 // ===== WRAPPER =====
 function applyTags(cfg) {
+  cfg = cfg || {};
+  if (cfg.enabled === false) return { items: [] };
+
   var entryObj = cfg.entryObj || entry();
   var result;
 
@@ -372,7 +377,8 @@ function applyTags(cfg) {
     rowAggregateMode: cfg.rowAggregateMode,
     rowIncludeUnits: cfg.rowIncludeUnits,
     rowAggregateDecimals: cfg.rowAggregateDecimals,
-    shortenTableHeaders: cfg.shortenTableHeaders
+    shortenTableHeaders: cfg.shortenTableHeaders,
+    tableHeaderNames: cfg.tableHeaderNames
   });
 
   return result;
@@ -397,6 +403,8 @@ function resolveBulkResult(externalResult, entryObj, index, allEntries) {
 
 function bulkApplyTags(cfg) {
   cfg = cfg || {};
+  if (cfg.enabled === false) return cfg.collectResults === false ? null : [];
+
   var all = lib().entries();
   var externalResult = cfg.result;
   var collectResults = cfg.collectResults !== false;
@@ -430,7 +438,8 @@ function bulkApplyTags(cfg) {
       rowAggregateMode: cfg.rowAggregateMode,
       rowIncludeUnits: cfg.rowIncludeUnits,
       rowAggregateDecimals: cfg.rowAggregateDecimals,
-      shortenTableHeaders: cfg.shortenTableHeaders
+      shortenTableHeaders: cfg.shortenTableHeaders,
+      tableHeaderNames: cfg.tableHeaderNames
     });
   }
 
@@ -439,6 +448,8 @@ function bulkApplyTags(cfg) {
 
 function bulkExportAtags(cfg) {
   cfg = cfg || {};
+  if (cfg.enabled === false) return cfg.collectResults === false ? null : [];
+
   var all = lib().entries();
   var externalResult = cfg.result;
   var collectResults = cfg.collectResults !== false;
@@ -472,7 +483,8 @@ function bulkExportAtags(cfg) {
       rowAggregateMode: cfg.rowAggregateMode,
       rowIncludeUnits: cfg.rowIncludeUnits,
       rowAggregateDecimals: cfg.rowAggregateDecimals,
-      shortenTableHeaders: cfg.shortenTableHeaders
+      shortenTableHeaders: cfg.shortenTableHeaders,
+      tableHeaderNames: cfg.tableHeaderNames
     });
   }
 

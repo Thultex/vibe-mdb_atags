@@ -104,6 +104,10 @@ Ziel-Felder
 - `addons/timeMarker.js` (Zeitmarker für Textfelder)
   - `appendTimeMarker()`
   - optionales Stundenlimit über `maxHours` (Default: `30`)
+- `addons/readableAtagText.js` (lesbare Row-/Tagzeilen)
+  - `applyReadableAtagText()`
+  - `bulkApplyReadableAtagText()`
+  - schreibt Row-Tags in kompakte `|`-Zeilen und globale Tags in `||`
 - `core/restoreAtags.js` (Restore-Helfer, historisch im `core/` abgelegt)
   - `restoreAtags()`
   - `bulkRestoreAtags()`
@@ -113,6 +117,7 @@ Ziel-Felder
 - `tests/test_collectAtags.js`
 - `tests/test_tagPairParser.js`
 - `tests/test_timeMarker.js`
+- `tests/test_readableAtagText.js`
 ## Add-on Nutzung
 
 **Tag-Pair Preprocessing**
@@ -174,6 +179,68 @@ appendTimeMarker({
 });
 ```
 
+**Readable Atag Text**
+
+Hält Row-Text in einer Zeile und sammelt erkannte Tags direkt darunter in einer kompakten `|`-Zeile. Globale Tags aus dem Textanfang werden am Ende in `||` gesammelt.
+
+```js
+applyReadableAtagText({
+  sourceTextField: "Notiz",
+  targetTextField: "Notiz lesbar",
+  backupTextField: "Notiz Backup",
+  result: collectAtagsResult,
+  aliasTextFields: ["Alias"],
+  enabled: true,
+  rowMode: true,
+  blankLineBetweenRows: "tagged"
+});
+```
+
+Alias-Feld:
+
+```text
+@@Kopfschmerz (ks): Kopfschmerzen, Kschm
+```
+
+Notiz-Feld:
+
+```text
+0: ks2, SchM1
+```
+
+Notiz-lesbar-Feld:
+
+```text
+0: ks, SchM
+| ks² SchM¹
+```
+
+Mit Alias direkt im Quelltext geht es ebenfalls:
+
+```text
+@@Kopfschmerz (ks): Kopfschmerzen, Kschm
+0: ks2, SchM1
+```
+
+Alias-Zeilen dürfen ein Kürzel enthalten: `@@Tag (kurz): Alias1, Alias2`. Die Aliasliste ist optional, z. B. `@@Wirkung (Wk)`. Wenn kein Kürzel angegeben ist, wird der Tagname selbst in der `|`-Zeile verwendet.
+
+Wenn Alias-Zeilen in einem separaten Feld stehen, muss das Feld über `aliasTextFields` mitgegeben werden. Alternativ kann ein Alias-Text direkt über `aliasText` übergeben werden. Das Add-on sucht keine Alias-Felder automatisch.
+
+Optional kann ein vorhandenes `collectAtags()`-Result über `result` mitgegeben werden. Dann baut das Add-on die Tagzeilen aus `result.items` und nutzt dort vorhandene `displayName`-Kürzel; das Entfernen aus dem sichtbaren Text läuft weiterhin über die Text-Erkennung des Add-ons.
+
+Mit `enabled: false` bleibt das Add-on eine No-op-Hülle: Es schreibt kein Zielfeld und gibt den Quelltext unverändert zurück.
+
+Mit `backupTextField` wird der ursprüngliche Quelltext einmalig gesichert, wenn das Backupfeld leer ist oder nur Whitespace enthält. Das ist besonders für `targetTextField === sourceTextField` und Bulk-Läufe gedacht.
+
+Tags mit doppeltem Marker wie `##tag` oder `tag##` werden aus dem sichtbaren Text entfernt und nur in der `|`- bzw. `||`-Tagzeile geführt.
+
+Tag-Typgruppen werden mit `, ` getrennt, z. B. `SchlM² tr³, testⁿ`.
+
+Leerzeilen zwischen Rows sind optional:
+
+- `blankLineBetweenRows: "tagged"` setzt eine Leerzeile nur nach Rows mit Tagzeile
+- `blankLineBetweenRows: "always"` setzt eine Leerzeile nach jeder Row
+
 ## Syntax & Regeln
 
 **Tag-Formen**
@@ -190,11 +257,15 @@ tag: "text"
 
 alias:
 @@emo: Emotion
+@@Kopfschmerzen (ks): Kopfschmerz, Kschm
+@@Wirkung (Wk)
 @@mood.: gut, -down
 
 rows:
 5h: emo3
 2,5: focus+1
+| ks² emo⁴
+|| tag⁺¹ info: "text"
 ```
 
 **Row-System**
@@ -270,3 +341,4 @@ Optionen:
 - `rowAggregateMode`
 - `rowAggregateDecimals`
 - `shortenTableHeaders` (`0` = Standard, 10 Zeichen + `.`)
+- `tableHeaderNames`: `"short"` (Standard, Alias-Kürzel), `"long"` oder `"both"`

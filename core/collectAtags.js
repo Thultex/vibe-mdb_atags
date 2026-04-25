@@ -1,9 +1,14 @@
 /*
 ========================================
-collectAtags v1.28 (sys 2.10)
+collectAtags v1.31 (sys 2.10)
 ========================================
 
 Changes
+- alias definitions can declare a short tag, e.g. `@@Kopfschmerz (ks): Kopfschmerzen`
+- readable tag lines like `| Angst-2 Gutn` with superscript values are parsed in row context
+- global readable tag lines like `|| tag: 1 info: "text"` are parsed without row context
+- alias declarations can omit the alias list, e.g. `@@Wirkung (Wk)`
+- parsed items keep alias short display names for exports
 - quoted hash tags can carry values, e.g. `"tag name"#4,1`
 - precompute quote state per parsed line and expose small quote helpers for text rewrites
 - alias definitions allow a trailing dot on the base tag and preserve it for export, e.g. `@@tag.: ...`
@@ -146,7 +151,7 @@ function collectAtags(cfg) {
     };
   }
 
-  function addItem(items, seen, name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw) {
+  function addItem(items, seen, name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, displayName) {
     var key = String(name).toLowerCase() +
       "|" + String(attrText) +
       "|" + String(rowValue) +
@@ -162,11 +167,12 @@ function collectAtags(cfg) {
       rawText: rawText,
       rowValue: rowValue != null ? rowValue : null,
       rowUnit: rowUnit != null ? rowUnit : null,
-      rowRaw: rowRaw != null ? rowRaw : null
+      rowRaw: rowRaw != null ? rowRaw : null,
+      displayName: displayName || name
     });
   }
 
-  function buildAliasMap(text) {
+  function buildAliasMapLegacy(text) {
     var map = {};
     var lines = String(text || "").split(/\r?\n/);
 
@@ -216,6 +222,72 @@ function collectAtags(cfg) {
     return map;
   }
 
+  function buildAliasMap(text) {
+    var map = {};
+    var lines = String(text || "").split(/\r?\n/);
+
+    for (var i = 0; i < lines.length; i++) {
+      var line = String(lines[i] || "").replace(/^\s+|\s+$/g, "");
+      if (!/^@@/.test(line)) continue;
+
+      var m = line.match(/^@@([^(:]+?)(?:\s*\(\s*([^)]+)\s*\))?(?::\s*(.*))?$/);
+      if (!m) continue;
+
+      var baseName = normalizeTagName(m[1]);
+      var shortName = normalizeTagName(m[2] || "");
+      if (!baseName) continue;
+      if (isExcluded(baseName)) continue;
+
+      map[baseName.toLowerCase()] = {
+        name: baseName,
+        shortName: shortName || baseName,
+        invert: false
+      };
+
+      if (shortName && !isExcluded(shortName)) {
+        map[shortName.toLowerCase()] = {
+          name: baseName,
+          shortName: shortName,
+          invert: false
+        };
+      }
+
+      var rawAliases = String(m[3] || "");
+      if (
+        (rawAliases.charAt(0) === '"' && rawAliases.charAt(rawAliases.length - 1) === '"') ||
+        (rawAliases.charAt(0) === "'" && rawAliases.charAt(rawAliases.length - 1) === "'")
+      ) {
+        rawAliases = rawAliases.substring(1, rawAliases.length - 1);
+      }
+
+      var parts = rawAliases.split(",");
+
+      for (var j = 0; j < parts.length; j++) {
+        var alias = String(parts[j] || "").replace(/^\s+|\s+$/g, "");
+        var invert = false;
+
+        if (!alias) continue;
+
+        if (alias.charAt(0) === "-") {
+          invert = true;
+          alias = alias.substring(1);
+        }
+
+        if (!alias) continue;
+        if (/[:#"'@]/.test(alias)) continue;
+        if (!/^[A-Za-zÃ„Ã–ÃœÃ¤Ã¶Ã¼ÃŸ_][A-Za-zÃ„Ã–ÃœÃ¤Ã¶Ã¼ÃŸ0-9_\-]*$/.test(alias)) continue;
+
+        map[alias.toLowerCase()] = {
+          name: baseName,
+          shortName: shortName || baseName,
+          invert: invert
+        };
+      }
+    }
+
+    return map;
+  }
+
   function resolveAlias(name, aliasMap) {
     var key = String(name || "").toLowerCase();
     var aliasInfo = aliasMap[key];
@@ -223,11 +295,111 @@ function collectAtags(cfg) {
     if (!aliasInfo) {
       return {
         name: name,
+        shortName: name,
         invert: false
       };
     }
 
     return aliasInfo;
+  }
+
+  function decodeReadableSuperscript(raw) {
+    var s = String(raw || "");
+    var out = "";
+    var i;
+    var ch;
+    var sign;
+    var digits;
+
+    for (i = 0; i < s.length; i++) {
+      ch = s.charAt(i);
+      if (ch === "\u2070") out += "0";
+      else if (ch === "\u00B9") out += "1";
+      else if (ch === "\u00B2") out += "2";
+      else if (ch === "\u00B3") out += "3";
+      else if (ch === "\u2074") out += "4";
+      else if (ch === "\u2075") out += "5";
+      else if (ch === "\u2076") out += "6";
+      else if (ch === "\u2077") out += "7";
+      else if (ch === "\u2078") out += "8";
+      else if (ch === "\u2079") out += "9";
+      else if (ch === "\u207A") out += "+";
+      else if (ch === "\u207B") out += "-";
+      else if (ch === "\u207F") return "";
+    }
+
+    if (/^[+\-]?0\d+$/.test(out)) {
+      sign = "";
+      digits = out;
+      if (out.charAt(0) === "+" || out.charAt(0) === "-") {
+        sign = out.charAt(0);
+        digits = out.substring(1);
+      }
+      out = sign + "0," + digits.substring(1);
+    }
+
+    return out;
+  }
+
+  function addReadableTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw) {
+    var aliasInfo = resolveAlias(name, aliasMap);
+    var resolvedName = aliasInfo.name;
+    var norm;
+
+    if (!resolvedName || isExcluded(resolvedName)) return;
+
+    norm = normalizeAttr(raw);
+    if (aliasInfo.invert) norm = invertNormalizedAttr(norm);
+
+    addItem(
+      items, seen,
+      resolvedName,
+      norm.attrText, norm.attrValue, raw,
+      rowValue, rowUnit, rowRaw,
+      aliasInfo.shortName || resolvedName
+    );
+  }
+
+  function addReadableTagLineItems(tagText, items, seen, aliasMap, rowValue, rowUnit, rowRaw) {
+    var s = String(tagText || "");
+    var used = [];
+    var rxColon = /(^|\s+)([^\s:|][^:\s|]*)\s*:\s*(?:"([^"]*)"|([^\s]+))/g;
+    var rxSuper = /([^\s:|]+?)([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B\u207F]+)(?=$|\s+)/g;
+    var m;
+    var name;
+    var raw;
+
+    function mark(start, end) {
+      used.push({ start: start, end: end });
+    }
+
+    function isUsed(pos) {
+      var u;
+      for (u = 0; u < used.length; u++) {
+        if (pos >= used[u].start && pos < used[u].end) return true;
+      }
+      return false;
+    }
+
+    while ((m = rxColon.exec(s)) !== null) {
+      name = normalizeTagName(m[2] || "");
+      raw = m[3] != null && m[3] !== "" ? m[3] : (m[4] || "");
+      addReadableTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw);
+      mark(m.index, m.index + String(m[0]).length);
+      if (m[0] === "") rxColon.lastIndex++;
+    }
+
+    while ((m = rxSuper.exec(s)) !== null) {
+      if (isUsed(m.index)) {
+        if (m[0] === "") rxSuper.lastIndex++;
+        continue;
+      }
+
+      name = normalizeTagName(m[1] || "");
+      raw = decodeReadableSuperscript(m[2] || "");
+      addReadableTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw);
+      if (m[0] === "") rxSuper.lastIndex++;
+    }
   }
 
   function detectRowPrefix(line) {
@@ -264,10 +436,33 @@ function collectAtags(cfg) {
     if (!str) continue;
 
     var lines = str.split(/\r?\n/);
+    var lastRowValue = null;
+    var lastRowUnit = null;
+    var lastRowRaw = null;
 
     for (var ln = 0; ln < lines.length; ln++) {
       var line = String(lines[ln] || "");
       var rowCtx = detectRowPrefix(line);
+      var readableGlobalLine = line.match(/^\s*\|\|\s*(.+)$/);
+      var readableRowLine = line.match(/^\s*\|\s*([^|].*)$/);
+
+      if (readableGlobalLine) {
+        addReadableTagLineItems(
+          readableGlobalLine[1],
+          items, seen, aliasMap,
+          null, null, null
+        );
+        continue;
+      }
+
+      if (readableRowLine) {
+        addReadableTagLineItems(
+          readableRowLine[1],
+          items, seen, aliasMap,
+          lastRowValue, lastRowUnit, lastRowRaw
+        );
+        continue;
+      }
 
       var currentRowValue = null;
       var currentRowUnit = null;
@@ -280,6 +475,9 @@ function collectAtags(cfg) {
         currentRowUnit = rowCtx.rowUnit;
         currentRowRaw = rowCtx.rowRaw;
         parseLine = rowCtx.rest;
+        lastRowValue = currentRowValue;
+        lastRowUnit = currentRowUnit;
+        lastRowRaw = currentRowRaw;
       }
 
       quoteState = buildAtagQuoteState(parseLine);
@@ -306,7 +504,8 @@ function collectAtags(cfg) {
           items, seen,
           rawQuotedName,
           normQuoted.attrText, normQuoted.attrValue, rawQuotedAttr,
-          currentRowValue, currentRowUnit, currentRowRaw
+          currentRowValue, currentRowUnit, currentRowRaw,
+          quotedAlias.shortName || rawQuotedName
         );
       }
 
@@ -337,7 +536,8 @@ function collectAtags(cfg) {
           norm1.attrText,
           norm1.attrValue,
           raw1,
-          currentRowValue, currentRowUnit, currentRowRaw
+          currentRowValue, currentRowUnit, currentRowRaw,
+          alias1.shortName || name1
         );
       }
 
@@ -367,7 +567,8 @@ function collectAtags(cfg) {
           normH.attrText,
           normH.attrValue,
           rawH,
-          currentRowValue, currentRowUnit, currentRowRaw
+          currentRowValue, currentRowUnit, currentRowRaw,
+          aliasH.shortName || nameH
         );
       }
 
@@ -412,7 +613,8 @@ function collectAtags(cfg) {
           normN.attrText,
           normN.attrValue,
           rawN,
-          currentRowValue, currentRowUnit, currentRowRaw
+          currentRowValue, currentRowUnit, currentRowRaw,
+          aliasN.shortName || nameN
         );
       }
 
@@ -433,7 +635,8 @@ function collectAtags(cfg) {
           items, seen,
           nameS,
           null, null, "",
-          currentRowValue, currentRowUnit, currentRowRaw
+          currentRowValue, currentRowUnit, currentRowRaw,
+          aliasS.shortName || nameS
         );
       }
 

@@ -43,7 +43,7 @@ function assertArray(label, actual, expected) {
   }
 }
 
-function item(name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw) {
+function item(name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, displayName) {
   return {
     name: name,
     attrText: attrText,
@@ -51,7 +51,8 @@ function item(name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw) {
     rawText: rawText,
     rowValue: rowValue == null ? null : rowValue,
     rowUnit: rowUnit || null,
-    rowRaw: rowRaw || null
+    rowRaw: rowRaw || null,
+    displayName: displayName || name
   };
 }
 
@@ -70,6 +71,11 @@ var rowItems = [
   item("zeta", "+2", 2, "+2", 2, "h", "2h"),
   item("alpha", "+1", 1, "+1", 2, "h", "2h"),
   item("middle", "+3", 3, "+3", 3, "h", "3h")
+];
+
+var shortRowItems = [
+  item("Kopfschmerz", "+2", 2, "+2", 0.5, null, "0,5", "ks"),
+  item("Innere_Anspannung", "+1", 1, "+1", 0.5, null, "0,5", "IA")
 ];
 
 var entryObj;
@@ -142,6 +148,65 @@ assertEqual(
 entryObj = makeEntry({});
 exportAtags({
   entryObj: entryObj,
+  result: { items: shortRowItems },
+  targetField: "Rows",
+  targetFieldType: "rows_md",
+  rowAggregateMode: "avg",
+  rowAggregateDecimals: 1,
+  shortenTableHeaders: -1
+});
+assertEqual(
+  "rows_md-short-headers",
+  entryObj.field("Rows"),
+  "| rval | IA | ks |  \n" +
+  "| :--- | ---: | ---: |  \n" +
+  "| 0,5 | 1 | 2 |  \n" +
+  "| avg | 1 | 2 |"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: { items: shortRowItems },
+  targetField: "Rows",
+  targetFieldType: "rows_md",
+  rowAggregateMode: "avg",
+  rowAggregateDecimals: 1,
+  shortenTableHeaders: -1,
+  tableHeaderNames: "long"
+});
+assertEqual(
+  "rows_md-long-headers",
+  entryObj.field("Rows"),
+  "| rval | Innere_Anspannung | Kopfschmerz |  \n" +
+  "| :--- | ---: | ---: |  \n" +
+  "| 0,5 | 1 | 2 |  \n" +
+  "| avg | 1 | 2 |"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: { items: shortRowItems },
+  targetField: "Rows",
+  targetFieldType: "rows_md",
+  rowAggregateMode: "avg",
+  rowAggregateDecimals: 1,
+  shortenTableHeaders: -1,
+  tableHeaderNames: "both"
+});
+assertEqual(
+  "rows_md-both-headers",
+  entryObj.field("Rows"),
+  "| rval | IA (Innere_Anspannung) | ks (Kopfschmerz) |  \n" +
+  "| :--- | ---: | ---: |  \n" +
+  "| 0,5 | 1 | 2 |  \n" +
+  "| avg | 1 | 2 |"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
   result: { items: baseItems },
   targetField: "Text",
   targetFieldType: "text"
@@ -164,5 +229,16 @@ assertEqual(
   entryObj.field("Json"),
   "{\"alpha\":1,\"linktag\":\"https://example.com\",\"mailtag\":\"a@example.com\",\"plaina\":null,\"plainz\":null,\"textalpha\":\"alpha\",\"textbeta\":\"beta\",\"zeta\":2}"
 );
+
+entryObj = makeEntry({ MD: "keep" });
+var disabledResult = applyTags({
+  entryObj: entryObj,
+  enabled: false,
+  result: { items: baseItems },
+  targetField: "MD",
+  targetFieldType: "md"
+});
+assertEqual("apply-disabled-target-unchanged", entryObj.field("MD"), "keep");
+assertEqual("apply-disabled-empty-result", disabledResult.items.length, 0);
 
 WScript.Echo("OK");
