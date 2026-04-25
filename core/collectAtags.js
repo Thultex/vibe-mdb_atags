@@ -1,9 +1,10 @@
 /*
 ========================================
-collectAtags v1.31 (sys 2.10)
+collectAtags v1.32 (sys 2.10)
 ========================================
 
 Changes
+- superscript value suffixes like `emo⁺²` and `tag⁻⁰³` are parsed in normal text
 - alias definitions can declare a short tag, e.g. `@@Kopfschmerz (ks): Kopfschmerzen`
 - readable tag lines like `| Angst-2 Gutn` with superscript values are parsed in row context
 - global readable tag lines like `|| tag: 1 info: "text"` are parsed without row context
@@ -615,6 +616,35 @@ function collectAtags(cfg) {
           rawN,
           currentRowValue, currentRowUnit, currentRowRaw,
           aliasN.shortName || nameN
+        );
+      }
+
+      // name + superscript value: emo⁺² / tag⁻⁰³ / stuff⁺⁺
+      var rxSupNum = /(^|[\s,;.!?()\[\]{}])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B\u207F]+)(?=$|[\s,;.!?()\[\]{}])/g;
+      var msup;
+      while ((msup = rxSupNum.exec(parseLine)) !== null) {
+        var nameSup = msup[2];
+        var rawSup = decodeReadableSuperscript(msup[3] || "");
+
+        if (!nameSup) continue;
+        if (isInsideAtagQuoteState(quoteState, msup.index)) continue;
+
+        var aliasSup = resolveAlias(nameSup, aliasMap);
+        nameSup = aliasSup.name;
+
+        if (isExcluded(nameSup)) continue;
+
+        var normSup = normalizeAttr(rawSup);
+        if (aliasSup.invert) normSup = invertNormalizedAttr(normSup);
+
+        addItem(
+          items, seen,
+          nameSup,
+          normSup.attrText,
+          normSup.attrValue,
+          rawSup,
+          currentRowValue, currentRowUnit, currentRowRaw,
+          aliasSup.shortName || nameSup
         );
       }
 

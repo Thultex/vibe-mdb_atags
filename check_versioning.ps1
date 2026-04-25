@@ -6,6 +6,7 @@ $moduleFiles = @(
   "core/helpers.js",
   "core/restoreAtags.js",
   "addons/tagPairParser.js",
+  "addons/tagCleaner.js",
   "addons/globalFieldSync.js",
   "addons/timeMarker.js"
 )

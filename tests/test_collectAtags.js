@@ -134,6 +134,9 @@ assertItem("alias-short", "@@Kopfschmerzen (ks): Kopfschmerz, Kschm\nks2", "Kopf
 assertDisplayName("alias-short-display", "@@Kopfschmerzen (ks): Kopfschmerz, Kschm\nKopfschmerz2", "Kopfschmerzen", "ks");
 assertItem("alias-short-without-list", "@@Wirkung (Wk)\nWk++", "Wirkung", "+2", 2, null, null);
 assertDisplayName("alias-short-without-list-display", "@@Wirkung (Wk)\nWirkung++", "Wirkung", "Wk");
+assertItem("superscript-normal-text-plus", "emo\u207A\u00B2", "emo", "+2", 2, null, null);
+assertItem("superscript-normal-text-decimal", "tag\u207B\u2070\u00B3", "tag", "-0,3", -0.3, null, null);
+assertItem("superscript-normal-text-plusplus", "stuff\u207A\u207A", "stuff", "+2", 2, null, null);
 assertItem("alias-declaration-without-short", "@@Gut\n| Gut\u207F", "Gut", null, null, null, null);
 assertItem("readable-row-superscript", "@@Wirkung (Wk)\n0,7: Text\n| Angst\u207B\u00B2 Stress\u2070 Scham\u207B\u2070\u2075 Wk\u207A\u00B2  Gut\u207F W\u00E4rme\u207F", "Angst", "-2", -2, 0.7, null);
 assertItem("readable-row-decimal-superscript", "0,7: Text\n| Scham\u207B\u2070\u2075", "Scham", "-0,5", -0.5, 0.7, null);

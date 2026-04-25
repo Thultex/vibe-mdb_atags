@@ -96,6 +96,9 @@ Ziel-Felder
 - `addons/tagPairParser.js` (Parser-Preprocessing)
   - `applyTagPairParser()`
   - `bulkApplyTagPairParser()`
+- `addons/tagCleaner.js` (einfache Notiz-/Tagleisten-Normalisierung)
+  - `applyTagCleaner()`
+  - `bulkApplyTagCleaner()`
 - `addons/globalFieldSync.js` (Feld-Synchronisation)
   - `syncFieldTo()`
   - `syncFieldBack()`
@@ -112,6 +115,7 @@ Ziel-Felder
 
 - `tests/test_collectAtags.js`
 - `tests/test_tagPairParser.js`
+- `tests/test_tagCleaner.js`
 - `tests/test_timeMarker.js`
 ## Add-on Nutzung
 
@@ -142,6 +146,45 @@ Unabhängig vom Parser nutzbar, um Felder zu spiegeln:
 
 - Synchronisierung einzelner oder mehrerer Felder
 - Konfliktbehandlung über `overwrite: true`
+
+**Tag Cleaner**
+
+Normalisiert einfache Werttags im Text und führt `|`-/`||`-Tagleisten am Feldende zusammen.
+
+```js
+applyTagCleaner({
+  textField: "Notiz"
+});
+```
+
+Beispiele:
+
+```text
+emo2 tag-0,3 stuff++
+```
+
+wird zu:
+
+```text
+emo⁺² tag⁻⁰³ stuff⁺⁺
+```
+
+Tagleisten:
+
+```text
+Text
+|| tag3 info#"das ist info"
+| info2
+| stress laufen emo3
+```
+
+werden zu einer Tagleiste am Ende:
+
+```text
+Text
+
+|| emo⁺³ info⁺² tag⁺³ info#"das ist info" laufen# stress#
+```
 
 **Restore Add-on (JSON → Felder)**
 
@@ -181,6 +224,8 @@ appendTimeMarker({
 ```text
 #tag
 tag3
+tag⁺³
+tag⁻⁰³
 tag+3
 tag-2
 tag++

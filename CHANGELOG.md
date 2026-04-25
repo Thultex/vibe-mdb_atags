@@ -19,6 +19,20 @@
 
 ## 2026-04-25
 
+- `Addon Tag Cleaner` auf `v1.01` angehoben
+- Fix: Wiederholtes Anwenden bleibt stabil und erzeugt keine doppelte oder veränderte Tagleiste
+- Test: Rekursions-/Idempotenzfälle für `makeTagCleanerText()` und Same-field-Apply ergänzt
+
+## 2026-04-25
+
+- `collectAtags` auf `v1.32` angehoben
+- `Addon Tag Cleaner` auf `v1.00` ergänzt
+- Feature: Parser liest hochgestellte Wert-Endformen wie `emo⁺²`, `tag⁻⁰³` und `stuff⁺⁺` im normalen Text
+- Feature: `tagCleaner.js` normalisiert einfache Werttags und führt `|`-/`||`-Tagleisten am Feldende zusammen
+- Test/Doku: Parser- und Cleaner-Regressionen sowie README-Nutzung ergänzt
+
+## 2026-04-25
+
 - `Shared Script: Time Marker` auf `v1.23` angehoben
 - Fix: Beim Setzen eines neuen TimeMarkers werden alte leere TimeMarker-Zeilen entfernt
 - Wirkung: Marker mit Inhalt bleiben erhalten, leere Zwischenmarker werden bereinigt
