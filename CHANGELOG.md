@@ -19,6 +19,13 @@
 
 ## 2026-04-25
 
+- `Addon Readable Atag Text` aus dem aktiven Plugin-Set entfernt
+- Archiv: der Stand mit Readable-Add-on liegt auf Branch `readable-addon-archive`
+- Wirkung: Alias-, Sync-, Parser-, Export-, Restore- und TimeMarker-Funktionen bleiben erhalten
+- Doku/Test: README, Versioning-Liste und Readable-Testdatei aus dem aktiven Stand entfernt
+
+## 2026-04-25
+
 - `Addon Readable Atag Text` auf `v1.24` angehoben
 - Änderung: Row-Tagzeilen werden mit zwei Leerzeichen vor `|` ausgegeben
 - Feature: `blankLineBetweenRows: "never"` entfernt bestehende Leerzeilen beim Re-Write
