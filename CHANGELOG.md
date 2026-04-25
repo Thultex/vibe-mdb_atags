@@ -19,9 +19,22 @@
 
 ## 2026-04-25
 
+- Readable-Add-on-Experiment zurückgenommen; Idee bleibt in `NEXT_STEPS.md` für einen neuen, kleinbildschirmfreundlichen Entwurf
+- Parser-Sonderregeln für Readable-Suffixe wieder entfernt; bestehende Quote-/Hash-Fixes bleiben erhalten
+
+## 2026-04-25
+
 - `collectAtags` auf `v1.27` angehoben
 - Intern: Quote-Zustand wird pro Parse-Zeile vorberechnet und ueber kleine Helper wiederverwendbar gemacht
 - Test: `tests/test_collectAtags.js` um Quote-Regressionsfaelle fuer numerische Kurz-Tags ergaenzt
+
+## 2026-04-25
+
+- Systemversion auf `sys 2.10` angehoben
+- `addons/timeMarker.js` Header an das gemeinsame `v... (sys ...)` Format angepasst
+- Doku: Header und Versionierungsbeispiele in `README.md` und `CONTRIBUTING.md` auf `sys 2.10` aktualisiert
+- Tooling: `check_versioning.ps1` akzeptiert reine Systemversionssprünge ohne Modulversionssprung
+- Tooling: `check_versioning.ps1` toleriert beim Umstieg alte Modulheader ohne bisherige Systemversionszeile
 
 ## 2026-04-25
 

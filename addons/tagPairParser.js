@@ -1,6 +1,6 @@
 /*
 ========================================
-Addon Tag Pair Parser v1.00 (sys 2.00)
+Addon Tag Pair Parser v1.00 (sys 2.10)
 ========================================
 
 Änderungen

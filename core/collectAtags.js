@@ -1,6 +1,6 @@
 /*
 ========================================
-collectAtags v1.28 (sys 2.00)
+collectAtags v1.28 (sys 2.10)
 ========================================
 
 Changes
@@ -436,6 +436,7 @@ function collectAtags(cfg) {
           currentRowValue, currentRowUnit, currentRowRaw
         );
       }
+
     }
   }
 

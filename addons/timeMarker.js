@@ -1,7 +1,6 @@
 /*
 ========================================
-Shared Script: Time Marker
-v1.22
+Shared Script: Time Marker v1.22 (sys 2.10)
 ========================================
 
 Änderungen
