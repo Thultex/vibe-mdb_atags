@@ -181,7 +181,7 @@ appendTimeMarker({
 
 **Readable Atag Text**
 
-Hält Row-Text in einer Zeile und sammelt erkannte Tags direkt darunter in einer kompakten `|`-Zeile. Globale Tags aus dem Textanfang werden am Ende in `||` gesammelt.
+Hält Row-Text in einer Zeile und sammelt erkannte Tags direkt darunter in einer kompakten `  |`-Zeile. Globale Tags aus dem Textanfang werden am Ende in `||` gesammelt.
 
 ```js
 applyReadableAtagText({
@@ -212,7 +212,7 @@ Notiz-lesbar-Feld:
 
 ```text
 0: ks, SchM
-| ks² SchM¹
+  | ks² SchM¹
 ```
 
 Mit Alias direkt im Quelltext geht es ebenfalls:
@@ -232,7 +232,7 @@ Mit `enabled: false` bleibt das Add-on eine No-op-Hülle: Es schreibt kein Zielf
 
 Mit `backupTextField` wird der ursprüngliche Quelltext einmalig gesichert, wenn das Backupfeld leer ist oder nur Whitespace enthält. Das ist besonders für `targetTextField === sourceTextField` und Bulk-Läufe gedacht.
 
-Tags mit doppeltem Marker wie `##tag` oder `tag##` werden aus dem sichtbaren Text entfernt und nur in der `|`- bzw. `||`-Tagzeile geführt.
+Tags mit doppeltem Marker wie `##tag` oder `tag##` werden aus dem sichtbaren Text entfernt und nur in der `  |`- bzw. `||`-Tagzeile geführt.
 
 Tag-Typgruppen werden mit `, ` getrennt, z. B. `SchlM² tr³, testⁿ`.
 
@@ -240,6 +240,7 @@ Leerzeilen zwischen Rows sind optional:
 
 - `blankLineBetweenRows: "tagged"` setzt eine Leerzeile nur nach Rows mit Tagzeile
 - `blankLineBetweenRows: "always"` setzt eine Leerzeile nach jeder Row
+- `blankLineBetweenRows: "never"` entfernt bestehende Leerzeilen beim Re-Write
 
 ## Syntax & Regeln
 
@@ -264,7 +265,7 @@ alias:
 rows:
 5h: emo3
 2,5: focus+1
-| ks² emo⁴
+  | ks² emo⁴
 || tag⁺¹ info: "text"
 ```
 

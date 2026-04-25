@@ -19,6 +19,13 @@
 
 ## 2026-04-25
 
+- `Addon Readable Atag Text` auf `v1.24` angehoben
+- Änderung: Row-Tagzeilen werden mit zwei Leerzeichen vor `|` ausgegeben
+- Feature: `blankLineBetweenRows: "never"` entfernt bestehende Leerzeilen beim Re-Write
+- Test/Doku: Readable-Erwartungen und README-Beispiele angepasst
+
+## 2026-04-25
+
 - `Addon Readable Atag Text` auf `v1.23` angehoben
 - Feature: `backupTextField` sichert den ursprünglichen Quelltext einmalig, wenn das Backupfeld leer oder Whitespace ist
 - Feature/Test: `bulkApplyReadableAtagText()` unterstützt Backupfelder für die gesamte Datenbank über `lib().entries()`
