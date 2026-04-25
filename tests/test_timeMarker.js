@@ -105,9 +105,29 @@ function testKeepsExistingTimeBlockFormatting() {
   assertEquals("existing-block", entryObj.field("Note"), "1: info\n2: \n\ntest");
 }
 
+function testRemovesOldEmptyMarkersWhenAddingNewOne() {
+  var entryObj = makeEntry({
+    Note: "1: \n1,5: info\n\ntest",
+    Hours: 2
+  });
+
+  appendTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    sourceMode: "hours",
+    sourceHoursField: "Hours",
+    insertMode: "time_block_top",
+    stepHours: 0.5,
+    maxHours: 30
+  });
+
+  assertEquals("remove-old-empty-marker", entryObj.field("Note"), "1,5: info\n2: \n\ntest");
+}
+
 testInlineInsertForSingleTextLine();
 testSkipsWhenDefaultLimitExceeded();
 testAllowsDisablingLimit();
 testKeepsExistingTimeBlockFormatting();
+testRemovesOldEmptyMarkersWhenAddingNewOne();
 
 print("OK");

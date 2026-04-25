@@ -1,9 +1,10 @@
 /*
 ========================================
-Shared Script: Time Marker v1.22 (sys 2.10)
+Shared Script: Time Marker v1.23 (sys 2.10)
 ========================================
 
 Änderungen
+- leere bestehende TimeMarker werden beim Setzen eines neuen Markers entfernt
 - Add-on wieder eingebunden
 - optionales Stundenlimit ergänzt
 - Standardlimit auf 30 Stunden gesetzt
@@ -136,6 +137,23 @@ function parseLeadingHour(line) {
 
 function isTimestampLine(line) {
   return parseLeadingHour(line) != null;
+}
+
+function isEmptyTimestampLine(line) {
+  return /^\s*\d+(?:[.,]\d+)?\s*:\s*$/.test(String(line || ""));
+}
+
+function removeEmptyTimestampLines(text) {
+  if (!text) return "";
+
+  var raw = String(text).split(/\r?\n/);
+  var out = [];
+
+  for (var i = 0; i < raw.length; i++) {
+    if (!isEmptyTimestampLine(raw[i])) out.push(raw[i]);
+  }
+
+  return out.join("\n");
 }
 
 function hasSameOrLaterLine(text, targetHour) {
@@ -283,6 +301,8 @@ function appendTimeMarker(cfg) {
   if (shouldSkipForMaxHours(rawHours, stepped, resolveMaxHours(cfg))) {
     return;
   }
+
+  text = removeEmptyTimestampLines(text);
 
   if (hasSameOrLaterLine(text, stepped)) return;
 

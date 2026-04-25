@@ -19,6 +19,13 @@
 
 ## 2026-04-25
 
+- `Shared Script: Time Marker` auf `v1.23` angehoben
+- Fix: Beim Setzen eines neuen TimeMarkers werden alte leere TimeMarker-Zeilen entfernt
+- Wirkung: Marker mit Inhalt bleiben erhalten, leere Zwischenmarker werden bereinigt
+- Test: Regression für alten leeren Marker vor neuem Marker ergänzt
+
+## 2026-04-25
+
 - `Addon Readable Atag Text` aus dem aktiven Plugin-Set entfernt
 - Archiv: der Stand mit Readable-Add-on liegt auf Branch `readable-addon-archive`
 - Wirkung: Alias-, Sync-, Parser-, Export-, Restore- und TimeMarker-Funktionen bleiben erhalten
