@@ -1,9 +1,12 @@
 /*
 ========================================
-Shared Script: Time Marker v1.23 (sys 2.10)
+Shared Script: Time Marker v1.26 (sys 2.11)
 ========================================
 
 Änderungen
+- Bereinigung leerer TimeMarker und Leerzeilen läuft auch beim Abbruch durch `maxHours`
+- bereinigte Leerzeilen werden auch zurückgeschrieben, wenn kein neuer Marker nötig ist
+- Leerzeilen im Zeitblock werden nach Entfernen leerer TimeMarker bereinigt
 - leere bestehende TimeMarker werden beim Setzen eines neuen Markers entfernt
 - Add-on wieder eingebunden
 - optionales Stundenlimit ergänzt
@@ -156,6 +159,35 @@ function removeEmptyTimestampLines(text) {
   return out.join("\n");
 }
 
+function normalizeTimeMarkerText(text) {
+  var raw = text ? String(text).split(/\r?\n/) : [];
+  var out = [];
+  var i;
+  var line;
+  var prevWasTime;
+  var nextIsTime;
+
+  for (i = 0; i < raw.length; i++) {
+    line = String(raw[i]);
+    if (line.replace(/^\s+|\s+$/g, "") !== "") {
+      out.push(line);
+      continue;
+    }
+
+    prevWasTime = out.length > 0 && isTimestampLine(out[out.length - 1]);
+    nextIsTime = false;
+    while (i + 1 < raw.length && String(raw[i + 1]).replace(/^\s+|\s+$/g, "") === "") i++;
+    if (i + 1 < raw.length) nextIsTime = isTimestampLine(raw[i + 1]);
+
+    if (prevWasTime && nextIsTime) continue;
+    if (prevWasTime && out.length === 1 && i + 1 < raw.length) continue;
+    if (out.length && i + 1 < raw.length) out.push("");
+  }
+
+  while (out.length && String(out[out.length - 1]).replace(/^\s+|\s+$/g, "") === "") out.pop();
+  return out.join("\n");
+}
+
 function hasSameOrLaterLine(text, targetHour) {
   if (!text) return false;
 
@@ -288,6 +320,7 @@ function appendTimeMarker(cfg) {
   var text = e.field(cfg.targetTextField);
   if (text == null) text = "";
   text = String(text);
+  var originalText = text;
 
   var rawHours = getSourceHours(e, cfg);
   if (rawHours == null) return;
@@ -298,13 +331,17 @@ function appendTimeMarker(cfg) {
     cfg.roundMode || "round"
   );
 
+  text = normalizeTimeMarkerText(removeEmptyTimestampLines(text));
+
   if (shouldSkipForMaxHours(rawHours, stepped, resolveMaxHours(cfg))) {
+    if (text !== originalText) e.set(cfg.targetTextField, text);
     return;
   }
 
-  text = removeEmptyTimestampLines(text);
-
-  if (hasSameOrLaterLine(text, stepped)) return;
+  if (hasSameOrLaterLine(text, stepped)) {
+    if (text !== originalText) e.set(cfg.targetTextField, text);
+    return;
+  }
 
   var newLine = formatHourLabel(stepped) + ": ";
   var insertMode = cfg.insertMode || "append";

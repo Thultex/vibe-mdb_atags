@@ -67,6 +67,24 @@ function testSkipsWhenDefaultLimitExceeded() {
   assertEquals("default-limit-skip", entryObj.field("Note"), "start");
 }
 
+function testCleansWhenDefaultLimitExceeded() {
+  var entryObj = makeEntry({
+    Note: "1: \n\n1,5: info\n\n2: \n\n3: weiter",
+    Hours: 30.2
+  });
+
+  appendTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    sourceMode: "hours",
+    sourceHoursField: "Hours",
+    insertMode: "time_block_top",
+    stepHours: 0.5
+  });
+
+  assertEquals("default-limit-cleanup", entryObj.field("Note"), "1,5: info\n3: weiter");
+}
+
 function testAllowsDisablingLimit() {
   var entryObj = makeEntry({
     Note: "start",
@@ -124,10 +142,91 @@ function testRemovesOldEmptyMarkersWhenAddingNewOne() {
   assertEquals("remove-old-empty-marker", entryObj.field("Note"), "1,5: info\n2: \n\ntest");
 }
 
+function testRemovesBlankLinesLeftBetweenTimestamps() {
+  var entryObj = makeEntry({
+    Note: "1: info\n\n1,5: \n\n2: weiter\n\ntest",
+    Hours: 2.5
+  });
+
+  appendTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    sourceMode: "hours",
+    sourceHoursField: "Hours",
+    insertMode: "time_block_top",
+    stepHours: 0.5,
+    maxHours: 30
+  });
+
+  assertEquals("remove-blank-between-timestamps", entryObj.field("Note"), "1: info\n2: weiter\n2,5: \n\ntest");
+}
+
+function testRemovesBlankBetweenNewMarkerAndSingleTextLine() {
+  var entryObj = makeEntry({
+    Note: "1: \n\ntext",
+    Hours: 2
+  });
+
+  appendTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    sourceMode: "hours",
+    sourceHoursField: "Hours",
+    insertMode: "time_block_top",
+    stepHours: 0.5,
+    maxHours: 30
+  });
+
+  assertEquals("remove-blank-between-current-marker-and-text", entryObj.field("Note"), "2: text");
+}
+
+function testRemovesBlankBetweenFilledAndCurrentTimestamp() {
+  var entryObj = makeEntry({
+    Note: "13: Nackenschmerzen\u207A\u00B2, Ks\u207A\u00B9\n\n15: ",
+    Hours: 15
+  });
+
+  appendTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    sourceMode: "hours",
+    sourceHoursField: "Hours",
+    insertMode: "time_block_top",
+    stepHours: 0.5,
+    maxHours: 30
+  });
+
+  assertEquals("remove-blank-between-filled-and-current-timestamp", entryObj.field("Note"), "13: Nackenschmerzen\u207A\u00B2, Ks\u207A\u00B9\n15: ");
+}
+
+function testWritesCleanedBlankWhenSameTimestampAlreadyExists() {
+  var entryObj = makeEntry({
+    Note: "13: Nackenschmerzen\u207A\u00B2, Ks\u207A\u00B9\n\n15: weiter",
+    Hours: 15
+  });
+
+  appendTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    sourceMode: "hours",
+    sourceHoursField: "Hours",
+    insertMode: "time_block_top",
+    stepHours: 0.5,
+    maxHours: 30
+  });
+
+  assertEquals("write-cleaned-blank-when-same-timestamp-exists", entryObj.field("Note"), "13: Nackenschmerzen\u207A\u00B2, Ks\u207A\u00B9\n15: weiter");
+}
+
 testInlineInsertForSingleTextLine();
 testSkipsWhenDefaultLimitExceeded();
+testCleansWhenDefaultLimitExceeded();
 testAllowsDisablingLimit();
 testKeepsExistingTimeBlockFormatting();
 testRemovesOldEmptyMarkersWhenAddingNewOne();
+testRemovesBlankLinesLeftBetweenTimestamps();
+testRemovesBlankBetweenNewMarkerAndSingleTextLine();
+testRemovesBlankBetweenFilledAndCurrentTimestamp();
+testWritesCleanedBlankWhenSameTimestampAlreadyExists();
 
 print("OK");

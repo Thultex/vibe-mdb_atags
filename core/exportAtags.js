@@ -1,42 +1,13 @@
 /*
 ========================================
-exportAtags v1.40 (sys 2.10)
+exportAtags v1.41 (sys 2.11)
 ========================================
 
 Änderungen
-- exports sort tags alphabetically; markdown keeps type groups and sorts alphabetically inside each group
-- table exports use alias short display names by default, with optional long or both-name headers
-- examples show `enabled: true`
-- rows exports reuse precomputed aggregate data to reduce repeated scans and temp arrays
-- ganze Zahlen bleiben in Exporten ohne `,0`, solange kein echter Dezimalwert pro Tag vorkam
-- HTML-Tabellen nutzen Sans-Serif-Schrift
-- shortenTableHeaders standardmäßig auf 0 gesetzt
-- 0 kürzt Tabellen-Header jetzt auf 10 Zeichen + "."
-- nutzt ausgelagerte Helper aus Atag Helpers
-- Export für:
-  - tags
-  - text
-  - md
-  - rows_md
-  - rows_html
-  - json
-- Tag-Hybrid-System enthalten
-- md mit "  \n"
-- tags ohne value bleiben in md sichtbar
-- tags ohne row bleiben in md normal sichtbar
-- Row-Werte im normalen md:
-  - avg / sum + [einzelwerte]
-  - bei nur 1 Wert ohne []
-  - bei rowAggregateMode null nur Werte / Listen
-- rows_md / rows_html mit optionaler Header-Kürzung
-- shortenTableHeaders:
-- -1 = aus
-- 0 = 10 Zeichen + "."
-- n = n Zeichen + "."
-- tableHeaderNames:
-- "short" = alias short/display name (default)
-- "long" = canonical tag name
-- "both" = short (canonical)
+- Kopfkommentar gekürzt, damit der Memento-Java-Editor nicht im Export-Script abstürzt
+- Exporttypen: tags, text, md, rows_md, rows_html, json
+- Tabellen nutzen Alias-Kürzel als Header, optional Langform oder beide Namen
+- Row-Tabellen unterstützen avg, sum, Header-Kürzung und HTML/Markdown-Ausgabe
 
 Voraussetzung
 - Atag Helpers geladen
@@ -54,22 +25,8 @@ applyTags({
 applyTags({
   enabled: true,
   textFields: ["Alias", "Notiz"],
-  targetField: "Atag Debug",
-  targetFieldType: "text"
-});
-
-applyTags({
-  enabled: true,
-  textFields: ["Alias", "Notiz"],
   targetField: "Atag MD",
   targetFieldType: "md"
-});
-
-applyTags({
-  enabled: true,
-  textFields: ["Alias", "Notiz"],
-  targetField: "Atag JSON",
-  targetFieldType: "json"
 });
 
 applyTags({
@@ -81,38 +38,6 @@ applyTags({
   rowIncludeUnits: true,
   rowAggregateDecimals: 1,
   shortenTableHeaders: 0
-});
-
-applyTags({
-  enabled: true,
-  textFields: ["Alias", "Notiz"],
-  targetField: "Atag Rows Html",
-  targetFieldType: "rows_html",
-  rowAggregateMode: "sum",
-  rowIncludeUnits: false,
-  rowAggregateDecimals: 1,
-  shortenTableHeaders: 7
-});
-
-applyTags({
-  enabled: true,
-  textFields: ["Alias", "Notiz"],
-  targetField: "Atags",
-  targetFieldType: "tags",
-  preserveForeignTagsField: "Tags Extern",
-  parserOwnedTagsField: "Tags Parser"
-});
-
-var result = collectAtags({
-  entryObj: entry(),
-  textFields: ["Alias", "Notiz"]
-});
-
-exportAtags({
-  entryObj: entry(),
-  result: result,
-  targetField: "Atag MD",
-  targetFieldType: "md"
 });
 */
 

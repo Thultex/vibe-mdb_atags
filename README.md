@@ -1,4 +1,4 @@
-# ATAG System (sys 2.10)
+# ATAG System (sys 2.11)
 
 ## Inhalt
 
@@ -9,6 +9,7 @@
 - [Add-on Nutzung](#add-on-nutzung)
 - [Syntax & Regeln](#syntax--regeln)
 - [Export](#export)
+- [Aktuelle Funktionsaufrufe](#aktuelle-funktionsaufrufe)
 
 ## Pflege & Versionierung
 
@@ -20,7 +21,8 @@ Jede funktionale Änderung wird an zwei Stellen dokumentiert:
 Regeln:
 
 - Modulversion pro geänderter Datei anheben
-- Änderungen im Kopfblock kurz und konkret notieren
+- Kopfblöcke in Moduldateien sehr kurz halten; ausführliche Änderungen gehören in `CHANGELOG.md`
+- In Kopfblöcken vorsichtig mit Quotes, Backticks, langen `Änderungen`-Listen und Sonderzeichen umgehen, weil der Memento-Java-Editor daran hängen bleiben kann
 - Changelog mit Datum, Versionssprung und Wirkung ergänzen
 
 Details siehe `CONTRIBUTING.md`.
@@ -149,13 +151,54 @@ Unabhängig vom Parser nutzbar, um Felder zu spiegeln:
 
 **Tag Cleaner**
 
-Normalisiert einfache Werttags im Text und führt `|`-/`||`-Tagleisten am Feldende zusammen.
+Normalisiert einfache Werttags im Text und führt `|`-/`||`-Tagleisten zusammen. Standard ist Tagleiste unten mit einer Leerzeile Abstand.
 
 ```js
 applyTagCleaner({
-  textField: "Notiz"
+  textField: "Notiz",
+  tagFields: ["Tags", "User Tags"],
+  tagBarPosition: "bottom",
+  tagBarSpacing: "blank",
+  formatValues: "keep"
 });
 ```
+
+Bulk-Aufruf:
+
+```js
+bulkApplyTagCleaner({
+  textField: "Notiz",
+  tagFields: ["Tags", "User Tags"],
+  tagBarPosition: "top",
+  tagBarSpacing: "none",
+  formatValues: "keep"
+});
+```
+
+Optionen:
+
+- `tagBarPosition: "bottom"` setzt die Tagleiste ans Ende (Standard)
+- `tagBarPosition: "top"` setzt die Tagleiste an den Anfang
+- `tagBarSpacing: "blank"` setzt eine Leerzeile Abstand (Standard)
+- `tagBarSpacing: "none"` setzt keinen Leerzeilen-Abstand
+- `formatValues: "keep"` erhält die Eingabeform (Standard)
+- `formatValues: "min"` lässt `+` bei positiven Zahlen weg
+- `formatValues: "max"` erzwingt `+` bei positiven Zahlen
+- `formatValues: "none"` lässt Werttags unverändert
+- `tagFields: ["Tags", "User Tags"]` schreibt `##tag`/`tag##` als User-Tags in mehrere Tagfelder
+
+Pro Notiz kann die Werteformatierung über `fv` in der Tagleiste gesetzt werden:
+
+```text
+|| fv: keep
+|| fv: min
+|| fv: max
+|| fv: none
+```
+
+In der Tagleiste wird nach Gruppen sortiert: erst Werttags, dann String-Werte, dann leere Tags, dann Funktions-Tags wie `fv`. Zwischen Gruppen steht `, `, innerhalb einer Gruppe nur ein Leerzeichen. String-Werte werden kompakt als `tag:wert` ausgegeben. Quotes bleiben nur erhalten, wenn sie nötig sind, z. B. bei mehreren Wörtern.
+
+`##tag` oder `tag##` wird aus der Notiz entfernt und in die angegebenen `tagFields` geschrieben. Ohne `tagFields` wird der sichtbare Text trotzdem bereinigt, es wird aber kein Tagfeld geschrieben.
 
 Beispiele:
 
@@ -166,8 +209,10 @@ emo2 tag-0,3 stuff++
 wird zu:
 
 ```text
-emo⁺² tag⁻⁰³ stuff⁺⁺
+emo² tag⁻⁰³ stuff⁺⁺
 ```
+
+Mit `formatValues: "keep"` bleibt `tag+3` als `tag⁺³`, während `tag3` zu `tag³` wird. Mit `"max"` wird auch `tag³` zu `tag⁺³`; mit `"min"` wird `tag⁺³` zu `tag³`.
 
 Tagleisten:
 
@@ -183,7 +228,7 @@ werden zu einer Tagleiste am Ende:
 ```text
 Text
 
-|| emo⁺³ info⁺² tag⁺³ info#"das ist info" laufen# stress#
+|| emo³ info² tag³ info#"das ist info" laufen# stress#
 ```
 
 **Restore Add-on (JSON → Felder)**
@@ -224,7 +269,7 @@ appendTimeMarker({
 ```text
 #tag
 tag3
-tag⁺³
+tag³
 tag⁻⁰³
 tag+3
 tag-2
@@ -269,6 +314,7 @@ Aggregation:
 ```text
 @@emo: Emotion
 @@mood.: gut, -down
+@@Kopfschmerz (KSch): ks, Kopfdruck1
 ```
 
 - nur gültig im Tag-Kontext
@@ -276,6 +322,7 @@ Aggregation:
 - nur erlaubte Tagformen
 - Basistags mit abschließendem Punkt sind erlaubt (z. B. `mood.`)
 - inverse Aliase mit Präfix `-` kehren numerische Werte um (`down2` → `mood.-2`)
+- Alias-Einträge dürfen feste Werte tragen (`Kopfdruck1` → `Kopfschmerz+1`)
 
 ## Export
 
@@ -318,3 +365,112 @@ Optionen:
 - `rowAggregateDecimals`
 - `shortenTableHeaders` (`0` = Standard, 10 Zeichen + `.`)
 - `tableHeaderNames`: `"short"` (Standard, Alias-Kürzel), `"long"` oder `"both"`
+
+## Aktuelle Funktionsaufrufe
+
+Ausführliche Beispiele liegen hier in der README, nicht in den Script-Kopfkommentaren. Die Script-Kommentare bleiben kurz, damit der Memento-Java-Editor nicht am Syntax-Highlighting hängen bleibt.
+
+**Basis-Export in Tags**
+
+```js
+applyTags({
+  enabled: 1,
+  textFields: ["Alias", "Notiz"],
+  targetField: "Atags",
+  targetFieldType: "tags"
+});
+```
+
+**Debug-/Text-Export**
+
+```js
+applyTags({
+  enabled: 1,
+  textFields: ["Alias", "Notiz"],
+  targetField: "Atag Debug",
+  targetFieldType: "text"
+});
+```
+
+**Markdown-Export**
+
+```js
+applyTags({
+  enabled: 1,
+  textFields: ["Alias", "Notiz"],
+  targetField: "Atag MD",
+  targetFieldType: "md"
+});
+```
+
+**JSON-Export**
+
+```js
+applyTags({
+  enabled: 1,
+  textFields: ["Alias", "Notiz"],
+  targetField: "Atag JSON",
+  targetFieldType: "json"
+});
+```
+
+**Rows Markdown**
+
+```js
+applyTags({
+  enabled: 1,
+  textFields: ["Alias", "Notiz"],
+  targetField: "Atag Rows MD",
+  targetFieldType: "rows_md",
+  rowAggregateMode: "avg",
+  rowIncludeUnits: true,
+  rowAggregateDecimals: 1,
+  shortenTableHeaders: 0,
+  tableHeaderNames: "short"
+});
+```
+
+**Rows HTML**
+
+```js
+applyTags({
+  enabled: 1,
+  textFields: ["Alias", "Notiz"],
+  targetField: "Atag Rows Html",
+  targetFieldType: "rows_html",
+  rowAggregateMode: "sum",
+  rowIncludeUnits: false,
+  rowAggregateDecimals: 1,
+  shortenTableHeaders: 7,
+  tableHeaderNames: "both"
+});
+```
+
+**Hybrid-Tags Mit Fremdtag-Erhalt**
+
+```js
+applyTags({
+  enabled: 1,
+  textFields: ["Alias", "Notiz"],
+  targetField: "Atags",
+  targetFieldType: "tags",
+  preserveForeignTagsField: "Tags Extern",
+  parserOwnedTagsField: "Tags Parser"
+});
+```
+
+**Direkter Export Aus Vorhandenem Result**
+
+```js
+var result = collectAtags({
+  entryObj: entry(),
+  textFields: ["Alias", "Notiz"]
+});
+
+exportAtags({
+  entryObj: entry(),
+  result: result,
+  targetField: "Atag MD",
+  targetFieldType: "md"
+});
+```

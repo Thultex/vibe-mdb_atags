@@ -104,6 +104,8 @@ if (WScript.Arguments.length > 0) {
 }
 
 assertSimpleTag("hash-prefix", "#tag", "tag");
+assertSimpleTag("cleaner-simple-tag-suffix", "tag\u02E3", "tag");
+assertSimpleTag("cleaner-simple-tag-suffix-bar", "|| tag\u02E3", "tag");
 assertItem("plain-int", "tag3", "tag", "+3", 3, null, null);
 assertItem("plus-int", "tag+3", "tag", "+3", 3, null, null);
 assertItem("minus-int", "tag-2", "tag", "-2", -2, null, null);
@@ -132,6 +134,9 @@ assertMissing("quoted-colon-inside-text", "'tag: 5'", "tag");
 assertItem("quoted-text-outside-row", "10: Kopfruhe1, Innere_Anspannung1 geringer, Klarheit1, ' das hier# sollte aber nicht#23 drin sein'", "Kopfruhe", "+1", 1, 10, null);
 assertItem("alias-short", "@@Kopfschmerzen (ks): Kopfschmerz, Kschm\nks2", "Kopfschmerzen", "+2", 2, null, null);
 assertDisplayName("alias-short-display", "@@Kopfschmerzen (ks): Kopfschmerz, Kschm\nKopfschmerz2", "Kopfschmerzen", "ks");
+assertItem("alias-fixed-bare", "@@Kopfschmerz (KSch): ks, Kopfdruck1\n#Kopfdruck", "Kopfschmerz", "+1", 1, null, null);
+assertItem("alias-fixed-overrides-value", "@@Kopfschmerz (KSch): ks, Kopfdruck1\nKopfdruck3", "Kopfschmerz", "+1", 1, null, null);
+assertItem("alias-fixed-tagbar", "@@Kopfschmerz (KSch): ks, Kopfdruck1\n|| Kopfdruck", "Kopfschmerz", "+1", 1, null, null);
 assertItem("alias-short-without-list", "@@Wirkung (Wk)\nWk++", "Wirkung", "+2", 2, null, null);
 assertDisplayName("alias-short-without-list-display", "@@Wirkung (Wk)\nWirkung++", "Wirkung", "Wk");
 assertItem("superscript-normal-text-plus", "emo\u207A\u00B2", "emo", "+2", 2, null, null);
@@ -149,3 +154,4 @@ assertItem("readable-global-text", "|| tag\u207A\u00B9  test: 12,5  info: \"neue
 assertSimpleTag("readable-global-bare", "|| tag\u207A\u00B9  test: 12,5  info: \"neuer lauf\"  trial\u207F", "trial");
 
 print("OK");
+

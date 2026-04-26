@@ -1,10 +1,12 @@
 /*
 ========================================
-collectAtags v1.32 (sys 2.10)
+collectAtags v1.35 (sys 2.11)
 ========================================
 
 Changes
-- superscript value suffixes like `emo⁺²` and `tag⁻⁰³` are parsed in normal text
+- simple tag suffix `x` is parsed as an empty explicit tag
+- alias entries can carry fixed values, e.g. `@@Kopfschmerz (KSch): ks, Kopfdruck1`
+- superscript value suffixes like `emo²` and `tag⁻⁰³` are parsed in normal text
 - alias definitions can declare a short tag, e.g. `@@Kopfschmerz (ks): Kopfschmerzen`
 - readable tag lines like `| Angst-2 Gutn` with superscript values are parsed in row context
 - global readable tag lines like `|| tag: 1 info: "text"` are parsed without row context
@@ -242,14 +244,16 @@ function collectAtags(cfg) {
       map[baseName.toLowerCase()] = {
         name: baseName,
         shortName: shortName || baseName,
-        invert: false
+        invert: false,
+        fixedRaw: null
       };
 
       if (shortName && !isExcluded(shortName)) {
         map[shortName.toLowerCase()] = {
           name: baseName,
           shortName: shortName,
-          invert: false
+          invert: false,
+          fixedRaw: null
         };
       }
 
@@ -266,6 +270,8 @@ function collectAtags(cfg) {
       for (var j = 0; j < parts.length; j++) {
         var alias = String(parts[j] || "").replace(/^\s+|\s+$/g, "");
         var invert = false;
+        var fixedRaw = null;
+        var fixedMatch;
 
         if (!alias) continue;
 
@@ -276,12 +282,19 @@ function collectAtags(cfg) {
 
         if (!alias) continue;
         if (/[:#"'@]/.test(alias)) continue;
-        if (!/^[A-Za-zÃ„Ã–ÃœÃ¤Ã¶Ã¼ÃŸ_][A-Za-zÃ„Ã–ÃœÃ¤Ã¶Ã¼ÃŸ0-9_\-]*$/.test(alias)) continue;
+        fixedMatch = alias.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*?)([+\-]?\d+(?:[.,]\d+)?|\++|-+)$/);
+        if (fixedMatch) {
+          alias = fixedMatch[1];
+          fixedRaw = fixedMatch[2];
+        }
+
+        if (!/^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*$/.test(alias)) continue;
 
         map[alias.toLowerCase()] = {
           name: baseName,
           shortName: shortName || baseName,
-          invert: invert
+          invert: invert,
+          fixedRaw: fixedRaw
         };
       }
     }
@@ -346,16 +359,17 @@ function collectAtags(cfg) {
     var aliasInfo = resolveAlias(name, aliasMap);
     var resolvedName = aliasInfo.name;
     var norm;
+    var effectiveRaw = aliasInfo.fixedRaw != null ? aliasInfo.fixedRaw : raw;
 
     if (!resolvedName || isExcluded(resolvedName)) return;
 
-    norm = normalizeAttr(raw);
+    norm = normalizeAttr(effectiveRaw);
     if (aliasInfo.invert) norm = invertNormalizedAttr(norm);
 
     addItem(
       items, seen,
       resolvedName,
-      norm.attrText, norm.attrValue, raw,
+      norm.attrText, norm.attrValue, effectiveRaw,
       rowValue, rowUnit, rowRaw,
       aliasInfo.shortName || resolvedName
     );
@@ -400,6 +414,18 @@ function collectAtags(cfg) {
       raw = decodeReadableSuperscript(m[2] || "");
       addReadableTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw);
       if (m[0] === "") rxSuper.lastIndex++;
+    }
+
+    var rxCleanerSimple = /(^|\s+)([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\u02E3(?=$|\s+)/g;
+    while ((m = rxCleanerSimple.exec(s)) !== null) {
+      if (isUsed(m.index)) {
+        if (m[0] === "") rxCleanerSimple.lastIndex++;
+        continue;
+      }
+
+      name = normalizeTagName(m[2] || "");
+      addReadableTagValue(name, "", items, seen, aliasMap, rowValue, rowUnit, rowRaw);
+      if (m[0] === "") rxCleanerSimple.lastIndex++;
     }
   }
 
@@ -499,12 +525,13 @@ function collectAtags(cfg) {
         if (isExcluded(rawQuotedName)) continue;
 
         var normQuoted = normalizeAttr(rawQuotedAttr);
+        if (quotedAlias.fixedRaw != null) normQuoted = normalizeAttr(quotedAlias.fixedRaw);
         if (quotedAlias.invert) normQuoted = invertNormalizedAttr(normQuoted);
 
         addItem(
           items, seen,
           rawQuotedName,
-          normQuoted.attrText, normQuoted.attrValue, rawQuotedAttr,
+          normQuoted.attrText, normQuoted.attrValue, quotedAlias.fixedRaw != null ? quotedAlias.fixedRaw : rawQuotedAttr,
           currentRowValue, currentRowUnit, currentRowRaw,
           quotedAlias.shortName || rawQuotedName
         );
@@ -528,7 +555,7 @@ function collectAtags(cfg) {
         if (isExcluded(name1)) continue;
         if (/^\/\//.test(raw1)) continue;
 
-        var norm1 = normalizeAttr(raw1);
+        var norm1 = normalizeAttr(alias1.fixedRaw != null ? alias1.fixedRaw : raw1);
         if (alias1.invert) norm1 = invertNormalizedAttr(norm1);
 
         addItem(
@@ -536,7 +563,7 @@ function collectAtags(cfg) {
           name1,
           norm1.attrText,
           norm1.attrValue,
-          raw1,
+          alias1.fixedRaw != null ? alias1.fixedRaw : raw1,
           currentRowValue, currentRowUnit, currentRowRaw,
           alias1.shortName || name1
         );
@@ -559,7 +586,7 @@ function collectAtags(cfg) {
 
         if (isExcluded(nameH)) continue;
 
-        var normH = normalizeAttr(rawH);
+        var normH = normalizeAttr(aliasH.fixedRaw != null ? aliasH.fixedRaw : rawH);
         if (aliasH.invert) normH = invertNormalizedAttr(normH);
 
         addItem(
@@ -567,7 +594,7 @@ function collectAtags(cfg) {
           nameH,
           normH.attrText,
           normH.attrValue,
-          rawH,
+          aliasH.fixedRaw != null ? aliasH.fixedRaw : rawH,
           currentRowValue, currentRowUnit, currentRowRaw,
           aliasH.shortName || nameH
         );
@@ -605,7 +632,7 @@ function collectAtags(cfg) {
         if (isExcluded(nameN)) continue;
         if (isInsideAtagQuoteState(quoteState, mn.index)) continue;
 
-        var normN = normalizeAttr(rawN);
+        var normN = normalizeAttr(aliasN.fixedRaw != null ? aliasN.fixedRaw : rawN);
         if (aliasN.invert) normN = invertNormalizedAttr(normN);
 
         addItem(
@@ -613,13 +640,13 @@ function collectAtags(cfg) {
           nameN,
           normN.attrText,
           normN.attrValue,
-          rawN,
+          aliasN.fixedRaw != null ? aliasN.fixedRaw : rawN,
           currentRowValue, currentRowUnit, currentRowRaw,
           aliasN.shortName || nameN
         );
       }
 
-      // name + superscript value: emo⁺² / tag⁻⁰³ / stuff⁺⁺
+      // name + superscript value: emo² / tag⁻⁰³ / stuff⁺⁺
       var rxSupNum = /(^|[\s,;.!?()\[\]{}])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B\u207F]+)(?=$|[\s,;.!?()\[\]{}])/g;
       var msup;
       while ((msup = rxSupNum.exec(parseLine)) !== null) {
@@ -634,7 +661,7 @@ function collectAtags(cfg) {
 
         if (isExcluded(nameSup)) continue;
 
-        var normSup = normalizeAttr(rawSup);
+        var normSup = normalizeAttr(aliasSup.fixedRaw != null ? aliasSup.fixedRaw : rawSup);
         if (aliasSup.invert) normSup = invertNormalizedAttr(normSup);
 
         addItem(
@@ -642,7 +669,7 @@ function collectAtags(cfg) {
           nameSup,
           normSup.attrText,
           normSup.attrValue,
-          rawSup,
+          aliasSup.fixedRaw != null ? aliasSup.fixedRaw : rawSup,
           currentRowValue, currentRowUnit, currentRowRaw,
           aliasSup.shortName || nameSup
         );
@@ -661,12 +688,40 @@ function collectAtags(cfg) {
 
         if (isExcluded(nameS)) continue;
 
+        var normS = aliasS.fixedRaw != null ? normalizeAttr(aliasS.fixedRaw) : { attrText: null, attrValue: null };
+        if (aliasS.invert) normS = invertNormalizedAttr(normS);
+
         addItem(
           items, seen,
           nameS,
-          null, null, "",
+          normS.attrText, normS.attrValue, aliasS.fixedRaw != null ? aliasS.fixedRaw : "",
           currentRowValue, currentRowUnit, currentRowRaw,
           aliasS.shortName || nameS
+        );
+      }
+
+      // cleaner simple tag suffix: essenx
+      var rxCleanerSimpleTag = /(^|[\s,;.!?()\[\]{}])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\u02E3(?=$|[\s,;.!?()\[\]{}])/g;
+      var mcst;
+      while ((mcst = rxCleanerSimpleTag.exec(parseLine)) !== null) {
+        var nameCst = mcst[2] || "";
+        if (!nameCst) continue;
+        if (isInsideAtagQuoteState(quoteState, mcst.index)) continue;
+
+        var aliasCst = resolveAlias(nameCst, aliasMap);
+        nameCst = aliasCst.name;
+
+        if (isExcluded(nameCst)) continue;
+
+        var normCst = aliasCst.fixedRaw != null ? normalizeAttr(aliasCst.fixedRaw) : { attrText: null, attrValue: null };
+        if (aliasCst.invert) normCst = invertNormalizedAttr(normCst);
+
+        addItem(
+          items, seen,
+          nameCst,
+          normCst.attrText, normCst.attrValue, aliasCst.fixedRaw != null ? aliasCst.fixedRaw : "",
+          currentRowValue, currentRowUnit, currentRowRaw,
+          aliasCst.shortName || nameCst
         );
       }
 
@@ -675,3 +730,4 @@ function collectAtags(cfg) {
 
   return { items: items };
 }
+

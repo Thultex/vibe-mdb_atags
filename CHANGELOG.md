@@ -19,6 +19,161 @@
 
 ## 2026-04-25
 
+- Doku: Pflegehinweis ergänzt, dass Modul-Kopfblöcke wegen des Memento-Java-Editors kurz bleiben und vorsichtig mit Quotes, Backticks, langen `Änderungen`-Listen und Sonderzeichen umgehen sollen
+
+## 2026-04-25
+
+- Systemversion auf `sys 2.11` angehoben
+- Header aller Module und `ATAG_SYS_VERSION` auf `2.11` aktualisiert
+- Doku: README und CONTRIBUTING auf `sys 2.11` angepasst
+
+## 2026-04-25
+
+- `Addon Tag Cleaner` auf `v1.17` angehoben
+- `collectAtags` auf `v1.35` angehoben
+- Änderung: einfacher Cleaner-Tag-Suffix wechselt von `ᵗ` auf `ˣ`, z. B. `essen# -> essenˣ`
+- Test: Cleaner- und Parser-Regressionen auf `tagˣ` umgestellt
+
+## 2026-04-25
+
+- `Atag Helpers` auf `v1.12` angehoben
+- Fix: `enabled` und `collectResults` akzeptieren jetzt Memento-freundlich `0`/`1` sowie weiterhin `false`/`true`
+- Doku/Test: Beispiele auf `enabled: 1` umgestellt und Disabled-Test mit `enabled: 0` geprüft
+
+## 2026-04-25
+
+- `Atag Helpers` auf `v1.11` angehoben
+- Fix: `applyTags({ enabled: false })` gibt jetzt `null` zurück statt `{ items: [] }`, damit Funktionsfelder keinen Objekt-Rückgabewert auswerten müssen
+- Test: Disabled-Wrapper-Erwartung angepasst
+
+## 2026-04-25
+
+- `collectAtags` auf `v1.34` angehoben
+- Feature: Cleaner-Suffix `ᵗ` wird als leerer expliziter Tag gelesen, auch in `||`-Tagleisten
+- Test: Parser-Regressionen für `tagᵗ` in Text und Tagleiste ergänzt
+
+## 2026-04-25
+
+- `Addon Tag Cleaner` auf `v1.16` angehoben
+- Fix: doppelter `bulkApplyTagCleaner`-Beispielblock im Header entfernt, um Quote-/Editor-Probleme zu vermeiden
+- Änderung: `essen#` und `#essen` werden im Cleaner in Text und Tagleiste zu `essenᵗ` normalisiert und bleiben parserfähig
+- Fix: `##tag` und `tag##` werden nur entfernt und in Tagfelder geschrieben, wenn `tagFields`/`userTagFields` angegeben sind
+- Test: Regressionen für `essenᵗ` und Double-Hash ohne Tagfelder ergänzt
+
+## 2026-04-25
+
+- `Addon Tag Cleaner` auf `v1.15` angehoben
+- Fix: Kopfkommentar stark gekürzt und auf editor-sichere ASCII-Notes umgestellt, damit der Memento-Java-Editor nicht am `Änderungen`-Block hängen bleibt
+- Wirkung: Funktionslogik unverändert; ausführliche Nutzung bleibt in `README.md` und `CHANGELOG.md`
+
+## 2026-04-25
+
+- `Addon Tag Cleaner` auf `v1.14` angehoben
+- Fix: numerische `tag:10`-/`geld:+20,3`-Tokens in Tagleisten werden als Werte statt String-Tags behandelt
+- Feature: `##tag` und `tag##` werden aus Notiz/Tagleiste entfernt und optional in mehrere `tagFields` geschrieben
+- Änderung: Leerzeilen vor und nach dem Inhalt werden nach dem Verschieben der Tagleiste entfernt
+- Doku: Bulk-Aufruf und `tagFields`-Option für den Cleaner ergänzt
+- Test: Regressionen für numerische Colon-Werte, einfache Hash-Tags, Double-Hash-User-Tags und Trimming ergänzt
+
+## 2026-04-25
+
+- Nachtrag: `Atag Helpers v1.10` war im Modul vorhanden, aber im Changelog noch nicht dokumentiert
+- Wirkung: Versionskonflikt dokumentiert; Helper-Code selbst bleibt unverändert
+
+## 2026-04-25
+
+- `Addon Tag Cleaner` auf `v1.13` angehoben
+- Änderung: String- und Funktions-Tags in Tagleisten werden kompakt als `tag:wert` ohne Leerzeichen nach `:` ausgegeben
+- Test/Doku: Erwartungswerte und Beschreibung für kompakte Tagleisten-Werte angepasst
+
+## 2026-04-25
+
+- `Addon Tag Cleaner` auf `v1.12` angehoben
+- Fix: Kommata nach Zahlenwerten werden als Trenner gelesen, ohne Dezimalkommas wie `-0,5` zu zerlegen
+- Test: Regressionen für `Stress3,` und `Stress-0,5,` ergänzt
+
+## 2026-04-25
+
+- `Addon Tag Cleaner` auf `v1.11` angehoben
+- Fix: überzählige Kommata am Ende unquoted String-Werte werden entfernt und wachsen bei rekursiver Anwendung nicht weiter
+- Test: Regression für `zeta:einwort,,,` und quoted String-Werte mit Komma ergänzt
+
+## 2026-04-25
+
+- `Addon Tag Cleaner` auf `v1.10` angehoben
+- Änderung: Tagleisten-Gruppen werden mit `, ` getrennt, innerhalb einer Gruppe bleibt die Trennung per Leerzeichen
+- Test/Doku: Regression und Beschreibung für Gruppentrennung ergänzt
+
+## 2026-04-25
+
+- `Addon Tag Cleaner` auf `v1.09` angehoben
+- Änderung: Funktions-Tag `fv` wird immer ans Ende der Tagleiste sortiert und ohne unnötige Quotes ausgegeben
+- Änderung: String-Werte entfernen Quotes bei Einzelworten, behalten sie aber bei mehrteiligen Werten
+- Test/Doku: Regression für Funktions-Tag-Sortierung und Quote-Normalisierung ergänzt
+
+## 2026-04-25
+
+- `Addon Tag Cleaner` auf `v1.08` angehoben
+- Feature: `formatValues` nutzt die neuen Werte `"keep"`, `"min"`, `"max"` und `"none"`; alte `positiveSignMode`-Werte bleiben als Aliase lesbar
+- Feature: `fv: "..."` in einer Tagleiste setzt die Werteformatierung pro Notiz, z. B. `|| fv: "min"`
+- Änderung: Tagleisten werden als Werttags, String-Werte und leere Tags sortiert; String-Werte werden als `tag: wert` normalisiert
+- Test/Doku: Beispiele und Regressionen für `fv`, die neuen Formatter-Werte und Tagleisten-Sortierung ergänzt
+
+## 2026-04-25
+
+- `Shared Script: Time Marker` auf `v1.26` angehoben
+- Fix: Cleanup leerer TimeMarker und Leerzeilen läuft auch dann, wenn `maxHours` das Einfügen eines neuen Markers verhindert
+- Test: Regression für Max-Hours-Abbruch mit bereinigtem Zeitblock ergänzt
+
+## 2026-04-25
+
+- `Addon Tag Cleaner` auf `v1.07` angehoben
+- Fix: Tagleisten-Tokens nutzen `positiveSignMode: "preserve"` als Standard statt implizit `always`
+- Doku: Header-Beispiele auf `positiveSignMode: "preserve"` korrigiert
+- Test: schlanke Regression für `tagBarPosition: "top"` ohne expliziten `positiveSignMode` ergänzt
+
+## 2026-04-25
+
+- `Addon Tag Cleaner` auf `v1.06` angehoben
+- `Shared Script: Time Marker` auf `v1.25` angehoben
+- Fix: `preserve` normalisiert normale Pluszeichen vor Hochzahlen, z. B. `Stress+³ -> Stress⁺³`
+- Fix: TimeMarker schreibt bereinigte Leerzeilen auch zurück, wenn wegen gleicher/späterer Zeit kein neuer Marker gesetzt wird
+- Test: Regressionen für `Stress+³` und vorhandenen gleichen Timestamp mit Leerzeile ergänzt
+
+## 2026-04-25
+
+- `Addon Tag Cleaner` auf `v1.03` angehoben
+- `Shared Script: Time Marker` auf `v1.24` angehoben
+- Fix: Tagleiste oben mit `tagBarSpacing: "none"` entfernt alte führende Leerzeilen
+- Feature: `positiveSignMode` steuert positive Vorzeichen: `"preserve"` (Standard), `"minimal"` oder `"always"`
+- Fix: TimeMarker bereinigt Leerzeilen, die nach Entfernen leerer Marker zwischen Zeitmarkern oder vor der belegten Textzeile stehen
+- Test: Regressionen für rekursive Top-Tagleiste, TimeMarker-Leerzeilen und positive Vorzeichen-Modi ergänzt
+
+## 2026-04-25
+
+- `Addon Tag Cleaner` auf `v1.02` angehoben
+- Feature: Tagleiste kann über `tagBarPosition: "top"|"bottom"` oben oder unten ausgegeben werden
+- Feature: Leerzeilen-Abstand kann über `tagBarSpacing: "blank"|"none"` gesteuert werden
+- Änderung: Positive Zahlenwerte werden im Cleaner ohne Pluszeichen hochgestellt, z. B. `emo2 -> emo²`
+- Test/Doku: Cleaner-Optionen und Pluszeichen-Regel ergänzt
+
+## 2026-04-25
+
+- `collectAtags` auf `v1.33` angehoben
+- Feature: Alias-Einträge können feste Werte tragen, z. B. `@@Kopfschmerz (KSch): ks, Kopfdruck1`
+- Wirkung: `Kopfdruck`, `Kopfdruck3` oder `|| Kopfdruck` ergeben immer `Kopfschmerz+1`
+- Test/Doku: feste Alias-Werte in Parser-Regressionen und README ergänzt
+
+## 2026-04-25
+
+- `exportAtags` auf `v1.41` angehoben
+- Fix: Kopfkommentar im Export-Script stark gekürzt, um Java-Editor-Regex-Rekursion in Memento zu vermeiden
+- Wirkung: Exportlogik bleibt unverändert, nur der editorseitig riskante Kommentarblock wurde entschärft
+- Doku: Ausführliche aktuelle Export-Aufrufe zentral in `README.md` ergänzt
+- Test: Export-Regressionen und Versioning geprüft
+
+## 2026-04-25
+
 - `Addon Tag Cleaner` auf `v1.01` angehoben
 - Fix: Wiederholtes Anwenden bleibt stabil und erzeugt keine doppelte oder veränderte Tagleiste
 - Test: Rekursions-/Idempotenzfälle für `makeTagCleanerText()` und Same-field-Apply ergänzt

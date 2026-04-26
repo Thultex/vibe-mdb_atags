@@ -233,12 +233,12 @@ assertEqual(
 entryObj = makeEntry({ MD: "keep" });
 var disabledResult = applyTags({
   entryObj: entryObj,
-  enabled: false,
+  enabled: 0,
   result: { items: baseItems },
   targetField: "MD",
   targetFieldType: "md"
 });
 assertEqual("apply-disabled-target-unchanged", entryObj.field("MD"), "keep");
-assertEqual("apply-disabled-empty-result", disabledResult.items.length, 0);
+assertEqual("apply-disabled-null-result", disabledResult, null);
 
 WScript.Echo("OK");

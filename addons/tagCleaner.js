@@ -1,22 +1,25 @@
 /*
 ========================================
-Addon Tag Cleaner v1.01 (sys 2.10)
+Addon Tag Cleaner v1.17 (sys 2.11)
 ========================================
 
-Änderungen
-- wiederholte Anwendung bleibt stabil und dupliziert keine Tagleisten
-- normalisiert einfache Werttags in Hochstellung
-- zieht `|`- und `||`-Tagleisten ans Feldende
-- verbindet mehrere Tagleisten zu einer `||`-Zeile
-
-Anwendung
+Notes
+- Short header for the Memento Java editor.
+- Details live in README.md and CHANGELOG.md.
 
 applyTagCleaner({
-  textField: "Notiz"
+  textField: "Notiz",
+  tagBarPosition: "top",
+  tagBarSpacing: "blank",
+  formatValues: "keep"
 });
 
 bulkApplyTagCleaner({
-  textField: "Notiz"
+  textField: "Notiz",
+  tagFields: ["Tags", "User Tags"],
+  tagBarPosition: "top",
+  tagBarSpacing: "none",
+  formatValues: "keep"
 });
 
 ========================================
@@ -26,13 +29,153 @@ function trimTagCleanerString(s) {
   return String(s || "").replace(/^\s+|\s+$/g, "");
 }
 
-function tagCleanerSuperscript(raw) {
+function compactTagCleanerTextSpaces(s) {
+  return String(s || "")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\s+([,;.!?])/g, "$1")
+    .replace(/([(\[{])\s+/g, "$1")
+    .replace(/^\s+|\s+$/g, "");
+}
+
+function isTagCleanerNumberValue(s) {
+  return /^[+\-]?\d+(?:[.,]\d+)?$/.test(String(s || "")) || /^\++$/.test(String(s || "")) || /^-+$/.test(String(s || ""));
+}
+
+function normalizeTagCleanerFormatValueMode(mode) {
+  var s = String(mode == null ? "" : mode).replace(/^\s+|\s+$/g, "").toLowerCase();
+  s = s.replace(/^["']|["']$/g, "");
+
+  if (!s || s === "keep" || s === "preserve") return "keep";
+  if (s === "min" || s === "minimal") return "min";
+  if (s === "max" || s === "always" || s === "maximal") return "max";
+  if (s === "none" || s === "off") return "none";
+
+  return "keep";
+}
+
+function tagCleanerModeFromConfig(cfg) {
+  if (cfg && cfg.formatValues != null) return normalizeTagCleanerFormatValueMode(cfg.formatValues);
+  if (cfg && cfg.formatValueMode != null) return normalizeTagCleanerFormatValueMode(cfg.formatValueMode);
+  if (cfg && cfg.positiveSignMode != null) return normalizeTagCleanerFormatValueMode(cfg.positiveSignMode);
+  return "keep";
+}
+
+function normalizeTagCleanerFieldList(fields) {
+  if (fields == null) return [];
+  if (Object.prototype.toString.call(fields) === "[object Array]") return fields;
+  return [fields];
+}
+
+function cleanTagCleanerUserTagName(raw) {
+  var s = trimTagCleanerString(raw);
+  if (!/^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*$/.test(s)) return "";
+  return s;
+}
+
+function addUniqueTagCleanerName(out, seen, name) {
+  var clean = cleanTagCleanerUserTagName(name);
+  var key;
+
+  if (!clean) return;
+  key = clean.toLowerCase();
+  if (seen[key]) return;
+  seen[key] = 1;
+  out.push(clean);
+}
+
+function tagCleanerTagList(rawTags) {
+  var out = [];
+  var parts;
+  var i;
+
+  if (rawTags == null) return out;
+  if (Object.prototype.toString.call(rawTags) === "[object Array]") {
+    for (i = 0; i < rawTags.length; i++) {
+      if (trimTagCleanerString(rawTags[i])) out.push(trimTagCleanerString(rawTags[i]));
+    }
+    return out;
+  }
+
+  parts = String(rawTags || "").split(/\n|,\s*/);
+  for (i = 0; i < parts.length; i++) {
+    if (trimTagCleanerString(parts[i])) out.push(trimTagCleanerString(parts[i]));
+  }
+
+  return out;
+}
+
+function sortTagCleanerNames(tags) {
+  tags.sort(function(a, b) {
+    var aa = String(a || "").toLowerCase();
+    var bb = String(b || "").toLowerCase();
+    if (aa < bb) return -1;
+    if (aa > bb) return 1;
+    return 0;
+  });
+}
+
+function addTagCleanerUserTagsToFields(entryObj, fields, tags) {
+  var fieldList = normalizeTagCleanerFieldList(fields);
+  var i;
+  var j;
+  var existing;
+  var out;
+  var seen;
+
+  if (!entryObj || !fieldList.length || !tags || !tags.length) return;
+
+  for (i = 0; i < fieldList.length; i++) {
+    if (!fieldList[i]) continue;
+    existing = tagCleanerTagList(entryObj.field(fieldList[i]));
+    out = [];
+    seen = {};
+
+    for (j = 0; j < existing.length; j++) addUniqueTagCleanerName(out, seen, existing[j]);
+    for (j = 0; j < tags.length; j++) addUniqueTagCleanerName(out, seen, tags[j]);
+    sortTagCleanerNames(out);
+    entryObj.set(fieldList[i], out);
+  }
+}
+
+function extractTagCleanerFormatValueMode(text) {
+  var m = String(text || "").match(/(^|[\s,])fv\s*:\s*("[^"]*"|'[^']*'|[^\s,]+)/i);
+  if (!m) return null;
+  return normalizeTagCleanerFormatValueMode(m[2]);
+}
+
+function removeTagCleanerFormatValueDirectives(text) {
+  return String(text || "").replace(/(^|[\s,])fv\s*:\s*("[^"]*"|'[^']*'|[^\s,]+)/ig, "$1").replace(/\s+/g, " ");
+}
+
+function normalizeTagCleanerStringValue(raw) {
+  var s = trimTagCleanerString(raw);
+  var quote = s.charAt(0);
+  var inner;
+
+  if ((quote === '"' || quote === "'") && s.charAt(s.length - 1) === quote) {
+    inner = s.substring(1, s.length - 1);
+    if (!/\s/.test(inner)) return inner;
+    return s;
+  }
+
+  return s.replace(/,+$/g, "");
+}
+
+function isTagCleanerFormatValueDirectiveLine(line) {
+  return /^\s*fv\s*:\s*("[^"]*"|'[^']*'|[^\s,]+)\s*,*\s*$/i.test(String(line || ""));
+}
+
+function tagCleanerSuperscript(raw, positiveSignMode) {
   var s = String(raw || "");
   var out = "";
   var i;
   var ch;
+  var mode = normalizeTagCleanerFormatValueMode(positiveSignMode);
 
-  if (/^\d/.test(s)) s = "+" + s;
+  if (mode === "none") return s;
+
+  if (/^\d/.test(s) && mode === "max") s = "+" + s;
+  else if (/^\+\d/.test(s) && mode === "min") s = s.substring(1);
   s = s.replace(",", "");
 
   for (i = 0; i < s.length; i++) {
@@ -49,6 +192,67 @@ function tagCleanerSuperscript(raw) {
     else if (ch === "9") out += "\u2079";
     else if (ch === "+") out += "\u207A";
     else if (ch === "-") out += "\u207B";
+  }
+
+  return out;
+}
+
+function tagCleanerTagSuffix() {
+  return "\u02E3";
+}
+
+function normalizeTagCleanerSuperscriptToken(s) {
+  return String(s || "").replace(/([\u207A])(?=[\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079])/g, "");
+}
+
+function normalizeTagCleanerSuperscriptTokenForMode(s, positiveSignMode) {
+  var mode = normalizeTagCleanerFormatValueMode(positiveSignMode);
+  if (mode === "keep" || mode === "none") return String(s || "");
+  if (mode === "min") return normalizeTagCleanerSuperscriptToken(s);
+
+  var raw = decodeTagCleanerSuperscript(s);
+  if (/^\d/.test(raw)) raw = "+" + raw;
+  return tagCleanerSuperscript(raw, mode);
+}
+
+function normalizeTagCleanerRawValue(raw) {
+  var s = String(raw || "");
+  if (/^[+\-][\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079]+$/.test(s)) {
+    return s.charAt(0) + decodeTagCleanerSuperscript(s.substring(1));
+  }
+  return s;
+}
+
+function decodeTagCleanerSuperscript(raw) {
+  var s = String(raw || "");
+  var out = "";
+  var i;
+  var ch;
+
+  for (i = 0; i < s.length; i++) {
+    ch = s.charAt(i);
+    if (ch === "\u2070") out += "0";
+    else if (ch === "\u00B9") out += "1";
+    else if (ch === "\u00B2") out += "2";
+    else if (ch === "\u00B3") out += "3";
+    else if (ch === "\u2074") out += "4";
+    else if (ch === "\u2075") out += "5";
+    else if (ch === "\u2076") out += "6";
+    else if (ch === "\u2077") out += "7";
+    else if (ch === "\u2078") out += "8";
+    else if (ch === "\u2079") out += "9";
+    else if (ch === "\u207A") out += "+";
+    else if (ch === "\u207B") out += "-";
+  }
+
+  if (/^[+\-]?0\d+$/.test(out)) {
+    var sign = "";
+    var digits = out;
+    if (out.charAt(0) === "+" || out.charAt(0) === "-") {
+      sign = out.charAt(0);
+      digits = out.substring(1);
+    }
+    out = sign + "0," + digits.substring(1);
   }
 
   return out;
@@ -82,20 +286,42 @@ function tagCleanerInsideQuote(state, pos) {
   return !!state[p];
 }
 
-function cleanTagCleanerToken(token, bareAsHash) {
+function cleanTagCleanerToken(token, bareAsHash, positiveSignMode) {
   var s = trimTagCleanerString(token);
+  var mode = normalizeTagCleanerFormatValueMode(positiveSignMode);
   var m;
 
   if (!s) return "";
-  if (/^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*#$/.test(s)) return s;
-  if (/^#[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*$/.test(s)) return s.substring(1) + "#";
+  m = s.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#$/);
+  if (m) return m[1] + tagCleanerTagSuffix();
+  m = s.match(/^#([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)$/);
+  if (m) return m[1] + tagCleanerTagSuffix();
+  m = s.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:\s*(.+)$/);
+  if (m) {
+    if (isTagCleanerNumberValue(normalizeTagCleanerStringValue(m[2]))) {
+      return m[1] + tagCleanerSuperscript(normalizeTagCleanerStringValue(m[2]), positiveSignMode);
+    }
+    return m[1] + ":" + normalizeTagCleanerStringValue(m[2]);
+  }
+  m = s.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#(.+)$/);
+  if (m) return m[1] + ":" + normalizeTagCleanerStringValue(m[2]);
   if (/#/.test(s) || /:/.test(s)) return s;
-  if (/^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*[\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B]+$/.test(s)) return s;
+  if (mode === "none") {
+    if (bareAsHash && /^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*$/.test(s)) return s + tagCleanerTagSuffix();
+    return s;
+  }
+  if (/^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*[\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B]+$/.test(s)) {
+    m = s.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B]+)$/);
+    return m[1] + normalizeTagCleanerSuperscriptTokenForMode(m[2], positiveSignMode);
+  }
+
+  m = s.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*?)([+\-][\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079]+)$/);
+  if (m) return m[1] + tagCleanerSuperscript(normalizeTagCleanerRawValue(m[2]), positiveSignMode);
 
   m = s.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*?)([+\-]?\d+(?:[.,]\d+)?|\++|-+)$/);
-  if (m) return m[1] + tagCleanerSuperscript(m[2]);
+  if (m) return m[1] + tagCleanerSuperscript(m[2], positiveSignMode);
 
-  if (bareAsHash && /^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*$/.test(s)) return s + "#";
+  if (bareAsHash && /^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*$/.test(s)) return s + tagCleanerTagSuffix();
   return s;
 }
 
@@ -107,8 +333,11 @@ function tagCleanerTokenName(token) {
 
 function tagCleanerTokenKind(token) {
   var s = String(token || "");
-  if (/#/.test(s) || /:/.test(s)) return 1;
+  if (/^fv\s*:/i.test(s)) return 3;
   if (/[\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B]/.test(s)) return 0;
+  if (/^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*[+\-]?\d+(?:[.,]\d+)?$/.test(s)) return 0;
+  if (/:/.test(s) || /#[^#]+$/.test(s)) return 1;
+  if (new RegExp(tagCleanerTagSuffix() + "$").test(s)) return 2;
   return 2;
 }
 
@@ -128,21 +357,40 @@ function sortTagCleanerTokens(tokens) {
   });
 }
 
+function formatTagCleanerBarTokens(tokens) {
+  var out = "";
+  var lastKind = null;
+  var i;
+  var kind;
+
+  for (i = 0; i < tokens.length; i++) {
+    kind = tagCleanerTokenKind(tokens[i]);
+    if (out) out += kind !== lastKind ? ", " : " ";
+    out += tokens[i];
+    lastKind = kind;
+  }
+
+  return out;
+}
+
 function splitTagCleanerBarTokens(text) {
   var s = String(text || "");
   var out = [];
+  var combined = [];
   var token = "";
   var inSingle = false;
   var inDouble = false;
   var i;
   var ch;
+  var isSeparator;
 
   for (i = 0; i < s.length; i++) {
     ch = s.charAt(i);
     if (ch === "'" && !inDouble) inSingle = !inSingle;
     else if (ch === '"' && !inSingle) inDouble = !inDouble;
 
-    if (/\s/.test(ch) && !inSingle && !inDouble) {
+    isSeparator = /\s/.test(ch) || (ch === "," && !(/\d/.test(s.charAt(i - 1)) && /\d/.test(s.charAt(i + 1))));
+    if (isSeparator && !inSingle && !inDouble) {
       if (token) out.push(token);
       token = "";
     } else {
@@ -151,13 +399,88 @@ function splitTagCleanerBarTokens(text) {
   }
 
   if (token) out.push(token);
-  return out;
+
+  for (i = 0; i < out.length; i++) {
+    if (/^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*:$/.test(out[i]) && i + 1 < out.length) {
+      combined.push(out[i] + out[i + 1]);
+      i++;
+    } else {
+      combined.push(out[i]);
+    }
+  }
+
+  return combined;
 }
 
-function cleanTagCleanerInlineLine(line) {
+function extractTagCleanerUserTagsFromLine(line, userTags, userTagSeen, enabled) {
   var s = String(line || "");
   var state = tagCleanerQuoteState(s);
-  var rx = /(^|[\s,;.!?()\[\]{}])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)([+\-]?\d+(?:[.,]\d+)?|\++|-+)(?=$|[\s,;.!?()\[\]{}])/g;
+  var rx = /(^|[\s,;.!?()\[\]{}])(?:##([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)(?=$|[\s,;.!?()\[\]{}])|([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)##(?=$|[\s,;.!?()\[\]{}]))/g;
+  var out = [];
+  var last = 0;
+  var m;
+  var start;
+  var name;
+  var prefix;
+
+  while ((m = rx.exec(s)) !== null) {
+    prefix = m[1] || "";
+    start = m.index + prefix.length;
+
+    if (!tagCleanerInsideQuote(state, start)) {
+      name = m[2] || m[3] || "";
+      if (enabled) {
+        addUniqueTagCleanerName(userTags, userTagSeen, name);
+        out.push(s.substring(last, m.index));
+        if (prefix && !/^[,;.!?]$/.test(prefix)) out.push(prefix);
+        last = rx.lastIndex;
+      }
+    }
+
+    if (m[0] === "") rx.lastIndex++;
+  }
+
+  out.push(s.substring(last));
+  return compactTagCleanerTextSpaces(out.join(""));
+}
+
+function cleanTagCleanerSimpleHashTagsInLine(line) {
+  var s = String(line || "");
+  var state = tagCleanerQuoteState(s);
+  var rx = /(^|[\s,;.!?()\[\]{}])(?:#([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)(?=$|[\s,;.!?()\[\]{}])|([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#(?=$|[\s,;.!?()\[\]{}]))/g;
+  var out = [];
+  var last = 0;
+  var m;
+  var prefix;
+  var start;
+  var name;
+
+  while ((m = rx.exec(s)) !== null) {
+    prefix = m[1] || "";
+    start = m.index + prefix.length;
+
+    if (!tagCleanerInsideQuote(state, start)) {
+      name = m[2] || m[3] || "";
+      out.push(s.substring(last, m.index));
+      out.push(prefix + name + tagCleanerTagSuffix());
+      last = rx.lastIndex;
+    }
+
+    if (m[0] === "") rx.lastIndex++;
+  }
+
+  out.push(s.substring(last));
+  return out.join("");
+}
+
+function cleanTagCleanerInlineLine(line, positiveSignMode, userTags, userTagSeen, userTagsEnabled) {
+  var s = String(line || "");
+  s = extractTagCleanerUserTagsFromLine(s, userTags || [], userTagSeen || {}, userTagsEnabled);
+  s = cleanTagCleanerSimpleHashTagsInLine(s);
+  if (normalizeTagCleanerFormatValueMode(positiveSignMode) === "none") return s;
+
+  var state = tagCleanerQuoteState(s);
+  var rx = /(^|[\s,;.!?()\[\]{}])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)([+\-]?\d+(?:[.,]\d+)?|\++|-+|[+\-][\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079]+|[\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B]+)(?=$|[\s,;.!?()\[\]{}])/g;
   var out = [];
   var last = 0;
   var m;
@@ -185,7 +508,8 @@ function cleanTagCleanerInlineLine(line) {
 
     if (!tagCleanerInsideQuote(state, start)) {
       out.push(s.substring(last, start));
-      out.push(name + tagCleanerSuperscript(raw));
+      if (/^[\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B]+$/.test(raw)) out.push(name + normalizeTagCleanerSuperscriptTokenForMode(raw, positiveSignMode));
+      else out.push(name + tagCleanerSuperscript(normalizeTagCleanerRawValue(raw), positiveSignMode));
       last = end;
     }
 
@@ -197,10 +521,18 @@ function cleanTagCleanerInlineLine(line) {
 }
 
 function makeTagCleanerText(text) {
+  return makeTagCleanerTextWithOptions(text, {});
+}
+
+function makeTagCleanerTextWithOptions(text, cfg) {
+  cfg = cfg || {};
+
   var lines = String(text || "").split(/\r?\n/);
   var body = [];
   var barTokens = [];
   var seen = {};
+  var userTags = [];
+  var userTagSeen = {};
   var i;
   var line;
   var m;
@@ -208,9 +540,15 @@ function makeTagCleanerText(text) {
   var j;
   var token;
   var cleaned;
+  var tagBarPosition = cfg.tagBarPosition || cfg.tagBarPlacement || "bottom";
+  var tagBarSpacing = cfg.tagBarSpacing || "blank";
+  var positiveSignMode = tagCleanerModeFromConfig(cfg);
+  var barLine;
+  var formatModeFromLine;
+  var userTagsEnabled = normalizeTagCleanerFieldList(cfg.tagFields || cfg.userTagFields || cfg.tagField || cfg.userTagField).length > 0;
 
   function addBarToken(raw) {
-    cleaned = cleanTagCleanerToken(raw, true);
+    cleaned = cleanTagCleanerToken(raw, true, positiveSignMode);
     if (!cleaned) return;
     token = cleaned.toLowerCase();
     if (seen[token]) return;
@@ -221,23 +559,58 @@ function makeTagCleanerText(text) {
   for (i = 0; i < lines.length; i++) {
     line = String(lines[i] || "");
     m = line.match(/^\s*\|\|?\s*(.*)$/);
+    if (!m) continue;
+    formatModeFromLine = extractTagCleanerFormatValueMode(m[1] || "");
+    if (formatModeFromLine != null) positiveSignMode = formatModeFromLine;
+  }
+
+  for (i = 0; i < lines.length; i++) {
+    line = String(lines[i] || "");
+    if (!isTagCleanerFormatValueDirectiveLine(line)) continue;
+    formatModeFromLine = extractTagCleanerFormatValueMode(line);
+    if (formatModeFromLine != null) positiveSignMode = formatModeFromLine;
+  }
+
+  for (i = 0; i < lines.length; i++) {
+    line = String(lines[i] || "");
+    m = line.match(/^\s*\|\|?\s*(.*)$/);
 
     if (m) {
-      parts = splitTagCleanerBarTokens(m[1] || "");
+      formatModeFromLine = extractTagCleanerFormatValueMode(m[1] || "");
+      if (formatModeFromLine != null) addBarToken("fv:" + formatModeFromLine);
+      line = extractTagCleanerUserTagsFromLine(removeTagCleanerFormatValueDirectives(m[1] || ""), userTags, userTagSeen, userTagsEnabled);
+      parts = splitTagCleanerBarTokens(line);
       for (j = 0; j < parts.length; j++) addBarToken(parts[j]);
       continue;
     }
 
-    body.push(cleanTagCleanerInlineLine(line));
+    if (isTagCleanerFormatValueDirectiveLine(line)) {
+      formatModeFromLine = extractTagCleanerFormatValueMode(line);
+      if (formatModeFromLine != null) addBarToken("fv:" + formatModeFromLine);
+      continue;
+    }
+
+    body.push(cleanTagCleanerInlineLine(line, positiveSignMode, userTags, userTagSeen, userTagsEnabled));
   }
 
   while (body.length && trimTagCleanerString(body[body.length - 1]) === "") body.pop();
   sortTagCleanerTokens(barTokens);
 
   if (barTokens.length) {
-    if (body.length) body.push("");
-    body.push("|| " + barTokens.join(" "));
+    barLine = "|| " + formatTagCleanerBarTokens(barTokens);
+    if (tagBarPosition === "top" || tagBarPosition === "above") {
+      while (body.length && trimTagCleanerString(body[0]) === "") body.shift();
+      if (body.length && tagBarSpacing !== "none") body.unshift("");
+      body.unshift(barLine);
+    } else {
+      if (body.length && tagBarSpacing !== "none") body.push("");
+      body.push(barLine);
+    }
   }
+
+  while (body.length && trimTagCleanerString(body[0]) === "") body.shift();
+  while (body.length && trimTagCleanerString(body[body.length - 1]) === "") body.pop();
+  cfg._tagCleanerUserTags = userTags;
 
   return body.join("\n");
 }
@@ -255,8 +628,9 @@ function applyTagCleaner(cfg) {
   if (!entryObj || !sourceField || !targetField) return "";
 
   sourceText = entryObj.field(sourceField);
-  out = makeTagCleanerText(sourceText == null ? "" : String(sourceText));
+  out = makeTagCleanerTextWithOptions(sourceText == null ? "" : String(sourceText), cfg);
   entryObj.set(targetField, out);
+  addTagCleanerUserTagsToFields(entryObj, cfg.tagFields || cfg.userTagFields || cfg.tagField || cfg.userTagField, cfg._tagCleanerUserTags);
   return out;
 }
 
@@ -281,3 +655,4 @@ function bulkApplyTagCleaner(cfg) {
 
   return results;
 }
+
