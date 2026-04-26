@@ -1,6 +1,6 @@
 /*
 ========================================
-Addon Tag Cleaner v1.17 (sys 2.11)
+Addon Tag Cleaner v1.20 (sys 2.11)
 ========================================
 
 Notes
@@ -39,6 +39,16 @@ function compactTagCleanerTextSpaces(s) {
 
 function isTagCleanerNumberValue(s) {
   return /^[+\-]?\d+(?:[.,]\d+)?$/.test(String(s || "")) || /^\++$/.test(String(s || "")) || /^-+$/.test(String(s || ""));
+}
+
+function isTagCleanerTimestampLine(line) {
+  return /^\s*\d+(?:[.,]\d+)?\s*:/.test(String(line || ""));
+}
+
+function tagCleanerSpacingLines(spacing) {
+  if (spacing === "none") return 0;
+  if (spacing === "double") return 2;
+  return 1;
 }
 
 function normalizeTagCleanerFormatValueMode(mode) {
@@ -546,6 +556,8 @@ function makeTagCleanerTextWithOptions(text, cfg) {
   var barLine;
   var formatModeFromLine;
   var userTagsEnabled = normalizeTagCleanerFieldList(cfg.tagFields || cfg.userTagFields || cfg.tagField || cfg.userTagField).length > 0;
+  var hasTimestampLine = false;
+  var spacingLines = tagCleanerSpacingLines(tagBarSpacing);
 
   function addBarToken(raw) {
     cleaned = cleanTagCleanerToken(raw, true, positiveSignMode);
@@ -558,6 +570,7 @@ function makeTagCleanerTextWithOptions(text, cfg) {
 
   for (i = 0; i < lines.length; i++) {
     line = String(lines[i] || "");
+    if (isTagCleanerTimestampLine(line)) hasTimestampLine = true;
     m = line.match(/^\s*\|\|?\s*(.*)$/);
     if (!m) continue;
     formatModeFromLine = extractTagCleanerFormatValueMode(m[1] || "");
@@ -596,14 +609,18 @@ function makeTagCleanerTextWithOptions(text, cfg) {
   while (body.length && trimTagCleanerString(body[body.length - 1]) === "") body.pop();
   sortTagCleanerTokens(barTokens);
 
+  if ((tagBarPosition === "auto" || tagBarPosition === "time_top" || tagBarPosition === "timestamps_top") && hasTimestampLine) {
+    tagBarPosition = "top";
+  }
+
   if (barTokens.length) {
-    barLine = "|| " + formatTagCleanerBarTokens(barTokens);
+    barLine = "| " + formatTagCleanerBarTokens(barTokens);
     if (tagBarPosition === "top" || tagBarPosition === "above") {
       while (body.length && trimTagCleanerString(body[0]) === "") body.shift();
-      if (body.length && tagBarSpacing !== "none") body.unshift("");
+      for (j = 0; body.length && j < spacingLines; j++) body.unshift("");
       body.unshift(barLine);
     } else {
-      if (body.length && tagBarSpacing !== "none") body.push("");
+      for (j = 0; body.length && j < spacingLines; j++) body.push("");
       body.push(barLine);
     }
   }

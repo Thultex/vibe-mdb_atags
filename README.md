@@ -151,7 +151,7 @@ Unabhängig vom Parser nutzbar, um Felder zu spiegeln:
 
 **Tag Cleaner**
 
-Normalisiert einfache Werttags im Text und führt `|`-/`||`-Tagleisten zusammen. Standard ist Tagleiste unten mit einer Leerzeile Abstand.
+Normalisiert einfache Werttags im Text und führt `|`-/`||`-Tagleisten zusammen. Die Ausgabe nutzt eine einfache `|`-Tagleiste. Standard ist Tagleiste unten mit einer Leerzeile Abstand.
 
 ```js
 applyTagCleaner({
@@ -179,7 +179,9 @@ Optionen:
 
 - `tagBarPosition: "bottom"` setzt die Tagleiste ans Ende (Standard)
 - `tagBarPosition: "top"` setzt die Tagleiste an den Anfang
+- `tagBarPosition: "auto"` setzt die Tagleiste nach oben, sobald Zeitstempel-Zeilen wie `0:` oder `2,5:` vorhanden sind
 - `tagBarSpacing: "blank"` setzt eine Leerzeile Abstand (Standard)
+- `tagBarSpacing: "double"` setzt zwei Leerzeilen Abstand
 - `tagBarSpacing: "none"` setzt keinen Leerzeilen-Abstand
 - `formatValues: "keep"` erhält die Eingabeform (Standard)
 - `formatValues: "min"` lässt `+` bei positiven Zahlen weg
@@ -190,10 +192,10 @@ Optionen:
 Pro Notiz kann die Werteformatierung über `fv` in der Tagleiste gesetzt werden:
 
 ```text
-|| fv: keep
-|| fv: min
-|| fv: max
-|| fv: none
+| fv: keep
+| fv: min
+| fv: max
+| fv: none
 ```
 
 In der Tagleiste wird nach Gruppen sortiert: erst Werttags, dann String-Werte, dann leere Tags, dann Funktions-Tags wie `fv`. Zwischen Gruppen steht `, `, innerhalb einer Gruppe nur ein Leerzeichen. String-Werte werden kompakt als `tag:wert` ausgegeben. Quotes bleiben nur erhalten, wenn sie nötig sind, z. B. bei mehreren Wörtern.
@@ -218,7 +220,7 @@ Tagleisten:
 
 ```text
 Text
-|| tag3 info#"das ist info"
+| tag3 info#"das ist info"
 | info2
 | stress laufen emo3
 ```
@@ -228,7 +230,7 @@ werden zu einer Tagleiste am Ende:
 ```text
 Text
 
-|| emo³ info² tag³ info#"das ist info" laufen# stress#
+| emo³ info² tag³, info:"das ist info", laufenˣ stressˣ
 ```
 
 **Restore Add-on (JSON → Felder)**

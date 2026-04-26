@@ -23,6 +23,24 @@
 
 ## 2026-04-25
 
+- `Addon Tag Cleaner` auf `v1.20` angehoben
+- Änderung: Cleaner gibt Tagleisten mit einfachem `|` aus; vorhandene `||`-Leisten bleiben beim Einlesen kompatibel
+- Test/Doku: Cleaner-Erwartungen und Beispiele auf einfache `|`-Ausgabe umgestellt
+
+## 2026-04-25
+
+- `Addon Tag Cleaner` auf `v1.19` angehoben
+- Feature: `tagBarSpacing: "double"` setzt zwei Leerzeilen Abstand zwischen Tagleiste und Inhalt
+- Test/Doku: Double-Spacing oben und unten ergänzt
+
+## 2026-04-25
+
+- `Addon Tag Cleaner` auf `v1.18` angehoben
+- Feature: `tagBarPosition: "auto"` schiebt die Tagleiste nach oben, sobald Zeitstempel-Zeilen wie `0:` oder `2,5:` vorhanden sind
+- Test/Doku: Auto-Position für Zeitstempel-Felder ergänzt
+
+## 2026-04-25
+
 - Systemversion auf `sys 2.11` angehoben
 - Header aller Module und `ATAG_SYS_VERSION` auf `2.11` aktualisiert
 - Doku: README und CONTRIBUTING auf `sys 2.11` angepasst
