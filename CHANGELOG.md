@@ -27,6 +27,10 @@
 - Fix: Time Marker schreibt ersetzte `: Text`-Platzhalter sofort zurueck und setzt dabei keine zusaetzliche neue Markerzeile
 - Fix: Time Marker akzeptiert `textField` als Alias fuer `targetTextField`, damit Cleanup-Aufrufe wie andere Text-Addons schreiben
 - Test/Doku: Regressionen fuer Doppelpunkt-Platzhalter, leere Marker wie `3: `, CR-Zeilenumbrueche und AfterEntry-Cleanup ergaenzt; Marker-Beispiele in README und Script-Kopf geklaert
+- `Addon Multi Choice Helpers` auf `v1.01` ergaenzt
+- Feature: `multiChoiceAppend()` und `multiChoiceRemove()` aus Issue #31 als Workflow-Addon integriert
+- Fix: Multi-Choice-Feldwerte aus Memento werden als listenartige Werte entpackt, damit Freitext nicht als `[freiwort]` neu angehaengt wird
+- Test/Doku: Multi-Choice-Helfer mit Append-/Remove-Regressionen, README-Eintrag und Versioning-Check ergaenzt
 - `collectAtags` auf `v1.37` angehoben
 - Feature: Tag-Syntax `tag:inhalt`, `tag:: inhalt`, `inhalt(:tag)` und `"das ist ein Satz"(:Aussage)` aus Issues #21/#22 integriert
 - Fix: Normale Textstellen wie `text: inhalt` werden nicht mehr als Colon-Tag geparst

@@ -12,6 +12,7 @@ $moduleFiles = @(
   "addons/3_workflow/timeMarker.js",
   "addons/3_workflow/sequenceCounter.js",
   "addons/3_workflow/floatingAverage.js",
+  "addons/3_workflow/multiChoiceHelpers.js",
   "addons/6_integration/obsidianLinker.js",
   "addons/6_integration/wikiLinker.js",
   "addons/z_others/hourGuide.js"

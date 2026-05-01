@@ -123,6 +123,10 @@ Ziel-Felder
 - `addons/3_workflow/floatingAverage.js` (gleitender Gruppen-Mittelwert)
   - `updateAverage()`
   - optional nur aktueller Eintrag ueber `currentEntry`
+- `addons/3_workflow/multiChoiceHelpers.js` (Multi-Choice-Helfer)
+  - `multiChoiceAppend()`
+  - `multiChoiceRemove()`
+  - gibt `true` zurueck, wenn das Feld geaendert wurde
 
 **Integration Add-ons**
 - `addons/6_integration/obsidianLinker.js` (Memento-zu-Obsidian Advanced URI)
@@ -148,6 +152,7 @@ Ziel-Felder
 - `tests/test_timeMarker.js`
 - `tests/test_syncLastFromLatest.js`
 - `tests/test_sequenceCounter.js`
+- `tests/test_multiChoiceHelpers.js`
 - `tests/test_hourGuide.js`
 - `tests/test_obsidianLinker.js`
 ## Add-on Nutzung
@@ -395,6 +400,22 @@ applyHourGuide({
   sourceHoursField: "hours since dose",
   targetField: "Hour Guide",
   maxHours: 16
+});
+```
+
+**Multi Choice Helpers (Workflow)**
+
+Fuegt Werte zu Multi-Choice-Feldern hinzu oder entfernt sie. Bestehende Memento-Auswahllisten werden vor dem Schreiben entpackt, damit Freitext-Auswahlen erhalten bleiben. Beide Funktionen geben `true` zurueck, wenn das Feld geaendert wurde, sonst `false`.
+
+```js
+multiChoiceAppend({
+  field: "typ",
+  value: "Tag"
+});
+
+multiChoiceRemove({
+  field: "typ",
+  value: "Tag"
 });
 ```
 
