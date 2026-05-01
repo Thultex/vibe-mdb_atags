@@ -33,6 +33,7 @@
 - Feature: `multiChoiceAppend()` und `multiChoiceRemove()` aus Issue #31 als Workflow-Addon integriert
 - Fix: Multi-Choice-Feldwerte aus Memento werden als listenartige Werte entpackt, damit Freitext nicht als `[freiwort]` neu angehaengt wird
 - Test/Doku: Multi-Choice-Helfer mit Append-/Remove-Regressionen, README-Eintrag und Versioning-Check ergaenzt
+- Doku: aktuelle Entry-Trigger mit parse-relevanter Reihenfolge in `ENTRY_WORKFLOWS.md` dokumentiert
 - `collectAtags` auf `v1.37` angehoben
 - Feature: Tag-Syntax `tag:inhalt`, `tag:: inhalt`, `inhalt(:tag)` und `"das ist ein Satz"(:Aussage)` aus Issues #21/#22 integriert
 - Fix: Normale Textstellen wie `text: inhalt` werden nicht mehr als Colon-Tag geparst

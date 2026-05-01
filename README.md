@@ -10,6 +10,7 @@
 - [Syntax & Regeln](#syntax--regeln)
 - [Export](#export)
 - [Aktuelle Funktionsaufrufe](#aktuelle-funktionsaufrufe)
+- [Entry Workflows](ENTRY_WORKFLOWS.md)
 
 ## Pflege & Versionierung
 
@@ -26,6 +27,8 @@ Regeln:
 - Changelog mit Datum, Versionssprung und Wirkung ergänzen
 
 Details siehe `CONTRIBUTING.md`.
+
+Die aktuellen Memento-Entry-Trigger und die parse-relevante Reihenfolge stehen in `ENTRY_WORKFLOWS.md`.
 
 ## Ziel
 
