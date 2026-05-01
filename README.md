@@ -576,7 +576,10 @@ Optionen:
 - `rowAggregateMode`
 - `rowAggregateDecimals`
 - `shortenTableHeaders` (`0` = Standard, 10 Zeichen + `.`)
-- `tableHeaderNames`: `"short"` (Standard, Alias-Kürzel), `"long"` oder `"both"`
+- `tableHeaderNames`: `"short"` (Standard, Alias-Kuerzel), `"long"` oder `"both"`
+- `markdownLabelNames`: `"long"` (Standard), `"short"` oder `"both"` fuer normale Markdown-Ausgaben
+- `markdownGroupSeparator`: `"\---"` (Standard) trennt bei mehr als 5 Markdown-Zeilen Link/Mail/Tel, Zahlen, Text/List und Blank; eigener String ist moeglich, `null` deaktiviert das
+- `markdownGroupSeparators: false` bleibt als kompatibler Alias zum Deaktivieren erhalten
 
 ## Aktuelle Funktionsaufrufe
 
@@ -611,7 +614,8 @@ applyTags({
   enabled: 1,
   textFields: ["Alias", "Notiz"],
   targetField: "Atag MD",
-  targetFieldType: "md"
+  targetFieldType: "md",
+  markdownGroupSeparator: "\\---"
 });
 ```
 

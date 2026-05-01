@@ -1,11 +1,12 @@
 /*
 ========================================
-exportAtags v1.42 (sys 2.11)
+exportAtags v1.46 (sys 2.11)
 ========================================
 
 Änderungen
 - Markdown-Ausgabe sortiert normale Werte und Row-Aggregate gemeinsam
-- Markdown-Ausgabe nutzt Alias-/Displaynamen als Label, wenn vorhanden
+- Markdown-Ausgaben nutzen Langnamen als Standard; Row-Tabellen nutzen Kurzheader als Standard
+- Markdown-Kategorietrenner sind als Text konfigurierbar; Standard ist escaped `\---`
 - Kopfkommentar gekürzt, damit der Memento-Java-Editor nicht im Export-Script abstürzt
 - Exporttypen: tags, text, md, rows_md, rows_html, json
 - Tabellen nutzen Alias-Kürzel als Header, optional Langform oder beide Namen
@@ -146,9 +147,17 @@ function buildAtagNormalMarkdown(items, cfg) {
     });
   }
 
+  function outputCategory(sortItem) {
+    var group = getMarkdownSortGroup(sortItem);
+    if (group <= 3) return "link";
+    if (group <= 5) return "number";
+    if (group <= 7) return "text";
+    return "blank";
+  }
+
   for (var i = 0; i < items.length; i++) {
     var it = items[i];
-    var label = markdownItemLabel(it);
+    var label = markdownItemLabel(it, cfg);
 
     if (it.rowValue == null) {
       addOutput(it, formatMarkdownValue(label, it.attrText, it.rawText));
@@ -179,7 +188,7 @@ function buildAtagNormalMarkdown(items, cfg) {
     var vals = rowMap[name];
     var listParts = [];
     var firstItem = rowFirstItem[name];
-    var rowLabel = markdownItemLabel(firstItem);
+    var rowLabel = markdownItemLabel(firstItem, cfg);
 
     for (var k = 0; k < vals.length; k++) {
       listParts.push(formatTagNumberLocale(vals[k], decimals, !!rowHasDecimal[name]));
@@ -211,11 +220,28 @@ function buildAtagNormalMarkdown(items, cfg) {
   }
 
   outputItems.sort(function(a, b) {
-    return compareMarkdownItems(a.sortItem, b.sortItem);
+    return compareMarkdownItems(a.sortItem, b.sortItem, cfg);
   });
 
   var normalLines = [];
-  for (var oi = 0; oi < outputItems.length; oi++) normalLines.push(outputItems[oi].line);
+  var separator = "\\---";
+  if (cfg && Object.prototype.hasOwnProperty.call(cfg, "markdownGroupSeparator")) {
+    separator = cfg.markdownGroupSeparator;
+  }
+  if (cfg && (cfg.markdownGroupSeparators === false || cfg.markdownGroupSeparators === 0)) {
+    separator = null;
+  }
+  var lastCategory = null;
+  var category;
+
+  for (var oi = 0; oi < outputItems.length; oi++) {
+    category = outputCategory(outputItems[oi].sortItem);
+    if (separator != null && outputItems.length > 5 && lastCategory != null && category !== lastCategory) {
+      normalLines.push(String(separator));
+    }
+    normalLines.push(outputItems[oi].line);
+    lastCategory = category;
+  }
 
   return normalLines.join("  \n");
 }

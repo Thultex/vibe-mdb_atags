@@ -122,12 +122,66 @@ assertEqual(
   "linktag: [example.com](https://example.com)  \n" +
   "mailtag: [a@example.com](mailto:a@example.com)  \n" +
   "teltag: [+49 123456](tel:+49123456)  \n" +
+  "\\---  \n" +
+  "alpha: +1  \n" +
+  "zeta: +2  \n" +
+  "realtag: +1,5  \n" +
+  "\\---  \n" +
+  "textalpha: alpha  \n" +
+  "textbeta: beta  \n" +
+  "listtag: a,b  \n" +
+  "\\---  \n" +
+  "plaina  \n" +
+  "plainz"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: { items: baseItems },
+  targetField: "MD",
+  targetFieldType: "md",
+  markdownGroupSeparator: null
+});
+assertEqual(
+  "md-group-separator-null-disabled",
+  entryObj.field("MD"),
+  "linktag: [example.com](https://example.com)  \n" +
+  "mailtag: [a@example.com](mailto:a@example.com)  \n" +
+  "teltag: [+49 123456](tel:+49123456)  \n" +
   "alpha: +1  \n" +
   "zeta: +2  \n" +
   "realtag: +1,5  \n" +
   "textalpha: alpha  \n" +
   "textbeta: beta  \n" +
   "listtag: a,b  \n" +
+  "plaina  \n" +
+  "plainz"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: { items: baseItems },
+  targetField: "MD",
+  targetFieldType: "md",
+  markdownGroupSeparator: "* * *"
+});
+assertEqual(
+  "md-group-separator-custom",
+  entryObj.field("MD"),
+  "linktag: [example.com](https://example.com)  \n" +
+  "mailtag: [a@example.com](mailto:a@example.com)  \n" +
+  "teltag: [+49 123456](tel:+49123456)  \n" +
+  "* * *  \n" +
+  "alpha: +1  \n" +
+  "zeta: +2  \n" +
+  "realtag: +1,5  \n" +
+  "* * *  \n" +
+  "textalpha: alpha  \n" +
+  "textbeta: beta  \n" +
+  "listtag: a,b  \n" +
+  "* * *  \n" +
   "plaina  \n" +
   "plainz"
 );
@@ -149,9 +203,28 @@ exportAtags({
 assertEqual(
   "md-row-aggregate-sorted-with-values-and-alias",
   entryObj.field("MD"),
-  "lr: 2,5  [3, 2]  \n" +
+  "LongRowName: 2,5  [3, 2]  \n" +
   "textname: abc  \n" +
   "blankname"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("LongRowName", "+3", 3, "+3", 1, null, "1", "lr"),
+      item("LongRowName", "+2", 2, "+2", 2, null, "2", "lr")
+    ]
+  },
+  targetField: "MD",
+  targetFieldType: "md",
+  markdownLabelNames: "short"
+});
+assertEqual(
+  "md-short-labels-explicit",
+  entryObj.field("MD"),
+  "lr: 2,5  [3, 2]"
 );
 
 entryObj = makeEntry({});
@@ -186,7 +259,7 @@ exportAtags({
   shortenTableHeaders: -1
 });
 assertEqual(
-  "rows_md-short-headers",
+  "rows_md-short-headers-by-default",
   entryObj.field("Rows"),
   "| rval | IA | ks |  \n" +
   "| :--- | ---: | ---: |  \n" +

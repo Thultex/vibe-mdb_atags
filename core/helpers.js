@@ -1,10 +1,11 @@
 /*
 ========================================
-Atag Helpers v1.14 (sys 2.11)
+Atag Helpers v1.16 (sys 2.11)
 ========================================
 
 Changes
-- markdown sorting uses display labels when available
+- markdown/text exports use long tag names by default; short display names are opt-in
+- pass markdownGroupSeparator/markdownGroupSeparators through export wrappers
 - sort markdown output by detailed value type groups
 - enabled/collectResults accept 0/1 style values
 - applyTags returns null when disabled
@@ -326,17 +327,27 @@ function getSortedMarkdownItems(items) {
   return out;
 }
 
-function markdownItemLabel(item) {
+function markdownItemLabel(item, cfg) {
+  var mode = cfg && cfg.markdownLabelNames ? String(cfg.markdownLabelNames).toLowerCase() : "long";
+  var longName;
+  var shortName;
+
   if (!item) return "";
-  return item.displayName || item.name || "";
+
+  longName = String(item.name || "");
+  shortName = String(item.displayName || item.name || "");
+
+  if (mode === "short") return shortName || longName;
+  if (mode === "both" && shortName && shortName !== longName) return shortName + " (" + longName + ")";
+  return longName || shortName;
 }
 
-function compareMarkdownItems(a, b) {
+function compareMarkdownItems(a, b, cfg) {
   var ga = getMarkdownSortGroup(a);
   var gb = getMarkdownSortGroup(b);
 
   if (ga !== gb) return ga - gb;
-  return compareTagNames(markdownItemLabel(a), markdownItemLabel(b));
+  return compareTagNames(markdownItemLabel(a, cfg), markdownItemLabel(b, cfg));
 }
 
 // ===== ROW =====
@@ -391,7 +402,10 @@ function exportAtagsFromCfg(cfg, entryObj, result) {
     rowIncludeUnits: cfg.rowIncludeUnits,
     rowAggregateDecimals: cfg.rowAggregateDecimals,
     shortenTableHeaders: cfg.shortenTableHeaders,
-    tableHeaderNames: cfg.tableHeaderNames
+    tableHeaderNames: cfg.tableHeaderNames,
+    markdownLabelNames: cfg.markdownLabelNames,
+    markdownGroupSeparators: cfg.markdownGroupSeparators,
+    markdownGroupSeparator: cfg.markdownGroupSeparator
   });
 }
 
