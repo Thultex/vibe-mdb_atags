@@ -1,12 +1,15 @@
 /*
 ========================================
-exportAtags v1.49 (sys 2.11)
+exportAtags v1.54 (sys 2.11)
 ========================================
 
 Änderungen
 - Markdown-Ausgabe sortiert normale Werte und Row-Aggregate gemeinsam
 - Markdown-Ausgaben nutzen Langnamen als Standard; Row-Tabellen nutzen Kurzheader als Standard
-- Markdown-Kategorietrenner sind als Text konfigurierbar; Standard ist `◇`
+- Markdown-Gruppenwechsel werden explizit gerendert; Standard ist eine echte Leerzeile
+- Markdown-Separator-Default bleibt aktiv, wenn Wrapper undefined weiterreichen
+- Markdown-Kategorietrenner zaehlen die urspruenglichen Tags, nicht die verdichteten Ausgabezeilen
+- Text- und Markdown-Exports lassen Blank-Tags standardmaessig weg; per includeBlankTags aktivierbar
 - Kopfkommentar gekürzt, damit der Memento-Java-Editor nicht im Export-Script abstürzt
 - Exporttypen: tags, text, md, rows_md, rows_html, json
 - Tabellen nutzen Alias-Kürzel als Header, optional Langform oder beide Namen
@@ -29,7 +32,9 @@ applyTags({
   enabled: true,
   textFields: ["Alias", "Notiz"],
   targetField: "Atag MD",
-  targetFieldType: "md"
+  targetFieldType: "md",
+  markdownGroupSeparator: "",
+  includeBlankTags: false
 });
 
 applyTags({
@@ -45,10 +50,16 @@ applyTags({
 */
 
 // ===== TEXT =====
-function buildAtagTextLines(items) {
+function includeAtagTextItem(item, cfg) {
+  if (cfg && cfg.includeBlankTags === true) return true;
+  return !(item && (item.attrText == null || item.attrText === ""));
+}
+
+function buildAtagTextLines(items, cfg) {
   var lines = [];
   for (var i = 0; i < items.length; i++) {
     var it = items[i];
+    if (!includeAtagTextItem(it, cfg)) continue;
     if (it.attrText != null && it.attrText !== "") lines.push(it.name + ": " + it.attrText);
     else lines.push(it.name);
   }
@@ -137,6 +148,7 @@ function buildAtagNormalMarkdown(items, cfg) {
   var rowMap = {};
   var rowFirstItem = {};
   var rowHasDecimal = {};
+  var separatorSourceCount = 0;
   var aggMode = cfg && cfg.rowAggregateMode !== undefined ? cfg.rowAggregateMode : "avg";
   var decimals = cfg && cfg.rowAggregateDecimals != null ? cfg.rowAggregateDecimals : 1;
 
@@ -158,6 +170,9 @@ function buildAtagNormalMarkdown(items, cfg) {
   for (var i = 0; i < items.length; i++) {
     var it = items[i];
     var label = markdownItemLabel(it, cfg);
+
+    separatorSourceCount++;
+    if (!includeAtagTextItem(it, cfg)) continue;
 
     if (it.rowValue == null) {
       addOutput(it, formatMarkdownValue(label, it.attrText, it.rawText));
@@ -223,9 +238,12 @@ function buildAtagNormalMarkdown(items, cfg) {
     return compareMarkdownItems(a.sortItem, b.sortItem, cfg);
   });
 
-  var normalLines = [];
-  var separator = "◇";
-  if (cfg && Object.prototype.hasOwnProperty.call(cfg, "markdownGroupSeparator")) {
+  var separator = "";
+  if (
+    cfg &&
+    Object.prototype.hasOwnProperty.call(cfg, "markdownGroupSeparator") &&
+    cfg.markdownGroupSeparator !== undefined
+  ) {
     separator = cfg.markdownGroupSeparator;
   }
   if (cfg && (cfg.markdownGroupSeparators === false || cfg.markdownGroupSeparators === 0)) {
@@ -233,17 +251,25 @@ function buildAtagNormalMarkdown(items, cfg) {
   }
   var lastCategory = null;
   var category;
+  var rendered = "";
+  var lineBreak;
 
   for (var oi = 0; oi < outputItems.length; oi++) {
     category = outputCategory(outputItems[oi].sortItem);
-    if (separator != null && outputItems.length > 5 && lastCategory != null && category !== lastCategory) {
-      normalLines.push(String(separator));
+
+    if (oi > 0) {
+      lineBreak = "  \n";
+      if (separator != null && separatorSourceCount > 5 && lastCategory != null && category !== lastCategory) {
+        lineBreak = separator === "" ? "\n\n" : "  \n" + String(separator) + "  \n";
+      }
+      rendered += lineBreak;
     }
-    normalLines.push(outputItems[oi].line);
+
+    rendered += outputItems[oi].line;
     lastCategory = category;
   }
 
-  return normalLines.join("  \n");
+  return rendered;
 }
 
 // ===== ROWS MD =====
@@ -418,7 +444,7 @@ function exportAtags(cfg) {
   }
 
   if (targetFieldType === "text") {
-    entryObj.set(targetField, buildAtagTextLines(sortedItems).join("\n"));
+    entryObj.set(targetField, buildAtagTextLines(sortedItems, cfg).join("\n"));
     return;
   }
 

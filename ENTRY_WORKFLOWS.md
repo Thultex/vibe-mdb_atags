@@ -130,6 +130,8 @@ function AfterEntry() {
     textFields: ["Notiz", "Record"],
     targetField: "Atag MD",
     targetFieldType: "md",
+    markdownGroupSeparator: "",
+    includeBlankTags: false,
     result: result
   });
 

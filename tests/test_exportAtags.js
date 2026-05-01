@@ -121,18 +121,34 @@ assertEqual(
   entryObj.field("MD"),
   "linktag: [example.com](https://example.com)  \n" +
   "mailtag: [a@example.com](mailto:a@example.com)  \n" +
-  "teltag: [+49 123456](tel:+49123456)  \n" +
-  "◇  \n" +
+  "teltag: [+49 123456](tel:+49123456)\n\n" +
   "alpha: +1  \n" +
   "zeta: +2  \n" +
-  "realtag: +1,5  \n" +
-  "◇  \n" +
+  "realtag: +1,5\n\n" +
   "textalpha: alpha  \n" +
   "textbeta: beta  \n" +
-  "listtag: a,b  \n" +
-  "◇  \n" +
-  "plaina  \n" +
-  "plainz"
+  "listtag: a,b"
+);
+
+entryObj = makeEntry({});
+applyTags({
+  entryObj: entryObj,
+  result: { items: baseItems },
+  targetField: "MD",
+  targetFieldType: "md"
+});
+assertEqual(
+  "apply-md-default-group-separator",
+  entryObj.field("MD"),
+  "linktag: [example.com](https://example.com)  \n" +
+  "mailtag: [a@example.com](mailto:a@example.com)  \n" +
+  "teltag: [+49 123456](tel:+49123456)\n\n" +
+  "alpha: +1  \n" +
+  "zeta: +2  \n" +
+  "realtag: +1,5\n\n" +
+  "textalpha: alpha  \n" +
+  "textbeta: beta  \n" +
+  "listtag: a,b"
 );
 
 entryObj = makeEntry({});
@@ -154,9 +170,7 @@ assertEqual(
   "realtag: +1,5  \n" +
   "textalpha: alpha  \n" +
   "textbeta: beta  \n" +
-  "listtag: a,b  \n" +
-  "plaina  \n" +
-  "plainz"
+  "listtag: a,b"
 );
 
 entryObj = makeEntry({});
@@ -180,10 +194,7 @@ assertEqual(
   "* * *  \n" +
   "textalpha: alpha  \n" +
   "textbeta: beta  \n" +
-  "listtag: a,b  \n" +
-  "* * *  \n" +
-  "plaina  \n" +
-  "plainz"
+  "listtag: a,b"
 );
 
 entryObj = makeEntry({});
@@ -198,14 +209,38 @@ exportAtags({
     ]
   },
   targetField: "MD",
-  targetFieldType: "md"
+  targetFieldType: "md",
+  includeBlankTags: true
 });
 assertEqual(
-  "md-row-aggregate-sorted-with-values-and-alias",
+  "md-include-blank-tags-opt-in",
   entryObj.field("MD"),
   "LongRowName: 2,5  [3, 2]  \n" +
   "textname: abc  \n" +
   "blankname"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("Score", "+1", 1, "+1", 1, null, "1"),
+      item("Score", "+2", 2, "+2", 2, null, "2"),
+      item("Score", "+3", 3, "+3", 3, null, "3"),
+      item("Score", "+4", 4, "+4", 4, null, "4"),
+      item("Texttag", "abc", "abc", "abc"),
+      item("Blanktag", null, null, "")
+    ]
+  },
+  targetField: "MD",
+  targetFieldType: "md"
+});
+assertEqual(
+  "md-group-separators-count-original-tags",
+  entryObj.field("MD"),
+  "Score: 2,5  [1, 2, 3, 4]\n\n" +
+  "Texttag: abc"
 );
 
 entryObj = makeEntry({});
@@ -317,7 +352,7 @@ exportAtags({
 assertEqual(
   "text",
   entryObj.field("Text"),
-  "alpha: +1\nlinktag: https://example.com\nlisttag: a,b\nmailtag: a@example.com\nplaina\nplainz\nrealtag: +1,5\nteltag: +49 123456\ntextalpha: alpha\ntextbeta: beta\nzeta: +2"
+  "alpha: +1\nlinktag: https://example.com\nlisttag: a,b\nmailtag: a@example.com\nrealtag: +1,5\nteltag: +49 123456\ntextalpha: alpha\ntextbeta: beta\nzeta: +2"
 );
 
 entryObj = makeEntry({});

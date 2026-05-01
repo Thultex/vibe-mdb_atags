@@ -1,10 +1,11 @@
 /*
 ========================================
-Atag Helpers v1.16 (sys 2.11)
+Atag Helpers v1.17 (sys 2.11)
 ========================================
 
 Changes
 - markdown/text exports use long tag names by default; short display names are opt-in
+- pass includeBlankTags through export wrappers
 - pass markdownGroupSeparator/markdownGroupSeparators through export wrappers
 - sort markdown output by detailed value type groups
 - enabled/collectResults accept 0/1 style values
@@ -404,6 +405,7 @@ function exportAtagsFromCfg(cfg, entryObj, result) {
     shortenTableHeaders: cfg.shortenTableHeaders,
     tableHeaderNames: cfg.tableHeaderNames,
     markdownLabelNames: cfg.markdownLabelNames,
+    includeBlankTags: cfg.includeBlankTags,
     markdownGroupSeparators: cfg.markdownGroupSeparators,
     markdownGroupSeparator: cfg.markdownGroupSeparator
   });

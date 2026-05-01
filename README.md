@@ -578,8 +578,9 @@ Optionen:
 - `shortenTableHeaders` (`0` = Standard, 10 Zeichen + `.`)
 - `tableHeaderNames`: `"short"` (Standard, Alias-Kuerzel), `"long"` oder `"both"`
 - `markdownLabelNames`: `"long"` (Standard), `"short"` oder `"both"` fuer normale Markdown-Ausgaben
-- `markdownGroupSeparator`: `"◇"` (Standard) trennt bei mehr als 5 Markdown-Zeilen Link/Mail/Tel, Zahlen, Text/List und Blank; eigener String ist moeglich, `null` deaktiviert das
+- `markdownGroupSeparator`: `""` (Standard) trennt bei mehr als 5 Markdown-Zeilen Link/Mail/Tel, Zahlen und Text/List mit einer echten Leerzeile; eigener String ist moeglich, `null` deaktiviert das
 - `markdownGroupSeparators: false` bleibt als kompatibler Alias zum Deaktivieren erhalten
+- `includeBlankTags: true` gibt nackte Tags ohne Wert im `text`- und `md`-Export mit aus; Standard ist `false`
 
 ## Aktuelle Funktionsaufrufe
 
@@ -615,7 +616,8 @@ applyTags({
   textFields: ["Alias", "Notiz"],
   targetField: "Atag MD",
   targetFieldType: "md",
-  markdownGroupSeparator: "◇"
+  markdownGroupSeparator: "",
+  includeBlankTags: false
 });
 ```
 
@@ -687,6 +689,8 @@ exportAtags({
   entryObj: entry(),
   result: result,
   targetField: "Atag MD",
-  targetFieldType: "md"
+  targetFieldType: "md",
+  markdownGroupSeparator: "",
+  includeBlankTags: false
 });
 ```
