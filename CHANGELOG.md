@@ -19,6 +19,9 @@
 
 ## 2026-05-01
 
+- `Atag Helpers` auf `v1.13` angehoben
+- Feature: Markdown-Export sortiert nach Typgruppen Link, Mail, Tel, Integer, Real, Text, List, Blank und innerhalb der Gruppen alphabetisch
+- Test: Export-Regression fuer Issue #19 mit Tel-, Real- und List-Werten ergaenzt
 - `Addon Sequence Counter` auf `v1.03` angehoben
 - Fix: Im `currentEntry`-Modus ersetzt der aktuelle Eintrag eine gleichnamige/gleich-ID Library-Version im Berechnungsset, damit `AfterEntry()` nicht mit stale `lib().entries()` rechnet
 - Test: Regression fuer `AfterEntry()`-nahen Fall mit altem Library-Eintrag und aktuellem Entry ergaenzt

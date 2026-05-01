@@ -61,8 +61,11 @@ var baseItems = [
   item("alpha", "+1", 1, "+1"),
   item("mailtag", "a@example.com", "a@example.com", "a@example.com"),
   item("linktag", "https://example.com", "https://example.com", "https://example.com"),
+  item("teltag", "+49 123456", "+49 123456", "+49 123456"),
+  item("realtag", "+1,5", 1.5, "+1,5"),
   item("textbeta", "beta", "beta", "beta"),
   item("textalpha", "alpha", "alpha", "alpha"),
+  item("listtag", "a,b", ["a", "b"], "a,b"),
   item("plainz", null, null, "plainz"),
   item("plaina", null, null, "plaina")
 ];
@@ -87,7 +90,7 @@ exportAtags({
   targetField: "Tags",
   targetFieldType: "tags"
 });
-assertArray("tags", entryObj.field("Tags"), ["alpha", "email", "foreign", "link", "linktag", "mailtag", "plaina", "plainz", "textalpha", "textbeta", "zeta"]);
+assertArray("tags", entryObj.field("Tags"), ["alpha", "email", "foreign", "link", "linktag", "listtag", "mailtag", "plaina", "plainz", "realtag", "tel", "teltag", "textalpha", "textbeta", "zeta"]);
 
 entryObj = makeEntry({
   Tags: ["zForeign", "alpha", "mForeign"],
@@ -117,10 +120,13 @@ assertEqual(
   entryObj.field("MD"),
   "linktag: [example.com](https://example.com)  \n" +
   "mailtag: [a@example.com](mailto:a@example.com)  \n" +
+  "teltag: [+49 123456](tel:+49123456)  \n" +
   "alpha: +1  \n" +
   "zeta: +2  \n" +
+  "realtag: +1,5  \n" +
   "textalpha: alpha  \n" +
   "textbeta: beta  \n" +
+  "listtag: a,b  \n" +
   "plaina  \n" +
   "plainz"
 );
@@ -214,7 +220,7 @@ exportAtags({
 assertEqual(
   "text",
   entryObj.field("Text"),
-  "alpha: +1\nlinktag: https://example.com\nmailtag: a@example.com\nplaina\nplainz\ntextalpha: alpha\ntextbeta: beta\nzeta: +2"
+  "alpha: +1\nlinktag: https://example.com\nlisttag: a,b\nmailtag: a@example.com\nplaina\nplainz\nrealtag: +1,5\nteltag: +49 123456\ntextalpha: alpha\ntextbeta: beta\nzeta: +2"
 );
 
 entryObj = makeEntry({});
@@ -227,7 +233,7 @@ exportAtags({
 assertEqual(
   "json",
   entryObj.field("Json"),
-  "{\"alpha\":1,\"linktag\":\"https://example.com\",\"mailtag\":\"a@example.com\",\"plaina\":null,\"plainz\":null,\"textalpha\":\"alpha\",\"textbeta\":\"beta\",\"zeta\":2}"
+  "{\"alpha\":1,\"linktag\":\"https://example.com\",\"listtag\":\"a,b\",\"mailtag\":\"a@example.com\",\"plaina\":null,\"plainz\":null,\"realtag\":1.5,\"teltag\":\"+49 123456\",\"textalpha\":\"alpha\",\"textbeta\":\"beta\",\"zeta\":2}"
 );
 
 entryObj = makeEntry({ MD: "keep" });

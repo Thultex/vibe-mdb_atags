@@ -1,9 +1,10 @@
 /*
 ========================================
-Atag Helpers v1.12 (sys 2.11)
+Atag Helpers v1.13 (sys 2.11)
 ========================================
 
 Changes
+- sort markdown output by detailed value type groups
 - enabled/collectResults accept 0/1 style values
 - applyTags returns null when disabled
 - shared helpers for collect/export scripts
@@ -263,51 +264,65 @@ function formatMarkdownValue(name, val, raw) {
   return name + ": " + val;
 }
 
-function classifyMarkdownKind(raw) {
+function isArrayValue(val) {
+  return Object.prototype.toString.call(val) === "[object Array]";
+}
+
+function classifyMarkdownKind(item) {
+  var raw = item ? item.rawText : "";
+  var val = item ? item.attrValue : null;
   var s = trimString(raw);
+  var n;
 
   if (isLinkRaw(s)) return "link";
   if (isEmailRaw(s)) return "mail";
   if (isTelRaw(s)) return "tel";
-  if (/^[+-]?\d+(?:[.,]\d+)?$/.test(s)) return "number";
+  if (isArrayValue(val)) return "list";
+
+  n = toNumberIfPossible(val);
+  if (n != null || /^[+-]?\d+(?:[.,]\d+)?$/.test(s)) {
+    if (itemHasDecimalValue(item)) return "real";
+    return "int";
+  }
 
   return "text";
 }
 
 function getMarkdownSortGroup(item) {
   var kind;
-  if (!item || item.attrText == null || item.attrText === "") return 4;
+  if (!item || item.attrText == null || item.attrText === "") return 8;
 
-  kind = classifyMarkdownKind(item.rawText);
+  kind = classifyMarkdownKind(item);
 
-  if (kind === "link" || kind === "mail" || kind === "tel") return 1;
-  if (kind === "number") return 2;
-  if (kind === "text") return 3;
+  if (kind === "link") return 1;
+  if (kind === "mail") return 2;
+  if (kind === "tel") return 3;
+  if (kind === "int") return 4;
+  if (kind === "real") return 5;
+  if (kind === "text") return 6;
+  if (kind === "list") return 7;
 
-  return 4;
+  return 8;
 }
 
 function getSortedMarkdownItems(items) {
-  var g1 = [];
-  var g2 = [];
-  var g3 = [];
-  var g4 = [];
+  var groups = [[], [], [], [], [], [], [], []];
   var i;
   var it;
   var group;
+  var out = [];
 
   for (i = 0; i < items.length; i++) {
     it = items[i];
     group = getMarkdownSortGroup(it);
-
-    if (group === 1) g1.push(it);
-    else if (group === 2) g2.push(it);
-    else if (group === 3) g3.push(it);
-    else g4.push(it);
+    groups[group - 1].push(it);
   }
 
-  return sortItemsByTagName(g1)
-    .concat(sortItemsByTagName(g2), sortItemsByTagName(g3), sortItemsByTagName(g4));
+  for (i = 0; i < groups.length; i++) {
+    out = out.concat(sortItemsByTagName(groups[i]));
+  }
+
+  return out;
 }
 
 // ===== ROW =====
