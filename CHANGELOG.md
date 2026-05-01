@@ -19,6 +19,9 @@
 
 ## 2026-05-01
 
+- `Addon Floating Average` auf `v1.00` ergaenzt
+- Feature: `updateAverage()` aus Issue #28 als Workflow-Addon integriert
+- Verifikation/Doku: Syntax- und Versioning-Check; kein eigener Test wegen ueberschaubarer Addon-Logik
 - `exportAtags` auf `v1.42` angehoben
 - `Atag Helpers` auf `v1.14` angehoben
 - Fix: Markdown-Export sortiert Row-Aggregate gemeinsam mit normalen Werten, behält die Werte in `[]` aber in Row-Reihenfolge

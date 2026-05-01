@@ -120,6 +120,9 @@ Ziel-Felder
 - `addons/3_workflow/sequenceCounter.js` (Sequenz- und Spree-Zaehler)
   - `updateSequenceSpree()`
   - optional nur aktueller Eintrag ueber `currentEntry`
+- `addons/3_workflow/floatingAverage.js` (gleitender Gruppen-Mittelwert)
+  - `updateAverage()`
+  - optional nur aktueller Eintrag ueber `currentEntry`
 
 **Integration Add-ons**
 - `addons/6_integration/obsidianLinker.js` (Memento-zu-Obsidian Advanced URI)
@@ -220,6 +223,27 @@ updateSequenceSpree({
 ```
 
 Ziel-Felder sind optional. Mit `currentEntry` wird nur der aktuelle Eintrag geschrieben; ohne `currentEntry` werden alle berechneten Eintraege aktualisiert. `clearOnEmpty: false` verhindert das Leeren der Ziel-Felder, wenn ein Gruppierungsfeld leer ist.
+
+**Floating Average (Workflow)**
+
+Berechnet einen gleitenden Mittelwert innerhalb zusammenhaengender Gruppen.
+
+```js
+updateAverage({
+  entries: lib().entries(),
+  currentEntry: entry(),
+  fieldDate: "Einnahmedatum",
+  groupFields: ["Dosis"],
+  fieldValue: "Ausgabewert GW+AT",
+  fieldResult: "Ausgabewert Mittel",
+  ignoreFields: ["Unausgefüllt"],
+  avgCount: 3,
+  skipFirst: 2,
+  decimals: 2
+});
+```
+
+Mit `currentEntry` wird nur der aktuelle Eintrag geschrieben. Falls `lib().entries()` noch den alten Stand enthaelt, ersetzt `currentEntry` diesen Eintrag im Berechnungsset.
 
 **Tag Cleaner (Tagging)**
 
