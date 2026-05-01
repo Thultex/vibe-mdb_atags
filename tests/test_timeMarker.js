@@ -218,6 +218,145 @@ function testWritesCleanedBlankWhenSameTimestampAlreadyExists() {
   assertEquals("write-cleaned-blank-when-same-timestamp-exists", entryObj.field("Note"), "13: Nackenschmerzen\u207A\u00B2, Ks\u207A\u00B9\n15: weiter");
 }
 
+function testUsesColonPlaceholderAsCurrentMarker() {
+  var entryObj = makeEntry({
+    Note: ": Text",
+    Hours: 12.5
+  });
+
+  appendTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    sourceMode: "hours",
+    sourceHoursField: "Hours",
+    insertMode: "time_block_top",
+    stepHours: 0.5,
+    maxHours: 30
+  });
+
+  assertEquals("colon-placeholder-current-marker", entryObj.field("Note"), "12,5: Text");
+}
+
+function testUsesColonPlaceholderAfterExistingMarker() {
+  var entryObj = makeEntry({
+    Note: "0: Nase zu, ks\u00B2\n: sadf",
+    Hours: 3
+  });
+
+  appendTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    sourceMode: "hours",
+    sourceHoursField: "Hours",
+    insertMode: "time_block_top",
+    stepHours: 0.5,
+    maxHours: 30
+  });
+
+  assertEquals("colon-placeholder-after-existing-marker", entryObj.field("Note"), "0: Nase zu, ks\u00B2\n3: sadf");
+}
+
+function testRemovesEmptyColonPlaceholder() {
+  var entryObj = makeEntry({
+    Note: ":\n\nText",
+    Hours: 12.5
+  });
+
+  appendTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    sourceMode: "hours",
+    sourceHoursField: "Hours",
+    insertMode: "time_block_top",
+    stepHours: 0.5,
+    maxHours: 30
+  });
+
+  assertEquals("empty-colon-placeholder", entryObj.field("Note"), "12,5: Text");
+}
+
+function testCleanupPlaceholdersDoesNotInsertMarker() {
+  var entryObj = makeEntry({
+    Note: "Intro\n: Text",
+    Hours: 2
+  });
+
+  cleanupTimeMarkerPlaceholders({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    sourceMode: "hours",
+    sourceHoursField: "Hours",
+    stepHours: 0.5
+  });
+
+  assertEquals("cleanup-placeholders-no-insert", entryObj.field("Note"), "Intro\n: Text");
+}
+
+function testCleanupRemovesWhitespaceOnlyTimestamp() {
+  var entryObj = makeEntry({
+    Note: "1: Info\n3:   \nText"
+  });
+
+  cleanupTimeMarkerPlaceholders({
+    entryObj: entryObj,
+    targetTextField: "Note"
+  });
+
+  assertEquals("cleanup-removes-whitespace-only-timestamp", entryObj.field("Note"), "1: Info\nText");
+}
+
+function testCleanupRemovesTrailingEmptyTimestamp() {
+  var entryObj = makeEntry({
+    Note: "0: Nase zu, ks\u00B2\n3: "
+  });
+
+  cleanupTimeMarkerPlaceholders({
+    entryObj: entryObj,
+    targetTextField: "Note"
+  });
+
+  assertEquals("cleanup-removes-trailing-empty-timestamp", entryObj.field("Note"), "0: Nase zu, ks\u00B2");
+}
+
+function testCleanupRemovesTrailingEmptyTimestampWithCarriageReturn() {
+  var entryObj = makeEntry({
+    Note: "0: Nase zu, ks\u00B2\r3: "
+  });
+
+  cleanupTimeMarkerPlaceholders({
+    entryObj: entryObj,
+    targetTextField: "Note"
+  });
+
+  assertEquals("cleanup-removes-cr-trailing-empty-timestamp", entryObj.field("Note"), "0: Nase zu, ks\u00B2");
+}
+
+function testCleanupRemovesNonBreakingSpaceTimestamp() {
+  var entryObj = makeEntry({
+    Note: "0: Nase zu, ks\u00B2\n3:\u00A0"
+  });
+
+  cleanupTimeMarkerPlaceholders({
+    entryObj: entryObj,
+    targetTextField: "Note"
+  });
+
+  assertEquals("cleanup-removes-nbsp-empty-timestamp", entryObj.field("Note"), "0: Nase zu, ks\u00B2");
+}
+
+function testCleanupAcceptsTextFieldAlias() {
+  var entryObj = makeEntry({
+    Note: "0: Nase zu, ks\u00B2\n3: "
+  });
+
+  cleanupTimeMarkerPlaceholders({
+    entryObj: entryObj,
+    textField: "Note"
+  });
+
+  assertEquals("cleanup-accepts-text-field-alias", entryObj.field("Note"), "0: Nase zu, ks\u00B2");
+}
+
 testInlineInsertForSingleTextLine();
 testSkipsWhenDefaultLimitExceeded();
 testCleansWhenDefaultLimitExceeded();
@@ -228,5 +367,14 @@ testRemovesBlankLinesLeftBetweenTimestamps();
 testRemovesBlankBetweenNewMarkerAndSingleTextLine();
 testRemovesBlankBetweenFilledAndCurrentTimestamp();
 testWritesCleanedBlankWhenSameTimestampAlreadyExists();
+testUsesColonPlaceholderAsCurrentMarker();
+testUsesColonPlaceholderAfterExistingMarker();
+testRemovesEmptyColonPlaceholder();
+testCleanupPlaceholdersDoesNotInsertMarker();
+testCleanupRemovesWhitespaceOnlyTimestamp();
+testCleanupRemovesTrailingEmptyTimestamp();
+testCleanupRemovesTrailingEmptyTimestampWithCarriageReturn();
+testCleanupRemovesNonBreakingSpaceTimestamp();
+testCleanupAcceptsTextFieldAlias();
 
 print("OK");

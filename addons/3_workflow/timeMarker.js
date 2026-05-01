@@ -1,9 +1,10 @@
 /*
 ========================================
-Shared Script: Time Marker v1.26 (sys 2.11)
+Shared Script: Time Marker v1.27 (sys 2.11)
 ========================================
 
 Änderungen
+- Doppelpunkt-Platzhalter am Zeilenanfang werden beim Einfuegen mit dem aktuellen Marker belegt
 - Bereinigung leerer TimeMarker und Leerzeilen läuft auch beim Abbruch durch `maxHours`
 - bereinigte Leerzeilen werden auch zurückgeschrieben, wenn kein neuer Marker nötig ist
 - Leerzeilen im Zeitblock werden nach Entfernen leerer TimeMarker bereinigt
@@ -12,38 +13,13 @@ Shared Script: Time Marker v1.26 (sys 2.11)
 - optionales Stundenlimit ergänzt
 - Standardlimit auf 30 Stunden gesetzt
 
-Beispiele
+Kurzbeispiele
 
-Input:
-test
+- `test` wird bei aktuellem Marker `2` zu `2: test`
+- `: Text` wird bei aktuellem Marker `12,5` zu `12,5: Text`
+- eine einzelne Zeile `:` wird entfernt
 
-Output:
-2: test
-
-
-Input:
-test
-test2
-
-Output:
-2:
-
-test
-test2
-
-
-Input:
-1: info
-test
-
-Output:
-1: info
-2:
-
-test
-
-
-Standard Aufruf
+Anwendung vor oder beim Erstellen eines Eintrags
 
 appendTimeMarker({
   targetTextField: "Notiz",
@@ -52,6 +28,12 @@ appendTimeMarker({
   roundMode: "round",
   insertMode: "time_block_top",
   maxHours: 30
+});
+
+Anwendung in AfterEntry nur zum Loeschen leerer Marker
+
+cleanupTimeMarkerPlaceholders({
+  targetTextField: "Notiz",
 });
 */
 
@@ -129,6 +111,11 @@ function formatHourLabel(hours) {
   return s;
 }
 
+function splitTimeMarkerLines(text) {
+  if (!text) return [];
+  return String(text).split(/\r\n|\r|\n/);
+}
+
 function parseLeadingHour(line) {
   if (!line) return null;
 
@@ -138,18 +125,23 @@ function parseLeadingHour(line) {
   return parseFloat(m[1].replace(",", "."));
 }
 
+function isBlankTimeMarkerText(text) {
+  return /^[\s\u00A0\u2000-\u200B\u202F\u205F\u3000]*$/.test(String(text || ""));
+}
+
 function isTimestampLine(line) {
   return parseLeadingHour(line) != null;
 }
 
 function isEmptyTimestampLine(line) {
-  return /^\s*\d+(?:[.,]\d+)?\s*:\s*$/.test(String(line || ""));
+  var m = String(line || "").match(/^\s*\d+(?:[.,]\d+)?\s*:(.*)$/);
+  return !!(m && isBlankTimeMarkerText(m[1]));
 }
 
 function removeEmptyTimestampLines(text) {
   if (!text) return "";
 
-  var raw = String(text).split(/\r?\n/);
+  var raw = splitTimeMarkerLines(text);
   var out = [];
 
   for (var i = 0; i < raw.length; i++) {
@@ -160,7 +152,7 @@ function removeEmptyTimestampLines(text) {
 }
 
 function normalizeTimeMarkerText(text) {
-  var raw = text ? String(text).split(/\r?\n/) : [];
+  var raw = splitTimeMarkerLines(text);
   var out = [];
   var i;
   var line;
@@ -169,14 +161,14 @@ function normalizeTimeMarkerText(text) {
 
   for (i = 0; i < raw.length; i++) {
     line = String(raw[i]);
-    if (line.replace(/^\s+|\s+$/g, "") !== "") {
+    if (!isBlankTimeMarkerText(line)) {
       out.push(line);
       continue;
     }
 
     prevWasTime = out.length > 0 && isTimestampLine(out[out.length - 1]);
     nextIsTime = false;
-    while (i + 1 < raw.length && String(raw[i + 1]).replace(/^\s+|\s+$/g, "") === "") i++;
+    while (i + 1 < raw.length && isBlankTimeMarkerText(raw[i + 1])) i++;
     if (i + 1 < raw.length) nextIsTime = isTimestampLine(raw[i + 1]);
 
     if (prevWasTime && nextIsTime) continue;
@@ -184,14 +176,73 @@ function normalizeTimeMarkerText(text) {
     if (out.length && i + 1 < raw.length) out.push("");
   }
 
-  while (out.length && String(out[out.length - 1]).replace(/^\s+|\s+$/g, "") === "") out.pop();
+  while (out.length && isBlankTimeMarkerText(out[out.length - 1])) out.pop();
+  return out.join("\n");
+}
+
+function replaceColonPlaceholderLines(text, hourLabel) {
+  if (!text) return "";
+
+  var raw = splitTimeMarkerLines(text);
+  var out = [];
+  var label = hourLabel != null && hourLabel !== "" ? String(hourLabel) : null;
+  var i;
+  var line;
+  var m;
+
+  for (i = 0; i < raw.length; i++) {
+    line = String(raw[i]);
+
+    if (/^\s*:\s*$/.test(line)) continue;
+
+    m = line.match(/^(\s*):\s*(.+)$/);
+    if (m && label != null) {
+      out.push(String(m[1] || "") + label + ": " + String(m[2] || "").replace(/^\s+|\s+$/g, ""));
+      continue;
+    }
+
+    out.push(line);
+  }
+
+  return out.join("\n");
+}
+
+function hasFillableColonPlaceholderLine(text) {
+  var raw = splitTimeMarkerLines(text);
+  var i;
+  var line;
+  var m;
+
+  for (i = 0; i < raw.length; i++) {
+    line = String(raw[i]);
+    m = line.match(/^\s*:\s*(.*)$/);
+    if (m && !isBlankTimeMarkerText(m[1])) return true;
+  }
+
+  return false;
+}
+
+function removeEmptyColonPlaceholderLines(text) {
+  if (!text) return "";
+
+  var raw = splitTimeMarkerLines(text);
+  var out = [];
+  var i;
+  var line;
+
+  for (i = 0; i < raw.length; i++) {
+    line = String(raw[i]);
+    if (/^\s*:\s*$/.test(line)) continue;
+    out.push(line);
+  }
+
   return out.join("\n");
 }
 
 function hasSameOrLaterLine(text, targetHour) {
   if (!text) return false;
 
-  var lines = String(text).split(/\r?\n/);
+  var lines = splitTimeMarkerLines(text);
 
   for (var i = 0; i < lines.length; i++) {
     var h = parseLeadingHour(lines[i]);
@@ -204,12 +255,12 @@ function hasSameOrLaterLine(text, targetHour) {
 }
 
 function normalizeLines(text) {
-  var raw = text ? String(text).split(/\r?\n/) : [];
+  var raw = splitTimeMarkerLines(text);
   var out = [];
 
   for (var i = 0; i < raw.length; i++) {
     var line = String(raw[i]);
-    if (line.replace(/^\s+|\s+$/g, "") !== "") {
+    if (!isBlankTimeMarkerText(line)) {
       out.push(line);
     }
   }
@@ -289,6 +340,10 @@ function resolveMaxHours(cfg) {
   return 30;
 }
 
+function resolveTimeMarkerTextField(cfg) {
+  return cfg.targetTextField || cfg.textField;
+}
+
 function insertIntoTimeBlockTop(text, newLine) {
   var blocks = splitTextBlocks(text);
 
@@ -315,9 +370,10 @@ function appendTimeMarker(cfg) {
   cfg = cfg || {};
 
   var e = cfg.entryObj || entry();
-  if (!e || !cfg.targetTextField) return;
+  var targetTextField = resolveTimeMarkerTextField(cfg);
+  if (!e || !targetTextField) return;
 
-  var text = e.field(cfg.targetTextField);
+  var text = e.field(targetTextField);
   if (text == null) text = "";
   text = String(text);
   var originalText = text;
@@ -331,15 +387,22 @@ function appendTimeMarker(cfg) {
     cfg.roundMode || "round"
   );
 
+  var hasFillablePlaceholder = hasFillableColonPlaceholderLine(text);
+  text = replaceColonPlaceholderLines(text, formatHourLabel(stepped));
   text = normalizeTimeMarkerText(removeEmptyTimestampLines(text));
 
+  if (hasFillablePlaceholder) {
+    e.set(targetTextField, text);
+    return;
+  }
+
   if (shouldSkipForMaxHours(rawHours, stepped, resolveMaxHours(cfg))) {
-    if (text !== originalText) e.set(cfg.targetTextField, text);
+    if (text !== originalText) e.set(targetTextField, text);
     return;
   }
 
   if (hasSameOrLaterLine(text, stepped)) {
-    if (text !== originalText) e.set(cfg.targetTextField, text);
+    if (text !== originalText) e.set(targetTextField, text);
     return;
   }
 
@@ -353,5 +416,22 @@ function appendTimeMarker(cfg) {
     newText = insertSimple(text, newLine, insertMode);
   }
 
-  e.set(cfg.targetTextField, newText);
+  e.set(targetTextField, newText);
+}
+
+function cleanupTimeMarkerPlaceholders(cfg) {
+  cfg = cfg || {};
+
+  var e = cfg.entryObj || entry();
+  var targetTextField = resolveTimeMarkerTextField(cfg);
+  if (!e || !targetTextField) return;
+
+  var text = e.field(targetTextField);
+  if (text == null) text = "";
+  text = String(text);
+
+  var newText = removeEmptyColonPlaceholderLines(text);
+  newText = normalizeTimeMarkerText(removeEmptyTimestampLines(newText));
+
+  if (newText !== text) e.set(targetTextField, newText);
 }

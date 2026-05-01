@@ -1,10 +1,11 @@
 /*
 ========================================
-collectAtags v1.36 (sys 2.11)
+collectAtags v1.37 (sys 2.11)
 ========================================
 
 Changes
 - skip alias declaration lines during normal parsing
+- add compact, explicit, and inverted text tag syntaxes
 - parse bare tags in readable tag lines
 - simple tag suffix `x` is parsed as an empty explicit tag
 - alias entries can carry fixed values, e.g. `@@Kopfschmerz (KSch): ks, Kopfdruck1`
@@ -377,6 +378,36 @@ function collectAtags(cfg) {
     );
   }
 
+  function addParsedTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw) {
+    var cleanName = normalizeTagName(name);
+    var aliasInfo;
+    var resolvedName;
+    var effectiveRaw;
+    var norm;
+
+    if (!cleanName || /^\d+$/.test(cleanName)) return;
+
+    aliasInfo = resolveAlias(cleanName, aliasMap);
+    resolvedName = aliasInfo.name;
+    effectiveRaw = aliasInfo.fixedRaw != null ? aliasInfo.fixedRaw : raw;
+
+    if (!resolvedName || isExcluded(resolvedName)) return;
+    if (/^\/\//.test(String(effectiveRaw || ""))) return;
+
+    norm = normalizeAttr(effectiveRaw);
+    if (aliasInfo.invert) norm = invertNormalizedAttr(norm);
+
+    addItem(
+      items, seen,
+      resolvedName,
+      norm.attrText,
+      norm.attrValue,
+      effectiveRaw,
+      rowValue, rowUnit, rowRaw,
+      aliasInfo.shortName || resolvedName
+    );
+  }
+
   function addReadableTagLineItems(tagText, items, seen, aliasMap, rowValue, rowUnit, rowRaw) {
     var s = String(tagText || "");
     var used = [];
@@ -555,8 +586,26 @@ function collectAtags(cfg) {
         );
       }
 
-      // colon: gfk: 1,4
-      var rxColon = /(^|[\s\n\r])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:\s*(?:"([^"]*)"|([^\s,;]+))/g;
+      // inverted text tag: inhalt(:tag) / "das ist ein Satz"(:Aussage)
+      var rxInvertedQuoted = /(^|[\s,;.!?()\[\]{}\n\r])(?:'([^']*)'|"([^"]*)")\s*\(:\s*([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*\)/g;
+      var miq;
+      while ((miq = rxInvertedQuoted.exec(parseLine)) !== null) {
+        var rawIQ = miq[2] != null && miq[2] !== "" ? miq[2] : (miq[3] || "");
+        var nameIQ = miq[4] || "";
+
+        if (isInsideAtagQuoteState(quoteState, miq.index + String(miq[1] || "").length)) continue;
+        addParsedTagValue(nameIQ, rawIQ, items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw);
+      }
+
+      var rxInvertedBare = /(^|[\s,;.!?()\[\]{}\n\r])([^\s,;.!?()\[\]{}:'"#]+)\s*\(:\s*([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*\)/g;
+      var mib;
+      while ((mib = rxInvertedBare.exec(parseLine)) !== null) {
+        if (isInsideAtagQuoteState(quoteState, mib.index + String(mib[1] || "").length)) continue;
+        addParsedTagValue(mib[3] || "", mib[2] || "", items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw);
+      }
+
+      // colon: gfk: 1,4 / tag:inhalt / tag:: inhalt
+      var rxColon = /(^|[\s\n\r])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:(?:"([^"]*)"|([^:\s,;.!?()\[\]{}]+))/g;
       var m1;
       while ((m1 = rxColon.exec(parseLine)) !== null) {
         var name1 = m1[2];
@@ -565,26 +614,22 @@ function collectAtags(cfg) {
 
         if (!name1) continue;
         if (isInsideAtagQuoteState(quoteState, m1.index)) continue;
-        if (/^\d+$/.test(name1)) continue;
+        addParsedTagValue(name1, raw1, items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw);
+      }
 
-        var alias1 = resolveAlias(name1, aliasMap);
-        name1 = alias1.name;
+      var rxColonSpacedValue = /(^|[\s\n\r])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:\s*(?:"([^"]*)"|([+\-]?\d+(?:[.,]\d+)?|\++|-+))(?=$|[\s,;.!?()\[\]{}])/g;
+      while ((m1 = rxColonSpacedValue.exec(parseLine)) !== null) {
+        raw1 = m1[3] != null && m1[3] !== "" ? m1[3] : (m1[4] || "");
+        if (isInsideAtagQuoteState(quoteState, m1.index)) continue;
+        addParsedTagValue(m1[2] || "", raw1, items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw);
+      }
 
-        if (isExcluded(name1)) continue;
-        if (/^\/\//.test(raw1)) continue;
-
-        var norm1 = normalizeAttr(alias1.fixedRaw != null ? alias1.fixedRaw : raw1);
-        if (alias1.invert) norm1 = invertNormalizedAttr(norm1);
-
-        addItem(
-          items, seen,
-          name1,
-          norm1.attrText,
-          norm1.attrValue,
-          alias1.fixedRaw != null ? alias1.fixedRaw : raw1,
-          currentRowValue, currentRowUnit, currentRowRaw,
-          alias1.shortName || name1
-        );
+      var rxColonExplicit = /(^|[\s\n\r])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*::\s*(?:"([^"]*)"|([^\r\n,;.!?()\[\]{}]+))/g;
+      while ((m1 = rxColonExplicit.exec(parseLine)) !== null) {
+        raw1 = m1[3] != null && m1[3] !== "" ? m1[3] : (m1[4] || "");
+        raw1 = String(raw1).replace(/^\s+|\s+$/g, "");
+        if (isInsideAtagQuoteState(quoteState, m1.index)) continue;
+        addParsedTagValue(m1[2] || "", raw1, items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw);
       }
 
       // explicit tag with hash and value: test#string / test#5,

@@ -345,8 +345,24 @@ Fügt Zeitmarker wie `2:` oder `30,5:` in ein Textfeld ein und gruppiert sie bei
 - rundet über `stepHours` und `roundMode`
 - stoppt optional ab `maxHours` Stunden; Standard ist `30`
 - `maxHours: null` deaktiviert das Limit
+- `: Text` am Zeilenanfang wird zum aktuellen Marker, `:` ohne Inhalt wird entfernt
+- `cleanupTimeMarkerPlaceholders()` ist fuer `AfterEntry()` gedacht, erzeugt keine neuen Marker und entfernt nur leere Marker wie `:` oder `3: `
+- `targetTextField` ist der normale Feldparameter; `textField` bleibt nur als Alias kompatibel
 
-Beispiel:
+Kurzbeispiele:
+
+```text
+test
+-> 2: test
+
+: Text
+-> 12,5: Text
+
+:
+-> wird entfernt
+```
+
+Anwendung vor oder beim Erstellen eines Eintrags:
 
 ```js
 appendTimeMarker({
@@ -357,6 +373,14 @@ appendTimeMarker({
   roundMode: "round",
   insertMode: "time_block_top",
   maxHours: 30
+});
+```
+
+Anwendung in `AfterEntry()` nur zum Loeschen leerer Marker:
+
+```js
+cleanupTimeMarkerPlaceholders({
+  targetTextField: "Notiz"
 });
 ```
 
@@ -413,6 +437,10 @@ tag-2
 tag++
 tag: 5
 tag: "text"
+tag:inhalt
+tag:: inhalt
+inhalt(:tag)
+"das ist ein Satz"(:Aussage)
 'tag name'#
 
 alias:
