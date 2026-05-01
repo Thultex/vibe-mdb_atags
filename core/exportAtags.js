@@ -1,9 +1,11 @@
 /*
 ========================================
-exportAtags v1.41 (sys 2.11)
+exportAtags v1.42 (sys 2.11)
 ========================================
 
 Änderungen
+- Markdown-Ausgabe sortiert normale Werte und Row-Aggregate gemeinsam
+- Markdown-Ausgabe nutzt Alias-/Displaynamen als Label, wenn vorhanden
 - Kopfkommentar gekürzt, damit der Memento-Java-Editor nicht im Export-Script abstürzt
 - Exporttypen: tags, text, md, rows_md, rows_html, json
 - Tabellen nutzen Alias-Kürzel als Header, optional Langform oder beide Namen
@@ -130,31 +132,38 @@ function buildAtagRowHeaderLabel(row, includeUnits) {
 
 // ===== NORMAL MD =====
 function buildAtagNormalMarkdown(items, cfg) {
-  var sortedItems = getSortedMarkdownItems(items);
-  var normalLines = [];
+  var outputItems = [];
   var rowMap = {};
-  var rowOrder = [];
+  var rowFirstItem = {};
   var rowHasDecimal = {};
   var aggMode = cfg && cfg.rowAggregateMode !== undefined ? cfg.rowAggregateMode : "avg";
   var decimals = cfg && cfg.rowAggregateDecimals != null ? cfg.rowAggregateDecimals : 1;
 
-  for (var i = 0; i < sortedItems.length; i++) {
-    var it = sortedItems[i];
+  function addOutput(sortItem, line) {
+    outputItems.push({
+      sortItem: sortItem,
+      line: line
+    });
+  }
+
+  for (var i = 0; i < items.length; i++) {
+    var it = items[i];
+    var label = markdownItemLabel(it);
 
     if (it.rowValue == null) {
-      normalLines.push(formatMarkdownValue(it.name, it.attrText, it.rawText));
+      addOutput(it, formatMarkdownValue(label, it.attrText, it.rawText));
       continue;
     }
 
     var num = toNumberIfPossible(it.attrValue);
     if (num == null) {
-      normalLines.push(formatMarkdownValue(it.name, it.attrText, it.rawText));
+      addOutput(it, formatMarkdownValue(label, it.attrText, it.rawText));
       continue;
     }
 
     if (!rowMap[it.name]) {
       rowMap[it.name] = [];
-      rowOrder.push(it.name);
+      rowFirstItem[it.name] = it;
     }
 
     if (itemHasDecimalValue(it)) {
@@ -164,10 +173,13 @@ function buildAtagNormalMarkdown(items, cfg) {
     rowMap[it.name].push(num);
   }
 
-  for (var j = 0; j < rowOrder.length; j++) {
-    var name = rowOrder[j];
+  for (var name in rowMap) {
+    if (!rowMap.hasOwnProperty(name)) continue;
+
     var vals = rowMap[name];
     var listParts = [];
+    var firstItem = rowFirstItem[name];
+    var rowLabel = markdownItemLabel(firstItem);
 
     for (var k = 0; k < vals.length; k++) {
       listParts.push(formatTagNumberLocale(vals[k], decimals, !!rowHasDecimal[name]));
@@ -175,21 +187,35 @@ function buildAtagNormalMarkdown(items, cfg) {
 
     if (aggMode === "avg" || aggMode === "sum") {
       var agg = computeAggregate(vals, aggMode);
-      var line = name + ": " + formatTagNumberLocale(agg, decimals, !!rowHasDecimal[name]);
+      var aggText = formatTagNumberLocale(agg, decimals, !!rowHasDecimal[name]);
+      var line = rowLabel + ": " + aggText;
 
       if (listParts.length > 1) {
         line += "  [" + listParts.join(", ") + "]";
       }
 
-      normalLines.push(line);
+      addOutput({
+        name: firstItem.name,
+        displayName: firstItem.displayName,
+        attrText: aggText,
+        attrValue: agg,
+        rawText: aggText
+      }, line);
     } else {
       if (listParts.length === 1) {
-        normalLines.push(name + ": " + listParts[0]);
+        addOutput(firstItem, rowLabel + ": " + listParts[0]);
       } else if (listParts.length > 1) {
-        normalLines.push(name + "  [" + listParts.join(", ") + "]");
+        addOutput(firstItem, rowLabel + "  [" + listParts.join(", ") + "]");
       }
     }
   }
+
+  outputItems.sort(function(a, b) {
+    return compareMarkdownItems(a.sortItem, b.sortItem);
+  });
+
+  var normalLines = [];
+  for (var oi = 0; oi < outputItems.length; oi++) normalLines.push(outputItems[oi].line);
 
   return normalLines.join("  \n");
 }

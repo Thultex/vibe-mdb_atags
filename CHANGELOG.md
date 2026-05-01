@@ -19,6 +19,11 @@
 
 ## 2026-05-01
 
+- `exportAtags` auf `v1.42` angehoben
+- `Atag Helpers` auf `v1.14` angehoben
+- Fix: Markdown-Export sortiert Row-Aggregate gemeinsam mit normalen Werten, behält die Werte in `[]` aber in Row-Reihenfolge
+- Fix: Markdown-Export nutzt Alias-/Displaynamen als Label
+- Test: Regression fuer Row-Aggregate vor Text/Blank und Alias-Label im Markdown-Export ergaenzt
 - `Atag Helpers` auf `v1.13` angehoben
 - Feature: Markdown-Export sortiert nach Typgruppen Link, Mail, Tel, Integer, Real, Text, List, Blank und innerhalb der Gruppen alphabetisch
 - Test: Export-Regression fuer Issue #19 mit Tel-, Real- und List-Werten ergaenzt

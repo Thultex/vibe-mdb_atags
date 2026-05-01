@@ -73,7 +73,8 @@ var baseItems = [
 var rowItems = [
   item("zeta", "+2", 2, "+2", 2, "h", "2h"),
   item("alpha", "+1", 1, "+1", 2, "h", "2h"),
-  item("middle", "+3", 3, "+3", 3, "h", "3h")
+  item("middle", "+3", 3, "+3", 3, "h", "3h"),
+  item("LongRowName", "+4", 4, "+4", 4, "h", "4h", "lr")
 ];
 
 var shortRowItems = [
@@ -134,6 +135,28 @@ assertEqual(
 entryObj = makeEntry({});
 exportAtags({
   entryObj: entryObj,
+  result: {
+    items: [
+      item("textname", "abc", "abc", "abc"),
+      item("blankname", null, null, ""),
+      item("LongRowName", "+3", 3, "+3", 1, null, "1", "lr"),
+      item("LongRowName", "+2", 2, "+2", 2, null, "2", "lr")
+    ]
+  },
+  targetField: "MD",
+  targetFieldType: "md"
+});
+assertEqual(
+  "md-row-aggregate-sorted-with-values-and-alias",
+  entryObj.field("MD"),
+  "lr: 2,5  [3, 2]  \n" +
+  "textname: abc  \n" +
+  "blankname"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
   result: { items: rowItems },
   targetField: "Rows",
   targetFieldType: "rows_md",
@@ -144,11 +167,12 @@ exportAtags({
 assertEqual(
   "rows_md",
   entryObj.field("Rows"),
-  "| rval | alpha | middle | zeta |  \n" +
-  "| :--- | ---: | ---: | ---: |  \n" +
-  "| 2h | 1 |  | 2 |  \n" +
-  "| 3h |  | 3 |  |  \n" +
-  "| sum | 1 | 3 | 2 |"
+  "| rval | alpha | lr | middle | zeta |  \n" +
+  "| :--- | ---: | ---: | ---: | ---: |  \n" +
+  "| 2h | 1 |  |  | 2 |  \n" +
+  "| 4h |  | 4 |  |  |  \n" +
+  "| 3h |  |  | 3 |  |  \n" +
+  "| sum | 1 | 4 | 3 | 2 |"
 );
 
 entryObj = makeEntry({});

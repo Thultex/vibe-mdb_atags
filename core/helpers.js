@@ -1,9 +1,10 @@
 /*
 ========================================
-Atag Helpers v1.13 (sys 2.11)
+Atag Helpers v1.14 (sys 2.11)
 ========================================
 
 Changes
+- markdown sorting uses display labels when available
 - sort markdown output by detailed value type groups
 - enabled/collectResults accept 0/1 style values
 - applyTags returns null when disabled
@@ -323,6 +324,19 @@ function getSortedMarkdownItems(items) {
   }
 
   return out;
+}
+
+function markdownItemLabel(item) {
+  if (!item) return "";
+  return item.displayName || item.name || "";
+}
+
+function compareMarkdownItems(a, b) {
+  var ga = getMarkdownSortGroup(a);
+  var gb = getMarkdownSortGroup(b);
+
+  if (ga !== gb) return ga - gb;
+  return compareTagNames(markdownItemLabel(a), markdownItemLabel(b));
 }
 
 // ===== ROW =====
