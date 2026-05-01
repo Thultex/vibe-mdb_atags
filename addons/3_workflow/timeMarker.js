@@ -1,12 +1,13 @@
 /*
 ========================================
-Shared Script: Time Marker v1.29 (sys 2.11)
+Shared Script: Time Marker v1.30 (sys 2.11)
 ========================================
 
 Änderungen
 - Cleanup gibt `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
 - `appendTimeMarker()` gibt ebenfalls `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
 - `cleanupTimeMarker()` ersetzt `: Text` wie `appendTimeMarker()`, haengt aber keinen leeren neuen Marker an
+- Cleanup sortiert Markerzeilen als Row-Block nach oben und normalen Text darunter
 - Doppelpunkt-Platzhalter am Zeilenanfang werden beim Einfuegen mit dem aktuellen Marker belegt
 - Bereinigung leerer TimeMarker und Leerzeilen läuft auch beim Abbruch durch `maxHours`
 - bereinigte Leerzeilen werden auch zurückgeschrieben, wenn kein neuer Marker nötig ist
@@ -309,6 +310,11 @@ function buildTimeBlockText(timeLines, otherLines) {
   return timeLines.join("\n") + "\n\n" + otherLines.join("\n");
 }
 
+function arrangeTimeMarkerRows(text) {
+  var blocks = splitTextBlocks(text);
+  return buildTimeBlockText(blocks.timeLines, blocks.otherLines);
+}
+
 function getSourceHours(entryObj, cfg) {
   if (cfg.sourceMode === "realtime") {
     return getRealtimeHours();
@@ -403,7 +409,7 @@ function appendTimeMarker(cfg) {
 
   var hasFillablePlaceholder = hasFillableColonPlaceholderLine(text);
   text = replaceColonPlaceholderLines(text, formatHourLabel(stepped));
-  text = normalizeTimeMarkerText(removeEmptyTimestampLines(text));
+  text = arrangeTimeMarkerRows(normalizeTimeMarkerText(removeEmptyTimestampLines(text)));
 
   if (hasFillablePlaceholder) {
     e.set(targetTextField, text);
@@ -455,7 +461,7 @@ function cleanupTimeMarker(cfg) {
     );
 
   var newText = replaceColonPlaceholderLines(text, formatHourLabel(stepped));
-  newText = normalizeTimeMarkerText(removeEmptyTimestampLines(newText));
+  newText = arrangeTimeMarkerRows(normalizeTimeMarkerText(removeEmptyTimestampLines(newText)));
 
   if (newText !== text) e.set(targetTextField, newText);
   return hasTimestampLines(newText);

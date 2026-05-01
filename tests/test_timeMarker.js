@@ -328,7 +328,7 @@ function testCleanupFillsColonPlaceholderWithCurrentMarker() {
     stepHours: 0.5
   });
 
-  assertEquals("cleanup-placeholders-fills-current", entryObj.field("Note"), "Intro\n2: Text");
+  assertEquals("cleanup-placeholders-fills-current", entryObj.field("Note"), "2: Text\n\nIntro");
 }
 
 function testCleanupFillsColonPlaceholderWithSourceAfterExistingMarker() {
@@ -375,8 +375,38 @@ function testCleanupRemovesWhitespaceOnlyTimestamp() {
     targetTextField: "Note"
   });
 
-  assertEquals("cleanup-removes-whitespace-only-timestamp", entryObj.field("Note"), "1: Info\nText");
+  assertEquals("cleanup-removes-whitespace-only-timestamp", entryObj.field("Note"), "1: Info\n\nText");
   assertEquals("cleanup-return-true-when-marker-remains", hasMarkers, true);
+}
+
+function testCleanupMovesRowsAboveDoubleColonText() {
+  var entryObj = makeEntry({
+    Note: "15,5: tst(:inhalt)\nnur normaler text:: der interresant ist\n16: neue row"
+  });
+
+  cleanupTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note"
+  });
+
+  assertEquals("cleanup-moves-rows-above-double-colon-text", entryObj.field("Note"), "15,5: tst(:inhalt)\n16: neue row\n\nnur normaler text:: der interresant ist");
+}
+
+function testCleanupFillsColonPlaceholderWithCurrentRowAfterEmptyRow() {
+  var entryObj = makeEntry({
+    Note: "15,5: tst(:inhalt)\n\n16: \n\nnur normaler text:: der interresant ist\n: test",
+    Hours: 17
+  });
+
+  cleanupTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    sourceMode: "hours",
+    sourceHoursField: "Hours",
+    stepHours: 0.5
+  });
+
+  assertEquals("cleanup-fills-colon-placeholder-with-current-row-after-empty-row", entryObj.field("Note"), "15,5: tst(:inhalt)\n17: test\n\nnur normaler text:: der interresant ist");
 }
 
 function testCleanupRemovesTrailingEmptyTimestamp() {
@@ -465,6 +495,8 @@ testCleanupFillsColonPlaceholderWithCurrentMarker();
 testCleanupFillsColonPlaceholderWithSourceAfterExistingMarker();
 testCleanupFillsColonPlaceholderWithZeroSource();
 testCleanupRemovesWhitespaceOnlyTimestamp();
+testCleanupMovesRowsAboveDoubleColonText();
+testCleanupFillsColonPlaceholderWithCurrentRowAfterEmptyRow();
 testCleanupRemovesTrailingEmptyTimestamp();
 testCleanupRemovesTrailingEmptyTimestampWithCarriageReturn();
 testCleanupRemovesNonBreakingSpaceTimestamp();
