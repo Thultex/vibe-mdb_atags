@@ -122,15 +122,15 @@ assertEqual(
   "linktag: [example.com](https://example.com)  \n" +
   "mailtag: [a@example.com](mailto:a@example.com)  \n" +
   "teltag: [+49 123456](tel:+49123456)  \n" +
-  "\\---  \n" +
+  "◇  \n" +
   "alpha: +1  \n" +
   "zeta: +2  \n" +
   "realtag: +1,5  \n" +
-  "\\---  \n" +
+  "◇  \n" +
   "textalpha: alpha  \n" +
   "textbeta: beta  \n" +
   "listtag: a,b  \n" +
-  "\\---  \n" +
+  "◇  \n" +
   "plaina  \n" +
   "plainz"
 );

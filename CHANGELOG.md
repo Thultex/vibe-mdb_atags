@@ -39,9 +39,9 @@
 - `Addon Typed Text Fields` auf `v1.00` ergaenzt
 - Feature: `syncTypedTextFields()` integriert, um Felder mit `(t-dd)`, `(t-d)`, `(t-i)`, `(t-r)`, `(t-tag)` und `(t-l)` in passende Zielfelder zu konvertieren
 - Test/Doku: WSH-Regressionen fuer Einzelentry, Bulk, Optionen und Konvertierungen sowie README- und Versioning-Eintraege ergaenzt
-- `exportAtags` auf `v1.45` und `Atag Helpers` auf `v1.16` angehoben
+- `exportAtags` auf `v1.49` und `Atag Helpers` auf `v1.16` angehoben
 - Aenderung: Markdown-Exports nutzen Langnamen als Standard; Row-Tabellen behalten Alias-Kuerzel als Standard-Header und koennen per `tableHeaderNames: "long"` Langnamen nutzen
-- Feature: Normale Markdown-Exports trennen bei mehr als 5 Zeilen die grossen Kategorien Link/Mail/Tel, Zahlen, Text/List und Blank standardmaessig mit escaped `\---`; per `markdownGroupSeparator` anpassbar und per `null` abschaltbar
+- Feature: Normale Markdown-Exports trennen bei mehr als 5 Zeilen die grossen Kategorien Link/Mail/Tel, Zahlen, Text/List und Blank standardmaessig mit `◇`; per `markdownGroupSeparator` anpassbar und per `null` abschaltbar
 - `collectAtags` auf `v1.37` angehoben
 - Feature: Tag-Syntax `tag:inhalt`, `tag:: inhalt`, `inhalt(:tag)` und `"das ist ein Satz"(:Aussage)` aus Issues #21/#22 integriert
 - Fix: Normale Textstellen wie `text: inhalt` werden nicht mehr als Colon-Tag geparst

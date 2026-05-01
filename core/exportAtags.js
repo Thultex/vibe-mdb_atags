@@ -1,12 +1,12 @@
 /*
 ========================================
-exportAtags v1.46 (sys 2.11)
+exportAtags v1.49 (sys 2.11)
 ========================================
 
 Änderungen
 - Markdown-Ausgabe sortiert normale Werte und Row-Aggregate gemeinsam
 - Markdown-Ausgaben nutzen Langnamen als Standard; Row-Tabellen nutzen Kurzheader als Standard
-- Markdown-Kategorietrenner sind als Text konfigurierbar; Standard ist escaped `\---`
+- Markdown-Kategorietrenner sind als Text konfigurierbar; Standard ist `◇`
 - Kopfkommentar gekürzt, damit der Memento-Java-Editor nicht im Export-Script abstürzt
 - Exporttypen: tags, text, md, rows_md, rows_html, json
 - Tabellen nutzen Alias-Kürzel als Header, optional Langform oder beide Namen
@@ -224,7 +224,7 @@ function buildAtagNormalMarkdown(items, cfg) {
   });
 
   var normalLines = [];
-  var separator = "\\---";
+  var separator = "◇";
   if (cfg && Object.prototype.hasOwnProperty.call(cfg, "markdownGroupSeparator")) {
     separator = cfg.markdownGroupSeparator;
   }
