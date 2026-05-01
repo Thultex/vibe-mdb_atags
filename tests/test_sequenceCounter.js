@@ -27,6 +27,14 @@ function makeEntry(id, fields) {
   };
 }
 
+function makeFunctionIdEntry(id, fields) {
+  var e = makeEntry(id, fields);
+  e.id = function() {
+    return id;
+  };
+  return e;
+}
+
 function testBulkSequenceAndSpree() {
   var entries = [
     makeEntry("1", { Date: "2026-04-01", Dose: "10" }),
@@ -94,7 +102,87 @@ function testCurrentEntryOnlyAndEmptyClear() {
   assertEquals("empty-cleared-spree", empty.field("Spree"), null);
 }
 
+function testIssue25SingleCurrentEntryWithoutSequenceMax() {
+  var current = makeFunctionIdEntry("1", {
+    Einnahmedatum: "2026-04-01",
+    Dosis: "10"
+  });
+
+  updateSequenceSpree({
+    entries: [current],
+    currentEntry: current,
+    fieldDate: "Einnahmedatum",
+    groupFields: ["Dosis"],
+    fieldSequence: "Reihe",
+    fieldSpree: "Spree",
+    fieldSpreeMax: "Spree Max"
+  });
+
+  assertEquals("issue-25-sequence", current.field("Reihe"), 1);
+  assertEquals("issue-25-spree", current.field("Spree"), 1);
+  assertEquals("issue-25-spree-max", current.field("Spree Max"), 1);
+}
+
+function testCurrentEntryContinuesLatestSequenceWhenMissingFromEntries() {
+  var current = makeFunctionIdEntry("3", {
+    Einnahmedatum: "2026-04-03",
+    Dosis: "10"
+  });
+  var entries = [
+    makeFunctionIdEntry("1", { Einnahmedatum: "2026-04-01", Dosis: "10" }),
+    makeFunctionIdEntry("2", { Einnahmedatum: "2026-04-02", Dosis: "10" })
+  ];
+
+  updateSequenceSpree({
+    entries: entries,
+    currentEntry: current,
+    fieldDate: "Einnahmedatum",
+    groupFields: ["Dosis"],
+    fieldSequence: "Reihe",
+    fieldSpree: "Spree",
+    fieldSequenceMax: "Reihe Max",
+    fieldSpreeMax: "Spree Max"
+  });
+
+  assertEquals("current-missing-continues-sequence", current.field("Reihe"), 1);
+  assertEquals("current-missing-continues-spree", current.field("Spree"), 3);
+  assertEquals("current-missing-spree-max", current.field("Spree Max"), 3);
+  assertEquals("previous-not-written", entries[0].field("Reihe"), undefined);
+}
+
+function testCurrentEntryReplacesStaleEntryFromLibEntries() {
+  var stale = makeFunctionIdEntry("2", {
+    Einnahmedatum: "2026-04-02",
+    Dosis: "20"
+  });
+  var current = makeFunctionIdEntry("2", {
+    Einnahmedatum: "2026-04-02",
+    Dosis: "10"
+  });
+  var entries = [
+    makeFunctionIdEntry("1", { Einnahmedatum: "2026-04-01", Dosis: "10" }),
+    stale
+  ];
+
+  updateSequenceSpree({
+    entries: entries,
+    currentEntry: current,
+    fieldDate: "Einnahmedatum",
+    groupFields: ["Dosis"],
+    fieldSequence: "Reihe",
+    fieldSpree: "Spree",
+    fieldSpreeMax: "Spree Max"
+  });
+
+  assertEquals("current-replaces-stale-sequence", current.field("Reihe"), 1);
+  assertEquals("current-replaces-stale-spree", current.field("Spree"), 2);
+  assertEquals("stale-entry-not-written", stale.field("Reihe"), undefined);
+}
+
 testBulkSequenceAndSpree();
 testCurrentEntryOnlyAndEmptyClear();
+testIssue25SingleCurrentEntryWithoutSequenceMax();
+testCurrentEntryContinuesLatestSequenceWhenMissingFromEntries();
+testCurrentEntryReplacesStaleEntryFromLibEntries();
 
 WScript.Echo("OK");

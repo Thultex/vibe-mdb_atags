@@ -1,9 +1,12 @@
 /*
 ========================================
-Addon Sequence Counter v1.00 (sys 2.11)
+Addon Sequence Counter v1.03 (sys 2.11)
 ========================================
 
 Changes
+- replace stale entries item with currentEntry for calculation
+- include currentEntry in calculation if it is missing from entries
+- support entry id functions when matching currentEntry
 - add sequence and spree counter addon
 - sort entries by date and id
 - group adjacent entries by configurable fields
@@ -74,8 +77,8 @@ function sequenceDateTime(val) {
 
 function sequenceEntryId(entryObj) {
   if (!entryObj) return "";
-  if (entryObj.id != null) return String(entryObj.id);
   if (typeof entryObj.id === "function") return String(entryObj.id());
+  if (entryObj.id != null) return String(entryObj.id);
   return "";
 }
 
@@ -89,6 +92,38 @@ function sequenceSameEntry(a, b) {
   aid = sequenceEntryId(a);
   bid = sequenceEntryId(b);
   return aid !== "" && aid === bid;
+}
+
+function sequenceContainsEntry(entries, entryObj) {
+  var i;
+  if (!entries || !entryObj) return false;
+
+  for (i = 0; i < entries.length; i++) {
+    if (sequenceSameEntry(entries[i], entryObj)) return true;
+  }
+
+  return false;
+}
+
+function sequenceEntriesWithCurrent(entries, currentEntry) {
+  var out = [];
+  var replaced = false;
+  var i;
+
+  if (entries && entries.length) {
+    for (i = 0; i < entries.length; i++) {
+      if (currentEntry && sequenceSameEntry(entries[i], currentEntry)) {
+        out.push(currentEntry);
+        replaced = true;
+      } else {
+        out.push(entries[i]);
+      }
+    }
+  }
+
+  if (currentEntry && !replaced) out.push(currentEntry);
+
+  return out;
 }
 
 function sequenceHasEmptyGroup(entryObj, groupFields) {
@@ -216,6 +251,7 @@ function updateSequenceSpree(cfg) {
   var fieldSequenceMax = cfg.fieldSequenceMax || "";
   var fieldSpreeMax = cfg.fieldSpreeMax || "";
   var clearOnEmpty = cfg.clearOnEmpty !== false;
+  var calcEntries = entries;
   var calculated;
   var rows;
   var result = {
@@ -227,9 +263,11 @@ function updateSequenceSpree(cfg) {
   var row;
   var e;
 
-  if (!entries || !entries.length || !fieldDate) return result;
+  if (currentEntry) calcEntries = sequenceEntriesWithCurrent(entries, currentEntry);
 
-  calculated = sequenceBuildRows(entries, fieldDate, groupFields);
+  if (!calcEntries || !calcEntries.length || !fieldDate) return result;
+
+  calculated = sequenceBuildRows(calcEntries, fieldDate, groupFields);
   rows = calculated.rows;
   result.sequenceMax = calculated.sequenceMax;
 

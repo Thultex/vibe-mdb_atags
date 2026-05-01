@@ -19,6 +19,15 @@
 
 ## 2026-05-01
 
+- `Addon Sequence Counter` auf `v1.03` angehoben
+- Fix: Im `currentEntry`-Modus ersetzt der aktuelle Eintrag eine gleichnamige/gleich-ID Library-Version im Berechnungsset, damit `AfterEntry()` nicht mit stale `lib().entries()` rechnet
+- Test: Regression fuer `AfterEntry()`-nahen Fall mit altem Library-Eintrag und aktuellem Entry ergaenzt
+- `Addon Sequence Counter` auf `v1.02` angehoben
+- Fix: Wenn `currentEntry` nicht in `entries` enthalten ist, wird er fuer die Berechnung ergaenzt und fuehrt die letzte passende Sequenz fort
+- Test: Regression fuer fortgefuehrte Sequenz bei separat uebergebenem `currentEntry` ergaenzt
+- `Addon Sequence Counter` auf `v1.01` angehoben
+- Fix: `currentEntry`-Abgleich unterstuetzt Entry-IDs als Funktion, damit Einzel-Entry-Aufrufe wie in Issue #25 sicher geschrieben werden
+- Test: Regression fuer Issue #25 ohne `fieldSequenceMax` ergaenzt
 - `Addon Wiki Linker` auf `v1.00` ergaenzt
 - Feature: `applyWikiLinker()` aus Issue #27 als Integration-Addon integriert
 - Struktur: Workflow-Addons nach `addons/3_workflow/`, externe Integrationen nach `addons/6_integration/`
