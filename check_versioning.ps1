@@ -9,6 +9,7 @@ $moduleFiles = @(
   "addons/1_tagging/tagCleaner.js",
   "addons/2_syncing/globalFieldSync.js",
   "addons/2_syncing/syncLastFromLatest.js",
+  "addons/2_syncing/typedTextFields.js",
   "addons/3_workflow/timeMarker.js",
   "addons/3_workflow/sequenceCounter.js",
   "addons/3_workflow/floatingAverage.js",

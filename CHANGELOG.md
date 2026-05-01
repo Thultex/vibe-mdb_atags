@@ -36,6 +36,9 @@
 - Doku: aktuelle Entry-Trigger mit parse-relevanter Reihenfolge in `ENTRY_WORKFLOWS.md` dokumentiert
 - `Addon Obsidian Linker` auf `v1.01` angehoben
 - Fix: `overwriteHtmlField` schreibt den vollen Erstellen-/Overwrite-Link, `obsidianHtmlField` formatiert nur vorhandene Obsidian-Links; bei einem gemeinsamen Feld laufen beide Rollen auf dieses Feld
+- `Addon Typed Text Fields` auf `v1.00` ergaenzt
+- Feature: `syncTypedTextFields()` integriert, um Felder mit `(t-dd)`, `(t-d)`, `(t-i)`, `(t-r)`, `(t-tag)` und `(t-l)` in passende Zielfelder zu konvertieren
+- Test/Doku: WSH-Regressionen fuer Einzelentry, Bulk, Optionen und Konvertierungen sowie README- und Versioning-Eintraege ergaenzt
 - `collectAtags` auf `v1.37` angehoben
 - Feature: Tag-Syntax `tag:inhalt`, `tag:: inhalt`, `inhalt(:tag)` und `"das ist ein Satz"(:Aussage)` aus Issues #21/#22 integriert
 - Fix: Normale Textstellen wie `text: inhalt` werden nicht mehr als Colon-Tag geparst

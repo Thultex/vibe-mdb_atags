@@ -115,6 +115,10 @@ Ziel-Felder
   - `syncLastFromLatest()`
   - `fields` oder `map`
   - optional `onlyIfEmpty`
+- `addons/2_syncing/typedTextFields.js` (typisierte Textfelder in Zielfelder uebertragen)
+  - `syncTypedTextFields()`
+  - Tokens: `(t-dd)`, `(t-d)`, `(t-i)`, `(t-r)`, `(t-tag)`, `(t-l)`
+  - Optionen: `clearSource`, `onlyIfTargetEmpty`, `dryRun`
 
 **Workflow Add-ons**
 - `addons/3_workflow/timeMarker.js` (Zeitmarker für Textfelder)
@@ -155,6 +159,7 @@ Ziel-Felder
 - `tests/test_tagCleaner.js`
 - `tests/test_timeMarker.js`
 - `tests/test_syncLastFromLatest.js`
+- `tests/test_typedTextFields.js`
 - `tests/test_sequenceCounter.js`
 - `tests/test_multiChoiceHelpers.js`
 - `tests/test_hourGuide.js`
@@ -198,6 +203,21 @@ syncLastFromLatest({
   fieldDate: "Einnahmedatum",
   fields: ["Dosis", "Wirkstoff"],
   onlyIfEmpty: true
+});
+```
+
+**Typed Text Fields (Syncing)**
+
+Uebertraegt Text-Hilfsfelder mit Token-Suffix in passend benannte Zielfelder. Beispiel: `Dauer(t-d)` wird nach `Dauer` geschrieben, `Tags(t-tag)` nach `Tags`.
+
+```js
+syncTypedTextFields();
+syncTypedTextFields(entry());
+syncTypedTextFields(lib().entries());
+syncTypedTextFields(selectedEntries(), {
+  clearSource: false,
+  onlyIfTargetEmpty: false,
+  dryRun: false
 });
 ```
 
