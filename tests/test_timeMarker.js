@@ -36,7 +36,7 @@ function testInlineInsertForSingleTextLine() {
     Hours: 2
   });
 
-  appendTimeMarker({
+  var hasMarkers = appendTimeMarker({
     entryObj: entryObj,
     targetTextField: "Note",
     sourceMode: "hours",
@@ -47,6 +47,45 @@ function testInlineInsertForSingleTextLine() {
   });
 
   assertEquals("inline-single-line", entryObj.field("Note"), "2: test");
+  assertEquals("append-return-true-after-insert", hasMarkers, true);
+}
+
+function testAppendReturnsFalseWithoutSourceAndNoMarkers() {
+  var entryObj = makeEntry({
+    Note: "test"
+  });
+
+  var hasMarkers = appendTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    sourceMode: "hours",
+    sourceHoursField: "Hours",
+    insertMode: "time_block_top",
+    stepHours: 0.5,
+    maxHours: 30
+  });
+
+  assertEquals("append-without-source-keeps-text", entryObj.field("Note"), "test");
+  assertEquals("append-return-false-without-source-no-markers", hasMarkers, false);
+}
+
+function testAppendReturnsTrueWithoutSourceWhenMarkersExist() {
+  var entryObj = makeEntry({
+    Note: "1: test"
+  });
+
+  var hasMarkers = appendTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    sourceMode: "hours",
+    sourceHoursField: "Hours",
+    insertMode: "time_block_top",
+    stepHours: 0.5,
+    maxHours: 30
+  });
+
+  assertEquals("append-without-source-keeps-marker-text", entryObj.field("Note"), "1: test");
+  assertEquals("append-return-true-without-source-existing-marker", hasMarkers, true);
 }
 
 function testSkipsWhenDefaultLimitExceeded() {
@@ -275,13 +314,13 @@ function testRemovesEmptyColonPlaceholder() {
   assertEquals("empty-colon-placeholder", entryObj.field("Note"), "12,5: Text");
 }
 
-function testCleanupPlaceholdersDoesNotInsertMarker() {
+function testCleanupFillsColonPlaceholderWithCurrentMarker() {
   var entryObj = makeEntry({
     Note: "Intro\n: Text",
     Hours: 2
   });
 
-  cleanupTimeMarkerPlaceholders({
+  cleanupTimeMarker({
     entryObj: entryObj,
     targetTextField: "Note",
     sourceMode: "hours",
@@ -289,7 +328,41 @@ function testCleanupPlaceholdersDoesNotInsertMarker() {
     stepHours: 0.5
   });
 
-  assertEquals("cleanup-placeholders-no-insert", entryObj.field("Note"), "Intro\n: Text");
+  assertEquals("cleanup-placeholders-fills-current", entryObj.field("Note"), "Intro\n2: Text");
+}
+
+function testCleanupFillsColonPlaceholderWithSourceAfterExistingMarker() {
+  var entryObj = makeEntry({
+    Note: "12: jjh\n15: ufg\n: igu",
+    Hours: 16
+  });
+
+  cleanupTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    sourceMode: "hours",
+    sourceHoursField: "Hours",
+    stepHours: 0.5
+  });
+
+  assertEquals("cleanup-colon-placeholder-source-after-existing-marker", entryObj.field("Note"), "12: jjh\n15: ufg\n16: igu");
+}
+
+function testCleanupFillsColonPlaceholderWithZeroSource() {
+  var entryObj = makeEntry({
+    Note: ": utfz",
+    Hours: 0
+  });
+
+  cleanupTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    sourceMode: "hours",
+    sourceHoursField: "Hours",
+    stepHours: 0.5
+  });
+
+  assertEquals("cleanup-colon-placeholder-zero-source", entryObj.field("Note"), "0: utfz");
 }
 
 function testCleanupRemovesWhitespaceOnlyTimestamp() {
@@ -297,7 +370,7 @@ function testCleanupRemovesWhitespaceOnlyTimestamp() {
     Note: "1: Info\n3:   \nText"
   });
 
-  var hasMarkers = cleanupTimeMarkerPlaceholders({
+  var hasMarkers = cleanupTimeMarker({
     entryObj: entryObj,
     targetTextField: "Note"
   });
@@ -311,7 +384,7 @@ function testCleanupRemovesTrailingEmptyTimestamp() {
     Note: "0: Nase zu, ks\u00B2\n3: "
   });
 
-  var hasMarkers = cleanupTimeMarkerPlaceholders({
+  var hasMarkers = cleanupTimeMarker({
     entryObj: entryObj,
     targetTextField: "Note"
   });
@@ -325,7 +398,7 @@ function testCleanupRemovesTrailingEmptyTimestampWithCarriageReturn() {
     Note: "0: Nase zu, ks\u00B2\r3: "
   });
 
-  cleanupTimeMarkerPlaceholders({
+  cleanupTimeMarker({
     entryObj: entryObj,
     targetTextField: "Note"
   });
@@ -338,7 +411,7 @@ function testCleanupRemovesNonBreakingSpaceTimestamp() {
     Note: "0: Nase zu, ks\u00B2\n3:\u00A0"
   });
 
-  cleanupTimeMarkerPlaceholders({
+  cleanupTimeMarker({
     entryObj: entryObj,
     targetTextField: "Note"
   });
@@ -351,7 +424,7 @@ function testCleanupAcceptsTextFieldAlias() {
     Note: "0: Nase zu, ks\u00B2\n3: "
   });
 
-  cleanupTimeMarkerPlaceholders({
+  cleanupTimeMarker({
     entryObj: entryObj,
     textField: "Note"
   });
@@ -364,7 +437,7 @@ function testCleanupReturnsFalseWhenNoMarkersRemain() {
     Note: "3: "
   });
 
-  var hasMarkers = cleanupTimeMarkerPlaceholders({
+  var hasMarkers = cleanupTimeMarker({
     entryObj: entryObj,
     targetTextField: "Note"
   });
@@ -374,6 +447,8 @@ function testCleanupReturnsFalseWhenNoMarkersRemain() {
 }
 
 testInlineInsertForSingleTextLine();
+testAppendReturnsFalseWithoutSourceAndNoMarkers();
+testAppendReturnsTrueWithoutSourceWhenMarkersExist();
 testSkipsWhenDefaultLimitExceeded();
 testCleansWhenDefaultLimitExceeded();
 testAllowsDisablingLimit();
@@ -386,7 +461,9 @@ testWritesCleanedBlankWhenSameTimestampAlreadyExists();
 testUsesColonPlaceholderAsCurrentMarker();
 testUsesColonPlaceholderAfterExistingMarker();
 testRemovesEmptyColonPlaceholder();
-testCleanupPlaceholdersDoesNotInsertMarker();
+testCleanupFillsColonPlaceholderWithCurrentMarker();
+testCleanupFillsColonPlaceholderWithSourceAfterExistingMarker();
+testCleanupFillsColonPlaceholderWithZeroSource();
 testCleanupRemovesWhitespaceOnlyTimestamp();
 testCleanupRemovesTrailingEmptyTimestamp();
 testCleanupRemovesTrailingEmptyTimestampWithCarriageReturn();

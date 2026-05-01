@@ -1,10 +1,12 @@
 /*
 ========================================
-Shared Script: Time Marker v1.28 (sys 2.11)
+Shared Script: Time Marker v1.29 (sys 2.11)
 ========================================
 
 Änderungen
 - Cleanup gibt `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
+- `appendTimeMarker()` gibt ebenfalls `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
+- `cleanupTimeMarker()` ersetzt `: Text` wie `appendTimeMarker()`, haengt aber keinen leeren neuen Marker an
 - Doppelpunkt-Platzhalter am Zeilenanfang werden beim Einfuegen mit dem aktuellen Marker belegt
 - Bereinigung leerer TimeMarker und Leerzeilen läuft auch beim Abbruch durch `maxHours`
 - bereinigte Leerzeilen werden auch zurückgeschrieben, wenn kein neuer Marker nötig ist
@@ -31,9 +33,9 @@ appendTimeMarker({
   maxHours: 30
 });
 
-Anwendung in AfterEntry nur zum Loeschen leerer Marker
+Anwendung in AfterEntry zum Bereinigen ohne neuen leeren Marker
 
-cleanupTimeMarkerPlaceholders({
+cleanupTimeMarker({
   targetTextField: "Notiz",
 });
 */
@@ -383,7 +385,7 @@ function appendTimeMarker(cfg) {
 
   var e = cfg.entryObj || entry();
   var targetTextField = resolveTimeMarkerTextField(cfg);
-  if (!e || !targetTextField) return;
+  if (!e || !targetTextField) return false;
 
   var text = e.field(targetTextField);
   if (text == null) text = "";
@@ -391,7 +393,7 @@ function appendTimeMarker(cfg) {
   var originalText = text;
 
   var rawHours = getSourceHours(e, cfg);
-  if (rawHours == null) return;
+  if (rawHours == null) return hasTimestampLines(text);
 
   var stepped = stepHoursValue(
     rawHours,
@@ -405,17 +407,17 @@ function appendTimeMarker(cfg) {
 
   if (hasFillablePlaceholder) {
     e.set(targetTextField, text);
-    return;
+    return hasTimestampLines(text);
   }
 
   if (shouldSkipForMaxHours(rawHours, stepped, resolveMaxHours(cfg))) {
     if (text !== originalText) e.set(targetTextField, text);
-    return;
+    return hasTimestampLines(text);
   }
 
   if (hasSameOrLaterLine(text, stepped)) {
     if (text !== originalText) e.set(targetTextField, text);
-    return;
+    return hasTimestampLines(text);
   }
 
   var newLine = formatHourLabel(stepped) + ": ";
@@ -429,9 +431,10 @@ function appendTimeMarker(cfg) {
   }
 
   e.set(targetTextField, newText);
+  return hasTimestampLines(newText);
 }
 
-function cleanupTimeMarkerPlaceholders(cfg) {
+function cleanupTimeMarker(cfg) {
   cfg = cfg || {};
 
   var e = cfg.entryObj || entry();
@@ -442,9 +445,20 @@ function cleanupTimeMarkerPlaceholders(cfg) {
   if (text == null) text = "";
   text = String(text);
 
-  var newText = removeEmptyColonPlaceholderLines(text);
+  var rawHours = getSourceHours(e, cfg);
+  var stepped = rawHours == null
+    ? null
+    : stepHoursValue(
+      rawHours,
+      cfg.stepHours != null ? cfg.stepHours : 0.5,
+      cfg.roundMode || "round"
+    );
+
+  var newText = replaceColonPlaceholderLines(text, formatHourLabel(stepped));
   newText = normalizeTimeMarkerText(removeEmptyTimestampLines(newText));
 
   if (newText !== text) e.set(targetTextField, newText);
   return hasTimestampLines(newText);
 }
+
+var cleanupTimeMarkerPlaceholders = cleanupTimeMarker;

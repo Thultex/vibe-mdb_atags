@@ -346,8 +346,9 @@ Fügt Zeitmarker wie `2:` oder `30,5:` in ein Textfeld ein und gruppiert sie bei
 - stoppt optional ab `maxHours` Stunden; Standard ist `30`
 - `maxHours: null` deaktiviert das Limit
 - `: Text` am Zeilenanfang wird zum aktuellen Marker, `:` ohne Inhalt wird entfernt
-- `cleanupTimeMarkerPlaceholders()` ist fuer `AfterEntry()` gedacht, erzeugt keine neuen Marker und entfernt nur leere Marker wie `:` oder `3: `
-- `cleanupTimeMarkerPlaceholders()` gibt `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
+- `appendTimeMarker()` gibt `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
+- `cleanupTimeMarker()` ist fuer `AfterEntry()` gedacht, ersetzt `: Text` wie `appendTimeMarker()`, erzeugt aber keinen neuen leeren Marker
+- `cleanupTimeMarker()` entfernt leere Marker wie `:` oder `3: ` und gibt `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
 - `targetTextField` ist der normale Feldparameter; `textField` bleibt nur als Alias kompatibel
 
 Kurzbeispiele:
@@ -377,10 +378,10 @@ appendTimeMarker({
 });
 ```
 
-Anwendung in `AfterEntry()` nur zum Loeschen leerer Marker:
+Anwendung in `AfterEntry()` zum Bereinigen ohne neuen leeren Marker:
 
 ```js
-cleanupTimeMarkerPlaceholders({
+cleanupTimeMarker({
   targetTextField: "Notiz"
 });
 ```
