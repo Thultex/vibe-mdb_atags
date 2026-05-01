@@ -1,20 +1,23 @@
 /*
 ========================================
-Addon Obsidian Linker v1.00 (sys 2.11)
+Addon Obsidian Linker v1.01 (sys 2.11)
 ========================================
 
 Changes
 - add Memento to Obsidian Advanced URI linker
 - separate overwrite link field and Obsidian link field
+- support overwriteHtmlField as the create/overwrite link target
+- support obsidianHtmlField as the formatted Obsidian link target
+- always refresh the create/overwrite link when its field is separate
 - keep Memento id for filepath and frontmatter only
-- use existing Obsidian uid only for open links
+- format existing Obsidian links without replacing them with overwrite links
 
 Usage
 
 makeObsidianMementoUri({
   contentField: "Text",
-  overwriteLinkField: "Obsidian Overwrite Link",
-  obsidianLinkField: "Obsidian Link",
+  overwriteHtmlField: "Obsidian Overwrite Link",
+  obsidianHtmlField: "Obsidian Link",
   dateField: "Datum",
   mementoLinkField: "Memento Link",
   vault: "RasObs"
@@ -96,6 +99,10 @@ function obsExtractQueryParam(s, name) {
   }
 }
 
+function obsUriMode(s) {
+  return obsExtractQueryParam(s, "mode");
+}
+
 function obsSanitizePath(s) {
   return obsTrim(s)
     .replace(/[\/\\:*?"<>|]/g, "")
@@ -174,39 +181,56 @@ function makeObsidianMementoUri(cfg) {
   var e = cfg.entryObj || entry();
   var l = cfg.libObj || lib();
   var vault = cfg.vault || "RasObs";
-  var overwriteField = cfg.overwriteLinkField || cfg.htmlTargetField || cfg.targetField;
-  var obsidianField = cfg.obsidianLinkField || cfg.openLinkField || overwriteField;
+  var overwriteField = cfg.overwriteHtmlField || cfg.overwriteLinkField || cfg.htmlTargetField || cfg.targetField || cfg.obsidianHtmlField || cfg.obsidianLinkField || cfg.openLinkField;
+  var obsidianField = cfg.obsidianHtmlField || cfg.obsidianLinkField || cfg.openLinkField || cfg.overwriteHtmlField || cfg.overwriteLinkField || cfg.htmlTargetField || cfg.targetField;
   var obsidianRaw = obsidianField ? String(e.field(obsidianField) || "") : "";
   var overwriteRaw = overwriteField ? String(e.field(overwriteField) || "") : "";
+  var sameField = overwriteField && obsidianField && overwriteField === obsidianField;
   var obsidianUri = obsExtractUri(obsidianRaw);
-  var overwriteUri = obsExtractUri(overwriteRaw);
+  var obsidianMode = obsUriMode(obsidianRaw);
+  var overwriteUri = "";
   var existingUid = obsExtractQueryParam(obsidianRaw, "uid") || obsExtractQueryParam(overwriteRaw, "uid");
-  var existingOverwriteMode = obsExtractQueryParam(overwriteRaw, "mode");
   var openUri = "";
   var createUri = "";
+  var hasObsidianOpenLink = false;
+  var mode = "";
 
   if (!e || !cfg.contentField) {
     return { overwriteUri: "", obsidianUri: "", mode: "missing_config" };
   }
 
+  createUri = obsBuildOverwriteUri(cfg, e, l);
+  overwriteUri = createUri;
+
   if (existingUid) {
     openUri = "obsidian://adv-uri?vault=" + encodeURIComponent(vault) + "&uid=" + encodeURIComponent(existingUid);
+    hasObsidianOpenLink = true;
+  } else if (obsidianUri && obsidianMode !== "overwrite") {
+    openUri = obsidianUri;
+    hasObsidianOpenLink = true;
+  }
+
+  if (sameField) {
+    if (hasObsidianOpenLink) {
+      obsSetLinkField(e, obsidianField, openUri);
+      return { overwriteUri: createUri, obsidianUri: openUri, mode: "formatted_obsidian_same_field" };
+    }
+
+    obsSetLinkField(e, overwriteField, createUri);
+    return { overwriteUri: createUri, obsidianUri: "", mode: createUri ? "created_overwrite_same_field" : "missing_identity" };
+  }
+
+  if (createUri) {
+    obsSetLinkField(e, overwriteField, createUri);
+    mode = "created_overwrite";
+  } else {
+    mode = "missing_identity";
+  }
+
+  if (hasObsidianOpenLink) {
     obsSetLinkField(e, obsidianField, openUri);
-    return { overwriteUri: overwriteUri, obsidianUri: openUri, mode: "uid" };
+    mode = createUri ? "created_overwrite_and_formatted_obsidian" : "formatted_obsidian";
   }
 
-  if (obsidianUri) {
-    obsSetLinkField(e, obsidianField, obsidianUri);
-    return { overwriteUri: overwriteUri, obsidianUri: obsidianUri, mode: "existing_obsidian_uri" };
-  }
-
-  if (overwriteUri && existingOverwriteMode === "overwrite") {
-    obsSetLinkField(e, overwriteField, overwriteUri);
-    return { overwriteUri: overwriteUri, obsidianUri: "", mode: "existing_overwrite" };
-  }
-
-  createUri = obsBuildOverwriteUri(cfg, e, l);
-  obsSetLinkField(e, overwriteField, createUri);
-
-  return { overwriteUri: createUri, obsidianUri: "", mode: createUri ? "created_overwrite" : "missing_identity" };
+  return { overwriteUri: createUri, obsidianUri: openUri, mode: mode };
 }

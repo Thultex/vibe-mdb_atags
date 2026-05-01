@@ -56,8 +56,8 @@ function testCreatesOverwriteLinkOnlyInOverwriteField() {
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
-    overwriteLinkField: "Overwrite Link",
-    obsidianLinkField: "Obsidian Link",
+    overwriteHtmlField: "Overwrite Link",
+    obsidianHtmlField: "Obsidian Link",
     vault: "RasObs"
   });
 
@@ -78,17 +78,60 @@ function testUidWritesOpenLinkToObsidianField() {
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
-    overwriteLinkField: "Overwrite Link",
-    obsidianLinkField: "Obsidian Link",
+    overwriteHtmlField: "Overwrite Link",
+    obsidianHtmlField: "Obsidian Link",
     vault: "RasObs"
   });
 
-  assertEquals("uid-mode", result.mode, "uid");
+  assertEquals("uid-mode", result.mode, "created_overwrite_and_formatted_obsidian");
   assertContains("uid-open-link", e.field("Obsidian Link"), "obsidian://adv-uri?vault=RasObs&amp;uid=abc123");
-  assertEquals("overwrite-not-written", e.field("Overwrite Link"), "");
+  assertContains("overwrite-written", e.field("Overwrite Link"), "mode=overwrite");
+}
+
+function testSameFieldFormatsExistingObsidianLinkOnly() {
+  var e = makeEntry({
+    Text: "Body",
+    Link: '<a href="obsidian://adv-uri?vault=RasObs&amp;uid=abc123">open</a>'
+  });
+
+  var result = makeObsidianMementoUri({
+    entryObj: e,
+    libObj: lib(),
+    contentField: "Text",
+    overwriteHtmlField: "Link",
+    obsidianHtmlField: "Link",
+    vault: "RasObs"
+  });
+
+  assertEquals("same-field-mode", result.mode, "formatted_obsidian_same_field");
+  assertContains("same-field-keeps-open-link", e.field("Link"), "obsidian://adv-uri?vault=RasObs&amp;uid=abc123");
+  if (String(e.field("Link")).indexOf("mode=overwrite") >= 0) {
+    fail("same-field-should-not-overwrite-existing-obsidian-link");
+  }
+}
+
+function testSameFieldCreatesOverwriteWhenNoObsidianLinkExists() {
+  var e = makeEntry({
+    Text: "Body",
+    Link: ""
+  });
+
+  var result = makeObsidianMementoUri({
+    entryObj: e,
+    libObj: lib(),
+    contentField: "Text",
+    overwriteHtmlField: "Link",
+    obsidianHtmlField: "Link",
+    vault: "RasObs"
+  });
+
+  assertEquals("same-field-create-mode", result.mode, "created_overwrite_same_field");
+  assertContains("same-field-create-overwrite", e.field("Link"), "mode=overwrite");
 }
 
 testCreatesOverwriteLinkOnlyInOverwriteField();
 testUidWritesOpenLinkToObsidianField();
+testSameFieldFormatsExistingObsidianLinkOnly();
+testSameFieldCreatesOverwriteWhenNoObsidianLinkExists();
 
 WScript.Echo("OK");

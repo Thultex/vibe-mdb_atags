@@ -134,7 +134,8 @@ Ziel-Felder
 **Integration Add-ons**
 - `addons/6_integration/obsidianLinker.js` (Memento-zu-Obsidian Advanced URI)
   - `makeObsidianMementoUri()`
-  - getrennte Felder fuer Overwrite-Link und Obsidian-Link
+  - `overwriteHtmlField` fuer den Erstellen-/Overwrite-Link
+  - `obsidianHtmlField` fuer den formatierten bestehenden Obsidian-Link
 - `addons/6_integration/wikiLinker.js` (Wikipedia search link)
   - `applyWikiLinker()`
   - `makeWikiSearchUrl()`
@@ -424,13 +425,13 @@ multiChoiceRemove({
 
 **Obsidian Linker (Integration)**
 
-Erstellt beim ersten Lauf einen `mode=overwrite`-Link für Advanced URI und hält Obsidian-UIDs davon getrennt. Das Overwrite-Feld und das Obsidian-Link-Feld können gleich sein, sollten für klarere Pflege aber getrennt werden.
+Erstellt einen `mode=overwrite`-Link fuer Advanced URI im `overwriteHtmlField`. Ein vorhandener Obsidian-Link im `obsidianHtmlField` wird nur als HTML-Link formatiert. Wenn nur ein Feld existiert oder beide Felder gleich sind, laufen beide Rollen auf dieses eine Feld.
 
 ```js
 makeObsidianMementoUri({
   contentField: "Text",
-  overwriteLinkField: "Obsidian Overwrite Link",
-  obsidianLinkField: "Obsidian Link",
+  overwriteHtmlField: "Obsidian Overwrite Link",
+  obsidianHtmlField: "Obsidian Link",
   dateField: "Datum",
   mementoLinkField: "Memento Link",
   vault: "RasObs"
