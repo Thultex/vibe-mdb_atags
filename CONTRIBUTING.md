@@ -119,7 +119,7 @@ Die Versionsnummer im Dateikopf ist dateibezogen.
 
 Das bedeutet:
 
-- `core/collectAtags.js`, `core/exportAtags.js`, `core/helpers.js`, `core/restoreAtags.js`, `addons/tagPairParser.js` und `addons/globalFieldSync.js` dürfen unterschiedliche Versionsstände haben.
+- `core/collectAtags.js`, `core/exportAtags.js`, `core/helpers.js`, `core/restoreAtags.js`, `addons/tagging/tagPairParser.js` und `addons/syncing/globalFieldSync.js` dürfen unterschiedliche Versionsstände haben.
 - Nur die Datei bekommt einen Versionssprung, die tatsächlich geändert wurde.
 - Wenn mehrere Module geändert werden, wird jede betroffene Datei separat angehoben.
 
@@ -167,6 +167,9 @@ Tests und Verifikation sollen zur Groesse und zum Risiko der Aenderung passen.
 
 Regeln:
 
+- Besonders bei Add-ons vorab pruefen, ob ein eigener Test wirklich wichtig ist.
+- Eigene Add-on-Tests sind vor allem sinnvoll bei Parser-/Regex-Logik, Idempotenz, Datenverlust-Risiko, Feld-Schreiblogik, Memento/WSH-Kompatibilitaet oder mehreren relevanten Verzweigungen.
+- Ein Smoke-Test oder vorhandener Test reicht oft bei einfachen Wrappern, Anzeige-Helfern oder kleinen, gut sichtbaren Transformationen.
 - Nicht fuer jede kleine oder klar lokale Aenderung automatisch eine neue Testdatei anlegen.
 - Bestehende Tests bevorzugt erweitern, wenn dort schon passender Schutz existiert.
 - Neue Tests vor allem dann anlegen, wenn Verhalten riskant ist, leicht wieder kaputtgehen kann oder mehrere Pfade absichert.

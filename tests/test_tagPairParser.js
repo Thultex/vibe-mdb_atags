@@ -1,6 +1,6 @@
 var fso = new ActiveXObject("Scripting.FileSystemObject");
 var scriptDir = fso.GetParentFolderName(WScript.ScriptFullName);
-var parserPath = fso.BuildPath(scriptDir, "..\\addons\\tagPairParser.js");
+var parserPath = fso.BuildPath(scriptDir, "..\\addons\\tagging\\tagPairParser.js");
 
 eval(fso.OpenTextFile(parserPath, 1).ReadAll());
 

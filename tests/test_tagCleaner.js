@@ -1,6 +1,6 @@
 var fso = new ActiveXObject("Scripting.FileSystemObject");
 var scriptDir = fso.GetParentFolderName(WScript.ScriptFullName);
-var addonPath = fso.BuildPath(scriptDir, "..\\addons\\tagCleaner.js");
+var addonPath = fso.BuildPath(scriptDir, "..\\addons\\tagging\\tagCleaner.js");
 
 eval(fso.OpenTextFile(addonPath, 1).ReadAll());
 

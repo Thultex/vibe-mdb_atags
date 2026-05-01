@@ -94,21 +94,35 @@ Ziel-Felder
 - `core/helpers.js`
 - `core/restoreAtags.js`
 
-**Add-ons**
-- `addons/tagPairParser.js` (Parser-Preprocessing)
+**Tagging Add-ons**
+- `addons/tagging/tagPairParser.js` (Parser-Preprocessing)
   - `applyTagPairParser()`
   - `bulkApplyTagPairParser()`
-- `addons/tagCleaner.js` (einfache Notiz-/Tagleisten-Normalisierung)
+- `addons/tagging/tagCleaner.js` (einfache Notiz-/Tagleisten-Normalisierung)
   - `applyTagCleaner()`
   - `bulkApplyTagCleaner()`
-- `addons/globalFieldSync.js` (Feld-Synchronisation)
+
+**Syncing Add-ons**
+- `addons/syncing/globalFieldSync.js` (Feld-Synchronisation)
   - `syncFieldTo()`
   - `syncFieldBack()`
   - `syncFieldAll()`
   - optionales Überschreiben über `overwrite: true`
-- `addons/timeMarker.js` (Zeitmarker für Textfelder)
+- `addons/syncing/syncLastFromLatest.js` (Felder aus dem neuesten frueheren Eintrag uebernehmen)
+  - `syncLastFromLatest()`
+  - `fields` oder `map`
+  - optional `onlyIfEmpty`
+
+**Other Add-ons**
+- `addons/z_others/timeMarker.js` (Zeitmarker für Textfelder)
   - `appendTimeMarker()`
   - optionales Stundenlimit über `maxHours` (Default: `30`)
+- `addons/z_others/hourGuide.js` (HTML guide by hours since dose)
+  - `makeHourGuideHtml()`
+  - `applyHourGuide()`
+- `addons/z_others/obsidianLinker.js` (Memento-zu-Obsidian Advanced URI)
+  - `makeObsidianMementoUri()`
+  - getrennte Felder fuer Overwrite-Link und Obsidian-Link
 - `core/restoreAtags.js` (Restore-Helfer, historisch im `core/` abgelegt)
   - `restoreAtags()`
   - `bulkRestoreAtags()`
@@ -119,9 +133,12 @@ Ziel-Felder
 - `tests/test_tagPairParser.js`
 - `tests/test_tagCleaner.js`
 - `tests/test_timeMarker.js`
+- `tests/test_syncLastFromLatest.js`
+- `tests/test_hourGuide.js`
+- `tests/test_obsidianLinker.js`
 ## Add-on Nutzung
 
-**Tag-Pair Preprocessing**
+**Tag-Pair Preprocessing (Tagging)**
 
 Optional als Add-on vor `collectAtags()`:
 
@@ -142,14 +159,39 @@ Effekt:
 - der Wert-Tag wird aus dem Tag-Feld entfernt
 - danach kann separat die normale `collectAtags()`-Pipeline laufen
 
-**Global Field Sync**
+**Global Field Sync (Syncing)**
 
 Unabhängig vom Parser nutzbar, um Felder zu spiegeln:
 
 - Synchronisierung einzelner oder mehrerer Felder
 - Konfliktbehandlung über `overwrite: true`
 
-**Tag Cleaner**
+**Sync Last From Latest (Syncing)**
+
+Übernimmt Werte aus dem neuesten anderen Eintrag anhand eines Datumsfelds.
+
+```js
+syncLastFromLatest({
+  fieldDate: "Einnahmedatum",
+  fields: ["Dosis", "Wirkstoff"],
+  onlyIfEmpty: true
+});
+```
+
+Mapping von Quellfeld auf Zielfeld:
+
+```js
+syncLastFromLatest({
+  fieldDate: "Einnahmedatum",
+  map: {
+    "Dosis": "Dosis",
+    "Wirkstoff": "WS",
+    "Kommentar": "Notiz"
+  }
+});
+```
+
+**Tag Cleaner (Tagging)**
 
 Normalisiert einfache Werttags im Text und führt `|`-/`||`-Tagleisten zusammen. Die Ausgabe nutzt eine einfache `|`-Tagleiste. Standard ist Tagleiste unten mit einer Leerzeile Abstand.
 
@@ -233,7 +275,7 @@ Text
 | emo³ info² tag³, info:"das ist info", laufenˣ stressˣ
 ```
 
-**Restore Add-on (JSON → Felder)**
+**Restore Add-on (Other, JSON → Felder)**
 
 Die Restore-Funktionen sind das dritte Add-on/Utility im Stack und werden aus historischen Gründen in `core/restoreAtags.js` geführt.
 
@@ -241,7 +283,7 @@ Die Restore-Funktionen sind das dritte Add-on/Utility im Stack und werden aus hi
 - `bulkRestoreAtags()` für Restore über die gesamte Bibliothek
 - unterstützt `force_type: null | "text" | "list"`
 
-**Time Marker**
+**Time Marker (Other)**
 
 Fügt Zeitmarker wie `2:` oder `30,5:` in ein Textfeld ein und gruppiert sie bei `insertMode: "time_block_top"` oberhalb des restlichen Texts.
 
@@ -261,6 +303,33 @@ appendTimeMarker({
   roundMode: "round",
   insertMode: "time_block_top",
   maxHours: 30
+});
+```
+
+**Hour Guide (Other)**
+
+Returns context-aware HTML guidance from an hours field. After `maxHours`, it writes an empty string.
+
+```js
+applyHourGuide({
+  sourceHoursField: "hours since dose",
+  targetField: "Hour Guide",
+  maxHours: 16
+});
+```
+
+**Obsidian Linker (Other)**
+
+Erstellt beim ersten Lauf einen `mode=overwrite`-Link für Advanced URI und hält Obsidian-UIDs davon getrennt. Das Overwrite-Feld und das Obsidian-Link-Feld können gleich sein, sollten für klarere Pflege aber getrennt werden.
+
+```js
+makeObsidianMementoUri({
+  contentField: "Text",
+  overwriteLinkField: "Obsidian Overwrite Link",
+  obsidianLinkField: "Obsidian Link",
+  dateField: "Datum",
+  mementoLinkField: "Memento Link",
+  vault: "RasObs"
 });
 ```
 

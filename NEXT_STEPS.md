@@ -9,7 +9,7 @@
 
 ### Now
 
-leer
+- Issue #25 pruefen: `updateSequenceSpree()` fehlt noch als Add-on-Code; Issue enthaelt bisher nur den Aufruf/Repro.
 
 ### Soon
 

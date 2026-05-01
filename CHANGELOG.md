@@ -17,6 +17,19 @@
 - Test/Doku: ...
 ```
 
+## 2026-05-01
+
+- `Addon Sync Last From Latest` auf `v1.01` ergaenzt
+- `Addon Hour Guide` auf `v1.00` ergaenzt
+- `Addon Obsidian Linker` auf `v1.00` ergaenzt
+- Feature: Addons aus GitHub-Issues #17, #20 und #23 in aktive Moduldateien uebernommen
+- Aenderung: Addon-Liste in Tagging, Syncing und Other Add-ons gegliedert
+- Struktur: Addon-Dateien in `addons/tagging/`, `addons/syncing/` und `addons/z_others/` sortiert
+- Aenderung: Issue #20 als englisches `Hour Guide` Add-on mit `applyHourGuide()`/`makeHourGuideHtml()` integriert
+- Fix: Sync Last From Latest liest ISO-artige Datumsstrings auch im Windows Script Host
+- Feature: Obsidian Linker unterstuetzt getrennte Felder fuer Overwrite-Link und Obsidian-Link gemaess Issue #24
+- Test/Doku: neue Addon-Tests, README-Eintraege und Versioning-Liste ergaenzt
+
 ## 2026-04-25
 
 - Doku: Pflegehinweis ergänzt, dass Modul-Kopfblöcke wegen des Memento-Java-Editors kurz bleiben und vorsichtig mit Quotes, Backticks, langen `Änderungen`-Listen und Sonderzeichen umgehen sollen

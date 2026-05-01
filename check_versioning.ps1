@@ -5,10 +5,13 @@ $moduleFiles = @(
   "core/exportAtags.js",
   "core/helpers.js",
   "core/restoreAtags.js",
-  "addons/tagPairParser.js",
-  "addons/tagCleaner.js",
-  "addons/globalFieldSync.js",
-  "addons/timeMarker.js"
+  "addons/tagging/tagPairParser.js",
+  "addons/tagging/tagCleaner.js",
+  "addons/syncing/globalFieldSync.js",
+  "addons/syncing/syncLastFromLatest.js",
+  "addons/z_others/timeMarker.js",
+  "addons/z_others/hourGuide.js",
+  "addons/z_others/obsidianLinker.js"
 )
 
 function Get-VersionLine {
