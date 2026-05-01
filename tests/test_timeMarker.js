@@ -1,6 +1,6 @@
 var fso = new ActiveXObject("Scripting.FileSystemObject");
 var scriptDir = fso.GetParentFolderName(WScript.ScriptFullName);
-var addonPath = fso.BuildPath(scriptDir, "..\\addons\\z_others\\timeMarker.js");
+var addonPath = fso.BuildPath(scriptDir, "..\\addons\\3_workflow\\timeMarker.js");
 
 eval(fso.OpenTextFile(addonPath, 1).ReadAll());
 

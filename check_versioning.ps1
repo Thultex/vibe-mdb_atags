@@ -5,13 +5,15 @@ $moduleFiles = @(
   "core/exportAtags.js",
   "core/helpers.js",
   "core/restoreAtags.js",
-  "addons/tagging/tagPairParser.js",
-  "addons/tagging/tagCleaner.js",
-  "addons/syncing/globalFieldSync.js",
-  "addons/syncing/syncLastFromLatest.js",
-  "addons/z_others/timeMarker.js",
-  "addons/z_others/hourGuide.js",
-  "addons/z_others/obsidianLinker.js"
+  "addons/1_tagging/tagPairParser.js",
+  "addons/1_tagging/tagCleaner.js",
+  "addons/2_syncing/globalFieldSync.js",
+  "addons/2_syncing/syncLastFromLatest.js",
+  "addons/3_workflow/timeMarker.js",
+  "addons/3_workflow/sequenceCounter.js",
+  "addons/6_integration/obsidianLinker.js",
+  "addons/6_integration/wikiLinker.js",
+  "addons/z_others/hourGuide.js"
 )
 
 function Get-VersionLine {

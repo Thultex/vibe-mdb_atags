@@ -19,6 +19,13 @@
 
 ## 2026-05-01
 
+- `Addon Wiki Linker` auf `v1.00` ergaenzt
+- Feature: `applyWikiLinker()` aus Issue #27 als Integration-Addon integriert
+- Struktur: Workflow-Addons nach `addons/3_workflow/`, externe Integrationen nach `addons/6_integration/`
+- Verifikation: Wiki Linker per Syntaxcheck geprueft; kein eigener Test wegen sehr kleiner, linearer Link-Helper-Logik
+- `Addon Sequence Counter` auf `v1.00` ergaenzt
+- Feature: `updateSequenceSpree()` aus Issue #26 als Workflow-Addon integriert
+- Test/Doku: fokussierter WSH-Test fuer Bulk, `currentEntry` und leere Gruppenfelder ergaenzt
 - `collectAtags` auf `v1.36` angehoben
 - Fix: Alias-Deklarationszeilen mit `@@` werden nur noch fuer die Alias-Map genutzt und nicht mehr regulaer als Tags geparst
 - Fix: Readable-/Tagbar-Zeilen lesen bare Tags wie `|| Kopfdruck` selbst, statt indirekt von Alias-Zeilen abzuhängen
@@ -28,7 +35,7 @@
 - `Addon Obsidian Linker` auf `v1.00` ergaenzt
 - Feature: Addons aus GitHub-Issues #17, #20 und #23 in aktive Moduldateien uebernommen
 - Aenderung: Addon-Liste in Tagging, Syncing und Other Add-ons gegliedert
-- Struktur: Addon-Dateien in `addons/tagging/`, `addons/syncing/` und `addons/z_others/` sortiert
+- Struktur: Addon-Dateien in `addons/1_tagging/`, `addons/2_syncing/` und `addons/z_others/` sortiert
 - Aenderung: Issue #20 als englisches `Hour Guide` Add-on mit `applyHourGuide()`/`makeHourGuideHtml()` integriert
 - Fix: Sync Last From Latest liest ISO-artige Datumsstrings auch im Windows Script Host
 - Feature: Obsidian Linker unterstuetzt getrennte Felder fuer Overwrite-Link und Obsidian-Link gemaess Issue #24

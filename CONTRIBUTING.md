@@ -119,7 +119,7 @@ Die Versionsnummer im Dateikopf ist dateibezogen.
 
 Das bedeutet:
 
-- `core/collectAtags.js`, `core/exportAtags.js`, `core/helpers.js`, `core/restoreAtags.js`, `addons/tagging/tagPairParser.js` und `addons/syncing/globalFieldSync.js` dürfen unterschiedliche Versionsstände haben.
+- `core/collectAtags.js`, `core/exportAtags.js`, `core/helpers.js`, `core/restoreAtags.js`, `addons/1_tagging/tagPairParser.js` und `addons/2_syncing/globalFieldSync.js` dürfen unterschiedliche Versionsstände haben.
 - Nur die Datei bekommt einen Versionssprung, die tatsächlich geändert wurde.
 - Wenn mehrere Module geändert werden, wird jede betroffene Datei separat angehoben.
 

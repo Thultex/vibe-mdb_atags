@@ -95,34 +95,44 @@ Ziel-Felder
 - `core/restoreAtags.js`
 
 **Tagging Add-ons**
-- `addons/tagging/tagPairParser.js` (Parser-Preprocessing)
+- `addons/1_tagging/tagPairParser.js` (Parser-Preprocessing)
   - `applyTagPairParser()`
   - `bulkApplyTagPairParser()`
-- `addons/tagging/tagCleaner.js` (einfache Notiz-/Tagleisten-Normalisierung)
+- `addons/1_tagging/tagCleaner.js` (einfache Notiz-/Tagleisten-Normalisierung)
   - `applyTagCleaner()`
   - `bulkApplyTagCleaner()`
 
 **Syncing Add-ons**
-- `addons/syncing/globalFieldSync.js` (Feld-Synchronisation)
+- `addons/2_syncing/globalFieldSync.js` (Feld-Synchronisation)
   - `syncFieldTo()`
   - `syncFieldBack()`
   - `syncFieldAll()`
   - optionales Überschreiben über `overwrite: true`
-- `addons/syncing/syncLastFromLatest.js` (Felder aus dem neuesten frueheren Eintrag uebernehmen)
+- `addons/2_syncing/syncLastFromLatest.js` (Felder aus dem neuesten frueheren Eintrag uebernehmen)
   - `syncLastFromLatest()`
   - `fields` oder `map`
   - optional `onlyIfEmpty`
 
-**Other Add-ons**
-- `addons/z_others/timeMarker.js` (Zeitmarker für Textfelder)
+**Workflow Add-ons**
+- `addons/3_workflow/timeMarker.js` (Zeitmarker für Textfelder)
   - `appendTimeMarker()`
   - optionales Stundenlimit über `maxHours` (Default: `30`)
+- `addons/3_workflow/sequenceCounter.js` (Sequenz- und Spree-Zaehler)
+  - `updateSequenceSpree()`
+  - optional nur aktueller Eintrag ueber `currentEntry`
+
+**Integration Add-ons**
+- `addons/6_integration/obsidianLinker.js` (Memento-zu-Obsidian Advanced URI)
+  - `makeObsidianMementoUri()`
+  - getrennte Felder fuer Overwrite-Link und Obsidian-Link
+- `addons/6_integration/wikiLinker.js` (Wikipedia search link)
+  - `applyWikiLinker()`
+  - `makeWikiSearchUrl()`
+
+**Other Add-ons**
 - `addons/z_others/hourGuide.js` (HTML guide by hours since dose)
   - `makeHourGuideHtml()`
   - `applyHourGuide()`
-- `addons/z_others/obsidianLinker.js` (Memento-zu-Obsidian Advanced URI)
-  - `makeObsidianMementoUri()`
-  - getrennte Felder fuer Overwrite-Link und Obsidian-Link
 - `core/restoreAtags.js` (Restore-Helfer, historisch im `core/` abgelegt)
   - `restoreAtags()`
   - `bulkRestoreAtags()`
@@ -134,6 +144,7 @@ Ziel-Felder
 - `tests/test_tagCleaner.js`
 - `tests/test_timeMarker.js`
 - `tests/test_syncLastFromLatest.js`
+- `tests/test_sequenceCounter.js`
 - `tests/test_hourGuide.js`
 - `tests/test_obsidianLinker.js`
 ## Add-on Nutzung
@@ -190,6 +201,25 @@ syncLastFromLatest({
   }
 });
 ```
+
+**Sequence Counter (Workflow)**
+
+Berechnet zusammenhaengende Sequenzen und laufende Positionen innerhalb einer Sequenz anhand von Datum und Gruppierungsfeldern.
+
+```js
+updateSequenceSpree({
+  entries: lib().entries(),
+  currentEntry: entry(),
+  fieldDate: "Einnahmedatum",
+  groupFields: ["Dosis", "Medikament"],
+  fieldSequence: "Reihe",
+  fieldSpree: "Spree",
+  fieldSequenceMax: "Reihe Max",
+  fieldSpreeMax: "Spree Max"
+});
+```
+
+Ziel-Felder sind optional. Mit `currentEntry` wird nur der aktuelle Eintrag geschrieben; ohne `currentEntry` werden alle berechneten Eintraege aktualisiert. `clearOnEmpty: false` verhindert das Leeren der Ziel-Felder, wenn ein Gruppierungsfeld leer ist.
 
 **Tag Cleaner (Tagging)**
 
@@ -283,7 +313,7 @@ Die Restore-Funktionen sind das dritte Add-on/Utility im Stack und werden aus hi
 - `bulkRestoreAtags()` für Restore über die gesamte Bibliothek
 - unterstützt `force_type: null | "text" | "list"`
 
-**Time Marker (Other)**
+**Time Marker (Workflow)**
 
 Fügt Zeitmarker wie `2:` oder `30,5:` in ein Textfeld ein und gruppiert sie bei `insertMode: "time_block_top"` oberhalb des restlichen Texts.
 
@@ -318,7 +348,7 @@ applyHourGuide({
 });
 ```
 
-**Obsidian Linker (Other)**
+**Obsidian Linker (Integration)**
 
 Erstellt beim ersten Lauf einen `mode=overwrite`-Link für Advanced URI und hält Obsidian-UIDs davon getrennt. Das Overwrite-Feld und das Obsidian-Link-Feld können gleich sein, sollten für klarere Pflege aber getrennt werden.
 
@@ -330,6 +360,18 @@ makeObsidianMementoUri({
   dateField: "Datum",
   mementoLinkField: "Memento Link",
   vault: "RasObs"
+});
+```
+
+**Wiki Linker (Integration)**
+
+Erzeugt aus einem Titelfeld einen Wikipedia-Suchlink und schreibt ihn in ein Zielfeld.
+
+```js
+applyWikiLinker({
+  sourceTitleField: "Titel",
+  targetField: "Wikipedia",
+  language: "de"
 });
 ```
 
