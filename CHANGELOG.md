@@ -19,9 +19,10 @@
 
 ## 2026-05-01
 
-- `Shared Script: Time Marker` auf `v1.27` angehoben
+- `Shared Script: Time Marker` auf `v1.28` angehoben
 - Feature: Time Marker behandelt `:` am Zeilenanfang als Platzhalter; `: Text` wird zum aktuellen Marker, leere `:`-Zeilen werden entfernt
 - Feature: `cleanupTimeMarkerPlaceholders()` fuer `AfterEntry()` ergaenzt; Cleanup loescht nur leere Marker und erzeugt keine Markerwerte
+- Feature: `cleanupTimeMarkerPlaceholders()` gibt `true` zurueck, wenn nach dem Cleanup Markerzeilen vorhanden sind, sonst `false`
 - Fix: Time Marker schreibt ersetzte `: Text`-Platzhalter sofort zurueck und setzt dabei keine zusaetzliche neue Markerzeile
 - Fix: Time Marker akzeptiert `textField` als Alias fuer `targetTextField`, damit Cleanup-Aufrufe wie andere Text-Addons schreiben
 - Test/Doku: Regressionen fuer Doppelpunkt-Platzhalter, leere Marker wie `3: `, CR-Zeilenumbrueche und AfterEntry-Cleanup ergaenzt; Marker-Beispiele in README und Script-Kopf geklaert

@@ -347,6 +347,7 @@ Fügt Zeitmarker wie `2:` oder `30,5:` in ein Textfeld ein und gruppiert sie bei
 - `maxHours: null` deaktiviert das Limit
 - `: Text` am Zeilenanfang wird zum aktuellen Marker, `:` ohne Inhalt wird entfernt
 - `cleanupTimeMarkerPlaceholders()` ist fuer `AfterEntry()` gedacht, erzeugt keine neuen Marker und entfernt nur leere Marker wie `:` oder `3: `
+- `cleanupTimeMarkerPlaceholders()` gibt `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
 - `targetTextField` ist der normale Feldparameter; `textField` bleibt nur als Alias kompatibel
 
 Kurzbeispiele:

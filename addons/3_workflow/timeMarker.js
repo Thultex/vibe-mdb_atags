@@ -1,9 +1,10 @@
 /*
 ========================================
-Shared Script: Time Marker v1.27 (sys 2.11)
+Shared Script: Time Marker v1.28 (sys 2.11)
 ========================================
 
 Änderungen
+- Cleanup gibt `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
 - Doppelpunkt-Platzhalter am Zeilenanfang werden beim Einfuegen mit dem aktuellen Marker belegt
 - Bereinigung leerer TimeMarker und Leerzeilen läuft auch beim Abbruch durch `maxHours`
 - bereinigte Leerzeilen werden auch zurückgeschrieben, wenn kein neuer Marker nötig ist
@@ -131,6 +132,17 @@ function isBlankTimeMarkerText(text) {
 
 function isTimestampLine(line) {
   return parseLeadingHour(line) != null;
+}
+
+function hasTimestampLines(text) {
+  var raw = splitTimeMarkerLines(text);
+  var i;
+
+  for (i = 0; i < raw.length; i++) {
+    if (isTimestampLine(raw[i])) return true;
+  }
+
+  return false;
 }
 
 function isEmptyTimestampLine(line) {
@@ -424,7 +436,7 @@ function cleanupTimeMarkerPlaceholders(cfg) {
 
   var e = cfg.entryObj || entry();
   var targetTextField = resolveTimeMarkerTextField(cfg);
-  if (!e || !targetTextField) return;
+  if (!e || !targetTextField) return false;
 
   var text = e.field(targetTextField);
   if (text == null) text = "";
@@ -434,4 +446,5 @@ function cleanupTimeMarkerPlaceholders(cfg) {
   newText = normalizeTimeMarkerText(removeEmptyTimestampLines(newText));
 
   if (newText !== text) e.set(targetTextField, newText);
+  return hasTimestampLines(newText);
 }
