@@ -137,6 +137,7 @@ assertDisplayName("alias-short-display", "@@Kopfschmerzen (ks): Kopfschmerz, Ksc
 assertItem("alias-fixed-bare", "@@Kopfschmerz (KSch): ks, Kopfdruck1\n#Kopfdruck", "Kopfschmerz", "+1", 1, null, null);
 assertItem("alias-fixed-overrides-value", "@@Kopfschmerz (KSch): ks, Kopfdruck1\nKopfdruck3", "Kopfschmerz", "+1", 1, null, null);
 assertItem("alias-fixed-tagbar", "@@Kopfschmerz (KSch): ks, Kopfdruck1\n|| Kopfdruck", "Kopfschmerz", "+1", 1, null, null);
+assertMissing("alias-line-not-parsed", "@@Kopfschmerz (KSch): ks, Kopfdruck1", "Kopfschmerz");
 assertItem("alias-short-without-list", "@@Wirkung (Wk)\nWk++", "Wirkung", "+2", 2, null, null);
 assertDisplayName("alias-short-without-list-display", "@@Wirkung (Wk)\nWirkung++", "Wirkung", "Wk");
 assertItem("superscript-normal-text-plus", "emo\u207A\u00B2", "emo", "+2", 2, null, null);

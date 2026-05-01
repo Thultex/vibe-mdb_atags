@@ -1,9 +1,11 @@
 /*
 ========================================
-collectAtags v1.35 (sys 2.11)
+collectAtags v1.36 (sys 2.11)
 ========================================
 
 Changes
+- skip alias declaration lines during normal parsing
+- parse bare tags in readable tag lines
 - simple tag suffix `x` is parsed as an empty explicit tag
 - alias entries can carry fixed values, e.g. `@@Kopfschmerz (KSch): ks, Kopfdruck1`
 - superscript value suffixes like `emo²` and `tag⁻⁰³` are parsed in normal text
@@ -413,6 +415,7 @@ function collectAtags(cfg) {
       name = normalizeTagName(m[1] || "");
       raw = decodeReadableSuperscript(m[2] || "");
       addReadableTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw);
+      mark(m.index, m.index + String(m[0]).length);
       if (m[0] === "") rxSuper.lastIndex++;
     }
 
@@ -425,7 +428,20 @@ function collectAtags(cfg) {
 
       name = normalizeTagName(m[2] || "");
       addReadableTagValue(name, "", items, seen, aliasMap, rowValue, rowUnit, rowRaw);
+      mark(m.index, m.index + String(m[0]).length);
       if (m[0] === "") rxCleanerSimple.lastIndex++;
+    }
+
+    var rxBare = /(^|[\s,]+)([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)(?=$|[\s,]+)/g;
+    while ((m = rxBare.exec(s)) !== null) {
+      if (isUsed(m.index)) {
+        if (m[0] === "") rxBare.lastIndex++;
+        continue;
+      }
+
+      name = normalizeTagName(m[2] || "");
+      addReadableTagValue(name, "", items, seen, aliasMap, rowValue, rowUnit, rowRaw);
+      if (m[0] === "") rxBare.lastIndex++;
     }
   }
 
@@ -490,6 +506,8 @@ function collectAtags(cfg) {
         );
         continue;
       }
+
+      if (/^\s*@@/.test(line)) continue;
 
       var currentRowValue = null;
       var currentRowUnit = null;

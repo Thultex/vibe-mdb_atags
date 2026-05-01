@@ -19,6 +19,10 @@
 
 ## 2026-05-01
 
+- `collectAtags` auf `v1.36` angehoben
+- Fix: Alias-Deklarationszeilen mit `@@` werden nur noch fuer die Alias-Map genutzt und nicht mehr regulaer als Tags geparst
+- Fix: Readable-/Tagbar-Zeilen lesen bare Tags wie `|| Kopfdruck` selbst, statt indirekt von Alias-Zeilen abzuhängen
+- Test: Regression fuer Issue #18 ergaenzt
 - `Addon Sync Last From Latest` auf `v1.01` ergaenzt
 - `Addon Hour Guide` auf `v1.00` ergaenzt
 - `Addon Obsidian Linker` auf `v1.00` ergaenzt
