@@ -1,6 +1,6 @@
 /*
 ========================================
-Addon Multi Choice Helpers v1.01 (sys 2.11)
+C1 Multi Choice Helpers v1.01 (sys 2.20)
 ========================================
 
 Changes

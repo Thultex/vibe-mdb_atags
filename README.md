@@ -1,4 +1,4 @@
-# ATAG System (sys 2.11)
+# ATAG System (sys 2.20)
 
 ## Inhalt
 
@@ -22,6 +22,8 @@ Jede funktionale Änderung wird an zwei Stellen dokumentiert:
 Regeln:
 
 - Modulversion pro geänderter Datei anheben
+- Jede Core-/Addon-Datei hat eine stabile Kennung im Header: `A` fuer Core, `B` fuer Addons, `C` fuer geloeste eigenstaendige Module; aktuell gibt es noch keine `C`-Module.
+- Die Nummer folgt der Repo-Reihenfolge im Dateibaum. Core: `A1` bis `A4`; Addons: `B1` bis `B9`; geloeste generelle Module: `C1` bis `C3`.
 - Kopfblöcke in Moduldateien sehr kurz halten; ausführliche Änderungen gehören in `CHANGELOG.md`
 - In Kopfblöcken vorsichtig mit Quotes, Backticks, langen `Änderungen`-Listen und Sonderzeichen umgehen, weil der Memento-Java-Editor daran hängen bleiben kann
 - Changelog mit Datum, Versionssprung und Wirkung ergänzen
@@ -92,66 +94,63 @@ Ziel-Felder
 
 **Core**
 
-- `core/collectAtags.js`
-- `core/exportAtags.js`
-- `core/helpers.js`
-- `core/restoreAtags.js`
+- `A1` `core/collectAtags.js`
+- `A2` `core/exportAtags.js`
+- `A3` `core/helpers.js`
+- `A4` `core/restoreAtags.js`
 
 **Tagging Add-ons**
-- `addons/1_tagging/tagPairParser.js` (Parser-Preprocessing)
-  - `applyTagPairParser()`
-  - `bulkApplyTagPairParser()`
-- `addons/1_tagging/tagCleaner.js` (einfache Notiz-/Tagleisten-Normalisierung)
+- `B1` `addons/1_tagging/tagCleaner.js` (einfache Notiz-/Tagleisten-Normalisierung)
   - `applyTagCleaner()`
   - `bulkApplyTagCleaner()`
+- `B2` `addons/1_tagging/tagPairParser.js` (Parser-Preprocessing)
+  - `applyTagPairParser()`
+  - `bulkApplyTagPairParser()`
 
 **Syncing Add-ons**
-- `addons/2_syncing/globalFieldSync.js` (Feld-Synchronisation)
+- `B3` `addons/2_syncing/globalFieldSync.js` (Feld-Synchronisation)
   - `syncFieldTo()`
   - `syncFieldBack()`
   - `syncFieldAll()`
-  - optionales Überschreiben über `overwrite: true`
-- `addons/2_syncing/syncLastFromLatest.js` (Felder aus dem neuesten frueheren Eintrag uebernehmen)
+  - optionales Ueberschreiben ueber `overwrite: true`
+- `B4` `addons/2_syncing/syncLastFromLatest.js` (Felder aus dem neuesten frueheren Eintrag uebernehmen)
   - `syncLastFromLatest()`
   - `fields` oder `map`
   - optional `onlyIfEmpty`
-- `addons/2_syncing/typedTextFields.js` (typisierte Textfelder in Zielfelder uebertragen)
-  - `syncTypedTextFields()`
-  - Tokens: `(t-dd)`, `(t-d)`, `(t-i)`, `(t-r)`, `(t-tag)`, `(t-l)`
-  - Optionen: `clearSource`, `onlyIfTargetEmpty`, `dryRun`
 
 **Workflow Add-ons**
-- `addons/3_workflow/timeMarker.js` (Zeitmarker für Textfelder)
-  - `appendTimeMarker()`
-  - optionales Stundenlimit über `maxHours` (Default: `30`)
-- `addons/3_workflow/sequenceCounter.js` (Sequenz- und Spree-Zaehler)
-  - `updateSequenceSpree()`
-  - optional nur aktueller Eintrag ueber `currentEntry`
-- `addons/3_workflow/floatingAverage.js` (gleitender Gruppen-Mittelwert)
+- `B5` `addons/3_workflow/floatingAverage.js` (gleitender Gruppen-Mittelwert)
   - `updateAverage()`
   - optional nur aktueller Eintrag ueber `currentEntry`
-- `addons/3_workflow/multiChoiceHelpers.js` (Multi-Choice-Helfer)
-  - `multiChoiceAppend()`
-  - `multiChoiceRemove()`
-  - gibt `true` zurueck, wenn das Feld geaendert wurde
+- `B6` `addons/3_workflow/sequenceCounter.js` (Sequenz- und Spree-Zaehler)
+  - `updateSequenceSpree()`
+  - optional nur aktueller Eintrag ueber `currentEntry`
+- `B7` `addons/3_workflow/timeMarker.js` (Zeitmarker fuer Textfelder)
+  - `appendTimeMarker()`
+  - optionales Stundenlimit ueber `maxHours` (Default: `30`)
 
 **Integration Add-ons**
-- `addons/6_integration/obsidianLinker.js` (Memento-zu-Obsidian Advanced URI)
+- `B8` `addons/6_integration/obsidianLinker.js` (Memento-zu-Obsidian Advanced URI)
   - `makeObsidianMementoUri()`
   - `overwriteMarkdownField` fuer den Erstellen-/Overwrite-Link
   - `obsidianMarkdownField` fuer den formatierten bestehenden Obsidian-Link
   - alte `...HtmlField`-Optionen bleiben als Alias kompatibel
-- `addons/6_integration/wikiLinker.js` (Wikipedia search link)
+- `B9` `addons/6_integration/wikiLinker.js` (Wikipedia search link)
   - `applyWikiLinker()`
   - `makeWikiSearchUrl()`
 
-**Other Add-ons**
-- `addons/z_others/hourGuide.js` (HTML guide by hours since dose)
+**Generell / geloest**
+- `C1` `addons/z_generell/multiChoiceHelpers.js` (Multi-Choice-Helfer)
+  - `multiChoiceAppend()`
+  - `multiChoiceRemove()`
+  - gibt `true` zurueck, wenn das Feld geaendert wurde
+- `C2` `addons/z_generell/typedTextFields.js` (typisierte Textfelder in Zielfelder uebertragen)
+  - `syncTypedTextFields()`
+  - Tokens: `(t-dd)`, `(t-d)`, `(t-i)`, `(t-r)`, `(t-tag)`, `(t-l)`
+  - Optionen: `clearSource`, `onlyIfTargetEmpty`, `dryRun`
+- `C3` `addons/z_others/hourGuide.js` (HTML guide by hours since dose)
   - `makeHourGuideHtml()`
   - `applyHourGuide()`
-- `core/restoreAtags.js` (Restore-Helfer, historisch im `core/` abgelegt)
-  - `restoreAtags()`
-  - `bulkRestoreAtags()`
 
 **Tests**
 
@@ -446,7 +445,7 @@ multiChoiceRemove({
 
 **Obsidian Linker (Integration)**
 
-Erstellt einen `mode=overwrite`-Link fuer Advanced URI im `overwriteMarkdownField`. Sobald ein vorhandener Obsidian-Link im `obsidianMarkdownField` erkannt wird, wird das Overwrite-Feld geleert. Beide Felder werden als Markdown geschrieben; die alten `...HtmlField`-Optionen bleiben als Alias kompatibel. Die Ausgabe enthaelt `Link:` mit ausgeschriebenem direktem `obsidian://`-Link als Markdown-Link. Optional erzeugt `windowsOpenBase` zusaetzlich `Win:` mit ausgeschriebenem HTTP-/HTTPS-Redirect-Link. Wenn nur ein Feld existiert oder beide Felder gleich sind, laufen beide Rollen auf dieses eine Feld.
+Erstellt einen `mode=overwrite`-Link fuer Advanced URI im `overwriteMarkdownField`. Sobald ein vorhandener Obsidian-Link im `obsidianMarkdownField` erkannt wird, wird das Overwrite-Feld geleert. Beide Felder werden als Markdown geschrieben; die alten `...HtmlField`-Optionen bleiben als Alias kompatibel. Ein bestehender Obsidian-Link wird im Obsidian-Feld als reiner Markdown-Link ohne Prefix ausgegeben. Optional erzeugt `windowsOpenBase` zusaetzlich `Win:` mit ausgeschriebenem HTTP-/HTTPS-Redirect-Link. Wenn nur ein Feld existiert oder beide Felder gleich sind, laufen beide Rollen auf dieses eine Feld.
 
 ```js
 makeObsidianMementoUri({
@@ -455,11 +454,18 @@ makeObsidianMementoUri({
   obsidianMarkdownField: "Obsidian Link",
   dateField: "Datum",
   mementoLinkField: "Memento Link",
-  vault: "RasObs"
+  vault: "RasObs",
+  open: true
 });
 ```
 
-Ohne lokalen Helper funktioniert `http://127.0.0.1:17890/...` nicht. Fuer einen `Win:`-Link ohne Helper braucht `windowsOpenBase` eine echte Browser-Redirect-Seite, z.B. `https://example.org/obsidian-open?uri=` oder ein Template mit `{uri}`.
+Empfohlen fuer Windows Desktop und Android ist `open: true`: Das Addon schreibt weiterhin stabile Markdown-Links in die Felder und versucht zusaetzlich, den verbundenen oder neu erzeugten Obsidian-Link direkt per Script zu oeffnen. Auf Android nutzt es `intent("android.intent.action.VIEW")`; auf Windows Desktop werden Java `Desktop.browse()` und als Fallback `rundll32.exe url.dll,FileProtocolHandler` versucht. Wenn die Plattform das blockt, bleibt das Feld trotzdem geschrieben und `openResult` enthaelt den Fehlerstatus.
+
+Wenn `open: true` einen neuen `mode=overwrite`-Link oeffnet, wird danach kein Overwrite-Link im Feld behalten. Das Overwrite-Feld wird geleert und das Obsidian-Feld auf `Link: EINFÜGEN` gesetzt. Dieser Marker ist die einzige Ausgabe mit `Link:`-Prefix und bedeutet: Obsidian wurde zum Erstellen/Oeffnen angestossen, der echte Obsidian-Link muss noch eingefuegt werden. Solange dieser Marker im Obsidian-Feld steht, erzeugt und oeffnet ein erneuter Script-Lauf keinen neuen Overwrite-Link.
+
+Wenn nur `obsidianMarkdownField` gesetzt ist, erzeugt das Addon nie einen Overwrite-Link in diesem Feld. Dann dient das Feld nur zum Anzeigen/Oeffnen eines bereits eingefuegten Obsidian-Links; das Erstellen laeuft ueber eine separate Aktion bzw. ein separat konfiguriertes `overwriteMarkdownField`.
+
+Ohne lokalen Helper funktioniert `http://127.0.0.1:17890/...` nicht. `windowsOpenBase` sollte deshalb normalerweise leer bleiben. Fuer einen zusaetzlichen `Win:`-Link ohne Helper braucht `windowsOpenBase` eine echte Browser-Redirect-Seite, z.B. `https://example.org/obsidian-open?uri=` oder ein Template mit `{uri}`.
 
 **Wiki Linker (Integration)**
 

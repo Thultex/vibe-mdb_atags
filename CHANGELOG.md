@@ -19,6 +19,12 @@
 
 ## 2026-05-01
 
+- Systemversion auf `sys 2.20` angehoben
+- Struktur: Modulheader tragen jetzt stabile Kennungen (`A` Core, `B` Addons, `C` fuer geloeste generelle Module)
+- Nummerierung: Core `A1`-`A4`; Addons `B1`-`B9`; geloeste generelle Module `C1`-`C3`
+- Struktur: `multiChoiceHelpers.js` und `typedTextFields.js` nach `addons/z_generell/` verschoben und als `C1`/`C2` nummeriert
+- Aenderung: `addons/z_others/hourGuide.js` als generelles Modul `C3` nummeriert
+- Doku/Tooling: README, CONTRIBUTING und `check_versioning.ps1` pruefen und beschreiben die neue Headerform
 - `Shared Script: Time Marker` auf `v1.31` angehoben
 - Feature: Time Marker behandelt `:` am Zeilenanfang als Platzhalter; `: Text` wird zum aktuellen Marker, leere `:`-Zeilen werden entfernt
 - Feature: `appendTimeMarker()` gibt wie Cleanup `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
@@ -51,6 +57,20 @@
 - Testweise Aenderung: Verbundene Obsidian-Links werden als Markdown-Link statt HTML-Link ausgegeben
 - `Addon Obsidian Linker` auf `v1.07` angehoben
 - Aenderung: Overwrite- und Obsidian-Felder schreiben Markdown-Links; `overwriteMarkdownField` und `obsidianMarkdownField` als neue bevorzugte Optionsnamen ergaenzt
+- `Addon Obsidian Linker` auf `v1.08` angehoben
+- Feature: `open: true` versucht den verbundenen oder neu erzeugten Obsidian-URI per Android-Intent bzw. Java Desktop direkt zu oeffnen
+- `Addon Obsidian Linker` auf `v1.09` angehoben
+- Fix: Windows-Open probiert nach Java `Desktop.browse()` zusaetzlich `rundll32.exe url.dll,FileProtocolHandler` ueber Java-Interop
+- `Addon Obsidian Linker` auf `v1.10` angehoben
+- Fix: Markdown-Links werden beim erneuten Lauf stabil erkannt und nicht mehr ineinander verschachtelt
+- `Addon Obsidian Linker` auf `v1.11` angehoben
+- Aenderung: Nach `open: true` fuer einen neuen Overwrite-Link wird das Overwrite-Feld geleert und das Obsidian-Feld mit `Link: EINFÜGEN` als Wartezustand markiert
+- Fix: `Link: EINFÜGEN` loest bei weiteren Laeufen kein erneutes Overwrite/Oeffnen aus
+- `Addon Obsidian Linker` auf `v1.12` angehoben
+- Aenderung: Wenn nur `obsidianMarkdownField` konfiguriert ist, wird nie ein Overwrite-Link erzeugt oder geoeffnet
+- `Addon Obsidian Linker` auf `v1.13` angehoben
+- Aenderung: Bestehende Obsidian-Links werden im Obsidian-Feld ohne `Link:`-Prefix als reine Markdown-Links geschrieben; `Link: EINFÜGEN` bleibt nur fuer den Wartezustand
+- Doku: Getesteten Obsidian-Linker-Workflow mit Markdown-Feldern und `open: true` als empfohlene Windows-/Android-Konfiguration dokumentiert
 - `Addon Typed Text Fields` auf `v1.00` ergaenzt
 - Feature: `syncTypedTextFields()` integriert, um Felder mit `(t-dd)`, `(t-d)`, `(t-i)`, `(t-r)`, `(t-tag)` und `(t-l)` in passende Zielfelder zu konvertieren
 - Test/Doku: WSH-Regressionen fuer Einzelentry, Bulk, Optionen und Konvertierungen sowie README- und Versioning-Eintraege ergaenzt

@@ -1,6 +1,6 @@
 /*
 ========================================
-Addon Global Field Sync v1.01 (sys 2.11)
+B3 Global Field Sync v1.01 (sys 2.20)
 ========================================
 
 Changes

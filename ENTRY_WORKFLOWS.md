@@ -164,7 +164,10 @@ function AfterEntry() {
   makeObsidianMementoUri({
     contentField: "Notiz",
     overwriteMarkdownField: "Obsidian Uri",
-    dateField: "Datum/Zeit"
+    obsidianMarkdownField: "Obsidian Link",
+    dateField: "Datum/Zeit",
+    vault: "RasObs",
+    open: true
   });
 
   var e = entry();

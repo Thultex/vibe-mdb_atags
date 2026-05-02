@@ -1,6 +1,6 @@
 /*
 ========================================
-Addon Sync Last From Latest v1.01 (sys 2.11)
+B4 Sync Last From Latest v1.01 (sys 2.20)
 ========================================
 
 Changes

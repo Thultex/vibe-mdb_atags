@@ -1,6 +1,6 @@
 /*
 ========================================
-Addon Floating Average v1.00 (sys 2.11)
+B5 Floating Average v1.00 (sys 2.20)
 ========================================
 
 Changes

@@ -5,17 +5,17 @@ $moduleFiles = @(
   "core/exportAtags.js",
   "core/helpers.js",
   "core/restoreAtags.js",
-  "addons/1_tagging/tagPairParser.js",
   "addons/1_tagging/tagCleaner.js",
+  "addons/1_tagging/tagPairParser.js",
   "addons/2_syncing/globalFieldSync.js",
   "addons/2_syncing/syncLastFromLatest.js",
-  "addons/2_syncing/typedTextFields.js",
-  "addons/3_workflow/timeMarker.js",
-  "addons/3_workflow/sequenceCounter.js",
   "addons/3_workflow/floatingAverage.js",
-  "addons/3_workflow/multiChoiceHelpers.js",
+  "addons/3_workflow/sequenceCounter.js",
+  "addons/3_workflow/timeMarker.js",
   "addons/6_integration/obsidianLinker.js",
   "addons/6_integration/wikiLinker.js",
+  "addons/z_generell/multiChoiceHelpers.js",
+  "addons/z_generell/typedTextFields.js",
   "addons/z_others/hourGuide.js"
 )
 
@@ -25,16 +25,36 @@ function Get-VersionLine {
     [string]$Path
   )
 
-  $match = [regex]::Match($Content, '(?m)^[^\r\n]* v(\d+\.\d+) \(sys (\d+\.\d+)\)$')
+  $match = [regex]::Match($Content, '(?m)^([ABC]\d+) [^\r\n]* v(\d+\.\d+) \(sys (\d+\.\d+)\)$')
   if (-not $match.Success) {
-    throw "Keine Versionszeile im erwarteten Format gefunden: $Path"
+    throw "Keine Versionszeile im erwarteten Format gefunden: $Path (erwartet z.B. A1 collectAtags v1.37 (sys 2.20))"
   }
 
   return [pscustomobject]@{
     Raw = $match.Value
-    Version = [version]($match.Groups[1].Value)
-    SysVersion = [version]($match.Groups[2].Value)
+    ModuleId = $match.Groups[1].Value
+    Version = [version]($match.Groups[2].Value)
+    SysVersion = [version]($match.Groups[3].Value)
   }
+}
+
+function Get-ExpectedModuleId {
+  param([string]$Path)
+
+  $index = [array]::IndexOf($moduleFiles, $Path)
+  if ($index -lt 0) {
+    return $null
+  }
+
+  if ($Path -like "core/*") {
+    return "A" + ($index + 1)
+  }
+
+  if ($Path -like "addons/z_generell/*" -or $Path -like "addons/z_others/*") {
+    return "C" + ($index - 12)
+  }
+
+  return "B" + ($index - 3)
 }
 
 $changedFiles = @(
@@ -53,6 +73,11 @@ $errors = @()
 foreach ($path in $changedModules) {
   $currentContent = Get-Content -Raw -Path $path
   $current = Get-VersionLine -Content $currentContent -Path $path
+  $expectedModuleId = Get-ExpectedModuleId -Path $path
+
+  if ($expectedModuleId -and $current.ModuleId -ne $expectedModuleId) {
+    $errors += "$path hat Kennung $($current.ModuleId), erwartet ist $expectedModuleId."
+  }
 
   $oldContent = $null
   try {

@@ -1,6 +1,6 @@
 /*
 ========================================
-Addon Sequence Counter v1.03 (sys 2.11)
+B6 Sequence Counter v1.03 (sys 2.20)
 ========================================
 
 Changes

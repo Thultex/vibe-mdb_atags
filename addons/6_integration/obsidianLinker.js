@@ -1,6 +1,6 @@
 /*
 ========================================
-Addon Obsidian Linker v1.07 (sys 2.11)
+B8 Obsidian Linker v1.13 (sys 2.20)
 ========================================
 
 Changes
@@ -17,6 +17,12 @@ Changes
 - omit Windows/Web redirect link unless configured
 - render connected links as Markdown links for testing
 - prefer Markdown field option names while keeping HTML aliases
+- optionally open the generated or connected Obsidian URI
+- broaden Windows open attempts for Memento Desktop Java engines
+- parse Markdown Obsidian links without self-nesting
+- mark opened overwrite links as pending insert
+- keep obsidian-only configs from creating overwrite links
+- write connected Obsidian fields as bare Markdown links
 
 Usage
 
@@ -26,7 +32,8 @@ makeObsidianMementoUri({
   obsidianMarkdownField: "Obsidian Link",
   dateField: "Datum",
   mementoLinkField: "Memento Link",
-  vault: "RasObs"
+  vault: "RasObs",
+  open: false
 });
 
 ========================================
@@ -81,7 +88,10 @@ function obsHtmlUnescape(s) {
 
 function obsExtractUri(s) {
   var text = obsHtmlUnescape(s);
-  var match = text.match(/obsidian:\/\/(?:advanced-uri|adv-uri)[^\s"'<>\)]+/);
+  var match = text.match(/\]\((obsidian:\/\/(?:advanced-uri|adv-uri)[^\s"'<>\)]+)\)/);
+  if (match) return match[1];
+
+  match = text.match(/obsidian:\/\/(?:advanced-uri|adv-uri)[^\s"'<>\]\[]+/);
   return match ? match[0] : "";
 }
 
@@ -107,6 +117,18 @@ function obsExtractQueryParam(s, name) {
 
 function obsUriMode(s) {
   return obsExtractQueryParam(s, "mode");
+}
+
+function obsPendingInsertText(cfg) {
+  return cfg && cfg.pendingInsertText ? String(cfg.pendingInsertText) : "EINFÜGEN";
+}
+
+function obsPendingInsertMarkdown(cfg) {
+  return "Link: " + obsPendingInsertText(cfg);
+}
+
+function obsIsPendingInsert(s, cfg) {
+  return obsTrim(s) === obsPendingInsertMarkdown(cfg);
 }
 
 function obsSanitizePath(s) {
@@ -154,7 +176,7 @@ function obsWindowsOpenUri(cfg, uri) {
 
 function obsConnectedLinkMarkdown(cfg, uri) {
   var winUri = obsWindowsOpenUri(cfg, uri);
-  var text = "Link: " + obsLinkMarkdown(uri);
+  var text = obsLinkMarkdown(uri);
 
   if (winUri) {
     text += "\nWin: " + obsLinkMarkdown(winUri);
@@ -179,6 +201,88 @@ function obsClearField(entryObj, fieldName) {
   if (fieldName && entryObj) {
     entryObj.set(fieldName, "");
   }
+}
+
+function obsOpenUri(uri, cfg) {
+  var i;
+  var Desktop;
+  var URI;
+  var ProcessBuilder;
+  var lastError = "";
+
+  if (!cfg || !cfg.open || !uri) {
+    return { attempted: false, ok: false, method: "disabled", error: "" };
+  }
+
+  try {
+    if (typeof cfg.openFunction === "function") {
+      cfg.openFunction(uri);
+      return { attempted: true, ok: true, method: "openFunction", error: "" };
+    }
+  } catch (errOpenFunction) {
+    lastError = String(errOpenFunction && errOpenFunction.message ? errOpenFunction.message : errOpenFunction);
+  }
+
+  try {
+    if (typeof intent === "function") {
+      i = intent("android.intent.action.VIEW");
+      i.data(uri);
+      i.send();
+      return { attempted: true, ok: true, method: "android_intent", error: "" };
+    }
+  } catch (errIntent) {
+    lastError = String(errIntent && errIntent.message ? errIntent.message : errIntent);
+  }
+
+  try {
+    if (typeof Java !== "undefined" && Java.type) {
+      Desktop = Java.type("java.awt.Desktop");
+      URI = Java.type("java.net.URI");
+      Desktop.getDesktop().browse(new URI(uri));
+      return { attempted: true, ok: true, method: "java_type_desktop", error: "" };
+    }
+  } catch (errJavaTypeDesktop) {
+    lastError = String(errJavaTypeDesktop && errJavaTypeDesktop.message ? errJavaTypeDesktop.message : errJavaTypeDesktop);
+  }
+
+  try {
+    if (typeof java !== "undefined" && java.awt && java.awt.Desktop && java.net && java.net.URI) {
+      java.awt.Desktop.getDesktop().browse(new java.net.URI(uri));
+      return { attempted: true, ok: true, method: "java_desktop", error: "" };
+    }
+  } catch (errJavaDesktop) {
+    lastError = String(errJavaDesktop && errJavaDesktop.message ? errJavaDesktop.message : errJavaDesktop);
+  }
+
+  try {
+    if (typeof Packages !== "undefined" && Packages.java && Packages.java.awt && Packages.java.awt.Desktop) {
+      Packages.java.awt.Desktop.getDesktop().browse(new Packages.java.net.URI(uri));
+      return { attempted: true, ok: true, method: "packages_java_desktop", error: "" };
+    }
+  } catch (errPackagesDesktop) {
+    lastError = String(errPackagesDesktop && errPackagesDesktop.message ? errPackagesDesktop.message : errPackagesDesktop);
+  }
+
+  try {
+    if (typeof Java !== "undefined" && Java.type) {
+      ProcessBuilder = Java.type("java.lang.ProcessBuilder");
+      new ProcessBuilder(["rundll32.exe", "url.dll,FileProtocolHandler", uri]).start();
+      return { attempted: true, ok: true, method: "java_type_rundll32", error: "" };
+    }
+  } catch (errJavaTypeRundll) {
+    lastError = String(errJavaTypeRundll && errJavaTypeRundll.message ? errJavaTypeRundll.message : errJavaTypeRundll);
+  }
+
+  try {
+    if (typeof Packages !== "undefined" && Packages.java && Packages.java.lang && Packages.java.lang.ProcessBuilder) {
+      new Packages.java.lang.ProcessBuilder(["rundll32.exe", "url.dll,FileProtocolHandler", uri]).start();
+      return { attempted: true, ok: true, method: "packages_java_rundll32", error: "" };
+    }
+  } catch (errPackagesRundll) {
+    lastError = String(errPackagesRundll && errPackagesRundll.message ? errPackagesRundll.message : errPackagesRundll);
+  }
+
+  return { attempted: true, ok: false, method: "unavailable", error: lastError || "No supported URI opener available" };
 }
 
 function obsBuildOverwriteUri(cfg, e, l) {
@@ -231,26 +335,36 @@ function makeObsidianMementoUri(cfg) {
   var e = cfg.entryObj || entry();
   var l = cfg.libObj || lib();
   var vault = cfg.vault || "RasObs";
-  var overwriteField = cfg.overwriteMarkdownField || cfg.overwriteHtmlField || cfg.overwriteLinkField || cfg.markdownTargetField || cfg.htmlTargetField || cfg.targetField || cfg.obsidianMarkdownField || cfg.obsidianHtmlField || cfg.obsidianLinkField || cfg.openLinkField;
+  var overwriteField = cfg.overwriteMarkdownField || cfg.overwriteHtmlField || cfg.overwriteLinkField || cfg.markdownTargetField || cfg.htmlTargetField || cfg.targetField;
   var obsidianField = cfg.obsidianMarkdownField || cfg.obsidianHtmlField || cfg.obsidianLinkField || cfg.openLinkField || cfg.overwriteMarkdownField || cfg.overwriteHtmlField || cfg.overwriteLinkField || cfg.markdownTargetField || cfg.htmlTargetField || cfg.targetField;
+  var hasOverwriteField = !!overwriteField;
   var obsidianRaw = obsidianField ? String(e.field(obsidianField) || "") : "";
   var overwriteRaw = overwriteField ? String(e.field(overwriteField) || "") : "";
   var sameField = overwriteField && obsidianField && overwriteField === obsidianField;
   var obsidianUri = obsExtractUri(obsidianRaw);
   var obsidianMode = obsUriMode(obsidianRaw);
+  var pendingInsert = obsidianField && obsIsPendingInsert(obsidianRaw, cfg);
   var overwriteUri = "";
   var existingUid = obsExtractQueryParam(obsidianRaw, "uid") || obsExtractQueryParam(overwriteRaw, "uid");
   var openUri = "";
   var createUri = "";
   var hasObsidianOpenLink = false;
   var mode = "";
+  var openResult;
 
   if (!e || !cfg.contentField) {
-    return { overwriteUri: "", obsidianUri: "", mode: "missing_config" };
+    return { overwriteUri: "", obsidianUri: "", mode: "missing_config", openResult: { attempted: false, ok: false, method: "disabled", error: "" } };
   }
 
   createUri = obsBuildOverwriteUri(cfg, e, l);
   overwriteUri = createUri;
+
+  if (pendingInsert) {
+    if (!sameField) {
+      obsClearField(e, overwriteField);
+    }
+    return { overwriteUri: "", obsidianUri: "", mode: sameField ? "pending_insert_same_field" : "pending_insert", openResult: { attempted: false, ok: false, method: "pending_insert", error: "" } };
+  }
 
   if (existingUid) {
     openUri = "obsidian://adv-uri?vault=" + encodeURIComponent(vault) + "&uid=" + encodeURIComponent(existingUid);
@@ -263,25 +377,46 @@ function makeObsidianMementoUri(cfg) {
   if (sameField) {
     if (hasObsidianOpenLink) {
       obsSetConnectedLinkField(e, obsidianField, openUri, cfg);
-      return { overwriteUri: "", obsidianUri: openUri, mode: "connected_obsidian_same_field" };
+      openResult = obsOpenUri(openUri, cfg);
+      return { overwriteUri: "", obsidianUri: openUri, mode: "connected_obsidian_same_field", openResult: openResult };
+    }
+
+    if (cfg.open && createUri) {
+      openResult = obsOpenUri(createUri, cfg);
+      e.set(overwriteField, obsPendingInsertMarkdown(cfg));
+      return { overwriteUri: "", obsidianUri: "", mode: openResult.ok ? "opened_overwrite_pending_insert_same_field" : "open_overwrite_pending_insert_same_field", openResult: openResult };
     }
 
     obsSetLinkField(e, overwriteField, createUri);
-    return { overwriteUri: createUri, obsidianUri: "", mode: createUri ? "created_overwrite_same_field" : "missing_identity" };
+    openResult = obsOpenUri(createUri, cfg);
+    return { overwriteUri: createUri, obsidianUri: "", mode: createUri ? "created_overwrite_same_field" : "missing_identity", openResult: openResult };
   }
 
   if (hasObsidianOpenLink) {
     obsClearField(e, overwriteField);
     obsSetConnectedLinkField(e, obsidianField, openUri, cfg);
-    return { overwriteUri: "", obsidianUri: openUri, mode: "connected_obsidian" };
+    openResult = obsOpenUri(openUri, cfg);
+    return { overwriteUri: "", obsidianUri: openUri, mode: "connected_obsidian", openResult: openResult };
   }
 
   if (createUri) {
-    obsSetLinkField(e, overwriteField, createUri);
-    mode = "created_overwrite";
+    if (!hasOverwriteField) {
+      return { overwriteUri: createUri, obsidianUri: openUri, mode: "obsidian_only_no_overwrite", openResult: { attempted: false, ok: false, method: "obsidian_only", error: "" } };
+    } else if (cfg.open) {
+      openResult = obsOpenUri(createUri, cfg);
+      obsClearField(e, overwriteField);
+      if (obsidianField) {
+        e.set(obsidianField, obsPendingInsertMarkdown(cfg));
+      }
+      return { overwriteUri: "", obsidianUri: "", mode: openResult.ok ? "opened_overwrite_pending_insert" : "open_overwrite_pending_insert", openResult: openResult };
+    } else {
+      obsSetLinkField(e, overwriteField, createUri);
+      mode = "created_overwrite";
+    }
   } else {
     mode = "missing_identity";
   }
 
-  return { overwriteUri: createUri, obsidianUri: openUri, mode: mode };
+  openResult = obsOpenUri(createUri, cfg);
+  return { overwriteUri: createUri, obsidianUri: openUri, mode: mode, openResult: openResult };
 }

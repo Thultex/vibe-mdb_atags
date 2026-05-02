@@ -21,7 +21,7 @@ Jede zentrale Script-Datei beginnt mit einem kurzen Kopfblock, zum Beispiel:
 ```js
 /*
 ========================================
-collectAtags v1.22 (sys 2.11)
+A1 collectAtags v1.22 (sys 2.20)
 ========================================
 
 Änderungen
@@ -34,7 +34,8 @@ Regeln:
 - Die Modulversion wird erhöht, wenn sich Verhalten, Schnittstelle, Logik oder relevante interne Verarbeitung ändert.
 - Reine Textkorrekturen ohne Verhaltensänderung brauchen nicht zwingend einen Versionssprung.
 - Der Block `Änderungen` enthält kurze, konkrete Punkte mit Wirkung.
-- Die Systemversion `sys 2.11` bleibt unverändert, solange sich nur das einzelne Modul ändert.
+- Die Systemversion `sys 2.20` bleibt unverändert, solange sich nur das einzelne Modul ändert.
+- Die Kennung vor dem Namen ist Pflicht: `A` fuer Core, `B` fuer Addons, `C` fuer geloeste eigenstaendige Module. Die Nummer folgt der dokumentierten Repo-Reihenfolge.
 
 ## Aktuelle Form Der Dateiheader
 
@@ -45,7 +46,7 @@ Typische Form im Repo heute:
 ```js
 /*
 ========================================
-collectAtags v1.22 (sys 2.11)
+A1 collectAtags v1.22 (sys 2.20)
 ========================================
 
 Änderungen
@@ -68,7 +69,7 @@ Weitere reale Beispiele:
 ```js
 /*
 ========================================
-exportAtags v1.33 (sys 2.11)
+A2 exportAtags v1.33 (sys 2.20)
 ========================================
 
 Änderungen
@@ -86,7 +87,7 @@ exportAtags v1.33 (sys 2.11)
 ```js
 /*
 ========================================
-Atag Helpers v1.01 (sys 2.11)
+A3 Atag Helpers v1.01 (sys 2.20)
 ========================================
 
 Änderungen

@@ -1,6 +1,6 @@
 var fso = new ActiveXObject("Scripting.FileSystemObject");
 var scriptDir = fso.GetParentFolderName(WScript.ScriptFullName);
-var addonPath = fso.BuildPath(scriptDir, "..\\addons\\2_syncing\\typedTextFields.js");
+var addonPath = fso.BuildPath(scriptDir, "..\\addons\\z_generell\\typedTextFields.js");
 
 eval(fso.OpenTextFile(addonPath, 1).ReadAll());
 
