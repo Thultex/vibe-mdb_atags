@@ -19,7 +19,7 @@
 
 ## 2026-05-01
 
-- `Shared Script: Time Marker` auf `v1.30` angehoben
+- `Shared Script: Time Marker` auf `v1.31` angehoben
 - Feature: Time Marker behandelt `:` am Zeilenanfang als Platzhalter; `: Text` wird zum aktuellen Marker, leere `:`-Zeilen werden entfernt
 - Feature: `appendTimeMarker()` gibt wie Cleanup `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
 - Feature: `cleanupTimeMarker()` ersetzt `: Text` wie `appendTimeMarker()`, erzeugt aber keinen neuen leeren Marker
@@ -28,6 +28,7 @@
 - Fix: `: Text` wird auch im Cleanup nach den bestehenden Source-Regeln gefuellt und danach in den Row-Block einsortiert
 - Fix: Time Marker schreibt ersetzte `: Text`-Platzhalter sofort zurueck und setzt dabei keine zusaetzliche neue Markerzeile
 - Fix: Time Marker akzeptiert `textField` als Alias fuer `targetTextField`, damit Cleanup-Aufrufe wie andere Text-Addons schreiben
+- Fix: Cleanup entfernt keine Leerzeilen innerhalb von normalem Fliesstext mehr; bereinigt werden nur Marker-Grenzen, Marker-Zwischenraeume sowie fuehrende/abschliessende Leerzeilen
 - Test/Doku: Regressionen fuer Doppelpunkt-Platzhalter, leere Marker wie `3: `, CR-Zeilenumbrueche und AfterEntry-Cleanup ergaenzt; Marker-Beispiele in README und Script-Kopf geklaert
 - `Addon Multi Choice Helpers` auf `v1.01` ergaenzt
 - Feature: `multiChoiceAppend()` und `multiChoiceRemove()` aus Issue #31 als Workflow-Addon integriert
@@ -36,6 +37,20 @@
 - Doku: aktuelle Entry-Trigger mit parse-relevanter Reihenfolge in `ENTRY_WORKFLOWS.md` dokumentiert
 - `Addon Obsidian Linker` auf `v1.01` angehoben
 - Fix: `overwriteHtmlField` schreibt den vollen Erstellen-/Overwrite-Link, `obsidianHtmlField` formatiert nur vorhandene Obsidian-Links; bei einem gemeinsamen Feld laufen beide Rollen auf dieses Feld
+- `Addon Obsidian Linker` auf `v1.02` angehoben
+- Fix: Bestehende Obsidian-Links leeren das Overwrite-Feld und werden mit `Link verbunden:` im Obsidian-Feld ausgegeben
+- Test/Doku: Regression fuer Issue #33 und README-Verhalten ergaenzt
+- `Addon Obsidian Linker` auf `v1.03` angehoben
+- Feature: Verbundene Obsidian-Links zeigen zusaetzlich einen `Win:`-HTTP-Helper-Link fuer Windows-Klicks
+- Test/Doku: Regression fuer Default- und Template-Windows-Link ergaenzt
+- `Addon Obsidian Linker` auf `v1.04` angehoben
+- Aenderung: Verbundene Linkfelder enthalten nur noch `Link:` und `Win:` mit ausgeschriebenem, verlinktem URL-Text
+- `Addon Obsidian Linker` auf `v1.05` angehoben
+- Aenderung: `Win:` wird nur noch erzeugt, wenn `windowsOpenBase` explizit gesetzt ist; lokaler `127.0.0.1`-Default entfernt
+- `Addon Obsidian Linker` auf `v1.06` angehoben
+- Testweise Aenderung: Verbundene Obsidian-Links werden als Markdown-Link statt HTML-Link ausgegeben
+- `Addon Obsidian Linker` auf `v1.07` angehoben
+- Aenderung: Overwrite- und Obsidian-Felder schreiben Markdown-Links; `overwriteMarkdownField` und `obsidianMarkdownField` als neue bevorzugte Optionsnamen ergaenzt
 - `Addon Typed Text Fields` auf `v1.00` ergaenzt
 - Feature: `syncTypedTextFields()` integriert, um Felder mit `(t-dd)`, `(t-d)`, `(t-i)`, `(t-r)`, `(t-tag)` und `(t-l)` in passende Zielfelder zu konvertieren
 - Test/Doku: WSH-Regressionen fuer Einzelentry, Bulk, Optionen und Konvertierungen sowie README- und Versioning-Eintraege ergaenzt

@@ -138,8 +138,9 @@ Ziel-Felder
 **Integration Add-ons**
 - `addons/6_integration/obsidianLinker.js` (Memento-zu-Obsidian Advanced URI)
   - `makeObsidianMementoUri()`
-  - `overwriteHtmlField` fuer den Erstellen-/Overwrite-Link
-  - `obsidianHtmlField` fuer den formatierten bestehenden Obsidian-Link
+  - `overwriteMarkdownField` fuer den Erstellen-/Overwrite-Link
+  - `obsidianMarkdownField` fuer den formatierten bestehenden Obsidian-Link
+  - alte `...HtmlField`-Optionen bleiben als Alias kompatibel
 - `addons/6_integration/wikiLinker.js` (Wikipedia search link)
   - `applyWikiLinker()`
   - `makeWikiSearchUrl()`
@@ -445,18 +446,20 @@ multiChoiceRemove({
 
 **Obsidian Linker (Integration)**
 
-Erstellt einen `mode=overwrite`-Link fuer Advanced URI im `overwriteHtmlField`. Ein vorhandener Obsidian-Link im `obsidianHtmlField` wird nur als HTML-Link formatiert. Wenn nur ein Feld existiert oder beide Felder gleich sind, laufen beide Rollen auf dieses eine Feld.
+Erstellt einen `mode=overwrite`-Link fuer Advanced URI im `overwriteMarkdownField`. Sobald ein vorhandener Obsidian-Link im `obsidianMarkdownField` erkannt wird, wird das Overwrite-Feld geleert. Beide Felder werden als Markdown geschrieben; die alten `...HtmlField`-Optionen bleiben als Alias kompatibel. Die Ausgabe enthaelt `Link:` mit ausgeschriebenem direktem `obsidian://`-Link als Markdown-Link. Optional erzeugt `windowsOpenBase` zusaetzlich `Win:` mit ausgeschriebenem HTTP-/HTTPS-Redirect-Link. Wenn nur ein Feld existiert oder beide Felder gleich sind, laufen beide Rollen auf dieses eine Feld.
 
 ```js
 makeObsidianMementoUri({
   contentField: "Text",
-  overwriteHtmlField: "Obsidian Overwrite Link",
-  obsidianHtmlField: "Obsidian Link",
+  overwriteMarkdownField: "Obsidian Overwrite Link",
+  obsidianMarkdownField: "Obsidian Link",
   dateField: "Datum",
   mementoLinkField: "Memento Link",
   vault: "RasObs"
 });
 ```
+
+Ohne lokalen Helper funktioniert `http://127.0.0.1:17890/...` nicht. Fuer einen `Win:`-Link ohne Helper braucht `windowsOpenBase` eine echte Browser-Redirect-Seite, z.B. `https://example.org/obsidian-open?uri=` oder ein Template mit `{uri}`.
 
 **Wiki Linker (Integration)**
 

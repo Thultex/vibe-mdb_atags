@@ -392,6 +392,19 @@ function testCleanupMovesRowsAboveDoubleColonText() {
   assertEquals("cleanup-moves-rows-above-double-colon-text", entryObj.field("Note"), "15,5: tst(:inhalt)\n16: neue row\n\nnur normaler text:: der interresant ist");
 }
 
+function testCleanupKeepsBlankLinesInsideFreeText() {
+  var entryObj = makeEntry({
+    Note: "1: info\n\nFreitext eins\n\nFreitext zwei\n\n2: weiter"
+  });
+
+  cleanupTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note"
+  });
+
+  assertEquals("cleanup-keeps-blank-lines-inside-free-text", entryObj.field("Note"), "1: info\n2: weiter\n\nFreitext eins\n\nFreitext zwei");
+}
+
 function testCleanupFillsColonPlaceholderWithCurrentRowAfterEmptyRow() {
   var entryObj = makeEntry({
     Note: "15,5: tst(:inhalt)\n\n16: \n\nnur normaler text:: der interresant ist\n: test",
@@ -496,6 +509,7 @@ testCleanupFillsColonPlaceholderWithSourceAfterExistingMarker();
 testCleanupFillsColonPlaceholderWithZeroSource();
 testCleanupRemovesWhitespaceOnlyTimestamp();
 testCleanupMovesRowsAboveDoubleColonText();
+testCleanupKeepsBlankLinesInsideFreeText();
 testCleanupFillsColonPlaceholderWithCurrentRowAfterEmptyRow();
 testCleanupRemovesTrailingEmptyTimestamp();
 testCleanupRemovesTrailingEmptyTimestampWithCarriageReturn();

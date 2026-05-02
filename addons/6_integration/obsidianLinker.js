@@ -1,6 +1,6 @@
 /*
 ========================================
-Addon Obsidian Linker v1.01 (sys 2.11)
+Addon Obsidian Linker v1.07 (sys 2.11)
 ========================================
 
 Changes
@@ -11,13 +11,19 @@ Changes
 - always refresh the create/overwrite link when its field is separate
 - keep Memento id for filepath and frontmatter only
 - format existing Obsidian links without replacing them with overwrite links
+- hide overwrite link once an Obsidian link is connected
+- show connected Obsidian links with direct and Windows helper links
+- write full link texts for Memento link detection
+- omit Windows/Web redirect link unless configured
+- render connected links as Markdown links for testing
+- prefer Markdown field option names while keeping HTML aliases
 
 Usage
 
 makeObsidianMementoUri({
   contentField: "Text",
-  overwriteHtmlField: "Obsidian Overwrite Link",
-  obsidianHtmlField: "Obsidian Link",
+  overwriteMarkdownField: "Obsidian Overwrite Link",
+  obsidianMarkdownField: "Obsidian Link",
   dateField: "Datum",
   mementoLinkField: "Memento Link",
   vault: "RasObs"
@@ -121,13 +127,57 @@ function obsYamlLineIf(key, value) {
   return key + ": " + obsYamlQuote(value) + "\n";
 }
 
-function obsLinkHtml(uri) {
-  return '<a href="' + obsHtmlEscape(uri) + '">' + obsHtmlEscape(uri) + '</a>';
+function obsMarkdownEscapeText(s) {
+  return String(s == null ? "" : s)
+    .replace(/\\/g, "\\\\")
+    .replace(/\[/g, "\\[")
+    .replace(/\]/g, "\\]");
+}
+
+function obsLinkMarkdown(uri) {
+  return "[" + obsMarkdownEscapeText(uri) + "](" + String(uri == null ? "" : uri).replace(/\)/g, "%29") + ")";
+}
+
+function obsWindowsOpenUri(cfg, uri) {
+  var base = cfg.windowsOpenBase;
+
+  if (base === null || base === false) return "";
+  if (base == null || base === "") return "";
+
+  base = String(base);
+  if (base.indexOf("{uri}") >= 0) {
+    return base.replace(/\{uri\}/g, encodeURIComponent(uri));
+  }
+
+  return base + encodeURIComponent(uri);
+}
+
+function obsConnectedLinkMarkdown(cfg, uri) {
+  var winUri = obsWindowsOpenUri(cfg, uri);
+  var text = "Link: " + obsLinkMarkdown(uri);
+
+  if (winUri) {
+    text += "\nWin: " + obsLinkMarkdown(winUri);
+  }
+
+  return text;
 }
 
 function obsSetLinkField(entryObj, fieldName, uri) {
   if (fieldName && entryObj && uri) {
-    entryObj.set(fieldName, obsLinkHtml(uri));
+    entryObj.set(fieldName, obsLinkMarkdown(uri));
+  }
+}
+
+function obsSetConnectedLinkField(entryObj, fieldName, uri, cfg) {
+  if (fieldName && entryObj && uri) {
+    entryObj.set(fieldName, obsConnectedLinkMarkdown(cfg || {}, uri));
+  }
+}
+
+function obsClearField(entryObj, fieldName) {
+  if (fieldName && entryObj) {
+    entryObj.set(fieldName, "");
   }
 }
 
@@ -181,8 +231,8 @@ function makeObsidianMementoUri(cfg) {
   var e = cfg.entryObj || entry();
   var l = cfg.libObj || lib();
   var vault = cfg.vault || "RasObs";
-  var overwriteField = cfg.overwriteHtmlField || cfg.overwriteLinkField || cfg.htmlTargetField || cfg.targetField || cfg.obsidianHtmlField || cfg.obsidianLinkField || cfg.openLinkField;
-  var obsidianField = cfg.obsidianHtmlField || cfg.obsidianLinkField || cfg.openLinkField || cfg.overwriteHtmlField || cfg.overwriteLinkField || cfg.htmlTargetField || cfg.targetField;
+  var overwriteField = cfg.overwriteMarkdownField || cfg.overwriteHtmlField || cfg.overwriteLinkField || cfg.markdownTargetField || cfg.htmlTargetField || cfg.targetField || cfg.obsidianMarkdownField || cfg.obsidianHtmlField || cfg.obsidianLinkField || cfg.openLinkField;
+  var obsidianField = cfg.obsidianMarkdownField || cfg.obsidianHtmlField || cfg.obsidianLinkField || cfg.openLinkField || cfg.overwriteMarkdownField || cfg.overwriteHtmlField || cfg.overwriteLinkField || cfg.markdownTargetField || cfg.htmlTargetField || cfg.targetField;
   var obsidianRaw = obsidianField ? String(e.field(obsidianField) || "") : "";
   var overwriteRaw = overwriteField ? String(e.field(overwriteField) || "") : "";
   var sameField = overwriteField && obsidianField && overwriteField === obsidianField;
@@ -212,12 +262,18 @@ function makeObsidianMementoUri(cfg) {
 
   if (sameField) {
     if (hasObsidianOpenLink) {
-      obsSetLinkField(e, obsidianField, openUri);
-      return { overwriteUri: createUri, obsidianUri: openUri, mode: "formatted_obsidian_same_field" };
+      obsSetConnectedLinkField(e, obsidianField, openUri, cfg);
+      return { overwriteUri: "", obsidianUri: openUri, mode: "connected_obsidian_same_field" };
     }
 
     obsSetLinkField(e, overwriteField, createUri);
     return { overwriteUri: createUri, obsidianUri: "", mode: createUri ? "created_overwrite_same_field" : "missing_identity" };
+  }
+
+  if (hasObsidianOpenLink) {
+    obsClearField(e, overwriteField);
+    obsSetConnectedLinkField(e, obsidianField, openUri, cfg);
+    return { overwriteUri: "", obsidianUri: openUri, mode: "connected_obsidian" };
   }
 
   if (createUri) {
@@ -225,11 +281,6 @@ function makeObsidianMementoUri(cfg) {
     mode = "created_overwrite";
   } else {
     mode = "missing_identity";
-  }
-
-  if (hasObsidianOpenLink) {
-    obsSetLinkField(e, obsidianField, openUri);
-    mode = createUri ? "created_overwrite_and_formatted_obsidian" : "formatted_obsidian";
   }
 
   return { overwriteUri: createUri, obsidianUri: openUri, mode: mode };

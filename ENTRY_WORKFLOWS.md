@@ -163,7 +163,7 @@ function AfterEntry() {
 
   makeObsidianMementoUri({
     contentField: "Notiz",
-    htmlTargetField: "Obsidian Uri",
+    overwriteMarkdownField: "Obsidian Uri",
     dateField: "Datum/Zeit"
   });
 

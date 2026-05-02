@@ -1,6 +1,6 @@
 /*
 ========================================
-Shared Script: Time Marker v1.30 (sys 2.11)
+Shared Script: Time Marker v1.31 (sys 2.11)
 ========================================
 
 Änderungen
@@ -8,6 +8,8 @@ Shared Script: Time Marker v1.30 (sys 2.11)
 - `appendTimeMarker()` gibt ebenfalls `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
 - `cleanupTimeMarker()` ersetzt `: Text` wie `appendTimeMarker()`, haengt aber keinen leeren neuen Marker an
 - Cleanup sortiert Markerzeilen als Row-Block nach oben und normalen Text darunter
+- Cleanup erhaelt Leerzeilen innerhalb des normalen Fliesstexts
+- Zeilensplit erhaelt leere Zeilen auch in JScript
 - Doppelpunkt-Platzhalter am Zeilenanfang werden beim Einfuegen mit dem aktuellen Marker belegt
 - Bereinigung leerer TimeMarker und Leerzeilen läuft auch beim Abbruch durch `maxHours`
 - bereinigte Leerzeilen werden auch zurückgeschrieben, wenn kein neuer Marker nötig ist
@@ -117,7 +119,7 @@ function formatHourLabel(hours) {
 
 function splitTimeMarkerLines(text) {
   if (!text) return [];
-  return String(text).split(/\r\n|\r|\n/);
+  return String(text).replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
 }
 
 function parseLeadingHour(line) {
@@ -171,8 +173,10 @@ function normalizeTimeMarkerText(text) {
   var out = [];
   var i;
   var line;
-  var prevWasTime;
-  var nextIsTime;
+  var p;
+  var n;
+  var prevLine;
+  var nextLine;
 
   for (i = 0; i < raw.length; i++) {
     line = String(raw[i]);
@@ -181,14 +185,27 @@ function normalizeTimeMarkerText(text) {
       continue;
     }
 
-    prevWasTime = out.length > 0 && isTimestampLine(out[out.length - 1]);
-    nextIsTime = false;
-    while (i + 1 < raw.length && isBlankTimeMarkerText(raw[i + 1])) i++;
-    if (i + 1 < raw.length) nextIsTime = isTimestampLine(raw[i + 1]);
+    prevLine = null;
+    nextLine = null;
 
-    if (prevWasTime && nextIsTime) continue;
-    if (prevWasTime && out.length === 1 && i + 1 < raw.length) continue;
-    if (out.length && i + 1 < raw.length) out.push("");
+    for (p = i - 1; p >= 0; p--) {
+      if (!isBlankTimeMarkerText(raw[p])) {
+        prevLine = String(raw[p]);
+        break;
+      }
+    }
+
+    for (n = i + 1; n < raw.length; n++) {
+      if (!isBlankTimeMarkerText(raw[n])) {
+        nextLine = String(raw[n]);
+        break;
+      }
+    }
+
+    if (!prevLine || !nextLine) continue;
+    if (isTimestampLine(prevLine) || isTimestampLine(nextLine)) continue;
+
+    out.push(line);
   }
 
   while (out.length && isBlankTimeMarkerText(out[out.length - 1])) out.pop();
@@ -269,32 +286,23 @@ function hasSameOrLaterLine(text, targetHour) {
   return false;
 }
 
-function normalizeLines(text) {
-  var raw = splitTimeMarkerLines(text);
-  var out = [];
-
-  for (var i = 0; i < raw.length; i++) {
-    var line = String(raw[i]);
-    if (!isBlankTimeMarkerText(line)) {
-      out.push(line);
-    }
-  }
-
-  return out;
-}
-
 function splitTextBlocks(text) {
-  var raw = normalizeLines(text);
+  var raw = splitTimeMarkerLines(text);
 
   var timeLines = [];
   var otherLines = [];
+  var i;
+  var line;
 
-  for (var i = 0; i < raw.length; i++) {
-    var line = raw[i];
+  for (i = 0; i < raw.length; i++) {
+    line = String(raw[i]);
 
     if (isTimestampLine(line)) timeLines.push(line);
     else otherLines.push(line);
   }
+
+  while (otherLines.length && isBlankTimeMarkerText(otherLines[0])) otherLines.shift();
+  while (otherLines.length && isBlankTimeMarkerText(otherLines[otherLines.length - 1])) otherLines.pop();
 
   return {
     timeLines: timeLines,
