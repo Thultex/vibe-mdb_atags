@@ -607,7 +607,7 @@ sf
 
 **Export-Typen**
 
-- `tags`: nur Tag-Namen + Metatags
+- `tags`: normale Tag-Namen + Metatags; Kategorie-Tags werden ins Memento-Tagfeld mit `@`-Praefix geschrieben, wenn sie Kinder haben; Leerzeichen werden dort als `_` geschrieben
 - `md`: normale Ausgabe, Aggregat + `[Einzelwerte]`, kein `[]` bei Einzelwert
 - `tree_md`: Unicode-Baum der kategorisierten Tags; Tags ohne Kategorie und Kategorien ohne Kinder werden standardmäßig ausgelassen; Kinderwerte werden standardmäßig angezeigt; `treeStyle: "ascii"` erzwingt ASCII-Zweige
 - `rows_md`: Markdown-Tabelle mit rechter Spaltenausrichtung und optionaler Header-Kürzung

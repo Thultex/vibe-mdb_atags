@@ -111,6 +111,9 @@ function assertCategoryTag(label, input, categoryName, expectedMembers, expected
   if (item.kind !== "category" || item.isCategory !== true) {
     fail(label + ": expected category marker");
   }
+  if (expectedMembers.length > 1 && item.attrText !== expectedMembers.join(", ")) {
+    fail(label + ": attrText expected '" + expectedMembers.join(", ") + "' but got '" + item.attrText + "'");
+  }
   if (expectedDisplayName != null && item.displayName !== expectedDisplayName) {
     fail(label + ": displayName expected '" + expectedDisplayName + "' but got '" + item.displayName + "'");
   }

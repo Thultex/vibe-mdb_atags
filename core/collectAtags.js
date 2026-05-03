@@ -1,6 +1,6 @@
 /*
 ========================================
-A1 collectAtags v1.40 (sys 2.21)
+A1 collectAtags v1.41 (sys 2.21)
 ========================================
 
 Changes
@@ -684,9 +684,9 @@ function collectAtags(cfg) {
       addItem(
         items, seen,
         cat,
-        names.join(","),
+        names.join(", "),
         names.slice(0),
-        names.join(","),
+        names.join(", "),
       null, null, null,
       displayName,
       [],

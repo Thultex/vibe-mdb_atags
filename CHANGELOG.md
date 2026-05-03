@@ -21,17 +21,21 @@
 
 - Systemversion auf `sys 2.21` angehoben
 - Header aller Module und `ATAG_SYS_VERSION` auf `2.21` aktualisiert
-- `collectAtags` auf `v1.40` angehoben
+- `collectAtags` auf `v1.41` angehoben
 - Feature: Alias-Klammern `[...]` definieren Kategorien ausschliesslich im Alias-Bereich; normale Tags uebernehmen diese Kategorien in `cats`
 - Feature: Kategorie-Aliase koennen per `@@@self (sf)` definiert werden und erzeugen keinen normalen Tag-Alias
 - Feature: Kategorie-Aliase koennen per `@@@help: Spielen, Musik, Laufen` feste Kinderlisten definieren; diese Namen werden nicht als Aliase aufgeloest
 - Feature: Kategorie-Tags werden automatisch als Listen ihrer Untertags erzeugt, z. B. `self` -> `tag1, tag2`
+- Aenderung: Kategorie-Listen werden in Text/Markdown mit Leerzeichen nach Kommas ausgegeben, z. B. `help: Spielen, Hausarbeit`
 - `Atag Helpers` auf `v2.02` angehoben
 - Aenderung: Kategorie-Tags bilden beim Markdown-Sortieren eine eigene Gruppe nach Listen und vor Blank-Tags
 - Aenderung: Kategorie-Tags behalten ihre Kinderlisten auch im JSON-Export als Array
-- `exportAtags` auf `v1.58` angehoben
+- `exportAtags` auf `v1.62` angehoben
 - Feature: neuer Exporttyp `tree_md` schreibt kategorisierte Tags standardmaessig als Unicode-Baum mit Kinderwerten und laesst uncategorized Tags sowie leere Kategorien standardmaessig weg; `treeStyle: "ascii"` bleibt als Fallback
 - Feature: `categoryFilter`/`catFilter` filtert alle Exporttypen per OR auf eine oder mehrere Kategorien
+- Aenderung: `targetFieldType: "tags"` schreibt Kategorie-Tags nur noch ins Memento-Tagfeld, wenn sie Kinder haben; normale Tags mit Unterstrich bleiben erhalten
+- Aenderung: `targetFieldType: "tags"` schreibt Leerzeichen als Unterstriche, damit auch Alias-Namen tag-kompatibel bleiben
+- Aenderung: Kategorie-Tags werden im Memento-Tagfeld mit `@`-Praefix markiert, z. B. `@help`
 - Fix: `exportAtags`-Kopfkommentar wieder kurz und ASCII-only, damit Mementos Script-Parser nicht an Kommentar-Beispielen haengen bleibt
 - `restoreAtags` auf `v2.01` angehoben
 - Aenderung: Alias-Klammern werden nicht mehr als Restore-Feldzuordnung gelesen; Restore-Ziele laufen weiter ueber `map`, `fields` oder `mappings`

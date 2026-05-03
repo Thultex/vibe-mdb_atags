@@ -99,6 +99,61 @@ exportAtags({
 });
 assertArray("tags", entryObj.field("Tags"), ["alpha", "email", "foreign", "link", "linktag", "listtag", "mailtag", "plaina", "plainz", "realtag", "tel", "teltag", "textalpha", "textbeta", "zeta"]);
 
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: { items: [item("Soziales_Regeln", "+1", 1, "+1")] },
+  targetField: "Tags",
+  targetFieldType: "tags",
+  mergeWithExistingTags: false
+});
+assertArray("tags-preserve-underscore", entryObj.field("Tags"), ["Soziales_Regeln"]);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("Soziales_Regeln", "+1", 1, "+1"),
+      item("Soziales Regeln", "+2", 2, "+2")
+    ]
+  },
+  targetField: "Tags",
+  targetFieldType: "tags",
+  mergeWithExistingTags: false
+});
+assertArray("tags-space-to-underscore-dedupe", entryObj.field("Tags"), ["Soziales_Regeln"]);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("Soziales_Regeln", "Spielen", ["Spielen"], "Spielen", null, null, null, "sr", [], "category"),
+      item("Spielen", "+2", 2, "+2", null, null, null, "Sp", ["Soziales_Regeln"])
+    ]
+  },
+  targetField: "Tags",
+  targetFieldType: "tags",
+  mergeWithExistingTags: false
+});
+assertArray("tags-keep-category-tags-with-children", entryObj.field("Tags"), ["@Soziales_Regeln", "Spielen"]);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("Soziales_Regeln", "", [], "", null, null, null, "sr", [], "category"),
+      item("Spielen", "+2", 2, "+2")
+    ]
+  },
+  targetField: "Tags",
+  targetFieldType: "tags",
+  mergeWithExistingTags: false
+});
+assertArray("tags-skip-empty-category-tags", entryObj.field("Tags"), ["Spielen"]);
+
 entryObj = makeEntry({
   Tags: ["zForeign", "alpha", "mForeign"],
   ParserTags: ["alpha"]
@@ -196,8 +251,8 @@ exportAtags({
 assertEqual(
   "tree_md-unicode-default",
   entryObj.field("Tree"),
-  "sf\n" +
-  "\u251c\u2500\u2500 tag1\n" +
+  "sf  \n" +
+  "\u251c\u2500\u2500 tag1  \n" +
   "\u2514\u2500\u2500 tag2"
 );
 
@@ -216,8 +271,8 @@ exportAtags({
 assertEqual(
   "tree_md-ascii",
   entryObj.field("Tree"),
-  "sf\n" +
-  "|-- tag1\n" +
+  "sf  \n" +
+  "|-- tag1  \n" +
   "`-- tag2"
 );
 
@@ -239,10 +294,10 @@ exportAtags({
 assertEqual(
   "tree_md",
   entryObj.field("Tree"),
-  "help\n" +
-  "\u2514\u2500\u2500 tag1 +3\n\n" +
-  "sf\n" +
-  "\u251c\u2500\u2500 tag1 +3\n" +
+  "help  \n" +
+  "\u2514\u2500\u2500 tag1 +3  \n  \n" +
+  "sf  \n" +
+  "\u251c\u2500\u2500 tag1 +3  \n" +
   "\u2514\u2500\u2500 tag2 +3"
 );
 
@@ -263,8 +318,8 @@ exportAtags({
 assertEqual(
   "tree_md-values-can-be-disabled",
   entryObj.field("Tree"),
-  "sf\n" +
-  "\u251c\u2500\u2500 tag1\n" +
+  "sf  \n" +
+  "\u251c\u2500\u2500 tag1  \n" +
   "\u2514\u2500\u2500 tag2"
 );
 
@@ -340,7 +395,7 @@ exportAtags({
   categoryFilter: ["help", "home"],
   mergeWithExistingTags: false
 });
-assertArray("category-filter-tags", entryObj.field("Tags"), ["Haushalt", "help", "home", "Musik", "Spielen"]);
+assertArray("category-filter-tags", entryObj.field("Tags"), ["@help", "@home", "Haushalt", "Musik", "Spielen"]);
 
 entryObj = makeEntry({});
 exportAtags({
@@ -385,8 +440,8 @@ exportAtags({
 assertEqual(
   "category-filter-tree",
   entryObj.field("Tree"),
-  "help\n" +
-  "\u251c\u2500\u2500 Musik laut\n" +
+  "help  \n" +
+  "\u251c\u2500\u2500 Musik laut  \n" +
   "\u2514\u2500\u2500 Spielen +2"
 );
 
