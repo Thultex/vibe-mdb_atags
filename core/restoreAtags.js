@@ -1,67 +1,38 @@
 /*
 ========================================
-A4 restoreAtags v1.10 (sys 2.20)
+A4 restoreAtags v2.00 (sys 2.21)
 ========================================
 
-Features
-- Restore einzelner Werte (Number / String)
-- Restore Listenwerte (Komma → Liste)
-- Auto-Restore aller Tags aus JSON
-- Bulk Restore über gesamte DB
-- force_type:
-  - null → automatisch
-  - "text" → String / multiline
-  - "list" → Array
+Notes:
+- JSON restore into fields
+- default suffixes: _ and _l
+- supports entry groups and direct maps
+- supports currentEntry like sequenceCounter
+- valueMode: avg, first, last, median, min, max
+- aggregate text like "2 [3, 1]" is treated as repeated values
+- optional debugField writes restore diagnostics
+- debugLog/logDebug mirrors diagnostics to log()
+- auto restore skips targets missing from lib().fields()
+- bulkRestoreAtags is a legacy wrapper
 
-- kompatibel mit collectAtags + exportAtags
-- Dezimalwerte bleiben korrekt (1,4 → 1.4 intern)
-- ignoriert null / invalid JSON
-- keine Abhängigkeit zu Parser
+Examples:
 
-========================================
-ANWENDUNG
-========================================
-
-1) Einzelwert
+restoreAtags({
+  sourceField: "Atag Json"
+});
 
 restoreAtags({
   sourceField: "Atag Json",
-  tagName: "emo",
-  targetField: "emo_t"
+  entries: lib().entries(),
+  currentEntry: entry()
 });
-
-2) Einzelwert als Text
 
 restoreAtags({
   sourceField: "Atag Json",
-  tagName: "emo",
-  targetField: "emo_text",
-  force_type: "text"
-});
-
-3) Liste
-
-restoreAtags({
-  sourceField: "Atag Json",
-  tagName: "info",
-  targetField: "info_tl",
-  force_type: "list"
-});
-
-4) Komplett Restore
-
-restoreAtags({
-  sourceField: "Atag Json",
-  suffix: "_t",
-  listSuffix: "_tl"
-});
-
-5) Bulk
-
-bulkRestoreAtags({
-  sourceField: "Atag Json",
-  suffix: "_t",
-  listSuffix: "_tl"
+  map: {
+    Perserveration: "Perserveration_"
+  },
+  mode: "exclusive"
 });
 
 ========================================
@@ -69,12 +40,12 @@ bulkRestoreAtags({
 
 // ===== HELPERS =====
 function parseListValue(val) {
-  var parts = Array.isArray(val) ? val : String(val).split(",");
+  var parts = isRestoreArray(val) ? val : String(val).split(",");
   var out = [];
   var seen = {};
 
   for (var i = 0; i < parts.length; i++) {
-    var s = String(parts[i]).trim();
+    var s = trimRestoreString(parts[i]);
     if (!s) continue;
 
     var key = s.toLowerCase();
@@ -88,9 +59,175 @@ function parseListValue(val) {
 }
 
 function isListLikeValue(val) {
-  if (Array.isArray(val)) return true;
+  if (isRestoreArray(val)) return true;
   if (val == null) return false;
   return String(val).indexOf(",") >= 0;
+}
+
+function isRestoreArray(val) {
+  return Object.prototype.toString.call(val) === "[object Array]";
+}
+
+function isRestoreString(val) {
+  return typeof val === "string" || Object.prototype.toString.call(val) === "[object String]";
+}
+
+function restoreListLength(val) {
+  var n;
+
+  if (val == null || isRestoreString(val)) return null;
+  if (isRestoreArray(val)) return val.length;
+
+  try {
+    n = Number(val.length());
+    if (!isNaN(n) && n >= 0 && Math.floor(n) === n) return n;
+  } catch (e0) {}
+
+  try {
+    n = Number(val.length);
+    if (!isNaN(n) && n >= 0 && Math.floor(n) === n) return n;
+  } catch (e1) {}
+
+  try {
+    n = Number(val.size);
+    if (!isNaN(n) && n >= 0 && Math.floor(n) === n) return n;
+  } catch (e2) {}
+
+  try {
+    n = Number(val.size());
+    if (!isNaN(n) && n >= 0 && Math.floor(n) === n) return n;
+  } catch (e3) {}
+
+  return null;
+}
+
+function restoreListItem(val, index) {
+  try {
+    return val.get(index);
+  } catch (e0) {}
+  try {
+    return val.item(index);
+  } catch (e1) {}
+  try {
+    return val.entry(index);
+  } catch (e2) {}
+  try {
+    return val.getAt(index);
+  } catch (e3) {}
+  return val[index];
+}
+
+function restoreToArray(val) {
+  var out = [];
+  var it;
+  var len;
+  var i;
+
+  if (val == null) return out;
+  if (isRestoreArray(val)) return val.slice(0);
+
+  try {
+    return restoreToArray(val.toArray());
+  } catch (e0) {}
+
+  len = restoreListLength(val);
+  if (len != null) {
+    for (i = 0; i < len; i++) out.push(restoreListItem(val, i));
+    return out;
+  }
+
+  try {
+    it = val.iterator();
+    while (it.hasNext()) out.push(it.next());
+    return out;
+  } catch (e2) {}
+
+  try {
+    while (val.hasNext()) out.push(val.next());
+    return out;
+  } catch (e3) {}
+
+  return [val];
+}
+
+function restoreFieldNameMap(cfg) {
+  var fields;
+  var map = {};
+  var i;
+  var name;
+
+  if (cfg._fieldNameMap !== undefined) return cfg._fieldNameMap;
+
+  fields = cfg.targetFields || cfg.fieldNames || null;
+  if (!fields && typeof lib === "function") {
+    try {
+      fields = lib().fields();
+    } catch (e) {
+      fields = null;
+    }
+  }
+
+  if (!fields) {
+    cfg._fieldNameMap = null;
+    cfg._fieldNameCount = null;
+    return null;
+  }
+
+  fields = restoreToArray(fields);
+  for (i = 0; i < fields.length; i++) {
+    name = String(fields[i]);
+    map[name.toLowerCase()] = true;
+  }
+
+  cfg._fieldNameMap = map;
+  cfg._fieldNameCount = fields.length;
+  return map;
+}
+
+function restoreTargetExists(cfg, targetField) {
+  var map = restoreFieldNameMap(cfg);
+  if (!map) return true;
+  return !!map[String(targetField || "").toLowerCase()];
+}
+
+function restoreEntryId(entryObj) {
+  if (!entryObj) return "";
+  if (typeof entryObj.id === "function") return String(entryObj.id());
+  if (entryObj.id != null) return String(entryObj.id);
+  return "";
+}
+
+function restoreSameEntry(a, b) {
+  var aid;
+  var bid;
+
+  if (!a || !b) return false;
+  if (a === b) return true;
+
+  aid = restoreEntryId(a);
+  bid = restoreEntryId(b);
+  return aid !== "" && aid === bid;
+}
+
+function restoreEntriesWithCurrent(entries, currentEntry) {
+  var out = [];
+  var replaced = false;
+  var i;
+
+  if (entries && entries.length) {
+    for (i = 0; i < entries.length; i++) {
+      if (currentEntry && restoreSameEntry(entries[i], currentEntry)) {
+        out.push(currentEntry);
+        replaced = true;
+      } else {
+        out.push(entries[i]);
+      }
+    }
+  }
+
+  if (currentEntry && !replaced) out.push(currentEntry);
+
+  return out;
 }
 
 function readJsonField(entryObj, sourceField) {
@@ -98,14 +235,37 @@ function readJsonField(entryObj, sourceField) {
   if (!raw) return null;
 
   try {
-    return JSON.parse(raw);
+    if (typeof JSON !== "undefined" && JSON.parse) {
+      return JSON.parse(raw);
+    }
+    return eval("(" + raw + ")");
   } catch (e) {
     return null;
   }
 }
 
+function restoreDebugPush(cfg, msg) {
+  if (!cfg || !cfg._debugLines) return;
+  cfg._debugLines.push(String(msg));
+
+  if (cfg.debugLog === true || cfg.logDebug === true) {
+    try {
+      log(String(msg));
+    } catch (e) {}
+  }
+}
+
+function restoreDebugFlush(entryObj, cfg) {
+  if (!cfg || !cfg.debugField || !cfg._debugLines) return;
+
+  try {
+    entryObj.set(cfg.debugField, cfg._debugLines.join("\n"));
+  } catch (e) {}
+}
+
 function writeValueByType(entryObj, targetField, val, force_type) {
   if (val == null) return;
+  if (!targetField) return;
 
   if (force_type === "list") {
     entryObj.set(targetField, parseListValue(val));
@@ -115,7 +275,7 @@ function writeValueByType(entryObj, targetField, val, force_type) {
   if (force_type === "text") {
     entryObj.set(
       targetField,
-      Array.isArray(val)
+      isRestoreArray(val)
         ? parseListValue(val).join("\n")
         : String(val)
     );
@@ -126,95 +286,474 @@ function writeValueByType(entryObj, targetField, val, force_type) {
   entryObj.set(targetField, isNaN(num) ? String(val) : num);
 }
 
-// ===== CORE =====
-function restoreAtags(cfg) {
-  var entryObj = entry();
-  if (!entryObj) return;
+function selectRestoreValue(val, valueMode, force_type) {
+  var values;
+  var mode;
+  var nums;
+  var i;
+  var n;
+  var mid;
+  var agg;
 
-  var obj = readJsonField(entryObj, cfg.sourceField);
-  if (!obj) return;
+  if (!isRestoreArray(val) && force_type !== "list") {
+    agg = parseRestoreAggregateText(val);
+    if (agg) val = agg.values;
+  }
 
-  // ===== EINZELTAG =====
-  if (cfg.tagName) {
-    var val = obj[cfg.tagName];
-    if (val == null) return;
+  if (!isRestoreArray(val) || force_type === "list") return val;
 
-    writeValueByType(entryObj, cfg.targetField, val, cfg.force_type);
+  values = compactRestoreValues(val);
+  if (!values.length) return null;
+
+  mode = String(valueMode || "avg").toLowerCase();
+  if (mode === "first") return values[0];
+  if (mode === "last") return values[values.length - 1];
+
+  nums = [];
+  for (i = 0; i < values.length; i++) {
+    n = toRestoreNumber(values[i]);
+    if (n == null) return values[0];
+    nums.push(n);
+  }
+
+  if (mode === "median") {
+    nums.sort(function(a, b) { return a - b; });
+    mid = Math.floor(nums.length / 2);
+    if (nums.length % 2) return nums[mid];
+    return (nums[mid - 1] + nums[mid]) / 2;
+  }
+
+  if (mode === "min") {
+    n = nums[0];
+    for (i = 1; i < nums.length; i++) if (nums[i] < n) n = nums[i];
+    return n;
+  }
+
+  if (mode === "max") {
+    n = nums[0];
+    for (i = 1; i < nums.length; i++) if (nums[i] > n) n = nums[i];
+    return n;
+  }
+
+  n = 0;
+  for (i = 0; i < nums.length; i++) n += nums[i];
+  return n / nums.length;
+}
+
+function parseRestoreAggregateText(val) {
+  var s;
+  var m;
+  var list;
+  var nums = [];
+  var rx;
+  var hit;
+  var n;
+
+  if (!isRestoreString(val)) return null;
+
+  s = trimRestoreString(val);
+  m = s.match(/^[+-]?\d+(?:[.,]\d+)?\s*\[([^\]]+)\]\s*$/);
+  if (!m) return null;
+
+  list = m[1];
+  rx = /[+-]?\d+(?:[.,]\d+)?/g;
+  while ((hit = rx.exec(list)) !== null) {
+    n = toRestoreNumber(hit[0]);
+    if (n == null) return null;
+    nums.push(n);
+  }
+
+  if (!nums.length) return null;
+
+  return {
+    values: nums
+  };
+}
+
+function compactRestoreValues(val) {
+  var out = [];
+  var i;
+
+  for (i = 0; i < val.length; i++) {
+    if (val[i] == null) continue;
+    if (String(val[i]) === "") continue;
+    out.push(val[i]);
+  }
+
+  return out;
+}
+
+function toRestoreNumber(val) {
+  var s;
+  var n;
+
+  if (typeof val === "number") return isNaN(val) ? null : val;
+
+  s = String(val || "").replace(",", ".");
+  if (!/^[+-]?\d+(?:\.\d+)?$/.test(s)) return null;
+
+  n = Number(s);
+  return isNaN(n) ? null : n;
+}
+
+function normalizeRestoreTagName(rawName) {
+  var s = String(rawName || "");
+  s = trimRestoreString(s);
+  s = s.replace(/\s+/g, "_");
+  s = s.replace(/^_+|_+$/g, "");
+  return s;
+}
+
+function trimRestoreString(val) {
+  return String(val || "").replace(/^\s+|\s+$/g, "");
+}
+
+function addRestoreMapping(out, seen, tagName, targetField, force_type) {
+  var tag = normalizeRestoreTagName(tagName);
+  var field = String(targetField || "").replace(/^\s+|\s+$/g, "");
+  var key;
+
+  if (!tag || !field) return;
+
+  key = tag.toLowerCase() + "|" + field.toLowerCase();
+  if (seen[key]) return null;
+  seen[key] = true;
+
+  var mapping = {
+    tagName: tag,
+    targetField: field,
+    force_type: force_type,
+    valueMode: null
+  };
+
+  out.push(mapping);
+  return mapping;
+}
+
+function addRestoreMappingsFromValue(out, seen, val, defaultForce) {
+  var i;
+  var key;
+  var item;
+  var m;
+  var added;
+
+  if (!val) return;
+
+  if (typeof val === "string") {
+    m = val.match(/^\s*(.+?)\s*(?:->|=>|:)\s*(.+?)\s*$/);
+    if (!m) m = val.match(/^\s*(.+?)\s+-\s+(.+?)\s*$/);
+    if (m) addRestoreMapping(out, seen, m[1], m[2], defaultForce);
     return;
   }
 
-  // ===== AUTO RESTORE =====
-  var suffix = cfg.suffix || "_t";
-  var listSuffix = cfg.listSuffix;
-  var force = cfg.force_type;
-
-  for (var key in obj) {
-    var val2 = obj[key];
-    if (val2 == null) continue;
-
-    var isList = isListLikeValue(val2);
-
-    if (force === "list") {
-      entryObj.set(key + (listSuffix || suffix), parseListValue(val2));
-      continue;
+  if (isRestoreArray(val)) {
+    for (i = 0; i < val.length; i++) {
+      item = val[i];
+      if (typeof item === "string") {
+        addRestoreMappingsFromValue(out, seen, item, defaultForce);
+      } else if (item && typeof item === "object") {
+        added = addRestoreMapping(
+          out,
+          seen,
+          item.tagName || item.tag || item.name,
+          item.targetField || item.field || item.to,
+          item.force_type || item.forceType || defaultForce
+        );
+        if (added) added.valueMode = item.valueMode || item.mode || null;
+      }
     }
+    return;
+  }
 
-    if (force === "text") {
-      entryObj.set(
-        key + (isList && listSuffix ? listSuffix : suffix),
-        isList
-          ? parseListValue(val2).join("\n")
-          : String(val2)
-      );
-      continue;
+  if (typeof val === "object") {
+    for (key in val) {
+      item = val[key];
+      if (typeof item === "string") {
+        addRestoreMapping(out, seen, key, item, defaultForce);
+      } else if (item && typeof item === "object") {
+        added = addRestoreMapping(
+          out,
+          seen,
+          item.tagName || item.tag || item.name || key,
+          item.targetField || item.field || item.to,
+          item.force_type || item.forceType || defaultForce
+        );
+        if (added) added.valueMode = item.valueMode || item.mode || null;
+      }
     }
-
-    if (isList && listSuffix) {
-      entryObj.set(key + listSuffix, parseListValue(val2));
-      continue;
-    }
-
-    var num2 = Number(val2);
-    entryObj.set(key + suffix, isNaN(num2) ? String(val2) : num2);
   }
 }
 
-// ===== BULK =====
-function bulkRestoreAtags(cfg) {
-  var all = lib().entries();
+function addRestoreMappingsFromAliasText(out, seen, text, defaultForce) {
+  var lines = String(text || "").split(/\r?\n/);
+  var i;
+  var line;
+  var m;
 
-  var suffix = cfg.suffix || "_t";
-  var listSuffix = cfg.listSuffix;
-  var force = cfg.force_type;
+  for (i = 0; i < lines.length; i++) {
+    line = String(lines[i] || "").replace(/^\s+|\s+$/g, "");
+    if (!/^@@/.test(line)) continue;
 
-  for (var i = 0; i < all.length; i++) {
-    var entryObj = all[i];
-    var obj = readJsonField(entryObj, cfg.sourceField);
-    if (!obj) continue;
+    m = line.match(/^@@([^\[(:(]+?)(?:\s*\(\s*([^)]+)\s*\))?\s*\[\s*([^\]]+)\s*\](?::\s*(.*))?$/);
+    if (!m) continue;
 
-    for (var key in obj) {
-      var val = obj[key];
-      if (val == null) continue;
+    addRestoreMapping(out, seen, m[1], m[3], defaultForce);
+    if (m[2]) addRestoreMapping(out, seen, m[2], m[3], defaultForce);
+  }
+}
 
-      var isList = isListLikeValue(val);
+function buildRestoreMappings(cfg, entryObj) {
+  var out = [];
+  var seen = {};
+  var aliasFields = cfg.aliasTextFields || cfg.textFields || [];
+  var i;
+  var txt;
 
-      try {
-        if (force === "list") {
-          entryObj.set(key + (listSuffix || suffix), parseListValue(val));
-        } else if (force === "text") {
-          entryObj.set(
-            key + (isList && listSuffix ? listSuffix : suffix),
-            isList
-              ? parseListValue(val).join("\n")
-              : String(val)
-          );
-        } else if (isList && listSuffix) {
-          entryObj.set(key + listSuffix, parseListValue(val));
-        } else {
-          var num = Number(val);
-          entryObj.set(key + suffix, isNaN(num) ? String(val) : num);
-        }
-      } catch (e) {}
+  addRestoreMappingsFromValue(out, seen, cfg.map, cfg.force_type);
+  addRestoreMappingsFromValue(out, seen, cfg.fields, cfg.force_type);
+  addRestoreMappingsFromValue(out, seen, cfg.mappings, cfg.force_type);
+
+  if (typeof cfg.aliasText === "string") {
+    addRestoreMappingsFromAliasText(out, seen, cfg.aliasText, cfg.force_type);
+  }
+
+  if (entryObj && aliasFields && aliasFields.length) {
+    for (i = 0; i < aliasFields.length; i++) {
+      txt = entryObj.field(aliasFields[i]);
+      addRestoreMappingsFromAliasText(out, seen, txt, cfg.force_type);
     }
   }
+
+  return out;
+}
+
+function restoreMappedAtags(entryObj, obj, mappings, clearFirst, valueMode, cfg) {
+  var i;
+  var m;
+  var val;
+
+  if (clearFirst) {
+    for (i = 0; i < mappings.length; i++) {
+      if (!restoreTargetExists(cfg, mappings[i].targetField)) {
+        restoreDebugPush(cfg, "clear skip missing target: " + mappings[i].targetField);
+        continue;
+      }
+      try {
+        entryObj.set(mappings[i].targetField, "");
+        restoreDebugPush(cfg, "clear ok: " + mappings[i].targetField);
+      } catch (eClear) {
+        restoreDebugPush(cfg, "clear error: " + mappings[i].targetField + " :: " + eClear);
+      }
+    }
+  }
+
+  for (i = 0; i < mappings.length; i++) {
+    m = mappings[i];
+    if (!restoreTargetExists(cfg, m.targetField)) {
+      restoreDebugPush(cfg, "map skip missing target: " + m.tagName + " -> " + m.targetField);
+      continue;
+    }
+    val = selectRestoreValue(obj[m.tagName], m.valueMode || valueMode, m.force_type);
+    if (val == null) continue;
+    try {
+      writeValueByType(entryObj, m.targetField, val, m.force_type);
+      restoreDebugPush(cfg, "map ok: " + m.tagName + " -> " + m.targetField + " = " + String(val));
+    } catch (eWrite) {
+      restoreDebugPush(cfg, "map error: " + m.tagName + " -> " + m.targetField + " :: " + eWrite);
+    }
+  }
+}
+
+function restoreAutoAtags(entryObj, obj, cfg) {
+  var suffix = cfg.suffix != null ? cfg.suffix : "_";
+  var listSuffix = cfg.listSuffix != null ? cfg.listSuffix : "_l";
+  var force = cfg.force_type;
+  var key;
+  var val;
+  var isList;
+  var num;
+  var target;
+
+  for (key in obj) {
+    try {
+      val = selectRestoreValue(obj[key], cfg.valueMode, cfg.force_type);
+      if (val == null) continue;
+
+      isList = isListLikeValue(val);
+
+      if (force === "list") {
+        target = key + (listSuffix || suffix);
+        if (!restoreTargetExists(cfg, target)) {
+          restoreDebugPush(cfg, "auto skip missing target: " + key + " -> " + target);
+          continue;
+        }
+        entryObj.set(target, parseListValue(val));
+        restoreDebugPush(cfg, "auto ok: " + key + " -> " + target + " = list");
+        continue;
+      }
+
+      if (force === "text") {
+        target = key + (isList && listSuffix ? listSuffix : suffix);
+        if (!restoreTargetExists(cfg, target)) {
+          restoreDebugPush(cfg, "auto skip missing target: " + key + " -> " + target);
+          continue;
+        }
+        entryObj.set(
+          target,
+          isList
+            ? parseListValue(val).join("\n")
+            : String(val)
+        );
+        restoreDebugPush(cfg, "auto ok: " + key + " -> " + target + " = " + String(val));
+        continue;
+      }
+
+      if (isList && listSuffix) {
+        target = key + listSuffix;
+        if (!restoreTargetExists(cfg, target)) {
+          restoreDebugPush(cfg, "auto skip missing target: " + key + " -> " + target);
+          continue;
+        }
+        entryObj.set(target, parseListValue(val));
+        restoreDebugPush(cfg, "auto ok: " + key + " -> " + target + " = list");
+        continue;
+      }
+
+      target = key + suffix;
+      if (!restoreTargetExists(cfg, target)) {
+        restoreDebugPush(cfg, "auto skip missing target: " + key + " -> " + target);
+        continue;
+      }
+      num = Number(val);
+      entryObj.set(target, isNaN(num) ? String(val) : num);
+      restoreDebugPush(cfg, "auto ok: " + key + " -> " + target + " = " + String(isNaN(num) ? String(val) : num));
+    } catch (e) {
+      restoreDebugPush(cfg, "auto error: " + key + " :: " + e);
+    }
+  }
+}
+
+function restoreAtagsForEntry(entryObj, cfg, clearMappedFields) {
+  var obj;
+  var mappings;
+  var mappedOnly;
+  var val;
+
+  if (!entryObj) return;
+
+  if (cfg.debugField) cfg._debugLines = [];
+  restoreDebugPush(cfg, "restoreAtags v2.00");
+  restoreDebugPush(cfg, "sourceField: " + cfg.sourceField);
+  restoreFieldNameMap(cfg);
+  restoreDebugPush(cfg, "known fields: " + (cfg._fieldNameCount == null ? "unknown" : String(cfg._fieldNameCount)));
+  restoreDebugPush(cfg, "clearMappedFields: " + String(clearMappedFields));
+
+  obj = readJsonField(entryObj, cfg.sourceField);
+  mappings = buildRestoreMappings(cfg, entryObj);
+  restoreDebugPush(cfg, "json: " + (obj ? "ok" : "missing_or_invalid"));
+  restoreDebugPush(cfg, "mappings: " + mappings.length);
+
+  if (clearMappedFields && mappings.length) {
+    restoreMappedAtags(entryObj, obj || {}, mappings, true, cfg.valueMode, cfg);
+  }
+
+  if (!obj) {
+    restoreDebugFlush(entryObj, cfg);
+    return;
+  }
+
+  // ===== EINZELTAG =====
+  if (cfg.tagName) {
+    val = selectRestoreValue(obj[cfg.tagName], cfg.valueMode, cfg.force_type);
+    if (val == null) {
+      restoreDebugPush(cfg, "single missing: " + cfg.tagName);
+      restoreDebugFlush(entryObj, cfg);
+      return;
+    }
+
+    try {
+      writeValueByType(entryObj, cfg.targetField, val, cfg.force_type);
+      restoreDebugPush(cfg, "single ok: " + cfg.tagName + " -> " + cfg.targetField + " = " + String(val));
+    } catch (eSingle) {
+      restoreDebugPush(cfg, "single error: " + cfg.tagName + " -> " + cfg.targetField + " :: " + eSingle);
+    }
+    restoreDebugFlush(entryObj, cfg);
+    return;
+  }
+
+  if (mappings.length) {
+    restoreMappedAtags(entryObj, obj, mappings, false, cfg.valueMode, cfg);
+  }
+
+  mappedOnly = cfg.mode === "exclusive" || cfg.exclusive === true || (mappings.length && cfg.additional !== true);
+  if (mappedOnly) {
+    restoreDebugPush(cfg, "mode: mapped_only");
+    restoreDebugFlush(entryObj, cfg);
+    return;
+  }
+
+  restoreAutoAtags(entryObj, obj, cfg);
+  restoreDebugFlush(entryObj, cfg);
+}
+
+// ===== CORE =====
+function restoreAtags(cfg) {
+  cfg = cfg || {};
+
+  var all = getRestoreEntries(cfg);
+  var currentEntry = cfg.currentEntry || null;
+  var limit = cfg.limit != null ? Number(cfg.limit) : (cfg.maxEntries != null ? Number(cfg.maxEntries) : null);
+  var isGroup = all.length > 1;
+  var clearMappedFields = cfg.clearMappedFields != null ? cfg.clearMappedFields === true : isGroup;
+  var count = 0;
+
+  if ((cfg.debugLog === true || cfg.logDebug === true) && !cfg._debugLines) cfg._debugLines = [];
+  restoreDebugPush(cfg, "restoreAtags start");
+  restoreDebugPush(cfg, "entries count: " + (all && all.length != null ? String(all.length) : "unknown"));
+
+  cfg._fieldNameMap = undefined;
+  cfg._fieldNameCount = undefined;
+
+  if (currentEntry) all = restoreEntriesWithCurrent(all, currentEntry);
+
+  for (var i = 0; i < all.length; i++) {
+    if (limit != null && !isNaN(limit) && count >= limit) break;
+
+    if (currentEntry && !restoreSameEntry(all[i], currentEntry)) {
+      count++;
+      continue;
+    }
+
+    try {
+      restoreAtagsForEntry(all[i], cfg, clearMappedFields);
+    } catch (e) {}
+
+    count++;
+  }
+}
+
+function getRestoreEntries(cfg) {
+  var group;
+
+  if (cfg.entries) return restoreToArray(cfg.entries);
+
+  group = cfg.entryGroup || cfg.group;
+
+  if (group) {
+    if (isRestoreArray(group)) return group;
+    try {
+      return restoreToArray(group.entries());
+    } catch (e) {}
+    return restoreToArray(group);
+  }
+
+  if (cfg.entryObj) return [cfg.entryObj];
+  if (cfg.currentEntry) return [cfg.currentEntry];
+
+  return [entry()];
+}
+
+// ===== LEGACY WRAPPER =====
+function bulkRestoreAtags(cfg) {
+  restoreAtags(cfg);
 }

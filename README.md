@@ -1,4 +1,4 @@
-# ATAG System (sys 2.20)
+# ATAG System (sys 2.21)
 
 ## Inhalt
 
@@ -362,9 +362,44 @@ Text
 
 Die Restore-Funktionen sind das dritte Add-on/Utility im Stack und werden aus historischen Gründen in `core/restoreAtags.js` geführt.
 
-- `restoreAtags()` für Einzel- oder Auto-Restore aus einem JSON-Feld
-- `bulkRestoreAtags()` für Restore über die gesamte Bibliothek
+- `restoreAtags()` für Einzel-, Auto- oder Gruppen-Restore aus einem JSON-Feld
+- ohne `entryObj`, `currentEntry`, `entries`, `entryGroup` oder `group` arbeitet `restoreAtags()` auf dem aktuellen Eintrag
+- direkte Zuordnungen per `map`, `fields` oder `mappings`, z. B. `"emo - Emotion"`
+- Alias-Zeilen koennen Restore-Felder mitgeben: `@@Kopfschmerz (KSch)[Kopf Feld]: ks`
+- direkte Zuordnungen sind standardmaessig exklusiv; mit `additional: true` laeuft danach zusaetzlich der Suffix-Auto-Restore
+- fuer Gruppen kann `restoreAtags()` `entries`, `entryGroup` oder `group` nehmen; Gruppen koennen ein Array oder ein Objekt mit `.entries()` sein
+- Java-Listen wie `lib().entries()` werden fuer Gruppen automatisch entpackt (`length`, `size()/get()` oder `iterator()`)
+- `currentEntry: entry()` verhaelt sich wie beim Sequence-Counter: ersetzt stale Library-Eintraege, ergaenzt fehlende aktuelle Eintraege und schreibt nur den aktuellen Eintrag
+- bei Gruppen werden gemappte Felder vor dem Schreiben geleert; bei Einzel-Entry nur mit `clearMappedFields: true`
+- mehrere Werte in einem JSON-Array oder Aggregat-Text wie `2 [3, 1]` werden standardmaessig per `valueMode: "avg"` gemittelt; moeglich sind `"avg"`, `"first"`, `"last"`, `"median"`, `"min"` und `"max"`
+- Standard-Suffixe fuer den Auto-Restore sind `_` und `_l` fuer Listen; `suffix: ""` schreibt direkt in gleichnamige Felder
+- `debugField: "Feldname"` schreibt Diagnosezeilen in ein Textfeld; `debugLog: true` spiegelt sie zusaetzlich nach `log()`
+- Auto-Restore nutzt vorhandene Feldnamen aus `lib().fields()` und ueberspringt fehlende Ziele vor dem Schreiben; alternativ kann `targetFields` explizit gesetzt werden
 - unterstützt `force_type: null | "text" | "list"`
+
+```js
+restoreAtags({
+  sourceField: "Atag Json",
+  map: {
+    emo: "Emotion",
+    info: { field: "Info", force_type: "text" }
+  },
+  valueMode: "median"
+});
+
+restoreAtags({
+  sourceField: "Atag Json",
+  entries: lib().entries(),
+  currentEntry: entry(),
+  aliasTextFields: ["Alias"],
+  limit: 1
+});
+
+restoreAtags({
+  sourceField: "Atag Json",
+  debugField: "Atag Restore Debug"
+});
+```
 
 **Time Marker (Workflow)**
 

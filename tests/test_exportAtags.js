@@ -368,6 +368,26 @@ assertEqual(
   "{\"alpha\":1,\"linktag\":\"https://example.com\",\"listtag\":\"a,b\",\"mailtag\":\"a@example.com\",\"plaina\":null,\"plainz\":null,\"realtag\":1.5,\"teltag\":\"+49 123456\",\"textalpha\":\"alpha\",\"textbeta\":\"beta\",\"zeta\":2}"
 );
 
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("emo", "+1", 1, "+1"),
+      item("emo", "+3", 3, "+3"),
+      item("info", "a", "a", "a"),
+      item("info", "b", "b", "b")
+    ]
+  },
+  targetField: "Json",
+  targetFieldType: "json"
+});
+assertEqual(
+  "json-repeated-values",
+  entryObj.field("Json"),
+  "{\"emo\":[1,3],\"info\":[\"a\",\"b\"]}"
+);
+
 entryObj = makeEntry({ MD: "keep" });
 var disabledResult = applyTags({
   entryObj: entryObj,

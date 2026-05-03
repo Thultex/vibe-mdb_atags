@@ -19,6 +19,8 @@
 
 ## 2026-05-01
 
+- Systemversion auf `sys 2.21` angehoben
+- Header aller Module und `ATAG_SYS_VERSION` auf `2.21` aktualisiert
 - Systemversion auf `sys 2.20` angehoben
 - Struktur: Modulheader tragen jetzt stabile Kennungen (`A` Core, `B` Addons, `C` fuer geloeste generelle Module)
 - Nummerierung: Core `A1`-`A4`; Addons `B1`-`B9`; geloeste generelle Module `C1`-`C3`
@@ -82,10 +84,29 @@
 - Fix: Der Standard-Gruppentrenner bleibt auch aktiv, wenn `applyTags()` `markdownGroupSeparator` ohne Wert als `undefined` weiterreicht
 - Aenderung: Text- und Markdown-Exports lassen Blank-Tags ohne Wert standardmaessig weg; `includeBlankTags: true` stellt das bisherige Verhalten wieder her
 - Doku: `markdownGroupSeparator: ""` und `includeBlankTags: false` in den `applyTags()`-Markdown-Beispielen der README, Workflow-Doku und `exportAtags`-Kopfbeispiele explizit aufgenommen
+- `Atag Helpers` auf `v2.00` angehoben
+- Aenderung: JSON-Value-Maps behalten wiederholte Tag-Werte als Arrays, damit `restoreAtags` sie per `valueMode` aggregieren kann
+- Test: JSON-Export-Regression fuer wiederholte Werte als Arrays ergaenzt
 - `collectAtags` auf `v1.37` angehoben
 - Feature: Tag-Syntax `tag:inhalt`, `tag:: inhalt`, `inhalt(:tag)` und `"das ist ein Satz"(:Aussage)` aus Issues #21/#22 integriert
 - Fix: Normale Textstellen wie `text: inhalt` werden nicht mehr als Colon-Tag geparst
 - Test/Doku: fokussierte Parser-Regressionen und README-Syntax ergaenzt
+- `restoreAtags` auf `v2.00` angehoben
+- Feature: Direkte Tag-Feld-Zuordnungen per `map`/`fields`/`mappings`, exklusiv per Default oder zusaetzlich mit `additional: true`
+- Feature: Alias-Zeilen koennen Restore-Felder sammeln, z. B. `@@Kopfschmerz (KSch)[Kopf Feld]: ks`
+- Feature: `restoreAtags()` verarbeitet jetzt wahlweise den aktuellen Eintrag, `entryObj` oder eine Gruppe per `entries`/`entryGroup`/`group`; `bulkRestoreAtags()` bleibt nur als Kompatibilitaets-Wrapper
+- Feature: Gruppen koennen Arrays oder Objekte mit `.entries()` sein; gemappte Felder werden bei Gruppen vor dem Restore geleert
+- Feature: mehrere JSON-Werte und Aggregat-Texte wie `2 [3, 1]` werden per `valueMode` verdichtet; Standard ist `avg`, moeglich sind `avg`, `first`, `last`, `median`, `min` und `max`
+- Aenderung: Auto-Restore nutzt `_` als Standard-Suffix und `_l` als Standard-Listensuffix; `suffix: ""` ist als direktes gleichnamiges Ziel erlaubt
+- Fix: Auto-Restore prueft Zielnamen gegen `lib().fields()` bzw. `targetFields` und ueberspringt fehlende Zielfelder vor dem Schreiben, statt Memento-Java-Fehler auszuloesen
+- Fix: Gruppenwerte wie `lib().entries()` werden wie in `typedTextFields` als Java-/Listen-Collection per `length`, `size()/get()` oder `iterator()` entpackt, statt als einzelner Entry behandelt zu werden
+- Fix: Rueckgabewerte von `.entries()` und direkte Iterator-Objekte werden ebenfalls entpackt, damit Bulk-Durchlaeufe nicht still ohne Eintraege enden
+- Fix: `cfg.entries` wird wie beim Sequence-Counter direkt als Entry-Liste genutzt; `.entries()` wird nur noch bei `entryGroup`/`group`-Objekten aufgerufen
+- Feature: `currentEntry` folgt dem Sequence-Counter-Muster und ersetzt/ergaenzt den aktuellen Eintrag in `entries`, schreibt dann aber nur diesen aktuellen Eintrag
+- Feature: `debugField` schreibt optionale Restore-Diagnose in ein Textfeld
+- Feature: `debugLog: true` bzw. `logDebug: true` spiegelt Restore-Diagnose zusaetzlich nach `log()`
+- Fix: `debugLog` ruft `log()` direkt auf, statt Memento-Host-Funktionen per `typeof ... === "function"` zu filtern
+- Test/Doku: `tests/test_restoreAtags.js` mit Mapping-, Alias-, Gruppen- und ValueMode-Regressionen sowie README-Beispiele ergaenzt
 - `Addon Floating Average` auf `v1.00` ergaenzt
 - Feature: `updateAverage()` aus Issue #28 als Workflow-Addon integriert
 - Verifikation/Doku: Syntax- und Versioning-Check; kein eigener Test wegen ueberschaubarer Addon-Logik
