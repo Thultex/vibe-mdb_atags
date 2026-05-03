@@ -43,8 +43,8 @@ function assertArray(label, actual, expected) {
   }
 }
 
-function item(name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, displayName) {
-  return {
+function item(name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, displayName, cats, kind) {
+  var out = {
     name: name,
     attrText: attrText,
     attrValue: attrValue,
@@ -52,8 +52,14 @@ function item(name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, dis
     rowValue: rowValue == null ? null : rowValue,
     rowUnit: rowUnit || null,
     rowRaw: rowRaw || null,
-    displayName: displayName || name
+    displayName: displayName || name,
+    cats: cats || []
   };
+  if (kind) {
+    out.kind = kind;
+    if (kind === "category") out.isCategory = true;
+  }
+  return out;
 }
 
 var baseItems = [
@@ -150,6 +156,124 @@ assertEqual(
   "textbeta: beta  \n" +
   "listtag: a,b"
 );
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("blankname", null, null, ""),
+      item("category", "tag1,tag2", ["tag1", "tag2"], "tag1,tag2", null, null, null, "cat", [], "category"),
+      item("listtag", "a,b", ["a", "b"], "a,b"),
+      item("textname", "abc", "abc", "abc")
+    ]
+  },
+  targetField: "MD",
+  targetFieldType: "md",
+  includeBlankTags: true,
+  markdownGroupSeparator: null
+});
+assertEqual(
+  "md-category-sorts-before-blank",
+  entryObj.field("MD"),
+  "textname: abc  \n" +
+  "listtag: a,b  \n" +
+  "category: tag1,tag2  \n" +
+  "blankname"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("self", "tag1,tag2", ["tag1", "tag2"], "tag1,tag2", null, null, null, "sf")
+    ]
+  },
+  targetField: "Tree",
+  targetFieldType: "tree_md"
+});
+assertEqual(
+  "tree_md-unicode-default",
+  entryObj.field("Tree"),
+  "sf\n" +
+  "\u251c\u2500\u2500 tag1\n" +
+  "\u2514\u2500\u2500 tag2"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("self", "tag1,tag2", ["tag1", "tag2"], "tag1,tag2", null, null, null, "sf")
+    ]
+  },
+  targetField: "Tree",
+  targetFieldType: "tree_md",
+  treeStyle: "ascii"
+});
+assertEqual(
+  "tree_md-ascii",
+  entryObj.field("Tree"),
+  "sf\n" +
+  "|-- tag1\n" +
+  "`-- tag2"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("self", "tag1,tag2", ["tag1", "tag2"], "tag1,tag2", null, null, null, "sf"),
+      item("help", "tag1", ["tag1"], "tag1"),
+      item("tag1", "+3", 3, "+3", null, null, null, "tg1", ["self", "help"]),
+      item("tag2", "+3", 3, "+3", null, null, null, "tg2", ["self"]),
+      item("solo", "+1", 1, "+1")
+    ]
+  },
+  targetField: "Tree",
+  targetFieldType: "tree_md"
+});
+assertEqual(
+  "tree_md",
+  entryObj.field("Tree"),
+  "help\n" +
+  "\u2514\u2500\u2500 tag1\n\n" +
+  "sf\n" +
+  "\u251c\u2500\u2500 tag1\n" +
+  "\u2514\u2500\u2500 tag2"
+);
+
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("empty", "", [], "", null, null, null, "e"),
+      item("solo", "+1", 1, "+1")
+    ]
+  },
+  targetField: "Tree",
+  targetFieldType: "tree_md"
+});
+assertEqual("tree_md-skips-empty-categories", entryObj.field("Tree"), "");
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("empty", "", [], "", null, null, null, "e")
+    ]
+  },
+  targetField: "Tree",
+  targetFieldType: "tree_md",
+  includeEmptyCategories: true
+});
+assertEqual("tree_md-includes-empty-categories", entryObj.field("Tree"), "e");
 
 entryObj = makeEntry({});
 exportAtags({

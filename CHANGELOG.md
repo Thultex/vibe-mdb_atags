@@ -21,6 +21,17 @@
 
 - Systemversion auf `sys 2.21` angehoben
 - Header aller Module und `ATAG_SYS_VERSION` auf `2.21` aktualisiert
+- `collectAtags` auf `v1.40` angehoben
+- Feature: Alias-Klammern `[...]` definieren Kategorien ausschliesslich im Alias-Bereich; normale Tags uebernehmen diese Kategorien in `cats`
+- Feature: Kategorie-Aliase koennen per `@@@self (sf)` definiert werden und erzeugen keinen normalen Tag-Alias
+- Feature: Kategorie-Aliase koennen per `@@@help: Spielen, Musik, Laufen` feste Kinderlisten definieren; diese Namen werden nicht als Aliase aufgeloest
+- Feature: Kategorie-Tags werden automatisch als Listen ihrer Untertags erzeugt, z. B. `self` -> `tag1, tag2`
+- `Atag Helpers` auf `v2.01` angehoben
+- Aenderung: Kategorie-Tags bilden beim Markdown-Sortieren eine eigene Gruppe nach Listen und vor Blank-Tags
+- `exportAtags` auf `v1.55` angehoben
+- Feature: neuer Exporttyp `tree_md` schreibt kategorisierte Tags standardmaessig als Unicode-Baum und laesst uncategorized Tags sowie leere Kategorien standardmaessig weg; `treeStyle: "ascii"` bleibt als Fallback
+- `restoreAtags` auf `v2.01` angehoben
+- Aenderung: Alias-Klammern werden nicht mehr als Restore-Feldzuordnung gelesen; Restore-Ziele laufen weiter ueber `map`, `fields` oder `mappings`
 - Systemversion auf `sys 2.20` angehoben
 - Struktur: Modulheader tragen jetzt stabile Kennungen (`A` Core, `B` Addons, `C` fuer geloeste generelle Module)
 - Nummerierung: Core `A1`-`A4`; Addons `B1`-`B9`; geloeste generelle Module `C1`-`C3`

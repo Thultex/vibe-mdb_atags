@@ -76,6 +76,46 @@ function assertDisplayName(label, input, expectedName, expectedDisplayName) {
   if (item.displayName !== expectedDisplayName) fail(label + ": displayName expected '" + expectedDisplayName + "' but got '" + item.displayName + "'");
 }
 
+function assertArray(label, actual, expected) {
+  var i;
+  if (!actual || actual.length !== expected.length) {
+    fail(label + ": expected length " + expected.length + " but got " + (actual ? actual.length : "null"));
+  }
+  for (i = 0; i < expected.length; i++) {
+    if (actual[i] !== expected[i]) {
+      fail(label + "[" + i + "]: expected '" + expected[i] + "' but got '" + actual[i] + "'");
+    }
+  }
+}
+
+function assertCats(label, input, expectedName, expectedCats) {
+  var result = collectAtags({
+    entryObj: makeEntry({ Note: input }),
+    textFields: ["Note"]
+  });
+  var item = findItem(result.items, expectedName);
+
+  if (!item) fail(label + ": item '" + expectedName + "' not found in " + input);
+  assertArray(label + "-cats", item.cats, expectedCats);
+}
+
+function assertCategoryTag(label, input, categoryName, expectedMembers, expectedDisplayName) {
+  var result = collectAtags({
+    entryObj: makeEntry({ Note: input }),
+    textFields: ["Note"]
+  });
+  var item = findItem(result.items, categoryName);
+
+  if (!item) fail(label + ": category '" + categoryName + "' not found in " + input);
+  assertArray(label + "-members", item.attrValue, expectedMembers);
+  if (item.kind !== "category" || item.isCategory !== true) {
+    fail(label + ": expected category marker");
+  }
+  if (expectedDisplayName != null && item.displayName !== expectedDisplayName) {
+    fail(label + ": displayName expected '" + expectedDisplayName + "' but got '" + item.displayName + "'");
+  }
+}
+
 function assertSimpleTag(label, input, expectedName) {
   var result = collectAtags({
     entryObj: makeEntry({ Note: input }),
@@ -142,6 +182,12 @@ assertMissing("quoted-colon-inside-text", "'tag: 5'", "tag");
 assertItem("quoted-text-outside-row", "10: Kopfruhe1, Innere_Anspannung1 geringer, Klarheit1, ' das hier# sollte aber nicht#23 drin sein'", "Kopfruhe", "+1", 1, 10, null);
 assertItem("alias-short", "@@Kopfschmerzen (ks): Kopfschmerz, Kschm\nks2", "Kopfschmerzen", "+2", 2, null, null);
 assertDisplayName("alias-short-display", "@@Kopfschmerzen (ks): Kopfschmerz, Kschm\nKopfschmerz2", "Kopfschmerzen", "ks");
+assertCats("alias-category-on-parsed-tag", "@@tag1 (tg1)[self, help]: 3\ntg1#3", "tag1", ["self", "help"]);
+assertCategoryTag("alias-category-item", "@@@self (sf)\n@@tag1 (tg1)[self]: 3\n@@tag2 (tg2)[self]: 3", "self", ["tag1", "tag2"], "sf");
+assertMissing("cat-alias-is-not-normal-tag-alias", "@@@self (sf)\nsf2", "self");
+assertCategoryTag("cat-alias-fixed-children", "@@@help: Spielen, Musik, Laufen", "help", ["Spielen", "Musik", "Laufen"], "help");
+assertCategoryTag("cat-alias-children-are-not-aliases", "@@@help: Spielen, Musik\n@@Spielen (Sp): play\nplay2", "help", ["Spielen", "Musik"], "help");
+assertCategoryTag("alias-category-line-without-prefix", "tag1 (tg1)[self]: 3\ntag2 (tg2)[self]: 3", "self", ["tag1", "tag2"], "self");
 assertItem("alias-fixed-bare", "@@Kopfschmerz (KSch): ks, Kopfdruck1\n#Kopfdruck", "Kopfschmerz", "+1", 1, null, null);
 assertItem("alias-fixed-overrides-value", "@@Kopfschmerz (KSch): ks, Kopfdruck1\nKopfdruck3", "Kopfschmerz", "+1", 1, null, null);
 assertItem("alias-fixed-tagbar", "@@Kopfschmerz (KSch): ks, Kopfdruck1\n|| Kopfdruck", "Kopfschmerz", "+1", 1, null, null);

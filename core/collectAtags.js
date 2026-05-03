@@ -1,9 +1,14 @@
 /*
 ========================================
-A1 collectAtags v1.37 (sys 2.21)
+A1 collectAtags v1.40 (sys 2.21)
 ========================================
 
 Changes
+- alias brackets define categories, e.g. `@@Tag (T)[self, help]: alias`
+- category aliases can use `@@@self (sf)`
+- category aliases can define fixed children, e.g. `@@@help: Spielen, Musik`
+- category tags are emitted as list tags containing their member tags
+- parsed items keep their categories in `cats`
 - skip alias declaration lines during normal parsing
 - add compact, explicit, and inverted text tag syntaxes
 - parse bare tags in readable tag lines
@@ -157,7 +162,8 @@ function collectAtags(cfg) {
     };
   }
 
-  function addItem(items, seen, name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, displayName) {
+  function addItem(items, seen, name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, displayName, cats, kind) {
+    var item;
     var key = String(name).toLowerCase() +
       "|" + String(attrText) +
       "|" + String(rowValue) +
@@ -166,7 +172,7 @@ function collectAtags(cfg) {
     if (seen[key]) return;
     seen[key] = true;
 
-    items.push({
+    item = {
       name: name,
       attrText: attrText,
       attrValue: attrValue,
@@ -174,8 +180,51 @@ function collectAtags(cfg) {
       rowValue: rowValue != null ? rowValue : null,
       rowUnit: rowUnit != null ? rowUnit : null,
       rowRaw: rowRaw != null ? rowRaw : null,
-      displayName: displayName || name
-    });
+      displayName: displayName || name,
+      cats: cats || []
+    };
+
+    if (kind) {
+      item.kind = kind;
+      if (kind === "category") item.isCategory = true;
+    }
+
+    items.push(item);
+  }
+
+  function splitAliasList(raw) {
+    var s = String(raw || "");
+    var parts;
+
+    if (
+      (s.charAt(0) === '"' && s.charAt(s.length - 1) === '"') ||
+      (s.charAt(0) === "'" && s.charAt(s.length - 1) === "'")
+    ) {
+      s = s.substring(1, s.length - 1);
+    }
+
+    parts = s.split(",");
+    return parts;
+  }
+
+  function normalizeCategoryList(raw) {
+    var parts = splitAliasList(raw);
+    var out = [];
+    var seenCats = {};
+    var i;
+    var cat;
+    var key;
+
+    for (i = 0; i < parts.length; i++) {
+      cat = normalizeTagName(parts[i]);
+      if (!cat || isExcluded(cat)) continue;
+      key = cat.toLowerCase();
+      if (seenCats[key]) continue;
+      seenCats[key] = true;
+      out.push(cat);
+    }
+
+    return out;
   }
 
   function buildAliasMapLegacy(text) {
@@ -230,25 +279,48 @@ function collectAtags(cfg) {
 
   function buildAliasMap(text) {
     var map = {};
+    map._categories = {};
     var lines = String(text || "").split(/\r?\n/);
 
     for (var i = 0; i < lines.length; i++) {
       var line = String(lines[i] || "").replace(/^\s+|\s+$/g, "");
-      if (!/^@@/.test(line)) continue;
+      var aliasLine = line;
+      var hasAliasPrefix = /^@@/.test(line);
+      var catAliasMatch;
 
-      var m = line.match(/^@@([^(:]+?)(?:\s*\(\s*([^)]+)\s*\))?(?::\s*(.*))?$/);
+      catAliasMatch = line.match(/^@@@\s*([^(:]+?)(?:\s*\(\s*([^)]+)\s*\))?(?:\s*:\s*(.*))?$/);
+      if (catAliasMatch) {
+        addCategoryAlias(
+          map,
+          normalizeTagName(catAliasMatch[1]),
+          normalizeTagName(catAliasMatch[2] || ""),
+          normalizeCategoryList(catAliasMatch[3] || "")
+        );
+        continue;
+      }
+
+      if (hasAliasPrefix) {
+        aliasLine = line.replace(/^@@\s*/, "");
+      } else if (!isAliasDeclarationLine(line)) {
+        continue;
+      }
+
+      var m = aliasLine.match(/^([^\[(:(]+?)(?:\s*\(\s*([^)]+)\s*\))?(?:\s*\[\s*([^\]]+)\s*\])?(?::\s*(.*))?$/);
       if (!m) continue;
 
       var baseName = normalizeTagName(m[1]);
       var shortName = normalizeTagName(m[2] || "");
+      var categories = normalizeCategoryList(m[3] || "");
       if (!baseName) continue;
       if (isExcluded(baseName)) continue;
+      addCategoryDefinitions(map, baseName, categories);
 
       map[baseName.toLowerCase()] = {
         name: baseName,
         shortName: shortName || baseName,
         invert: false,
-        fixedRaw: null
+        fixedRaw: null,
+        cats: categories
       };
 
       if (shortName && !isExcluded(shortName)) {
@@ -256,19 +328,12 @@ function collectAtags(cfg) {
           name: baseName,
           shortName: shortName,
           invert: false,
-          fixedRaw: null
+          fixedRaw: null,
+          cats: categories
         };
       }
 
-      var rawAliases = String(m[3] || "");
-      if (
-        (rawAliases.charAt(0) === '"' && rawAliases.charAt(rawAliases.length - 1) === '"') ||
-        (rawAliases.charAt(0) === "'" && rawAliases.charAt(rawAliases.length - 1) === "'")
-      ) {
-        rawAliases = rawAliases.substring(1, rawAliases.length - 1);
-      }
-
-      var parts = rawAliases.split(",");
+      var parts = splitAliasList(m[4] || "");
 
       for (var j = 0; j < parts.length; j++) {
         var alias = String(parts[j] || "").replace(/^\s+|\s+$/g, "");
@@ -297,12 +362,77 @@ function collectAtags(cfg) {
           name: baseName,
           shortName: shortName || baseName,
           invert: invert,
-          fixedRaw: fixedRaw
+          fixedRaw: fixedRaw,
+          cats: categories
         };
       }
     }
 
     return map;
+  }
+
+  function isAliasDeclarationLine(line) {
+    var s = String(line || "").replace(/^\s+|\s+$/g, "");
+    if (/^@@/.test(s)) return true;
+    return /^[^\[(:(]+?(?:\s*\(\s*([^)]+)\s*\))?\s*\[\s*[^\]]+\s*\]\s*:/.test(s);
+  }
+
+  function addCategoryDefinitions(aliasMap, baseName, categories) {
+    var i;
+    var cat;
+    var key;
+    var bucket;
+
+    for (i = 0; i < categories.length; i++) {
+      cat = categories[i];
+      key = String(cat).toLowerCase();
+
+      if (!aliasMap._categories[key]) {
+        aliasMap._categories[key] = {
+          name: cat,
+          shortName: cat,
+          names: [],
+          seen: {}
+        };
+      }
+
+      bucket = aliasMap._categories[key];
+      if (!bucket.seen[String(baseName).toLowerCase()]) {
+        bucket.seen[String(baseName).toLowerCase()] = true;
+        bucket.names.push(baseName);
+      }
+    }
+  }
+
+  function addCategoryAlias(aliasMap, catName, shortName, children) {
+    var key;
+    var bucket;
+    var i;
+    var child;
+    var childKey;
+
+    if (!catName || isExcluded(catName)) return;
+    key = String(catName).toLowerCase();
+
+    if (!aliasMap._categories[key]) {
+      aliasMap._categories[key] = {
+        name: catName,
+        shortName: shortName || catName,
+        names: [],
+        seen: {}
+      };
+    } else {
+      aliasMap._categories[key].shortName = shortName || aliasMap._categories[key].shortName || catName;
+    }
+
+    bucket = aliasMap._categories[key];
+    for (i = 0; i < (children || []).length; i++) {
+      child = children[i];
+      childKey = String(child).toLowerCase();
+      if (!child || bucket.seen[childKey]) continue;
+      bucket.seen[childKey] = true;
+      bucket.names.push(child);
+    }
   }
 
   function resolveAlias(name, aliasMap) {
@@ -373,8 +503,9 @@ function collectAtags(cfg) {
       items, seen,
       resolvedName,
       norm.attrText, norm.attrValue, effectiveRaw,
-      rowValue, rowUnit, rowRaw,
-      aliasInfo.shortName || resolvedName
+        rowValue, rowUnit, rowRaw,
+      aliasInfo.shortName || resolvedName,
+      aliasInfo.cats || []
     );
   }
 
@@ -404,7 +535,8 @@ function collectAtags(cfg) {
       norm.attrValue,
       effectiveRaw,
       rowValue, rowUnit, rowRaw,
-      aliasInfo.shortName || resolvedName
+      aliasInfo.shortName || resolvedName,
+      aliasInfo.cats || []
     );
   }
 
@@ -488,6 +620,81 @@ function collectAtags(cfg) {
     };
   }
 
+  function addCategoryItems(items, seen, aliasMap) {
+    var map = {};
+    var order = [];
+    var i;
+    var j;
+    var item;
+    var cats;
+    var cat;
+    var key;
+    var names;
+    var displayName;
+    var aliasInfo;
+    var defined;
+
+    defined = aliasMap._categories || {};
+    for (key in defined) {
+      map[key] = {
+        name: defined[key].name,
+        shortName: defined[key].shortName || defined[key].name,
+        names: defined[key].names.slice(0),
+        seen: {}
+      };
+      for (i = 0; i < map[key].names.length; i++) {
+        map[key].seen[String(map[key].names[i]).toLowerCase()] = true;
+      }
+      order.push(key);
+    }
+
+    for (i = 0; i < items.length; i++) {
+      item = items[i];
+      cats = item && item.cats ? item.cats : [];
+
+      for (j = 0; j < cats.length; j++) {
+        cat = cats[j];
+        key = String(cat).toLowerCase();
+
+        if (!map[key]) {
+          map[key] = {
+            name: cat,
+            names: [],
+            seen: {}
+          };
+          order.push(key);
+        }
+
+        if (!map[key].seen[String(item.name).toLowerCase()]) {
+          map[key].seen[String(item.name).toLowerCase()] = true;
+          map[key].names.push(item.name);
+        }
+      }
+    }
+
+    for (i = 0; i < order.length; i++) {
+      key = order[i];
+      cat = map[key].name;
+      names = map[key].names;
+      aliasInfo = aliasMap[String(cat).toLowerCase()] || null;
+      displayName = map[key].shortName || (aliasInfo && aliasInfo.shortName ? aliasInfo.shortName : cat);
+
+      if (!names.length) continue;
+
+      addItem(
+        items, seen,
+        cat,
+        names.join(","),
+        names.slice(0),
+        names.join(","),
+      null, null, null,
+      displayName,
+      [],
+      "category"
+    );
+  }
+  }
+
   var items = [];
   var seen = {};
   var cachedTexts = [];
@@ -538,7 +745,7 @@ function collectAtags(cfg) {
         continue;
       }
 
-      if (/^\s*@@/.test(line)) continue;
+      if (isAliasDeclarationLine(line)) continue;
 
       var currentRowValue = null;
       var currentRowUnit = null;
@@ -582,7 +789,8 @@ function collectAtags(cfg) {
           rawQuotedName,
           normQuoted.attrText, normQuoted.attrValue, quotedAlias.fixedRaw != null ? quotedAlias.fixedRaw : rawQuotedAttr,
           currentRowValue, currentRowUnit, currentRowRaw,
-          quotedAlias.shortName || rawQuotedName
+          quotedAlias.shortName || rawQuotedName,
+          quotedAlias.cats || []
         );
       }
 
@@ -659,7 +867,8 @@ function collectAtags(cfg) {
           normH.attrValue,
           aliasH.fixedRaw != null ? aliasH.fixedRaw : rawH,
           currentRowValue, currentRowUnit, currentRowRaw,
-          aliasH.shortName || nameH
+          aliasH.shortName || nameH,
+          aliasH.cats || []
         );
       }
 
@@ -705,7 +914,8 @@ function collectAtags(cfg) {
           normN.attrValue,
           aliasN.fixedRaw != null ? aliasN.fixedRaw : rawN,
           currentRowValue, currentRowUnit, currentRowRaw,
-          aliasN.shortName || nameN
+          aliasN.shortName || nameN,
+          aliasN.cats || []
         );
       }
 
@@ -734,7 +944,8 @@ function collectAtags(cfg) {
           normSup.attrValue,
           aliasSup.fixedRaw != null ? aliasSup.fixedRaw : rawSup,
           currentRowValue, currentRowUnit, currentRowRaw,
-          aliasSup.shortName || nameSup
+          aliasSup.shortName || nameSup,
+          aliasSup.cats || []
         );
       }
 
@@ -759,7 +970,8 @@ function collectAtags(cfg) {
           nameS,
           normS.attrText, normS.attrValue, aliasS.fixedRaw != null ? aliasS.fixedRaw : "",
           currentRowValue, currentRowUnit, currentRowRaw,
-          aliasS.shortName || nameS
+          aliasS.shortName || nameS,
+          aliasS.cats || []
         );
       }
 
@@ -784,13 +996,15 @@ function collectAtags(cfg) {
           nameCst,
           normCst.attrText, normCst.attrValue, aliasCst.fixedRaw != null ? aliasCst.fixedRaw : "",
           currentRowValue, currentRowUnit, currentRowRaw,
-          aliasCst.shortName || nameCst
+          aliasCst.shortName || nameCst,
+          aliasCst.cats || []
         );
       }
 
     }
   }
 
+  addCategoryItems(items, seen, aliasMap);
+
   return { items: items };
 }
-

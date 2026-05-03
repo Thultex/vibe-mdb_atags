@@ -115,7 +115,7 @@ function testAutoRestoreUsesUnderscoreSuffixByDefault() {
   assertArray("default-list-suffix", entryObj.field("info_l"), ["a", "b"]);
 }
 
-function testAliasFieldNotationBuildsMappings() {
+function testAliasBracketsDoNotBuildRestoreMappings() {
   var entryObj = makeEntry({
     Alias: "@@Kopfschmerz (KSch)[Kopf Feld]: ks, Kopfdruck1",
     Json: "{\"Kopfschmerz\":3,\"other\":5}"
@@ -128,8 +128,8 @@ function testAliasFieldNotationBuildsMappings() {
     mode: "exclusive"
   });
 
-  assertEqual("alias-field-base", entryObj.field("Kopf Feld"), 3);
-  assertEqual("alias-field-exclusive", entryObj.field("other_t"), undefined);
+  assertEqual("alias-bracket-no-field-mapping", entryObj.field("Kopf Feld"), undefined);
+  assertEqual("alias-bracket-no-mapping-auto", entryObj.field("Kopfschmerz_"), undefined);
 }
 
 function testRestoreGroupClearsMappedFieldsAndHonorsLimit() {
@@ -674,7 +674,7 @@ function testAutoRestoreSkipsMissingTargetsWhenFieldListIsKnown() {
 testDirectMapIsExclusiveByDefault();
 testMappingsCanRunAdditionalAutoRestore();
 testAutoRestoreUsesUnderscoreSuffixByDefault();
-testAliasFieldNotationBuildsMappings();
+testAliasBracketsDoNotBuildRestoreMappings();
 testRestoreGroupClearsMappedFieldsAndHonorsLimit();
 testRestoreGroupObjectWithEntriesMethod();
 testRestoreJavaListEntries();

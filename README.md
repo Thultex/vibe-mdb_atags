@@ -42,7 +42,7 @@ Freitext → strukturierte Daten → flexible Exporte.
 - Mehrfachwerte aggregieren
 - Alias-System unterstützen (inkl. inverse Aliase)
 - Hybrid-Tag-System (Parser + manuell)
-- Export in `tags` / `md` / `rows_md` / `rows_html` / `json`
+- Export in `tags` / `md` / `tree_md` / `rows_md` / `rows_html` / `json`
 
 ## Architektur
 
@@ -365,7 +365,7 @@ Die Restore-Funktionen sind das dritte Add-on/Utility im Stack und werden aus hi
 - `restoreAtags()` für Einzel-, Auto- oder Gruppen-Restore aus einem JSON-Feld
 - ohne `entryObj`, `currentEntry`, `entries`, `entryGroup` oder `group` arbeitet `restoreAtags()` auf dem aktuellen Eintrag
 - direkte Zuordnungen per `map`, `fields` oder `mappings`, z. B. `"emo - Emotion"`
-- Alias-Zeilen koennen Restore-Felder mitgeben: `@@Kopfschmerz (KSch)[Kopf Feld]: ks`
+- Alias-Zeilen werden nicht als Restore-Feldzuordnung gelesen; Restore-Ziele laufen ueber `map`, `fields` oder `mappings`
 - direkte Zuordnungen sind standardmaessig exklusiv; mit `additional: true` laeuft danach zusaetzlich der Suffix-Auto-Restore
 - fuer Gruppen kann `restoreAtags()` `entries`, `entryGroup` oder `group` nehmen; Gruppen koennen ein Array oder ein Objekt mit `.entries()` sein
 - Java-Listen wie `lib().entries()` werden fuer Gruppen automatisch entpackt (`length`, `size()/get()` oder `iterator()`)
@@ -571,6 +571,10 @@ Aggregation:
 @@emo: Emotion
 @@mood.: gut, -down
 @@Kopfschmerz (KSch): ks, Kopfdruck1
+@@@self (sf)
+@@@help: Spielen, Musik, Laufen
+tag1 (tg1)[self, help]: 3
+tag2 (tg2)[self]: 3
 ```
 
 - nur gültig im Tag-Kontext
@@ -579,6 +583,25 @@ Aggregation:
 - Basistags mit abschließendem Punkt sind erlaubt (z. B. `mood.`)
 - inverse Aliase mit Präfix `-` kehren numerische Werte um (`down2` → `mood.-2`)
 - Alias-Einträge dürfen feste Werte tragen (`Kopfdruck1` → `Kopfschmerz+1`)
+- Kategorie-Aliase werden mit `@@@` definiert, z. B. `@@@self (sf)`
+- `@@@help: Spielen, Musik, Laufen` setzt die rechte Seite direkt als Kategorie-Kinder, nicht als Aliase
+- Kategorien werden nur im Alias-Bereich mit `[...]` festgelegt
+- Kategorie-Tags enthalten ihre Untertags als Liste, z. B. `self` enthält `tag1, tag2`
+- normale Tags behalten ihre Kategorien in `cats`, z. B. `tag1` hat `self, help`
+
+Aus dem Beispiel entsteht fuer `tree_md`:
+
+```text
+help
+├── Laufen
+├── Musik
+├── Spielen
+└── tag1
+
+sf
+├── tag1
+└── tag2
+```
 
 ## Export
 
@@ -586,6 +609,7 @@ Aggregation:
 
 - `tags`: nur Tag-Namen + Metatags
 - `md`: normale Ausgabe, Aggregat + `[Einzelwerte]`, kein `[]` bei Einzelwert
+- `tree_md`: Unicode-Baum der kategorisierten Tags; Tags ohne Kategorie und Kategorien ohne Kinder werden standardmäßig ausgelassen; `treeStyle: "ascii"` erzwingt ASCII-Zweige
 - `rows_md`: Markdown-Tabelle mit rechter Spaltenausrichtung und optionaler Header-Kürzung
 - `rows_html`: HTML-Tabelle mit rechtsbündigen Zahlen
 - `json`: `{ tag: value }`
@@ -736,5 +760,21 @@ exportAtags({
   targetFieldType: "md",
   markdownGroupSeparator: "",
   includeBlankTags: false
+});
+
+exportAtags({
+  entryObj: entry(),
+  result: result,
+  targetField: "Atag Tree",
+  targetFieldType: "tree_md",
+  includeEmptyCategories: false
+});
+
+exportAtags({
+  entryObj: entry(),
+  result: result,
+  targetField: "Atag Tree ASCII",
+  targetFieldType: "tree_md",
+  treeStyle: "ascii"
 });
 ```

@@ -1,6 +1,6 @@
 /*
 ========================================
-A2 exportAtags v1.54 (sys 2.21)
+A2 exportAtags v1.56 (sys 2.21)
 ========================================
 
 Änderungen
@@ -10,8 +10,9 @@ A2 exportAtags v1.54 (sys 2.21)
 - Markdown-Separator-Default bleibt aktiv, wenn Wrapper undefined weiterreichen
 - Markdown-Kategorietrenner zaehlen die urspruenglichen Tags, nicht die verdichteten Ausgabezeilen
 - Text- und Markdown-Exports lassen Blank-Tags standardmaessig weg; per includeBlankTags aktivierbar
+- tree_md kann ASCII- oder Unicode-Aeste schreiben
 - Kopfkommentar gekürzt, damit der Memento-Java-Editor nicht im Export-Script abstürzt
-- Exporttypen: tags, text, md, rows_md, rows_html, json
+- Exporttypen: tags, text, md, tree_md, rows_md, rows_html, json
 - Tabellen nutzen Alias-Kürzel als Header, optional Langform oder beide Namen
 - Row-Tabellen unterstützen avg, sum, Header-Kürzung und HTML/Markdown-Ausgabe
 
@@ -47,6 +48,20 @@ applyTags({
   rowAggregateDecimals: 1,
   shortenTableHeaders: 0
 });
+
+applyTags({
+  enabled: true,
+  textFields: ["Alias", "Notiz"],
+  targetField: "Atag Tree",
+  targetFieldType: "tree_md",
+  includeEmptyCategories: false
+});
+
+// Alias-Beispiel fuer tree_md:
+// @@@self (sf)
+// @@@help: Spielen, Musik, Laufen
+// tag1 (tg1)[self, help]: 3
+// tag2 (tg2)[self]: 3
 */
 
 // ===== TEXT =====
@@ -405,6 +420,96 @@ function buildAtagRowsHtml(items, cfg) {
   return html.join("");
 }
 
+// ===== TREE MD =====
+function buildAtagTreeMarkdown(items, cfg) {
+  var categories = {};
+  var order = [];
+  var includeEmpty = !!(cfg && (cfg.includeEmptyCategories === true || cfg.showEmptyCategories === true));
+  var i;
+  var j;
+  var it;
+  var cats;
+  var cat;
+  var child;
+  var catKey;
+  var childKey;
+  var lines = [];
+  var style = cfg && cfg.treeStyle != null ? String(cfg.treeStyle).toLowerCase() : "unicode";
+  var branch = style === "unicode" ? "\u251c\u2500\u2500 " : "|-- ";
+  var lastBranch = style === "unicode" ? "\u2514\u2500\u2500 " : "`-- ";
+
+  function ensureCategory(name, displayName) {
+    var key = String(name || "").toLowerCase();
+    if (!name) return null;
+
+    if (!categories[key]) {
+      categories[key] = {
+        name: name,
+        displayName: displayName || name,
+        children: [],
+        childSeen: {}
+      };
+      order.push(key);
+    } else if (displayName && categories[key].displayName === categories[key].name) {
+      categories[key].displayName = displayName;
+    }
+
+    return categories[key];
+  }
+
+  for (i = 0; i < items.length; i++) {
+    it = items[i];
+    if (!it) continue;
+
+    if (isArrayValue(it.attrValue)) {
+      cat = ensureCategory(it.name, it.displayName || it.name);
+      for (j = 0; j < it.attrValue.length; j++) {
+        child = String(it.attrValue[j] || "");
+        if (!child) continue;
+        childKey = child.toLowerCase();
+        if (!cat.childSeen[childKey]) {
+          cat.childSeen[childKey] = true;
+          cat.children.push(child);
+        }
+      }
+    }
+
+    cats = it.cats || [];
+    for (j = 0; j < cats.length; j++) {
+      cat = ensureCategory(cats[j], cats[j]);
+      if (!cat) continue;
+      child = it.name;
+      childKey = String(child || "").toLowerCase();
+      if (!child || childKey === String(cats[j]).toLowerCase()) continue;
+      if (!cat.childSeen[childKey]) {
+        cat.childSeen[childKey] = true;
+        cat.children.push(child);
+      }
+    }
+  }
+
+  order.sort(function(a, b) {
+    return compareTagNames(categories[a].name, categories[b].name);
+  });
+
+  for (i = 0; i < order.length; i++) {
+    catKey = order[i];
+    cat = categories[catKey];
+    cat.children = sortTagNames(cat.children);
+
+    if (!cat.children.length && !includeEmpty) continue;
+
+    if (lines.length) lines.push("");
+    lines.push(cat.displayName || cat.name);
+
+    for (j = 0; j < cat.children.length; j++) {
+      lines.push((j === cat.children.length - 1 ? lastBranch : branch) + cat.children[j]);
+    }
+  }
+
+  return lines.join("\n");
+}
+
 // ===== EXPORT =====
 function exportAtags(cfg) {
   var entryObj = cfg.entryObj || entry();
@@ -450,6 +555,11 @@ function exportAtags(cfg) {
 
   if (targetFieldType === "md") {
     entryObj.set(targetField, buildAtagNormalMarkdown(items, cfg));
+    return;
+  }
+
+  if (targetFieldType === "tree_md") {
+    entryObj.set(targetField, buildAtagTreeMarkdown(sortedItems, cfg));
     return;
   }
 

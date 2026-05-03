@@ -1,6 +1,6 @@
 /*
 ========================================
-A3 Atag Helpers v2.00 (sys 2.21)
+A3 Atag Helpers v2.01 (sys 2.21)
 ========================================
 
 Changes
@@ -16,6 +16,7 @@ Changes
 - wrappers support `enabled: false`
 - pass tableHeaderNames through export wrappers
 - JSON value maps keep repeated tag values as arrays
+- markdown sorting treats category tags as their own group before blanks
 - consolidate wrapper export config
 
 ========================================
@@ -297,6 +298,7 @@ function classifyMarkdownKind(item) {
   var s = trimString(raw);
   var n;
 
+  if (item && (item.isCategory === true || item.kind === "category" || item.type === "category")) return "category";
   if (isLinkRaw(s)) return "link";
   if (isEmailRaw(s)) return "mail";
   if (isTelRaw(s)) return "tel";
@@ -313,7 +315,7 @@ function classifyMarkdownKind(item) {
 
 function getMarkdownSortGroup(item) {
   var kind;
-  if (!item || item.attrText == null || item.attrText === "") return 8;
+  if (!item || item.attrText == null || item.attrText === "") return 9;
 
   kind = classifyMarkdownKind(item);
 
@@ -324,12 +326,13 @@ function getMarkdownSortGroup(item) {
   if (kind === "real") return 5;
   if (kind === "text") return 6;
   if (kind === "list") return 7;
+  if (kind === "category") return 8;
 
-  return 8;
+  return 9;
 }
 
 function getSortedMarkdownItems(items) {
-  var groups = [[], [], [], [], [], [], [], []];
+  var groups = [[], [], [], [], [], [], [], [], []];
   var i;
   var it;
   var group;

@@ -1,6 +1,6 @@
 /*
 ========================================
-A4 restoreAtags v2.00 (sys 2.21)
+A4 restoreAtags v2.01 (sys 2.21)
 ========================================
 
 Notes:
@@ -14,6 +14,7 @@ Notes:
 - debugLog/logDebug mirrors diagnostics to log()
 - auto restore skips targets missing from lib().fields()
 - bulkRestoreAtags is a legacy wrapper
+- alias brackets are reserved for categories, not restore mappings
 
 Examples:
 
@@ -485,21 +486,7 @@ function addRestoreMappingsFromValue(out, seen, val, defaultForce) {
 }
 
 function addRestoreMappingsFromAliasText(out, seen, text, defaultForce) {
-  var lines = String(text || "").split(/\r?\n/);
-  var i;
-  var line;
-  var m;
-
-  for (i = 0; i < lines.length; i++) {
-    line = String(lines[i] || "").replace(/^\s+|\s+$/g, "");
-    if (!/^@@/.test(line)) continue;
-
-    m = line.match(/^@@([^\[(:(]+?)(?:\s*\(\s*([^)]+)\s*\))?\s*\[\s*([^\]]+)\s*\](?::\s*(.*))?$/);
-    if (!m) continue;
-
-    addRestoreMapping(out, seen, m[1], m[3], defaultForce);
-    if (m[2]) addRestoreMapping(out, seen, m[2], m[3], defaultForce);
-  }
+  return;
 }
 
 function buildRestoreMappings(cfg, entryObj) {
@@ -642,7 +629,7 @@ function restoreAtagsForEntry(entryObj, cfg, clearMappedFields) {
   if (!entryObj) return;
 
   if (cfg.debugField) cfg._debugLines = [];
-  restoreDebugPush(cfg, "restoreAtags v2.00");
+  restoreDebugPush(cfg, "restoreAtags v2.01");
   restoreDebugPush(cfg, "sourceField: " + cfg.sourceField);
   restoreFieldNameMap(cfg);
   restoreDebugPush(cfg, "known fields: " + (cfg._fieldNameCount == null ? "unknown" : String(cfg._fieldNameCount)));
