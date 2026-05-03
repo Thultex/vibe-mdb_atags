@@ -609,7 +609,7 @@ sf
 
 - `tags`: nur Tag-Namen + Metatags
 - `md`: normale Ausgabe, Aggregat + `[Einzelwerte]`, kein `[]` bei Einzelwert
-- `tree_md`: Unicode-Baum der kategorisierten Tags; Tags ohne Kategorie und Kategorien ohne Kinder werden standardmäßig ausgelassen; `treeStyle: "ascii"` erzwingt ASCII-Zweige
+- `tree_md`: Unicode-Baum der kategorisierten Tags; Tags ohne Kategorie und Kategorien ohne Kinder werden standardmäßig ausgelassen; Kinderwerte werden standardmäßig angezeigt; `treeStyle: "ascii"` erzwingt ASCII-Zweige
 - `rows_md`: Markdown-Tabelle mit rechter Spaltenausrichtung und optionaler Header-Kürzung
 - `rows_html`: HTML-Tabelle mit rechtsbündigen Zahlen
 - `json`: `{ tag: value }`
@@ -649,6 +649,8 @@ Optionen:
 - `markdownGroupSeparator`: `""` (Standard) trennt bei mehr als 5 Markdown-Zeilen Link/Mail/Tel, Zahlen und Text/List mit einer echten Leerzeile; eigener String ist moeglich, `null` deaktiviert das
 - `markdownGroupSeparators: false` bleibt als kompatibler Alias zum Deaktivieren erhalten
 - `includeBlankTags: true` gibt nackte Tags ohne Wert im `text`- und `md`-Export mit aus; Standard ist `false`
+- `treeShowValues: false` blendet Werte im `tree_md` aus
+- `categoryFilter: ["help", "home"]` filtert alle Exporttypen per OR auf eine oder mehrere Kategorien; `catFilter` ist ein Kurzalias
 
 ## Aktuelle Funktionsaufrufe
 
@@ -767,7 +769,8 @@ exportAtags({
   result: result,
   targetField: "Atag Tree",
   targetFieldType: "tree_md",
-  includeEmptyCategories: false
+  includeEmptyCategories: false,
+  categoryFilter: ["self", "help"]
 });
 
 exportAtags({
@@ -775,6 +778,7 @@ exportAtags({
   result: result,
   targetField: "Atag Tree ASCII",
   targetFieldType: "tree_md",
-  treeStyle: "ascii"
+  treeStyle: "ascii",
+  treeShowValues: false
 });
 ```

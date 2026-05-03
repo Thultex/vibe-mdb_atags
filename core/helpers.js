@@ -1,6 +1,6 @@
 /*
 ========================================
-A3 Atag Helpers v2.01 (sys 2.21)
+A3 Atag Helpers v2.02 (sys 2.21)
 ========================================
 
 Changes
@@ -17,6 +17,7 @@ Changes
 - pass tableHeaderNames through export wrappers
 - JSON value maps keep repeated tag values as arrays
 - markdown sorting treats category tags as their own group before blanks
+- JSON value maps keep category tag arrays as arrays
 - consolidate wrapper export config
 
 ========================================
@@ -207,7 +208,7 @@ function buildValueMap(items) {
 
   for (i = 0; i < items.length; i++) {
     it = items[i];
-    val = normalizeValueMapItemValue(it.attrValue);
+    val = normalizeValueMapItemValue(it.attrValue, it);
 
     if (map.hasOwnProperty(it.name)) {
       if (!isArrayValue(map[it.name])) map[it.name] = [map[it.name]];
@@ -220,8 +221,9 @@ function buildValueMap(items) {
   return map;
 }
 
-function normalizeValueMapItemValue(val) {
+function normalizeValueMapItemValue(val, item) {
   if (val == null) return null;
+  if (item && (item.isCategory === true || item.kind === "category" || item.type === "category")) return val;
   if (isArrayValue(val)) return val.join(",");
   return val;
 }

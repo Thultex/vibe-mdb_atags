@@ -1,26 +1,17 @@
 /*
 ========================================
-A2 exportAtags v1.56 (sys 2.21)
+A2 exportAtags v1.59 (sys 2.21)
 ========================================
 
-Änderungen
-- Markdown-Ausgabe sortiert normale Werte und Row-Aggregate gemeinsam
-- Markdown-Ausgaben nutzen Langnamen als Standard; Row-Tabellen nutzen Kurzheader als Standard
-- Markdown-Gruppenwechsel werden explizit gerendert; Standard ist eine echte Leerzeile
-- Markdown-Separator-Default bleibt aktiv, wenn Wrapper undefined weiterreichen
-- Markdown-Kategorietrenner zaehlen die urspruenglichen Tags, nicht die verdichteten Ausgabezeilen
-- Text- und Markdown-Exports lassen Blank-Tags standardmaessig weg; per includeBlankTags aktivierbar
-- tree_md kann ASCII- oder Unicode-Aeste schreiben
-- Kopfkommentar gekürzt, damit der Memento-Java-Editor nicht im Export-Script abstürzt
-- Exporttypen: tags, text, md, tree_md, rows_md, rows_html, json
-- Tabellen nutzen Alias-Kürzel als Header, optional Langform oder beide Namen
-- Row-Tabellen unterstützen avg, sum, Header-Kürzung und HTML/Markdown-Ausgabe
+Notes:
+- Exports: tags, text, md, tree_md, rows_md, rows_html, json
+- tree_md supports Unicode default and ASCII fallback
+- tree_md shows child values by default
+- tree_md uses Markdown hard line breaks for desktop rendering
+- categoryFilter filters all export types by OR categories
+- Keep this header ASCII-only for the Memento editor
 
-Voraussetzung
-- Atag Helpers geladen
-- collectAtags() vorhanden
-
-Beispiele
+Examples:
 
 applyTags({
   enabled: true,
@@ -41,27 +32,21 @@ applyTags({
 applyTags({
   enabled: true,
   textFields: ["Alias", "Notiz"],
-  targetField: "Atag Rows MD",
-  targetFieldType: "rows_md",
-  rowAggregateMode: "avg",
-  rowIncludeUnits: true,
-  rowAggregateDecimals: 1,
-  shortenTableHeaders: 0
+  targetField: "Atag Tree",
+  targetFieldType: "tree_md",
+  categoryFilter: ["self", "help"],
+  includeEmptyCategories: false,
+  treeShowValues: true
 });
 
 applyTags({
   enabled: true,
   textFields: ["Alias", "Notiz"],
-  targetField: "Atag Tree",
+  targetField: "Atag Tree ASCII",
   targetFieldType: "tree_md",
-  includeEmptyCategories: false
+  treeStyle: "ascii",
+  treeShowValues: false
 });
-
-// Alias-Beispiel fuer tree_md:
-// @@@self (sf)
-// @@@help: Spielen, Musik, Laufen
-// tag1 (tg1)[self, help]: 3
-// tag2 (tg2)[self]: 3
 */
 
 // ===== TEXT =====
@@ -420,11 +405,113 @@ function buildAtagRowsHtml(items, cfg) {
   return html.join("");
 }
 
+// ===== CATEGORY FILTER =====
+function normalizeAtagCategoryFilter(cfg) {
+  var raw = cfg ? (cfg.categoryFilter != null ? cfg.categoryFilter : cfg.catFilter) : null;
+  var parts;
+  var out = [];
+  var seen = {};
+  var i;
+  var name;
+  var key;
+
+  if (raw == null || raw === "" || raw === false) return [];
+  if (isArrayValue(raw)) parts = raw;
+  else parts = String(raw).split(",");
+
+  for (i = 0; i < parts.length; i++) {
+    name = String(parts[i] || "").replace(/^\s+|\s+$/g, "");
+    if (!name) continue;
+    key = name.toLowerCase();
+    if (seen[key]) continue;
+    seen[key] = true;
+    out.push(name);
+  }
+
+  return out;
+}
+
+function categoryFilterHasKey(filterMap, name) {
+  return !!filterMap[String(name || "").toLowerCase()];
+}
+
+function buildAtagCategoryFilterMap(filters) {
+  var map = {};
+  var i;
+
+  for (i = 0; i < filters.length; i++) {
+    map[String(filters[i]).toLowerCase()] = true;
+  }
+
+  return map;
+}
+
+function atagItemIsCategory(item) {
+  return !!(item && (item.isCategory === true || item.kind === "category" || item.type === "category"));
+}
+
+function filterAtagItemsByCategory(items, cfg) {
+  var filters = normalizeAtagCategoryFilter(cfg);
+  var filterMap;
+  var childrenMap = {};
+  var out = [];
+  var i;
+  var j;
+  var it;
+  var cats;
+  var key;
+  var child;
+
+  if (!filters.length) return items;
+
+  filterMap = buildAtagCategoryFilterMap(filters);
+
+  for (i = 0; i < items.length; i++) {
+    it = items[i];
+    if (!atagItemIsCategory(it)) continue;
+    if (!categoryFilterHasKey(filterMap, it.name)) continue;
+    if (!isArrayValue(it.attrValue)) continue;
+
+    for (j = 0; j < it.attrValue.length; j++) {
+      child = String(it.attrValue[j] || "");
+      if (child) childrenMap[child.toLowerCase()] = true;
+    }
+  }
+
+  for (i = 0; i < items.length; i++) {
+    it = items[i];
+    if (!it) continue;
+
+    key = String(it.name || "").toLowerCase();
+    if (childrenMap[key]) {
+      out.push(it);
+      continue;
+    }
+
+    if (atagItemIsCategory(it) && categoryFilterHasKey(filterMap, it.name)) {
+      out.push(it);
+      continue;
+    }
+
+    cats = it.cats || [];
+    for (j = 0; j < cats.length; j++) {
+      if (categoryFilterHasKey(filterMap, cats[j])) {
+        out.push(it);
+        break;
+      }
+    }
+  }
+
+  return out;
+}
+
 // ===== TREE MD =====
 function buildAtagTreeMarkdown(items, cfg) {
   var categories = {};
+  var itemByName = {};
   var order = [];
   var includeEmpty = !!(cfg && (cfg.includeEmptyCategories === true || cfg.showEmptyCategories === true));
+  var showValues = !(cfg && (cfg.treeShowValues === false || cfg.includeTreeValues === false));
   var i;
   var j;
   var it;
@@ -457,9 +544,36 @@ function buildAtagTreeMarkdown(items, cfg) {
     return categories[key];
   }
 
+  function rememberItem(item) {
+    var key;
+    if (!item || atagItemIsCategory(item)) return;
+    key = String(item.name || "").toLowerCase();
+    if (!key || itemByName[key]) return;
+    itemByName[key] = item;
+  }
+
+  function treeChildLabel(name) {
+    var item;
+    var label = String(name || "");
+    var val;
+
+    if (!showValues) return label;
+
+    item = itemByName[label.toLowerCase()];
+    if (!item) return label;
+    if (item.attrText == null || item.attrText === "") return label;
+
+    val = formatMarkdownValue("", item.attrText, item.rawText);
+    val = String(val || "").replace(/^:\s*/, "");
+    if (!val) return label;
+
+    return label + " " + val;
+  }
+
   for (i = 0; i < items.length; i++) {
     it = items[i];
     if (!it) continue;
+    rememberItem(it);
 
     if (isArrayValue(it.attrValue)) {
       cat = ensureCategory(it.name, it.displayName || it.name);
@@ -503,11 +617,11 @@ function buildAtagTreeMarkdown(items, cfg) {
     lines.push(cat.displayName || cat.name);
 
     for (j = 0; j < cat.children.length; j++) {
-      lines.push((j === cat.children.length - 1 ? lastBranch : branch) + cat.children[j]);
+      lines.push((j === cat.children.length - 1 ? lastBranch : branch) + treeChildLabel(cat.children[j]));
     }
   }
 
-  return lines.join("\n");
+  return lines.join("  \n");
 }
 
 // ===== EXPORT =====
@@ -516,7 +630,7 @@ function exportAtags(cfg) {
   if (!entryObj) return;
 
   var result = cfg.result || {};
-  var items = result.items || [];
+  var items = filterAtagItemsByCategory(result.items || [], cfg);
   var sortedItems = sortItemsByTagName(items);
   var targetField = cfg.targetField;
   var targetFieldType = cfg.targetFieldType;

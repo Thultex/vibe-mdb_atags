@@ -240,7 +240,29 @@ assertEqual(
   "tree_md",
   entryObj.field("Tree"),
   "help\n" +
-  "\u2514\u2500\u2500 tag1\n\n" +
+  "\u2514\u2500\u2500 tag1 +3\n\n" +
+  "sf\n" +
+  "\u251c\u2500\u2500 tag1 +3\n" +
+  "\u2514\u2500\u2500 tag2 +3"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("self", "tag1,tag2", ["tag1", "tag2"], "tag1,tag2", null, null, null, "sf"),
+      item("tag1", "+3", 3, "+3", null, null, null, "tg1", ["self"]),
+      item("tag2", null, null, "", null, null, null, "tg2", ["self"])
+    ]
+  },
+  targetField: "Tree",
+  targetFieldType: "tree_md",
+  treeShowValues: false
+});
+assertEqual(
+  "tree_md-values-can-be-disabled",
+  entryObj.field("Tree"),
   "sf\n" +
   "\u251c\u2500\u2500 tag1\n" +
   "\u2514\u2500\u2500 tag2"
@@ -274,6 +296,99 @@ exportAtags({
   includeEmptyCategories: true
 });
 assertEqual("tree_md-includes-empty-categories", entryObj.field("Tree"), "e");
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("help", "Spielen,Musik", ["Spielen", "Musik"], "Spielen,Musik", null, null, null, "help", [], "category"),
+      item("home", "Haushalt", ["Haushalt"], "Haushalt", null, null, null, "home", [], "category"),
+      item("Spielen", "+2", 2, "+2", null, null, null, "Sp", ["help"]),
+      item("Musik", "laut", "laut", "laut", null, null, null, "Mu", ["help"]),
+      item("Haushalt", "+1", 1, "+1", null, null, null, "HH", ["home"]),
+      item("Andere", "+9", 9, "+9")
+    ]
+  },
+  targetField: "MD",
+  targetFieldType: "md",
+  categoryFilter: ["help"]
+});
+assertEqual(
+  "category-filter-md",
+  entryObj.field("MD"),
+  "Spielen: +2  \n" +
+  "Musik: laut  \n" +
+  "help: Spielen,Musik"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("help", "Spielen,Musik", ["Spielen", "Musik"], "Spielen,Musik", null, null, null, "help", [], "category"),
+      item("home", "Haushalt", ["Haushalt"], "Haushalt", null, null, null, "home", [], "category"),
+      item("Spielen", "+2", 2, "+2", null, null, null, "Sp", ["help"]),
+      item("Musik", "laut", "laut", "laut", null, null, null, "Mu", ["help"]),
+      item("Haushalt", "+1", 1, "+1", null, null, null, "HH", ["home"]),
+      item("Andere", "+9", 9, "+9")
+    ]
+  },
+  targetField: "Tags",
+  targetFieldType: "tags",
+  categoryFilter: ["help", "home"],
+  mergeWithExistingTags: false
+});
+assertArray("category-filter-tags", entryObj.field("Tags"), ["Haushalt", "help", "home", "Musik", "Spielen"]);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("help", "Spielen,Musik", ["Spielen", "Musik"], "Spielen,Musik", null, null, null, "help", [], "category"),
+      item("home", "Haushalt", ["Haushalt"], "Haushalt", null, null, null, "home", [], "category"),
+      item("Spielen", "+2", 2, "+2", null, null, null, "Sp", ["help"]),
+      item("Musik", "laut", "laut", "laut", null, null, null, "Mu", ["help"]),
+      item("Haushalt", "+1", 1, "+1", null, null, null, "HH", ["home"]),
+      item("Andere", "+9", 9, "+9")
+    ]
+  },
+  targetField: "Json",
+  targetFieldType: "json",
+  categoryFilter: "home"
+});
+assertEqual(
+  "category-filter-json",
+  entryObj.field("Json"),
+  "{\"Haushalt\":1,\"home\":[\"Haushalt\"]}"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("help", "Spielen,Musik", ["Spielen", "Musik"], "Spielen,Musik", null, null, null, "help", [], "category"),
+      item("home", "Haushalt", ["Haushalt"], "Haushalt", null, null, null, "home", [], "category"),
+      item("Spielen", "+2", 2, "+2", null, null, null, "Sp", ["help"]),
+      item("Musik", "laut", "laut", "laut", null, null, null, "Mu", ["help"]),
+      item("Haushalt", "+1", 1, "+1", null, null, null, "HH", ["home"]),
+      item("Andere", "+9", 9, "+9")
+    ]
+  },
+  targetField: "Tree",
+  targetFieldType: "tree_md",
+  categoryFilter: ["help"]
+});
+assertEqual(
+  "category-filter-tree",
+  entryObj.field("Tree"),
+  "help\n" +
+  "\u251c\u2500\u2500 Musik laut\n" +
+  "\u2514\u2500\u2500 Spielen +2"
+);
 
 entryObj = makeEntry({});
 exportAtags({
