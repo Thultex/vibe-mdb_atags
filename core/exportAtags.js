@@ -7,6 +7,7 @@ Notes:
 - Exports: tags, text, md, tree_md, rows_md, rows_html, json
 - tree_md supports Unicode default and ASCII fallback
 - tree_md shows child values by default
+- tree_md only shows category children that actually occur unless enabled
 - tree_md uses Markdown hard line breaks for desktop rendering
 - categoryFilter filters all export types by OR categories
 - tag export skips empty category tags
@@ -579,6 +580,11 @@ function buildAtagTreeMarkdown(items, cfg) {
   var itemByName = {};
   var order = [];
   var includeEmpty = !!(cfg && (cfg.includeEmptyCategories === true || cfg.showEmptyCategories === true));
+  var includeMissingChildren = !!(cfg && (
+    cfg.treeIncludeMissingChildren === true ||
+    cfg.includeMissingTreeChildren === true ||
+    cfg.treeShowAllChildren === true
+  ));
   var showValues = !(cfg && (cfg.treeShowValues === false || cfg.includeTreeValues === false));
   var i;
   var j;
@@ -638,6 +644,25 @@ function buildAtagTreeMarkdown(items, cfg) {
     return label + " " + val;
   }
 
+  function treeChildExists(name) {
+    return !!itemByName[String(name || "").toLowerCase()];
+  }
+
+  function visibleTreeChildren(children) {
+    var out = [];
+    var idx;
+    var name;
+
+    if (includeMissingChildren) return children;
+
+    for (idx = 0; idx < children.length; idx++) {
+      name = children[idx];
+      if (treeChildExists(name)) out.push(name);
+    }
+
+    return out;
+  }
+
   for (i = 0; i < items.length; i++) {
     it = items[i];
     if (!it) continue;
@@ -678,6 +703,7 @@ function buildAtagTreeMarkdown(items, cfg) {
     catKey = order[i];
     cat = categories[catKey];
     cat.children = sortTagNames(cat.children);
+    cat.children = visibleTreeChildren(cat.children);
 
     if (!cat.children.length && !includeEmpty) continue;
 

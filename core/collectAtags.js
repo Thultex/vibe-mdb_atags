@@ -7,7 +7,7 @@ Changes
 - alias brackets define categories, e.g. `@@Tag (T)[self, help]: alias`
 - category aliases can use `@@@self (sf)`
 - category aliases can define fixed children, e.g. `@@@help: Spielen, Musik`
-- category tags are emitted as list tags containing their member tags
+- category tags are emitted as list tags containing their occurring member tags
 - parsed items keep their categories in `cats`
 - skip alias declaration lines during normal parsing
 - add compact, explicit, and inverted text tag syntaxes
@@ -280,6 +280,7 @@ function collectAtags(cfg) {
   function buildAliasMap(text) {
     var map = {};
     map._categories = {};
+    map._fixedChildCats = {};
     var lines = String(text || "").split(/\r?\n/);
 
     for (var i = 0; i < lines.length; i++) {
@@ -432,6 +433,9 @@ function collectAtags(cfg) {
       if (!child || bucket.seen[childKey]) continue;
       bucket.seen[childKey] = true;
       bucket.names.push(child);
+
+      if (!aliasMap._fixedChildCats[childKey]) aliasMap._fixedChildCats[childKey] = [];
+      aliasMap._fixedChildCats[childKey].push(catName);
     }
   }
 
@@ -633,24 +637,27 @@ function collectAtags(cfg) {
     var displayName;
     var aliasInfo;
     var defined;
+    var fixedChildCats;
 
     defined = aliasMap._categories || {};
     for (key in defined) {
       map[key] = {
         name: defined[key].name,
         shortName: defined[key].shortName || defined[key].name,
-        names: defined[key].names.slice(0),
+        names: [],
         seen: {}
       };
-      for (i = 0; i < map[key].names.length; i++) {
-        map[key].seen[String(map[key].names[i]).toLowerCase()] = true;
-      }
       order.push(key);
     }
+
+    fixedChildCats = aliasMap._fixedChildCats || {};
 
     for (i = 0; i < items.length; i++) {
       item = items[i];
       cats = item && item.cats ? item.cats : [];
+      if (item && fixedChildCats[String(item.name || "").toLowerCase()]) {
+        cats = cats.concat(fixedChildCats[String(item.name || "").toLowerCase()]);
+      }
 
       for (j = 0; j < cats.length; j++) {
         cat = cats[j];

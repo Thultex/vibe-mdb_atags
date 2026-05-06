@@ -5,6 +5,8 @@ var addonPath = fso.BuildPath(scriptDir, "..\\addons\\2_syncing\\globalFieldSync
 eval(fso.OpenTextFile(addonPath, 1).ReadAll());
 
 var _entries = [];
+var _entryThrows = false;
+var _libThrows = false;
 
 function print(s) {
   WScript.Echo(String(s));
@@ -29,12 +31,14 @@ function makeEntry(fields) {
 function lib() {
   return {
     entries: function() {
+      if (_libThrows) throw new Error("lib not ready");
       return _entries;
     }
   };
 }
 
 function entry() {
+  if (_entryThrows) throw new Error("entry not ready");
   return _entries[0];
 }
 
@@ -110,8 +114,41 @@ function testSyncFieldBackSkipsEmptyCurrentValue() {
   assertArrayEquals("back-sync-empty-skipped", result.skipped, ["Note"]);
 }
 
+function testSyncFieldToSkipsWhenEntryNotReady() {
+  _entryThrows = true;
+  _entries = [makeEntry({ Note: "source" })];
+
+  var result = syncFieldTo({
+    fields: ["Note"],
+    overwrite: true
+  });
+
+  _entryThrows = false;
+
+  assertArrayEquals("entry-not-ready-updated", result.updated, []);
+  assertArrayEquals("entry-not-ready-skipped", result.skipped, []);
+}
+
+function testSyncFieldToSkipsWhenLibNotReady() {
+  var target = makeEntry({ Note: "" });
+  _libThrows = true;
+
+  var result = syncFieldTo({
+    entryObj: target,
+    fields: ["Note"],
+    overwrite: true
+  });
+
+  _libThrows = false;
+
+  assertEquals("lib-not-ready-target", target.field("Note"), "");
+  assertArrayEquals("lib-not-ready-updated", result.updated, []);
+}
+
 testSyncFieldToFallsBackToNextFilledEntry();
 testSyncFieldToStopsAfterFirstTwentyEntries();
 testSyncFieldBackSkipsEmptyCurrentValue();
+testSyncFieldToSkipsWhenEntryNotReady();
+testSyncFieldToSkipsWhenLibNotReady();
 
 print("OK");

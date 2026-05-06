@@ -1,9 +1,10 @@
 /*
 ========================================
-B3 Global Field Sync v1.01 (sys 2.21)
+B3 Global Field Sync v1.02 (sys 2.21)
 ========================================
 
 Changes
+- guard entry/lib/field access for early open triggers
 - skip back-sync for empty current values
 - fallback to first non-empty source value within first 20 entries
 - add independent field sync addon
@@ -63,6 +64,46 @@ function isEmptySyncValue(val) {
   return false;
 }
 
+function safeSyncEntry() {
+  try {
+    return entry();
+  } catch (e) {
+    return null;
+  }
+}
+
+function safeSyncLibEntries() {
+  var all;
+
+  try {
+    all = lib().entries();
+  } catch (e) {
+    return [];
+  }
+
+  if (!all || !all.length) return [];
+  return all;
+}
+
+function safeSyncField(entryObj, fieldName) {
+  if (!entryObj || !fieldName) return null;
+  try {
+    return entryObj.field(fieldName);
+  } catch (e) {
+    return null;
+  }
+}
+
+function safeSyncSet(entryObj, fieldName, val) {
+  if (!entryObj || !fieldName) return false;
+  try {
+    entryObj.set(fieldName, val);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 function syncValuesEqual(a, b) {
   var i;
 
@@ -84,13 +125,13 @@ function syncValuesEqual(a, b) {
 }
 
 function getFirstSyncEntry() {
-  var all = lib().entries();
+  var all = safeSyncLibEntries();
   if (!all || !all.length) return null;
   return all[0];
 }
 
 function getSyncEntries() {
-  var all = lib().entries();
+  var all = safeSyncLibEntries();
   if (!all || !all.length) return [];
   return all;
 }
@@ -100,7 +141,7 @@ function resolveSyncSourceValue(cfg) {
 
   var sourceEntry = cfg.sourceEntry;
   var fieldName = cfg.fieldName;
-  var sourceVal = sourceEntry ? sourceEntry.field(fieldName) : null;
+  var sourceVal = safeSyncField(sourceEntry, fieldName);
   var fallbackEntries = cfg.fallbackEntries;
   var fallbackLimit = cfg.fallbackLimit;
   var i;
@@ -114,7 +155,7 @@ function resolveSyncSourceValue(cfg) {
   if (fallbackLimit > fallbackEntries.length) fallbackLimit = fallbackEntries.length;
 
   for (i = 0; i < fallbackLimit; i++) {
-    scanVal = fallbackEntries[i].field(fieldName);
+    scanVal = safeSyncField(fallbackEntries[i], fieldName);
     if (!isEmptySyncValue(scanVal)) return scanVal;
   }
 
@@ -151,7 +192,7 @@ function syncFieldsBetweenEntries(cfg) {
       fallbackEntries: fallbackEntries,
       fallbackLimit: fallbackLimit
     });
-    var targetVal = targetEntry.field(fieldName);
+    var targetVal = safeSyncField(targetEntry, fieldName);
 
     if (skipEmptySource && isEmptySyncValue(sourceVal)) {
       skipped.push(fieldName);
@@ -168,8 +209,11 @@ function syncFieldsBetweenEntries(cfg) {
       continue;
     }
 
-    targetEntry.set(fieldName, cloneSyncValue(sourceVal));
-    updated.push(fieldName);
+    if (safeSyncSet(targetEntry, fieldName, cloneSyncValue(sourceVal))) {
+      updated.push(fieldName);
+    } else {
+      skipped.push(fieldName);
+    }
   }
 
   return {
@@ -182,7 +226,7 @@ function syncFieldsBetweenEntries(cfg) {
 function syncFieldTo(cfg) {
   cfg = cfg || {};
 
-  var currentEntry = cfg.entryObj || entry();
+  var currentEntry = cfg.entryObj || safeSyncEntry();
   var firstEntry = getFirstSyncEntry();
   var all = getSyncEntries();
 
@@ -199,7 +243,7 @@ function syncFieldTo(cfg) {
 function syncFieldBack(cfg) {
   cfg = cfg || {};
 
-  var currentEntry = cfg.entryObj || entry();
+  var currentEntry = cfg.entryObj || safeSyncEntry();
   var firstEntry = getFirstSyncEntry();
 
   return syncFieldsBetweenEntries({

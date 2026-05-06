@@ -186,11 +186,12 @@ assertItem("quoted-text-outside-row", "10: Kopfruhe1, Innere_Anspannung1 geringe
 assertItem("alias-short", "@@Kopfschmerzen (ks): Kopfschmerz, Kschm\nks2", "Kopfschmerzen", "+2", 2, null, null);
 assertDisplayName("alias-short-display", "@@Kopfschmerzen (ks): Kopfschmerz, Kschm\nKopfschmerz2", "Kopfschmerzen", "ks");
 assertCats("alias-category-on-parsed-tag", "@@tag1 (tg1)[self, help]: 3\ntg1#3", "tag1", ["self", "help"]);
-assertCategoryTag("alias-category-item", "@@@self (sf)\n@@tag1 (tg1)[self]: 3\n@@tag2 (tg2)[self]: 3", "self", ["tag1", "tag2"], "sf");
+assertCategoryTag("alias-category-item", "@@@self (sf)\n@@tag1 (tg1)[self]: 3\n@@tag2 (tg2)[self]: 3\ntg1# tg2#", "self", ["tag1", "tag2"], "sf");
 assertMissing("cat-alias-is-not-normal-tag-alias", "@@@self (sf)\nsf2", "self");
-assertCategoryTag("cat-alias-fixed-children", "@@@help: Spielen, Musik, Laufen", "help", ["Spielen", "Musik", "Laufen"], "help");
-assertCategoryTag("cat-alias-children-are-not-aliases", "@@@help: Spielen, Musik\n@@Spielen (Sp): play\nplay2", "help", ["Spielen", "Musik"], "help");
-assertCategoryTag("alias-category-line-without-prefix", "tag1 (tg1)[self]: 3\ntag2 (tg2)[self]: 3", "self", ["tag1", "tag2"], "self");
+assertMissing("cat-alias-fixed-children-without-occurrence", "@@@help: Spielen, Musik, Laufen", "help");
+assertCategoryTag("cat-alias-fixed-children-with-occurrence", "@@@help: Spielen, Musik, Laufen\nSpielen1", "help", ["Spielen"], "help");
+assertCategoryTag("cat-alias-children-are-not-aliases", "@@@help: Spielen, Musik\n@@Spielen (Sp): play\nplay2", "help", ["Spielen"], "help");
+assertCategoryTag("alias-category-line-without-prefix", "tag1 (tg1)[self]: 3\ntag2 (tg2)[self]: 3\ntg1# tg2#", "self", ["tag1", "tag2"], "self");
 assertItem("alias-fixed-bare", "@@Kopfschmerz (KSch): ks, Kopfdruck1\n#Kopfdruck", "Kopfschmerz", "+1", 1, null, null);
 assertItem("alias-fixed-overrides-value", "@@Kopfschmerz (KSch): ks, Kopfdruck1\nKopfdruck3", "Kopfschmerz", "+1", 1, null, null);
 assertItem("alias-fixed-tagbar", "@@Kopfschmerz (KSch): ks, Kopfdruck1\n|| Kopfdruck", "Kopfschmerz", "+1", 1, null, null);

@@ -1,9 +1,11 @@
 var fso = new ActiveXObject("Scripting.FileSystemObject");
 var scriptDir = fso.GetParentFolderName(WScript.ScriptFullName);
 var helperPath = fso.BuildPath(scriptDir, "..\\core\\helpers.js");
+var collectPath = fso.BuildPath(scriptDir, "..\\core\\collectAtags.js");
 var exportPath = fso.BuildPath(scriptDir, "..\\core\\exportAtags.js");
 
 eval(fso.OpenTextFile(helperPath, 1).ReadAll());
+eval(fso.OpenTextFile(collectPath, 1).ReadAll());
 eval(fso.OpenTextFile(exportPath, 1).ReadAll());
 
 function fail(msg) {
@@ -246,7 +248,8 @@ exportAtags({
     ]
   },
   targetField: "Tree",
-  targetFieldType: "tree_md"
+  targetFieldType: "tree_md",
+  treeIncludeMissingChildren: true
 });
 assertEqual(
   "tree_md-unicode-default",
@@ -266,7 +269,8 @@ exportAtags({
   },
   targetField: "Tree",
   targetFieldType: "tree_md",
-  treeStyle: "ascii"
+  treeStyle: "ascii",
+  treeIncludeMissingChildren: true
 });
 assertEqual(
   "tree_md-ascii",
@@ -322,6 +326,85 @@ assertEqual(
   "\u251c\u2500\u2500 tag1  \n" +
   "\u2514\u2500\u2500 tag2"
 );
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("test", "ttt,missing", ["ttt", "missing"], "ttt,missing", null, null, null, "test", [], "category"),
+      item("ttt", "+1", 1, "+1")
+    ]
+  },
+  targetField: "Tree",
+  targetFieldType: "tree_md"
+});
+assertEqual(
+  "tree_md-only-occurring-fixed-children",
+  entryObj.field("Tree"),
+  "test  \n" +
+  "\u2514\u2500\u2500 ttt +1"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("test", "missing", ["missing"], "missing", null, null, null, "test", [], "category")
+    ]
+  },
+  targetField: "Tree",
+  targetFieldType: "tree_md"
+});
+assertEqual("tree_md-hides-category-with-only-missing-children", entryObj.field("Tree"), "");
+
+entryObj = makeEntry({ Note: "@@@help: Spielen, Musik\nSpielen1" });
+applyTags({
+  entryObj: entryObj,
+  textFields: ["Note"],
+  targetField: "Tags",
+  targetFieldType: "tags",
+  mergeWithExistingTags: false
+});
+assertArray("apply-tags-skips-missing-alias-children", entryObj.field("Tags"), ["@help", "Spielen"]);
+
+entryObj = makeEntry({ Note: "@@@help: Spielen, Musik\nSpielen1" });
+applyTags({
+  entryObj: entryObj,
+  textFields: ["Note"],
+  targetField: "MD",
+  targetFieldType: "md"
+});
+assertEqual(
+  "apply-md-skips-missing-alias-children",
+  entryObj.field("MD"),
+  "Spielen: +1  \n" +
+  "help: Spielen"
+);
+
+entryObj = makeEntry({ Note: "@@@help: Spielen, Musik\nSpielen1" });
+applyTags({
+  entryObj: entryObj,
+  textFields: ["Note"],
+  targetField: "Json",
+  targetFieldType: "json"
+});
+assertEqual(
+  "apply-json-skips-missing-alias-children",
+  entryObj.field("Json"),
+  "{\"help\":[\"Spielen\"],\"Spielen\":1}"
+);
+
+entryObj = makeEntry({ Note: "@@@help: Spielen, Musik" });
+applyTags({
+  entryObj: entryObj,
+  textFields: ["Note"],
+  targetField: "Tags",
+  targetFieldType: "tags",
+  mergeWithExistingTags: false
+});
+assertArray("apply-tags-no-category-from-only-alias", entryObj.field("Tags"), []);
 
 
 entryObj = makeEntry({});

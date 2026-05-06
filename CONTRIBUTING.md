@@ -111,6 +111,7 @@ Pflege-Regeln für diese Headerform:
 - Die Punkte im Abschnitt `Änderungen` bleiben kurz, konkret und nutzen die vorhandene Schreibweise der Datei.
 - Beispiele in `Anwendung` oder `Beispiele` werden angepasst, wenn sich Signatur, typische Nutzung oder unterstützte Formen geändert haben.
 - Neue oder geänderte Konfigurationsoptionen werden in den jeweiligen Usage-/Beispielblöcken der betroffenen Datei mit korrigiert, damit kopierbare Beispiele aktuell bleiben.
+- In Script-Dateiheadern keine `//`-Zeilenkommentare innerhalb von `/* ... */` verwenden. Memento kann solche Header beim Kopieren oder Einbinden fehlerhaft auswerten. Beispiele im Blockkommentar als normalen Text oder reine Codezeilen ohne `//` schreiben.
 - Wenn ein Header stark gewachsen ist, wird er gekürzt, aber nicht in ein neues freies Format umgebaut.
 - Ziel ist Konsistenz zwischen den Dateien, nicht perfekte Einheitlichkeit auf Kosten der vorhandenen Struktur.
 

@@ -452,7 +452,7 @@ cleanupTimeMarker({
 
 **Hour Guide (Other)**
 
-Returns context-aware HTML guidance from an hours field. After `maxHours`, it writes an empty string.
+Schreibt die Stundenhilfe passend zum Stundenwert als HTML in ein Rich-Text-Feld. Nach `maxHours` wird ein leerer Text geschrieben. Die Hilfe kann die eingebaute deutsche Vorgabe nutzen oder eine JSON-Vorgabe aus einem synchronisierten/shared Feld lesen.
 
 ```js
 applyHourGuide({
@@ -460,6 +460,33 @@ applyHourGuide({
   targetField: "Hour Guide",
   maxHours: 16
 });
+```
+
+Shared-JSON-Beispiel. Das JSON enthält nur Inhalt und Struktur; Dreieckszeichen, Zwischenlinien und Zeilenstriche ergänzt der Renderer.
+
+```js
+applyHourGuide({
+  sourceHoursField: "hours since dose",
+  targetField: "Hour Guide",
+  planField: "Hour Guide JSON"
+});
+```
+
+```json
+{
+  "maxHours": 16,
+  "blocks": [
+    {
+      "label": "Startphase · 0.4–1 h",
+      "from": 0.4,
+      "to": 1,
+      "sections": [
+        {"title": "Energie", "rows": [["Stabil", "ruhig bleiben"]]},
+        {"title": "Fokus", "rows": [{"title": "Einstieg", "text": "5-Min-Entry"}]}
+      ]
+    }
+  ]
+}
 ```
 
 **Multi Choice Helpers (Workflow)**
