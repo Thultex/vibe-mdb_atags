@@ -263,7 +263,7 @@ assertEqual(
   "garten: +20  \n" +
   "pc: +10  \n" +
   "pc: +30  \n" +
-  "kaufen: 27 [pc, garten]"
+  "kaufen: 27 - [pc, garten]"
 );
 
 entryObj = makeEntry({});
@@ -286,7 +286,7 @@ exportAtags({
 assertEqual(
   "text-category-custom-aggregate-modes",
   entryObj.field("Text"),
-  "garten: +24\ngarten: +20\nkaufen: 42 [pc, garten]\npc: +10\npc: +30"
+  "garten: +24\ngarten: +20\nkaufen: 42 - [pc, garten]\npc: +10\npc: +30"
 );
 
 entryObj = makeEntry({});
@@ -337,8 +337,8 @@ exportAtags({
 assertEqual(
   "tree_md-display-values-all",
   entryObj.field("Tree"),
-  "spannung_schmerz 2 [Kopfschmerz, Nackenschmerz, Spannung]  \n" +
-  "\u251c\u2500\u2500 Kopfschmerz 2 [1, 3]  \n" +
+  "spannung_schmerz 2 - [Kopfschmerz, Nackenschmerz, Spannung]  \n" +
+  "\u251c\u2500\u2500 Kopfschmerz 2 - [1, 3]  \n" +
   "\u251c\u2500\u2500 Nackenschmerz 2  \n" +
   "\u2514\u2500\u2500 Spannung 2"
 );
@@ -484,7 +484,7 @@ assertEqual(
   "apply-md-skips-missing-alias-children",
   entryObj.field("MD"),
   "Spielen: +1  \n" +
-  "help: 1 [Spielen]"
+  "help: 1 - [Spielen]"
 );
 
 entryObj = makeEntry({ Note: "@@@help: Spielen, Musik\nSpielen1" });
@@ -561,7 +561,7 @@ assertEqual(
   entryObj.field("MD"),
   "Spielen: +2  \n" +
   "Musik: laut  \n" +
-  "help: 2 [Spielen]"
+  "help: 2 - [Spielen]"
 );
 
 entryObj = makeEntry({});
@@ -696,7 +696,7 @@ exportAtags({
 assertEqual(
   "md-include-blank-tags-opt-in",
   entryObj.field("MD"),
-  "LongRowName: 2,5  [3, 2]  \n" +
+  "LongRowName: 2,5 - [3, 2]  \n" +
   "textname: abc  \n" +
   "blankname"
 );
@@ -720,7 +720,7 @@ exportAtags({
 assertEqual(
   "md-group-separators-count-original-tags",
   entryObj.field("MD"),
-  "Score: 2,5  [1, 2, 3, 4]\n\n" +
+  "Score: 2,5 - [1, 2, 3, 4]\n\n" +
   "Texttag: abc"
 );
 
@@ -740,7 +740,7 @@ exportAtags({
 assertEqual(
   "md-short-labels-explicit",
   entryObj.field("MD"),
-  "lr: 2,5  [3, 2]"
+  "lr: 2,5 - [3, 2]"
 );
 
 entryObj = makeEntry({});
@@ -759,7 +759,7 @@ exportAtags({
 assertEqual(
   "md-cumulative-forces-sum",
   entryObj.field("MD"),
-  "Pulse: 2  [1, 1]"
+  "Pulse: 2 - [1, 1]"
 );
 
 entryObj = makeEntry({});

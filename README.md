@@ -661,7 +661,7 @@ sf
 **Markdown-Regeln**
 
 - `"  \n"` für Zeilenumbruch
-- 2 Spaces vor `[Liste]`
+- ` - ` direkt vor `[Liste]` in Markdown-Ausgaben
 - Links klickbar
 - Sortierung:
   1. links / tel / mail
@@ -672,7 +672,7 @@ sf
 Beispiele:
 
 - Einzelwert: `emo: 1,0`
-- Mehrfach: `emo: 2,0  [3,0, 1,0]`
+- Mehrfach: `emo: 2,0 - [3,0, 1,0]`
 
 **Rows-Tabelle**
 
@@ -701,7 +701,7 @@ Optionen:
 - `treeShowValues: false` blendet Werte im `tree_md` aus
 - `categoryFilter: ["help", "home"]` filtert alle Exporttypen per OR auf eine oder mehrere Kategorien; `catFilter` ist ein Kurzalias
 
-Kategorie-Parents zeigen standardmaessig den Mittelwert ihrer numerischen Unterpunkte. Dabei wird zuerst je Unterpunkt aggregiert, fuer Kategorien standardmaessig mit `max`, danach werden diese Unterpunkt-Ergebnisse im Parent standardmaessig mit `avg` aggregiert. In `md`/`text` wird z. B. `kaufen: 22,2 [pc, garten]` geschrieben; im `tree_md` steht am Parent nur der Wert, weil die Unterpunkte direkt darunter sichtbar sind. Unterpunkte im `tree_md` nutzen dieselbe Wert-Zusammenfassung wie `md`; mehrfach vorkommende Row-Werte werden im Tree standardmaessig gekuerzt als Anzahl angezeigt, z. B. `Kopfschmerz 1,7 [3]`, waehrend `md`/`text` standardmaessig alle Einzelwerte zeigen. Tree-Defaults sind `cat_display_values: "none"` und `row_display_values: "count"`; fuer andere Exporte gelten `cat_display_values: "names"` und `row_display_values: "all"`. `rowAggregateMode` fuer Tabellen bleibt standardmaessig `avg`; `categoryRowAggregateMode`/`categoryChildAggregateMode` und `categoryAggregateMode`/`categoryValueMode` koennen `min`, `max`, `add`, `sum`, `avg`, `median`, `first`, `last` oder `amount` nutzen.
+Kategorie-Parents zeigen standardmaessig den Mittelwert ihrer numerischen Unterpunkte. Dabei wird zuerst je Unterpunkt aggregiert, fuer Kategorien standardmaessig mit `max`, danach werden diese Unterpunkt-Ergebnisse im Parent standardmaessig mit `avg` aggregiert. Vor Detailangaben mit Namen oder Einzelwerten steht ` - `, z. B. `kaufen: 22,2 - [pc, garten]`; die kurze Count-Form bleibt ohne Strich, z. B. `Kopfschmerz 1,7 [3]`. Im `tree_md` steht am Parent standardmaessig nur der Wert, weil die Unterpunkte direkt darunter sichtbar sind. Unterpunkte im `tree_md` nutzen dieselbe Wert-Zusammenfassung wie `md`; mehrfach vorkommende Row-Werte werden im Tree standardmaessig gekuerzt als Anzahl angezeigt, waehrend `md`/`text` standardmaessig alle Einzelwerte zeigen. Tree-Defaults sind `cat_display_values: "none"` und `row_display_values: "count"`; fuer andere Exporte gelten `cat_display_values: "names"` und `row_display_values: "all"`. `rowAggregateMode` fuer Tabellen bleibt standardmaessig `avg`; `categoryRowAggregateMode`/`categoryChildAggregateMode` und `categoryAggregateMode`/`categoryValueMode` koennen `min`, `max`, `add`, `sum`, `avg`, `median`, `first`, `last` oder `amount` nutzen.
 
 ## Aktuelle Funktionsaufrufe
 

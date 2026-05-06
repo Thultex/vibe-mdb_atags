@@ -1,6 +1,6 @@
 /*
 ========================================
-A2 exportAtags v1.68 (sys 2.21)
+A2 exportAtags v1.69 (sys 2.21)
 ========================================
 
 Notes:
@@ -108,6 +108,23 @@ function atagCategoryDisplayValuesMode(cfg, context) {
   return normalizeAtagDisplayMode(raw, context === "tree" ? "none" : "names");
 }
 
+function atagMarkdownDetailPrefix(context) {
+  return " - [";
+}
+
+function atagCountDetailPrefix(context) {
+  return " [";
+}
+
+function atagValueDetailPrefix(displayMode, context) {
+  return displayMode === "count" ? atagCountDetailPrefix(context) : atagMarkdownDetailPrefix(context);
+}
+
+function atagCategoryDetailPrefix(displayMode, context) {
+  return displayMode === "count" ? atagCountDetailPrefix(context) : atagMarkdownDetailPrefix(context);
+}
+
+
 function collectAtagCategoryChildValues(items, childNames, cfg) {
   var valuesByChild = {};
   var out = [];
@@ -184,9 +201,9 @@ function formatAtagCategorySummary(item, items, cfg, context) {
     agg = computeAggregate(nums, mode);
     if (agg != null) {
       var text = formatTagNumberLocale(agg, decimals, forceDecimal);
-      if (displayMode === "count") text += " [" + names.length + "]";
-      else if (displayMode === "names") text += " [" + names.join(", ") + "]";
-      else if (displayMode === "all") text += " [" + detailParts.join(", ") + "]";
+      if (displayMode === "count") text += atagCategoryDetailPrefix(displayMode, context) + names.length + "]";
+      else if (displayMode === "names") text += atagCategoryDetailPrefix(displayMode, context) + names.join(", ") + "]";
+      else if (displayMode === "all") text += atagCategoryDetailPrefix(displayMode, context) + detailParts.join(", ") + "]";
       return text;
     }
   }
@@ -231,7 +248,7 @@ function collectAtagValueSummary(itemName, items, cfg, context) {
     agg = computeAggregate(vals, mode);
     if (agg == null) return null;
     return {
-      text: formatTagNumberLocale(agg, decimals, hasDecimal) + (parts.length > 1 && displayMode === "count" ? " [" + parts.length + "]" : "") + (parts.length > 1 && displayMode === "all" ? " [" + parts.join(", ") + "]" : ""),
+      text: formatTagNumberLocale(agg, decimals, hasDecimal) + (parts.length > 1 && displayMode === "count" ? atagValueDetailPrefix(displayMode, context) + parts.length + "]" : "") + (parts.length > 1 && displayMode === "all" ? atagValueDetailPrefix(displayMode, context) + parts.join(", ") + "]" : ""),
       item: firstItem
     };
   }
@@ -246,14 +263,14 @@ function collectAtagValueSummary(itemName, items, cfg, context) {
   return null;
 }
 
-function categorySummaryItem(item, items, cfg) {
+function categorySummaryItem(item, items, cfg, context) {
   var clone;
   if (!atagItemIsCategory(item)) return item;
   clone = {};
   for (var k in item) {
     if (item.hasOwnProperty(k)) clone[k] = item[k];
   }
-  clone.attrText = formatAtagCategorySummary(item, items, cfg);
+  clone.attrText = formatAtagCategorySummary(item, items, cfg, context);
   clone.rawText = clone.attrText;
   return clone;
 }
@@ -266,7 +283,7 @@ function includeAtagTextItem(item, cfg) {
 function buildAtagTextLines(items, cfg) {
   var lines = [];
   for (var i = 0; i < items.length; i++) {
-    var it = categorySummaryItem(items[i], items, cfg);
+    var it = categorySummaryItem(items[i], items, cfg, "text");
     if (!includeAtagTextItem(it, cfg)) continue;
     if (it.attrText != null && it.attrText !== "") lines.push(it.name + ": " + it.attrText);
     else lines.push(it.name);
@@ -379,7 +396,7 @@ function buildAtagNormalMarkdown(items, cfg) {
   }
 
   for (var i = 0; i < items.length; i++) {
-    var it = categorySummaryItem(items[i], items, cfg);
+    var it = categorySummaryItem(items[i], items, cfg, "md");
     var label = markdownItemLabel(it, cfg);
 
     separatorSourceCount++;
@@ -430,7 +447,7 @@ function buildAtagNormalMarkdown(items, cfg) {
       var line = rowLabel + ": " + aggText;
 
       if (listParts.length > 1) {
-        line += "  [" + listParts.join(", ") + "]";
+        line += atagMarkdownDetailPrefix("md") + listParts.join(", ") + "]";
       }
 
       addOutput({
@@ -445,7 +462,7 @@ function buildAtagNormalMarkdown(items, cfg) {
       if (listParts.length === 1) {
         addOutput(firstItem, rowLabel + ": " + listParts[0]);
       } else if (listParts.length > 1) {
-        addOutput(firstItem, rowLabel + "  [" + listParts.join(", ") + "]");
+        addOutput(firstItem, rowLabel + atagMarkdownDetailPrefix("md") + listParts.join(", ") + "]");
       }
     }
   }
