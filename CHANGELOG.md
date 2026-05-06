@@ -28,6 +28,7 @@
 - Aenderung: Alleinstehende Superscripts werden im Tag Cleaner wieder als normaler Text geschrieben, z. B. `Nr ²` zu `Nr 2`
 - Aenderung: Kumulative Werte mit Suffix nutzen den Zahlenanteil als Wert, z. B. `tag++324` bzw. `tag⁺⁺³²⁴` als kumulativ `324`; lange Laeufe wie `tag++++` gelten als Kurzform fuer `tag++4`
 - Aenderung: Tag Cleaner erhaelt `tag:: Inhalt` mit doppeltem Doppelpunkt und normalisiert `tag::Inhalt` zu `tag:: Inhalt`
+- Test/Doku: In der Tagleiste wird `test_b: sdfd` als Stringwert zu `test_b:sdfd`; im normalen Text bleibt diese Form unveraendert
 - `collectAtags` auf `v1.42` angehoben
 - Feature: `tag+`, `tag-`, `tag++`, `tag--`, `tag++2` und `tag--3` werden als kumulative Plus-/Minuswerte gelesen
 - Feature: `tag00` wird als leerer/null-Wert gelesen; `tag0`, `tag02`, `tag0,2`, `tag-02` und `tag-0,2` werden als numerische Null- bzw. Nullkommawerte gelesen

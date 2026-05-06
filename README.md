@@ -341,7 +341,7 @@ emo² tag⁻⁰³ stuff⁺⁺
 tag⁺ tag⁻⁻ tag⁺⁺² tag⁰⁰ tag⁰² tag⁻⁰²
 ```
 
-Mit `formatValues: "keep"` bleibt `tag+3` als `tag⁺³`, während `tag3` zu `tag³` wird. Mit `"max"` wird auch `tag³` zu `tag⁺³`; mit `"min"` wird `tag⁺³` zu `tag³`. Kumulative Formen bleiben bewusst sichtbar: `tag+` wird `tag⁺`, `tag++` wird `tag⁺⁺`, `tag++2` wird `tag⁺⁺²`. Längere Läufe werden verdichtet: `tag++++` wird wie `tag++4` gelesen. `tag:_` und `tag:: _` gelten als Vorlagen und werden aus der Tagleiste nicht übernommen. `tag:: Inhalt` bleibt mit doppeltem Doppelpunkt erhalten; `tag::Inhalt` wird zu `tag:: Inhalt`. Wörter mit Unterstrich vor der Zahl bleiben Wörter, z. B. `test_00` und `test_3`. Alleinstehende Superscripts werden als normaler Text zurückgeschrieben, z. B. `Nr ²` zu `Nr 2`.
+Mit `formatValues: "keep"` bleibt `tag+3` als `tag⁺³`, während `tag3` zu `tag³` wird. Mit `"max"` wird auch `tag³` zu `tag⁺³`; mit `"min"` wird `tag⁺³` zu `tag³`. Kumulative Formen bleiben bewusst sichtbar: `tag+` wird `tag⁺`, `tag++` wird `tag⁺⁺`, `tag++2` wird `tag⁺⁺²`. Längere Läufe werden verdichtet: `tag++++` wird wie `tag++4` gelesen. `tag:_` und `tag:: _` gelten als Vorlagen und werden aus der Tagleiste nicht übernommen. `tag:: Inhalt` bleibt mit doppeltem Doppelpunkt erhalten; `tag::Inhalt` wird zu `tag:: Inhalt`. In der Tagleiste wird auch `test_b: sdfd` als Stringwert erkannt und zu `test_b:sdfd`; im normalen Text bleibt diese Form unberührt. Wörter mit Unterstrich vor der Zahl bleiben Wörter, z. B. `test_00` und `test_3`. Alleinstehende Superscripts werden als normaler Text zurückgeschrieben, z. B. `Nr ²` zu `Nr 2`.
 
 Tagleisten:
 

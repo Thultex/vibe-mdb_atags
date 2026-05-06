@@ -183,6 +183,18 @@ assertEquals(
 );
 
 assertEquals(
+  "tagbar-single-colon-underscore-string",
+  makeTagCleanerText("Text\n| test_b: sdfd"),
+  "Text\n\n| test_b:sdfd"
+);
+
+assertEquals(
+  "inline-single-colon-underscore-not-normalized",
+  makeTagCleanerText("test_b: sdfd bleibt"),
+  "test_b: sdfd bleibt"
+);
+
+assertEquals(
   "tagbar-function-tags-last-and-single-word-unquoted",
   makeTagCleanerText("Text\n| zeta#\"einwort\" beta#\"zwei worte\" fv: max alpha3 leer"),
   "Text\n\n| alpha\u207A\u00B3, beta:\"zwei worte\" zeta:einwort, leer\u02E3, fv:max"
