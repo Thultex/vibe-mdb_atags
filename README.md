@@ -687,6 +687,11 @@ Optionen:
 - `rowIncludeUnits`
 - `rowAggregateMode`
 - `rowAggregateDecimals`
+- `categoryAggregateMode` / `categoryValueMode`
+- `categoryRowAggregateMode` / `categoryChildAggregateMode`
+- `categoryAggregateDecimals`
+- `row_display_values` / `rowDisplayValues`: `"none"`, `"count"` oder `"all"`
+- `cat_display_values` / `categoryDisplayValues`: `"none"`, `"count"`, `"names"` oder `"all"`
 - `shortenTableHeaders` (`0` = Standard, 10 Zeichen + `.`)
 - `tableHeaderNames`: `"short"` (Standard, Alias-Kuerzel), `"long"` oder `"both"`
 - `markdownLabelNames`: `"long"` (Standard), `"short"` oder `"both"` fuer normale Markdown-Ausgaben
@@ -695,6 +700,8 @@ Optionen:
 - `includeBlankTags: true` gibt nackte Tags ohne Wert im `text`- und `md`-Export mit aus; Standard ist `false`
 - `treeShowValues: false` blendet Werte im `tree_md` aus
 - `categoryFilter: ["help", "home"]` filtert alle Exporttypen per OR auf eine oder mehrere Kategorien; `catFilter` ist ein Kurzalias
+
+Kategorie-Parents zeigen standardmaessig den Mittelwert ihrer numerischen Unterpunkte. Dabei wird zuerst je Unterpunkt aggregiert, fuer Kategorien standardmaessig mit `max`, danach werden diese Unterpunkt-Ergebnisse im Parent standardmaessig mit `avg` aggregiert. In `md`/`text` wird z. B. `kaufen: 22,2 [pc, garten]` geschrieben; im `tree_md` steht am Parent nur der Wert, weil die Unterpunkte direkt darunter sichtbar sind. Unterpunkte im `tree_md` nutzen dieselbe Wert-Zusammenfassung wie `md`; mehrfach vorkommende Row-Werte werden im Tree standardmaessig gekuerzt als Anzahl angezeigt, z. B. `Kopfschmerz 1,7 [3]`, waehrend `md`/`text` standardmaessig alle Einzelwerte zeigen. Tree-Defaults sind `cat_display_values: "none"` und `row_display_values: "count"`; fuer andere Exporte gelten `cat_display_values: "names"` und `row_display_values: "all"`. `rowAggregateMode` fuer Tabellen bleibt standardmaessig `avg`; `categoryRowAggregateMode`/`categoryChildAggregateMode` und `categoryAggregateMode`/`categoryValueMode` koennen `min`, `max`, `add`, `sum`, `avg`, `median`, `first`, `last` oder `amount` nutzen.
 
 ## Aktuelle Funktionsaufrufe
 

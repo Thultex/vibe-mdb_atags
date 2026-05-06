@@ -236,8 +236,111 @@ assertEqual(
   entryObj.field("MD"),
   "textname: abc  \n" +
   "listtag: a,b  \n" +
-  "category: tag1,tag2  \n" +
+  "category: tag1, tag2  \n" +
   "blankname"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("kaufen", "pc,garten", ["pc", "garten"], "pc,garten", null, null, null, "kf", [], "category"),
+      item("pc", "+10", 10, "+10"),
+      item("pc", "+30", 30, "+30"),
+      item("garten", "+24", 24, "+24"),
+      item("garten", "+20", 20, "+20")
+    ]
+  },
+  targetField: "MD",
+  targetFieldType: "md",
+  markdownGroupSeparator: null
+});
+assertEqual(
+  "md-category-aggregates-child-row-max-then-cat-avg",
+  entryObj.field("MD"),
+  "garten: +24  \n" +
+  "garten: +20  \n" +
+  "pc: +10  \n" +
+  "pc: +30  \n" +
+  "kaufen: 27 [pc, garten]"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("kaufen", "pc,garten", ["pc", "garten"], "pc,garten", null, null, null, "kf", [], "category"),
+      item("pc", "+10", 10, "+10"),
+      item("pc", "+30", 30, "+30"),
+      item("garten", "+24", 24, "+24"),
+      item("garten", "+20", 20, "+20")
+    ]
+  },
+  targetField: "Text",
+  targetFieldType: "text",
+  categoryRowAggregateMode: "avg",
+  categoryAggregateMode: "add"
+});
+assertEqual(
+  "text-category-custom-aggregate-modes",
+  entryObj.field("Text"),
+  "garten: +24\ngarten: +20\nkaufen: 42 [pc, garten]\npc: +10\npc: +30"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("spannung_schmerz", "Kopfschmerz,Nackenschmerz,Spannung", ["Kopfschmerz", "Nackenschmerz", "Spannung"], "Kopfschmerz,Nackenschmerz,Spannung", null, null, null, "ss", [], "category"),
+      item("Kopfschmerz", "+1", 1, "+1", 1, null, "1"),
+      item("Kopfschmerz", "+3", 3, "+3", 2, null, "2"),
+      item("Nackenschmerz", "+2", 2, "+2", 1, null, "1"),
+      item("Spannung", "+2", 2, "+2", 1, null, "1")
+    ]
+  },
+  targetField: "Tree",
+  targetFieldType: "tree_md",
+  rowAggregateMode: "avg",
+  rowAggregateDecimals: 1
+});
+assertEqual(
+  "tree_md-child-values-use-md-aggregation",
+  entryObj.field("Tree"),
+  "spannung_schmerz 2  \n" +
+  "\u251c\u2500\u2500 Kopfschmerz 2 [2]  \n" +
+  "\u251c\u2500\u2500 Nackenschmerz 2  \n" +
+  "\u2514\u2500\u2500 Spannung 2"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("spannung_schmerz", "Kopfschmerz,Nackenschmerz,Spannung", ["Kopfschmerz", "Nackenschmerz", "Spannung"], "Kopfschmerz,Nackenschmerz,Spannung", null, null, null, "ss", [], "category"),
+      item("Kopfschmerz", "+1", 1, "+1", 1, null, "1"),
+      item("Kopfschmerz", "+3", 3, "+3", 2, null, "2"),
+      item("Nackenschmerz", "+2", 2, "+2", 1, null, "1"),
+      item("Spannung", "+2", 2, "+2", 1, null, "1")
+    ]
+  },
+  targetField: "Tree",
+  targetFieldType: "tree_md",
+  row_display_values: "all",
+  cat_display_values: "names",
+  rowAggregateMode: "avg",
+  rowAggregateDecimals: 1
+});
+assertEqual(
+  "tree_md-display-values-all",
+  entryObj.field("Tree"),
+  "spannung_schmerz 2 [Kopfschmerz, Nackenschmerz, Spannung]  \n" +
+  "\u251c\u2500\u2500 Kopfschmerz 2 [1, 3]  \n" +
+  "\u251c\u2500\u2500 Nackenschmerz 2  \n" +
+  "\u2514\u2500\u2500 Spannung 2"
 );
 
 entryObj = makeEntry({});
@@ -255,7 +358,7 @@ exportAtags({
 assertEqual(
   "tree_md-unicode-default",
   entryObj.field("Tree"),
-  "sf  \n" +
+  "self  \n" +
   "\u251c\u2500\u2500 tag1  \n" +
   "\u2514\u2500\u2500 tag2"
 );
@@ -276,7 +379,7 @@ exportAtags({
 assertEqual(
   "tree_md-ascii",
   entryObj.field("Tree"),
-  "sf  \n" +
+  "self  \n" +
   "|-- tag1  \n" +
   "`-- tag2"
 );
@@ -299,11 +402,11 @@ exportAtags({
 assertEqual(
   "tree_md",
   entryObj.field("Tree"),
-  "help  \n" +
-  "\u2514\u2500\u2500 tag1 +3  \n  \n" +
-  "sf  \n" +
-  "\u251c\u2500\u2500 tag1 +3  \n" +
-  "\u2514\u2500\u2500 tag2 +3"
+  "help 3  \n" +
+  "\u2514\u2500\u2500 tag1 3  \n  \n" +
+  "self 3  \n" +
+  "\u251c\u2500\u2500 tag1 3  \n" +
+  "\u2514\u2500\u2500 tag2 3"
 );
 
 entryObj = makeEntry({});
@@ -323,7 +426,7 @@ exportAtags({
 assertEqual(
   "tree_md-values-can-be-disabled",
   entryObj.field("Tree"),
-  "sf  \n" +
+  "self  \n" +
   "\u251c\u2500\u2500 tag1  \n" +
   "\u2514\u2500\u2500 tag2"
 );
@@ -343,8 +446,8 @@ exportAtags({
 assertEqual(
   "tree_md-only-occurring-fixed-children",
   entryObj.field("Tree"),
-  "test  \n" +
-  "\u2514\u2500\u2500 ttt +1"
+  "test 1  \n" +
+  "\u2514\u2500\u2500 ttt 1"
 );
 
 entryObj = makeEntry({});
@@ -381,7 +484,7 @@ assertEqual(
   "apply-md-skips-missing-alias-children",
   entryObj.field("MD"),
   "Spielen: +1  \n" +
-  "help: Spielen"
+  "help: 1 [Spielen]"
 );
 
 entryObj = makeEntry({ Note: "@@@help: Spielen, Musik\nSpielen1" });
@@ -434,7 +537,7 @@ exportAtags({
   targetFieldType: "tree_md",
   includeEmptyCategories: true
 });
-assertEqual("tree_md-includes-empty-categories", entryObj.field("Tree"), "e");
+assertEqual("tree_md-includes-empty-categories", entryObj.field("Tree"), "empty");
 
 entryObj = makeEntry({});
 exportAtags({
@@ -458,7 +561,7 @@ assertEqual(
   entryObj.field("MD"),
   "Spielen: +2  \n" +
   "Musik: laut  \n" +
-  "help: Spielen,Musik"
+  "help: 2 [Spielen]"
 );
 
 entryObj = makeEntry({});
@@ -524,9 +627,9 @@ exportAtags({
 assertEqual(
   "category-filter-tree",
   entryObj.field("Tree"),
-  "help  \n" +
+  "help 2  \n" +
   "\u251c\u2500\u2500 Musik laut  \n" +
-  "\u2514\u2500\u2500 Spielen +2"
+  "\u2514\u2500\u2500 Spielen 2"
 );
 
 entryObj = makeEntry({});

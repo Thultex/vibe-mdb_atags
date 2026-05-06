@@ -1,9 +1,10 @@
 /*
 ========================================
-A3 Atag Helpers v2.02 (sys 2.21)
+A3 Atag Helpers v2.03 (sys 2.21)
 ========================================
 
 Changes
+- aggregate helper supports min, max, add, avg, median, first, last and amount
 - markdown/text exports use long tag names by default; short display names are opt-in
 - pass includeBlankTags through export wrappers
 - pass markdownGroupSeparator/markdownGroupSeparators through export wrappers
@@ -380,13 +381,38 @@ function compareMarkdownItems(a, b, cfg) {
 function computeAggregate(values, mode) {
   var i;
   var sum;
+  var sorted;
+  var mid;
+  var m = String(mode == null ? "avg" : mode).toLowerCase();
 
   if (!values.length) return null;
 
-  if (mode === "sum" || mode === "avg") {
+  if (m === "add") m = "sum";
+  if (m === "amount" || m === "count") return values.length;
+  if (m === "first") return values[0];
+  if (m === "last") return values[values.length - 1];
+  if (m === "min") {
+    sorted = values.slice(0);
+    sorted.sort(function(a, b) { return a - b; });
+    return sorted[0];
+  }
+  if (m === "max") {
+    sorted = values.slice(0);
+    sorted.sort(function(a, b) { return a - b; });
+    return sorted[sorted.length - 1];
+  }
+  if (m === "median") {
+    sorted = values.slice(0);
+    sorted.sort(function(a, b) { return a - b; });
+    mid = Math.floor(sorted.length / 2);
+    if (sorted.length % 2) return sorted[mid];
+    return (sorted[mid - 1] + sorted[mid]) / 2;
+  }
+
+  if (m === "sum" || m === "avg") {
     sum = 0;
     for (i = 0; i < values.length; i++) sum += values[i];
-    if (mode === "sum") return sum;
+    if (m === "sum") return sum;
     return sum / values.length;
   }
 

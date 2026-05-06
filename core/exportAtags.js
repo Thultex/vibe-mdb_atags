@@ -1,11 +1,13 @@
 /*
 ========================================
-A2 exportAtags v1.64 (sys 2.21)
+A2 exportAtags v1.68 (sys 2.21)
 ========================================
 
 Notes:
 - Exports: tags, text, md, tree_md, rows_md, rows_html, json
 - tree_md supports Unicode default and ASCII fallback
+- tree_md child values use the same aggregate summaries as md
+- tree_md defaults to compact row value counts and hidden category child lists
 - tree_md shows child values by default
 - tree_md only shows category children that actually occur unless enabled
 - tree_md uses Markdown hard line breaks for desktop rendering
@@ -13,6 +15,7 @@ Notes:
 - tag export skips empty category tags
 - tag export writes spaces as underscores
 - tag export prefixes category tags with @
+- category parents show aggregated numeric child values in text/md/tree exports
 - cumulative +/- values force sum aggregation in row exports
 - Keep this header ASCII-only for the Memento editor
 
@@ -55,6 +58,206 @@ applyTags({
 */
 
 // ===== TEXT =====
+function atagCategoryAggregateMode(cfg) {
+  if (cfg && cfg.categoryAggregateMode !== undefined) return cfg.categoryAggregateMode;
+  if (cfg && cfg.categoryValueMode !== undefined) return cfg.categoryValueMode;
+  return "avg";
+}
+
+function atagCategoryRowAggregateMode(cfg) {
+  if (cfg && cfg.categoryRowAggregateMode !== undefined) return cfg.categoryRowAggregateMode;
+  if (cfg && cfg.categoryChildAggregateMode !== undefined) return cfg.categoryChildAggregateMode;
+  if (cfg && cfg.rowAggregateMode !== undefined) return cfg.rowAggregateMode;
+  return "max";
+}
+
+function atagCategoryAggregateDecimals(cfg) {
+  if (cfg && cfg.categoryAggregateDecimals != null) return cfg.categoryAggregateDecimals;
+  if (cfg && cfg.rowAggregateDecimals != null) return cfg.rowAggregateDecimals;
+  return 1;
+}
+
+function normalizeAtagDisplayMode(mode, fallback) {
+  var s = String(mode == null ? fallback : mode).toLowerCase();
+  if (s === "off" || s === "false") return "none";
+  if (s === "full") return "all";
+  if (s === "name") return "names";
+  if (s === "values") return "all";
+  return s;
+}
+
+function atagRowDisplayValuesMode(cfg, context) {
+  var raw = cfg ? (
+    cfg.row_display_values != null ? cfg.row_display_values :
+    cfg.rowDisplayValues != null ? cfg.rowDisplayValues :
+    cfg.rowValueDisplay != null ? cfg.rowValueDisplay :
+    cfg.rowDisplayMode
+  ) : null;
+  return normalizeAtagDisplayMode(raw, context === "tree" ? "count" : "all");
+}
+
+function atagCategoryDisplayValuesMode(cfg, context) {
+  var raw = cfg ? (
+    cfg.cat_display_values != null ? cfg.cat_display_values :
+    cfg.category_display_values != null ? cfg.category_display_values :
+    cfg.catDisplayValues != null ? cfg.catDisplayValues :
+    cfg.categoryDisplayValues != null ? cfg.categoryDisplayValues :
+    cfg.categoryValueDisplay != null ? cfg.categoryValueDisplay :
+    cfg.categoryDisplayMode
+  ) : null;
+  return normalizeAtagDisplayMode(raw, context === "tree" ? "none" : "names");
+}
+
+function collectAtagCategoryChildValues(items, childNames, cfg) {
+  var valuesByChild = {};
+  var out = [];
+  var childSet = {};
+  var childOrder = [];
+  var childHasDecimal = {};
+  var mode = atagCategoryRowAggregateMode(cfg);
+  var i;
+  var it;
+  var name;
+  var key;
+  var num;
+  var vals;
+  var agg;
+
+  for (i = 0; i < (childNames || []).length; i++) {
+    name = String(childNames[i] || "");
+    if (!name) continue;
+    key = name.toLowerCase();
+    if (childSet[key]) continue;
+    childSet[key] = name;
+    childOrder.push(key);
+  }
+
+  for (i = 0; i < (items || []).length; i++) {
+    it = items[i];
+    if (!it || atagItemIsCategory(it)) continue;
+    key = String(it.name || "").toLowerCase();
+    if (!childSet[key]) continue;
+    num = toNumberIfPossible(it.attrValue);
+    if (num == null) continue;
+    if (!valuesByChild[key]) valuesByChild[key] = [];
+    valuesByChild[key].push(num);
+    if (itemHasDecimalValue(it)) childHasDecimal[key] = true;
+  }
+
+  for (i = 0; i < childOrder.length; i++) {
+    key = childOrder[i];
+    vals = valuesByChild[key] || [];
+    if (!vals.length) continue;
+    agg = computeAggregate(vals, mode);
+    if (agg == null) continue;
+    out.push({
+      name: childSet[key],
+      value: agg,
+      hasDecimal: !!childHasDecimal[key]
+    });
+  }
+
+  return out;
+}
+
+function formatAtagCategorySummary(item, items, cfg, context) {
+  var children = isArrayValue(item && item.attrValue) ? item.attrValue : [];
+  var values = collectAtagCategoryChildValues(items, children, cfg);
+  var decimals = atagCategoryAggregateDecimals(cfg);
+  var mode = atagCategoryAggregateMode(cfg);
+  var nums = [];
+  var names = [];
+  var detailParts = [];
+  var forceDecimal = false;
+  var i;
+  var agg;
+  var displayMode = atagCategoryDisplayValuesMode(cfg, context || "default");
+
+  for (i = 0; i < values.length; i++) {
+    nums.push(values[i].value);
+    names.push(values[i].name);
+    detailParts.push(values[i].name + ": " + formatTagNumberLocale(values[i].value, decimals, values[i].hasDecimal));
+    if (values[i].hasDecimal) forceDecimal = true;
+  }
+
+  if (nums.length) {
+    agg = computeAggregate(nums, mode);
+    if (agg != null) {
+      var text = formatTagNumberLocale(agg, decimals, forceDecimal);
+      if (displayMode === "count") text += " [" + names.length + "]";
+      else if (displayMode === "names") text += " [" + names.join(", ") + "]";
+      else if (displayMode === "all") text += " [" + detailParts.join(", ") + "]";
+      return text;
+    }
+  }
+
+  if (children.length) {
+    if (displayMode === "none") return "";
+    if (displayMode === "count") return "[" + children.length + "]";
+    return children.join(", ");
+  }
+  return item && item.attrText != null ? item.attrText : "";
+}
+
+function collectAtagValueSummary(itemName, items, cfg, context) {
+  var vals = [];
+  var parts = [];
+  var firstItem = null;
+  var hasDecimal = false;
+  var cumulative = false;
+  var mode = cfg && cfg.rowAggregateMode !== undefined ? cfg.rowAggregateMode : "avg";
+  var decimals = cfg && cfg.rowAggregateDecimals != null ? cfg.rowAggregateDecimals : 1;
+  var displayMode = atagRowDisplayValuesMode(cfg, context || "default");
+  var i;
+  var it;
+  var num;
+  var agg;
+
+  for (i = 0; i < (items || []).length; i++) {
+    it = items[i];
+    if (!it || atagItemIsCategory(it)) continue;
+    if (String(it.name || "").toLowerCase() !== String(itemName || "").toLowerCase()) continue;
+    if (!firstItem) firstItem = it;
+    num = toNumberIfPossible(it.attrValue);
+    if (num == null) continue;
+    vals.push(num);
+    parts.push(formatTagNumberLocale(num, decimals, itemHasDecimalValue(it)));
+    if (itemHasDecimalValue(it)) hasDecimal = true;
+    if (it.cumulative === true) cumulative = true;
+  }
+
+  if (vals.length) {
+    if (cumulative) mode = "sum";
+    agg = computeAggregate(vals, mode);
+    if (agg == null) return null;
+    return {
+      text: formatTagNumberLocale(agg, decimals, hasDecimal) + (parts.length > 1 && displayMode === "count" ? " [" + parts.length + "]" : "") + (parts.length > 1 && displayMode === "all" ? " [" + parts.join(", ") + "]" : ""),
+      item: firstItem
+    };
+  }
+
+  if (firstItem && firstItem.attrText != null && firstItem.attrText !== "") {
+    return {
+      text: String(formatMarkdownValue("", firstItem.attrText, firstItem.rawText)).replace(/^:\s*/, ""),
+      item: firstItem
+    };
+  }
+
+  return null;
+}
+
+function categorySummaryItem(item, items, cfg) {
+  var clone;
+  if (!atagItemIsCategory(item)) return item;
+  clone = {};
+  for (var k in item) {
+    if (item.hasOwnProperty(k)) clone[k] = item[k];
+  }
+  clone.attrText = formatAtagCategorySummary(item, items, cfg);
+  clone.rawText = clone.attrText;
+  return clone;
+}
+
 function includeAtagTextItem(item, cfg) {
   if (cfg && cfg.includeBlankTags === true) return true;
   return !(item && (item.attrText == null || item.attrText === ""));
@@ -63,7 +266,7 @@ function includeAtagTextItem(item, cfg) {
 function buildAtagTextLines(items, cfg) {
   var lines = [];
   for (var i = 0; i < items.length; i++) {
-    var it = items[i];
+    var it = categorySummaryItem(items[i], items, cfg);
     if (!includeAtagTextItem(it, cfg)) continue;
     if (it.attrText != null && it.attrText !== "") lines.push(it.name + ": " + it.attrText);
     else lines.push(it.name);
@@ -176,7 +379,7 @@ function buildAtagNormalMarkdown(items, cfg) {
   }
 
   for (var i = 0; i < items.length; i++) {
-    var it = items[i];
+    var it = categorySummaryItem(items[i], items, cfg);
     var label = markdownItemLabel(it, cfg);
 
     separatorSourceCount++;
@@ -636,21 +839,15 @@ function buildAtagTreeMarkdown(items, cfg) {
   }
 
   function treeChildLabel(name) {
-    var item;
     var label = String(name || "");
-    var val;
+    var summary;
 
     if (!showValues) return label;
 
-    item = itemByName[label.toLowerCase()];
-    if (!item) return label;
-    if (item.attrText == null || item.attrText === "") return label;
+    summary = collectAtagValueSummary(label, items, cfg, "tree");
+    if (!summary || !summary.text) return label;
 
-    val = formatMarkdownValue("", item.attrText, item.rawText);
-    val = String(val || "").replace(/^:\s*/, "");
-    if (!val) return label;
-
-    return label + " " + val;
+    return label + " " + summary.text;
   }
 
   function treeChildExists(name) {
@@ -678,7 +875,7 @@ function buildAtagTreeMarkdown(items, cfg) {
     rememberItem(it);
 
     if (isArrayValue(it.attrValue)) {
-      cat = ensureCategory(it.name, it.displayName || it.name);
+      cat = ensureCategory(it.name, it.name);
       for (j = 0; j < it.attrValue.length; j++) {
         child = String(it.attrValue[j] || "");
         if (!child) continue;
@@ -717,7 +914,7 @@ function buildAtagTreeMarkdown(items, cfg) {
     if (!cat.children.length && !includeEmpty) continue;
 
     if (lines.length) lines.push("");
-    lines.push(cat.displayName || cat.name);
+    lines.push(treeCategoryLabel(cat));
 
     for (j = 0; j < cat.children.length; j++) {
       lines.push((j === cat.children.length - 1 ? lastBranch : branch) + treeChildLabel(cat.children[j]));
@@ -725,6 +922,13 @@ function buildAtagTreeMarkdown(items, cfg) {
   }
 
   return lines.join("  \n");
+
+  function treeCategoryLabel(catObj) {
+    var summary = formatAtagCategorySummary({ attrValue: catObj.children }, items, cfg, "tree");
+    var label = catObj.name;
+    if (showValues && summary && /^\S/.test(summary)) label += " " + summary;
+    return label;
+  }
 }
 
 // ===== EXPORT =====

@@ -21,6 +21,15 @@
 
 - Systemversion auf `sys 2.21` angehoben
 - Header aller Module und `ATAG_SYS_VERSION` auf `2.21` aktualisiert
+- `exportAtags` auf `v1.68` angehoben
+- `Atag Helpers` auf `v2.03` angehoben
+- Feature: `computeAggregate` unterstuetzt `min`, `max`, `add`/`sum`, `avg`, `median`, `first`, `last` und `amount`
+- Feature: Kategorie-Parents zeigen in `text`, `md` und `tree_md` standardmaessig den Mittelwert numerischer Unterpunkte; zuvor wird je Unterpunkt per `categoryRowAggregateMode`/`categoryChildAggregateMode` aggregiert, Standard fuer Kategorien ist `max`
+- Feature: `categoryAggregateMode`/`categoryValueMode` und `categoryAggregateDecimals` steuern die Parent-Aggregation
+- Aenderung: `tree_md` zeigt Kategorie-Parents standardmaessig ausgeschrieben und ohne zusaetzliche Kinderliste in eckigen Klammern
+- Aenderung: `tree_md` nutzt fuer Unterpunktwerte dieselbe Aggregat-Zusammenfassung wie `md`, inklusive Einzelwertliste bei mehrfachen Row-Werten
+- Feature: `row_display_values`/`rowDisplayValues` steuert Einzelwertanzeige mit `none`, `count`, `all`; Tree-Standard ist `count`, andere Exporte behalten `all`
+- Feature: `cat_display_values`/`categoryDisplayValues` steuert Kategorie-Kinderinfo mit `none`, `count`, `names`, `all`; Tree-Standard ist `none`, andere Exporte behalten `names`
 - `Addon Tag Cleaner` auf `v1.21` angehoben
 - Feature: Tag Cleaner normalisiert die neuen Issue-#38-Formen wie `tag+`, `tag--`, `tag++2`, `tag00`, `tag02` und `tag-0,2` in die vereinfachte Superscript-Schreibweise
 - Aenderung: Tag Cleaner uebernimmt Template-Werte `tag:_` und `tag:: _` nicht in die Tagleiste
