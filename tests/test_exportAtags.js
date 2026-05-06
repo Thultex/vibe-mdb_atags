@@ -45,7 +45,7 @@ function assertArray(label, actual, expected) {
   }
 }
 
-function item(name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, displayName, cats, kind) {
+function item(name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, displayName, cats, kind, cumulative) {
   var out = {
     name: name,
     attrText: attrText,
@@ -61,6 +61,7 @@ function item(name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, dis
     out.kind = kind;
     if (kind === "category") out.isCategory = true;
   }
+  if (cumulative) out.cumulative = true;
   return out;
 }
 
@@ -642,6 +643,25 @@ assertEqual(
 entryObj = makeEntry({});
 exportAtags({
   entryObj: entryObj,
+  result: {
+    items: [
+      item("Pulse", "+", 1, "+", 1, null, "1", "Pulse", [], null, true),
+      item("Pulse", "+", 1, "+", 2, null, "2", "Pulse", [], null, true)
+    ]
+  },
+  targetField: "MD",
+  targetFieldType: "md",
+  rowAggregateMode: "avg"
+});
+assertEqual(
+  "md-cumulative-forces-sum",
+  entryObj.field("MD"),
+  "Pulse: 2  [1, 1]"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
   result: { items: rowItems },
   targetField: "Rows",
   targetFieldType: "rows_md",
@@ -677,6 +697,31 @@ assertEqual(
   "| :--- | ---: | ---: |  \n" +
   "| 0,5 | 1 | 2 |  \n" +
   "| avg | 1 | 2 |"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("Pulse", "+", 1, "+", 1, null, "1", "Pulse", [], null, true),
+      item("Pulse", "++", 2, "++", 2, null, "2", "Pulse", [], null, true)
+    ]
+  },
+  targetField: "Rows",
+  targetFieldType: "rows_md",
+  rowAggregateMode: "avg",
+  rowAggregateDecimals: 1,
+  shortenTableHeaders: -1
+});
+assertEqual(
+  "rows_md-cumulative-forces-sum",
+  entryObj.field("Rows"),
+  "| rval | Pulse |  \n" +
+  "| :--- | ---: |  \n" +
+  "| 1 | 1 |  \n" +
+  "| 2 | 2 |  \n" +
+  "| avg | 3 |"
 );
 
 entryObj = makeEntry({});

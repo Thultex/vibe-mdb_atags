@@ -1,6 +1,6 @@
 /*
 ========================================
-A2 exportAtags v1.63 (sys 2.21)
+A2 exportAtags v1.64 (sys 2.21)
 ========================================
 
 Notes:
@@ -13,6 +13,7 @@ Notes:
 - tag export skips empty category tags
 - tag export writes spaces as underscores
 - tag export prefixes category tags with @
+- cumulative +/- values force sum aggregation in row exports
 - Keep this header ASCII-only for the Memento editor
 
 Examples:
@@ -111,12 +112,14 @@ function collectAtagRowTableData(items) {
     if (!tagAgg[it.name]) {
       tagAgg[it.name] = {
         sum: 0,
-        count: 0
+        count: 0,
+        cumulative: false
       };
     }
 
     tagAgg[it.name].sum += num;
     tagAgg[it.name].count += 1;
+    if (it.cumulative === true) tagAgg[it.name].cumulative = true;
     rows[rowIndexMap[rowKey]].values[it.name] = num;
   }
 
@@ -152,6 +155,7 @@ function buildAtagNormalMarkdown(items, cfg) {
   var rowMap = {};
   var rowFirstItem = {};
   var rowHasDecimal = {};
+  var rowCumulative = {};
   var separatorSourceCount = 0;
   var aggMode = cfg && cfg.rowAggregateMode !== undefined ? cfg.rowAggregateMode : "avg";
   var decimals = cfg && cfg.rowAggregateDecimals != null ? cfg.rowAggregateDecimals : 1;
@@ -197,6 +201,9 @@ function buildAtagNormalMarkdown(items, cfg) {
     if (itemHasDecimalValue(it)) {
       rowHasDecimal[it.name] = true;
     }
+    if (it.cumulative === true) {
+      rowCumulative[it.name] = true;
+    }
 
     rowMap[it.name].push(num);
   }
@@ -214,7 +221,8 @@ function buildAtagNormalMarkdown(items, cfg) {
     }
 
     if (aggMode === "avg" || aggMode === "sum") {
-      var agg = computeAggregate(vals, aggMode);
+      var effectiveAggMode = rowCumulative[name] ? "sum" : aggMode;
+      var agg = computeAggregate(vals, effectiveAggMode);
       var aggText = formatTagNumberLocale(agg, decimals, !!rowHasDecimal[name]);
       var line = rowLabel + ": " + aggText;
 
@@ -227,7 +235,8 @@ function buildAtagNormalMarkdown(items, cfg) {
         displayName: firstItem.displayName,
         attrText: aggText,
         attrValue: agg,
-        rawText: aggText
+        rawText: aggText,
+        cumulative: !!rowCumulative[name]
       }, line);
     } else {
       if (listParts.length === 1) {
@@ -322,7 +331,7 @@ function buildAtagRowsMarkdown(items, cfg) {
       var aggInfo = tagAgg[tagOrder[tk]];
       var agg = null;
       if (aggInfo && aggInfo.count) {
-        agg = mode === "sum" ? aggInfo.sum : (aggInfo.sum / aggInfo.count);
+        agg = (mode === "sum" || aggInfo.cumulative === true) ? aggInfo.sum : (aggInfo.sum / aggInfo.count);
       }
       aggCells.push(agg == null ? "" : formatTagNumberLocale(agg, decimals, !!tagHasDecimal[tagOrder[tk]]));
     }
@@ -391,7 +400,7 @@ function buildAtagRowsHtml(items, cfg) {
       var aggInfo = tagAgg[tagOrder[tk]];
       var agg = null;
       if (aggInfo && aggInfo.count) {
-        agg = mode === "sum" ? aggInfo.sum : (aggInfo.sum / aggInfo.count);
+        agg = (mode === "sum" || aggInfo.cumulative === true) ? aggInfo.sum : (aggInfo.sum / aggInfo.count);
       }
       html.push(
         '<td style="text-align:right;">' +

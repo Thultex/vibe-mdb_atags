@@ -1,9 +1,11 @@
 /*
 ========================================
-A1 collectAtags v1.41 (sys 2.21)
+A1 collectAtags v1.42 (sys 2.21)
 ========================================
 
 Changes
+- parse cumulative +/-, explicit null 00 and zero-decimal forms from issue #38
+- ignore template tag values `_` in `tag:_` and `tag:: _`
 - alias brackets define categories, e.g. `@@Tag (T)[self, help]: alias`
 - category aliases can use `@@@self (sf)`
 - category aliases can define fixed children, e.g. `@@@help: Spielen, Musik`
@@ -113,8 +115,48 @@ function collectAtags(cfg) {
 
     var s = String(attrRaw).replace(/^\s+|\s+$/g, "");
     var sNum = s.replace(",", ".");
+    var m;
 
-    if (/^\d+$/.test(s)) {
+    if (s === "00") {
+      return { attrText: "00", attrValue: null, cumulative: false };
+    }
+
+    m = s.match(/^(\+{2,}|-{2,})(\d*)$/);
+    if (m) {
+      var signRun = m[1];
+      var suffixDigits = m[2] || "";
+      var signFactor = signRun.charAt(0) === "+" ? 1 : -1;
+      if (!suffixDigits && signRun.length > 2) {
+        suffixDigits = String(signRun.length);
+        s = signRun.substring(0, 2) + suffixDigits;
+      }
+      return {
+        attrText: s,
+        attrValue: suffixDigits ? signFactor * Number(suffixDigits) : signFactor * signRun.length,
+        cumulative: true
+      };
+    }
+
+    if (/^[-+]?0[.,]?\d+$/.test(s)) {
+      var sign = "";
+      var body = s;
+      if (s.charAt(0) === "+" || s.charAt(0) === "-") {
+        sign = s.charAt(0);
+        body = s.substring(1);
+      }
+      if (body === "0") {
+        return { attrText: sign === "-" ? "-0" : "0", attrValue: 0, cumulative: false };
+      }
+      body = body.replace(",", ".");
+      if (/^0\d+$/.test(body)) body = "0." + body.substring(1);
+      return {
+        attrText: (sign === "-" ? "-" : "") + body.replace(".", ","),
+        attrValue: Number((sign === "-" ? "-" : "") + body),
+        cumulative: false
+      };
+    }
+
+    if (/^[1-9]\d*$/.test(s)) {
       return { attrText: "+" + s, attrValue: Number(s) };
     }
 
@@ -131,11 +173,11 @@ function collectAtags(cfg) {
     }
 
     if (/^\++$/.test(s)) {
-      return { attrText: "+" + s.length, attrValue: s.length };
+      return { attrText: s, attrValue: s.length, cumulative: true };
     }
 
     if (/^-+$/.test(s)) {
-      return { attrText: String(-s.length), attrValue: -s.length };
+      return { attrText: s, attrValue: -s.length, cumulative: true };
     }
 
     return { attrText: s, attrValue: s };
@@ -162,7 +204,7 @@ function collectAtags(cfg) {
     };
   }
 
-  function addItem(items, seen, name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, displayName, cats, kind) {
+  function addItem(items, seen, name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, displayName, cats, kind, cumulative) {
     var item;
     var key = String(name).toLowerCase() +
       "|" + String(attrText) +
@@ -184,10 +226,15 @@ function collectAtags(cfg) {
       cats: cats || []
     };
 
+    if (!cumulative && /^([+\-]|\+{2,}\d*|-{2,}\d*)$/.test(String(attrText || ""))) {
+      cumulative = true;
+    }
+
     if (kind) {
       item.kind = kind;
       if (kind === "category") item.isCategory = true;
     }
+    if (cumulative) item.cumulative = true;
 
     items.push(item);
   }
@@ -479,6 +526,8 @@ function collectAtags(cfg) {
       else if (ch === "\u207F") return "";
     }
 
+    if (out === "00" || out === "+00") return "00";
+
     if (/^[+\-]?0\d+$/.test(out)) {
       sign = "";
       digits = out;
@@ -528,6 +577,7 @@ function collectAtags(cfg) {
 
     if (!resolvedName || isExcluded(resolvedName)) return;
     if (/^\/\//.test(String(effectiveRaw || ""))) return;
+    if (String(effectiveRaw || "").replace(/^\s+|\s+$/g, "") === "_") return;
 
     norm = normalizeAttr(effectiveRaw);
     if (aliasInfo.invert) norm = invertNormalizedAttr(norm);
@@ -880,7 +930,7 @@ function collectAtags(cfg) {
       }
 
       // name + number: emo3 / emo+1,3 / emo-12,32
-      var rxNum = /(^|[\s,;.!?()\[\]{}])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)([+\-]?\d+(?:[.,]\d+)?|\++|-+)(?=$|[\s,;.!?()\[\]{}])/g;
+      var rxNum = /(^|[\s,;.!?()\[\]{}])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)(\+{2,}\d*|-{2,}\d*|[+\-]?\d+(?:[.,]\d+)?|\++|-+)(?=$|[\s,;.!?()\[\]{}])/g;
       var mn;
       while ((mn = rxNum.exec(parseLine)) !== null) {
         var nameN = mn[2];
@@ -890,8 +940,20 @@ function collectAtags(cfg) {
         if (!nameN || !rawN) continue;
 
         // Regex prefers the longest possible tag name, so negative suffixes
-        // like "tag-2" or "emo-12,32" can be split incorrectly. Re-split the
-        // full token at the final negative numeric suffix.
+        // like "tag-2", "tag--" or "emo-12,32" can be split incorrectly.
+        // Re-split the full token at the final suffix.
+        var zeroSplit = fullTokenN.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*?)([+\-]?00|[+\-]?0[.,]?\d+)$/);
+        if (zeroSplit && zeroSplit[1]) {
+          nameN = zeroSplit[1];
+          rawN = zeroSplit[2];
+        }
+
+        var cumulativeSplit = fullTokenN.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*?)(\+{1,}\d*|-{2,}\d*)$/);
+        if (cumulativeSplit && cumulativeSplit[1]) {
+          nameN = cumulativeSplit[1];
+          rawN = cumulativeSplit[2];
+        }
+
         if (/^\d+(?:[.,]\d+)?$/.test(rawN)) {
           var negSplit = fullTokenN.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*?)(-\d+(?:[.,]\d+)?)$/);
           if (negSplit && negSplit[1]) {
@@ -901,9 +963,10 @@ function collectAtags(cfg) {
         }
 
         if (!nameN) continue;
+        if (/_$/.test(nameN)) continue;
 
         // emo1,2 without an explicit sign is not allowed
-        if (/^\d+[.,]\d+$/.test(rawN)) continue;
+        if (/^[1-9]\d*[.,]\d+$/.test(rawN)) continue;
 
         var aliasN = resolveAlias(nameN, aliasMap);
         nameN = aliasN.name;

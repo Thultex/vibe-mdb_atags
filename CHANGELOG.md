@@ -21,6 +21,20 @@
 
 - Systemversion auf `sys 2.21` angehoben
 - Header aller Module und `ATAG_SYS_VERSION` auf `2.21` aktualisiert
+- `Addon Tag Cleaner` auf `v1.21` angehoben
+- Feature: Tag Cleaner normalisiert die neuen Issue-#38-Formen wie `tag+`, `tag--`, `tag++2`, `tag00`, `tag02` und `tag-0,2` in die vereinfachte Superscript-Schreibweise
+- Aenderung: Tag Cleaner uebernimmt Template-Werte `tag:_` und `tag:: _` nicht in die Tagleiste
+- Fix: Kurzwerte werden nicht mehr aus Woertern mit Unterstrich vor der Zahl herausgelesen, z. B. `test_00` oder `test_3`
+- Aenderung: Alleinstehende Superscripts werden im Tag Cleaner wieder als normaler Text geschrieben, z. B. `Nr ²` zu `Nr 2`
+- Aenderung: Kumulative Werte mit Suffix nutzen den Zahlenanteil als Wert, z. B. `tag++324` bzw. `tag⁺⁺³²⁴` als kumulativ `324`; lange Laeufe wie `tag++++` gelten als Kurzform fuer `tag++4`
+- Aenderung: Tag Cleaner erhaelt `tag:: Inhalt` mit doppeltem Doppelpunkt und normalisiert `tag::Inhalt` zu `tag:: Inhalt`
+- `collectAtags` auf `v1.42` angehoben
+- Feature: `tag+`, `tag-`, `tag++`, `tag--`, `tag++2` und `tag--3` werden als kumulative Plus-/Minuswerte gelesen
+- Feature: `tag00` wird als leerer/null-Wert gelesen; `tag0`, `tag02`, `tag0,2`, `tag-02` und `tag-0,2` werden als numerische Null- bzw. Nullkommawerte gelesen
+- Feature: `tag:_` und `tag:: _` werden als Vorlagen erkannt und nicht als Atags ausgegeben
+- `exportAtags` auf `v1.64` angehoben
+- Aenderung: Kumulative Row-Werte werden in Markdown-/HTML-Row-Aggregationen addiert, auch wenn der Export sonst `rowAggregateMode: "avg"` nutzt
+- Test/Doku: Parser- und Export-Regressionen fuer Issue #38 sowie README-Syntax ergaenzt
 - `collectAtags` auf `v1.41` angehoben
 - Feature: Alias-Klammern `[...]` definieren Kategorien ausschliesslich im Alias-Bereich; normale Tags uebernehmen diese Kategorien in `cats`
 - Feature: Kategorie-Aliase koennen per `@@@self (sf)` definiert werden und erzeugen keinen normalen Tag-Alias

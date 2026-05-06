@@ -33,6 +33,24 @@ assertEquals(
 );
 
 assertEquals(
+  "inline-issue38-values",
+  makeTagCleanerText("tag+ tag- tag++ tag-- tag++2 tag--3 tag++++ tag---- tag00 tag0 tag02 tag0,2 tag-02 tag-0,2"),
+  "tag\u207A tag\u207B tag\u207A\u207A tag\u207B\u207B tag\u207A\u207A\u00B2 tag\u207B\u207B\u00B3 tag\u207A\u207A\u2074 tag\u207B\u207B\u2074 tag\u2070\u2070 tag\u2070 tag\u2070\u00B2 tag\u2070\u00B2 tag\u207B\u2070\u00B2 tag\u207B\u2070\u00B2"
+);
+
+assertEquals(
+  "inline-underscore-words-not-values",
+  makeTagCleanerText("test_00 test_3 tag00 tag3"),
+  "test_00 test_3 tag\u2070\u2070 tag\u00B3"
+);
+
+assertEquals(
+  "standalone-superscript-to-normal-text",
+  makeTagCleanerText("Nr \u00B2 und Wert \u207B\u2070\u00B2 aber tag\u00B2 bleibt"),
+  "Nr 2 und Wert -0,2 aber tag\u00B2 bleibt"
+);
+
+assertEquals(
   "normal-plus-before-superscript-preserved",
   makeTagCleanerText("Stress+\u00B3"),
   "Stress\u207A\u00B3"
@@ -60,6 +78,12 @@ assertEquals(
   "tagbar-colon-numeric-values",
   makeTagCleanerText("Text\n| geld:+20,3 tag:10, fv:max"),
   "Text\n\n| geld\u207A\u00B2\u2070\u00B3 tag\u207A\u00B9\u2070, fv:max"
+);
+
+assertEquals(
+  "tagbar-issue38-values-and-templates",
+  makeTagCleanerText("Text\n| tag+ tag-- tag++2 tag00 tag02 test:_ test:: _"),
+  "Text\n\n| tag\u207A tag\u207B\u207B tag\u207A\u207A\u00B2 tag\u2070\u2070 tag\u2070\u00B2"
 );
 
 assertEquals(
@@ -144,6 +168,18 @@ assertEquals(
     tagBarSpacing: "none"
   }),
   "| Ks+3 Stress+3, fv:none\nText emo2"
+);
+
+assertEquals(
+  "tagbar-double-colon-preserves-space",
+  makeTagCleanerText("Text\n| aussage:: Inhalt compact::Inhalt test_b::sdfd"),
+  "Text\n\n| aussage:: Inhalt compact:: Inhalt test_b:: sdfd"
+);
+
+assertEquals(
+  "inline-double-colon-adds-space",
+  makeTagCleanerText("test_b::sdfd bleibt"),
+  "test_b:: sdfd bleibt"
 );
 
 assertEquals(
