@@ -509,7 +509,7 @@ multiChoiceRemove({
 
 **Obsidian Linker (Integration)**
 
-Erstellt einen `mode=overwrite`-Link fuer Advanced URI im `overwriteMarkdownField`. Sobald ein vorhandener Obsidian-Link im `obsidianMarkdownField` erkannt wird, wird das Overwrite-Feld geleert. Beide Felder werden als Markdown geschrieben; die alten `...HtmlField`-Optionen bleiben als Alias kompatibel. Ein bestehender Obsidian-Link wird im Obsidian-Feld als reiner Markdown-Link ohne Prefix ausgegeben. Optional erzeugt `windowsOpenBase` zusaetzlich `Win:` mit ausgeschriebenem HTTP-/HTTPS-Redirect-Link. Wenn nur ein Feld existiert oder beide Felder gleich sind, laufen beide Rollen auf dieses eine Feld.
+Erstellt einen `mode=overwrite`-Link fuer Advanced URI im `overwriteMarkdownField`. Sobald ein vorhandener Obsidian-Link im `obsidianMarkdownField` erkannt wird, wird das Overwrite-Feld geleert. Beide Felder werden als Markdown geschrieben; die alten `...HtmlField`-Optionen bleiben als Alias kompatibel. Ein bestehender Obsidian-Link wird im Obsidian-Feld als reiner Markdown-Link ohne Prefix ausgegeben. Optional erzeugt `windowsOpenBase` zusaetzlich `Win:` mit ausgeschriebenem HTTP-/HTTPS-Redirect-Link. Wenn nur ein Feld existiert, nur `obsidianMarkdownField` gesetzt ist oder beide Felder gleich sind, laufen beide Rollen auf dieses eine Feld.
 
 ```js
 makeObsidianMementoUri({
@@ -527,7 +527,7 @@ Empfohlen fuer Windows Desktop und Android ist `open: true`: Das Addon schreibt 
 
 Wenn `open: true` einen neuen `mode=overwrite`-Link oeffnet, wird danach kein Overwrite-Link im Feld behalten. Das Overwrite-Feld wird geleert und das Obsidian-Feld auf `Link: EINFÜGEN` gesetzt. Dieser Marker ist die einzige Ausgabe mit `Link:`-Prefix und bedeutet: Obsidian wurde zum Erstellen/Oeffnen angestossen, der echte Obsidian-Link muss noch eingefuegt werden. Solange dieser Marker im Obsidian-Feld steht, erzeugt und oeffnet ein erneuter Script-Lauf keinen neuen Overwrite-Link.
 
-Wenn nur `obsidianMarkdownField` gesetzt ist, erzeugt das Addon nie einen Overwrite-Link in diesem Feld. Dann dient das Feld nur zum Anzeigen/Oeffnen eines bereits eingefuegten Obsidian-Links; das Erstellen laeuft ueber eine separate Aktion bzw. ein separat konfiguriertes `overwriteMarkdownField`.
+Wenn nur `obsidianMarkdownField` gesetzt ist, erzeugt das Addon dort den Overwrite-Link und nutzt dasselbe Feld spaeter zum Anzeigen/Oeffnen eines eingefuegten Obsidian-Links. Scheitert `open: true`, bleibt der Markdown-Link im Feld sichtbar.
 
 Ohne lokalen Helper funktioniert `http://127.0.0.1:17890/...` nicht. `windowsOpenBase` sollte deshalb normalerweise leer bleiben. Fuer einen zusaetzlichen `Win:`-Link ohne Helper braucht `windowsOpenBase` eine echte Browser-Redirect-Seite, z.B. `https://example.org/obsidian-open?uri=` oder ein Template mit `{uri}`.
 
@@ -687,6 +687,8 @@ Optionen:
 - `rowIncludeUnits`
 - `rowAggregateMode`
 - `rowAggregateDecimals`
+- `stringAggregateMode` / `textAggregateMode`: `"join"` (Standard), `"first"` oder `"last"` fuer mehrfach vorkommende Textwerte
+- `stringJoinSeparator`: Standard `", "`
 - `categoryAggregateMode` / `categoryValueMode`
 - `categoryRowAggregateMode` / `categoryChildAggregateMode`
 - `categoryAggregateDecimals`
@@ -700,6 +702,8 @@ Optionen:
 - `includeBlankTags: true` gibt nackte Tags ohne Wert im `text`- und `md`-Export mit aus; Standard ist `false`
 - `treeShowValues: false` blendet Werte im `tree_md` aus
 - `categoryFilter: ["help", "home"]` filtert alle Exporttypen per OR auf eine oder mehrere Kategorien; `catFilter` ist ein Kurzalias
+
+Mehrfach vorkommende Textwerte werden in `text`, `md`, `tree_md` und `json` standardmaessig per `join` zusammengefuehrt, z. B. `prot: Bechler` + `prot: Enda` zu `prot: Bechler, Enda`. Wenn `rowAggregateMode` oder `stringAggregateMode` auf `first` oder `last` steht, gilt diese Auswahl auch fuer Textwerte.
 
 Kategorie-Parents zeigen standardmaessig den Mittelwert ihrer numerischen Unterpunkte. Dabei wird zuerst je Unterpunkt aggregiert, fuer Kategorien standardmaessig mit `max`, danach werden diese Unterpunkt-Ergebnisse im Parent standardmaessig mit `avg` aggregiert. Vor Detailangaben mit Namen oder Einzelwerten steht ` - `, z. B. `kaufen: 22,2 - [pc, garten]`; die kurze Count-Form bleibt ohne Strich, z. B. `Kopfschmerz 1,7 [3]`. Im `tree_md` steht am Parent standardmaessig nur der Wert, weil die Unterpunkte direkt darunter sichtbar sind. Unterpunkte im `tree_md` nutzen dieselbe Wert-Zusammenfassung wie `md`; mehrfach vorkommende Row-Werte werden im Tree standardmaessig gekuerzt als Anzahl angezeigt, waehrend `md`/`text` standardmaessig alle Einzelwerte zeigen. Tree-Defaults sind `cat_display_values: "none"` und `row_display_values: "count"`; fuer andere Exporte gelten `cat_display_values: "names"` und `row_display_values: "all"`. `rowAggregateMode` fuer Tabellen bleibt standardmaessig `avg`; `categoryRowAggregateMode`/`categoryChildAggregateMode` und `categoryAggregateMode`/`categoryValueMode` koennen `min`, `max`, `add`, `sum`, `avg`, `median`, `first`, `last` oder `amount` nutzen.
 

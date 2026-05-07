@@ -1,6 +1,6 @@
 /*
 ========================================
-A2 exportAtags v1.69 (sys 2.21)
+A2 exportAtags v1.70 (sys 2.21)
 ========================================
 
 Notes:
@@ -16,6 +16,7 @@ Notes:
 - tag export writes spaces as underscores
 - tag export prefixes category tags with @
 - category parents show aggregated numeric child values in text/md/tree exports
+- repeated string values aggregate with first, last, or join
 - cumulative +/- values force sum aggregation in row exports
 - Keep this header ASCII-only for the Memento editor
 
@@ -106,6 +107,22 @@ function atagCategoryDisplayValuesMode(cfg, context) {
     cfg.categoryDisplayMode
   ) : null;
   return normalizeAtagDisplayMode(raw, context === "tree" ? "none" : "names");
+}
+
+function atagStringAggregateMode(cfg) {
+  var raw = cfg ? (
+    cfg.stringAggregateMode != null ? cfg.stringAggregateMode :
+    cfg.textAggregateMode != null ? cfg.textAggregateMode :
+    cfg.stringValueMode != null ? cfg.stringValueMode :
+    cfg.rowAggregateMode
+  ) : null;
+  var mode = String(raw == null ? "" : raw).toLowerCase();
+  if (mode === "first" || mode === "last" || mode === "join") return mode;
+  return "join";
+}
+
+function atagStringJoinSeparator(cfg) {
+  return cfg && cfg.stringJoinSeparator != null ? String(cfg.stringJoinSeparator) : ", ";
 }
 
 function atagMarkdownDetailPrefix(context) {
@@ -278,6 +295,96 @@ function categorySummaryItem(item, items, cfg, context) {
 function includeAtagTextItem(item, cfg) {
   if (cfg && cfg.includeBlankTags === true) return true;
   return !(item && (item.attrText == null || item.attrText === ""));
+}
+
+function atagCanAggregateStringItem(item) {
+  if (!item || atagItemIsCategory(item)) return false;
+  if (item.attrText == null || item.attrText === "") return false;
+  if (toNumberIfPossible(item.attrValue) != null) return false;
+  if (isLinkRaw(item.rawText) || isEmailRaw(item.rawText) || isTelRaw(item.rawText)) return false;
+  return typeof item.attrValue === "string" || isArrayValue(item.attrValue);
+}
+
+function atagStringParts(item) {
+  var out = [];
+  var val = item ? item.attrValue : null;
+  var i;
+  if (isArrayValue(val)) {
+    for (i = 0; i < val.length; i++) {
+      if (val[i] != null && val[i] !== "") out.push(String(val[i]));
+    }
+    return out;
+  }
+  if (item && item.attrText != null && item.attrText !== "") out.push(String(item.attrText));
+  return out;
+}
+
+function cloneAtagItem(item) {
+  var clone = {};
+  var k;
+  for (k in item) {
+    if (item.hasOwnProperty(k)) clone[k] = item[k];
+  }
+  return clone;
+}
+
+function aggregateAtagRepeatedStringItems(items, cfg) {
+  var groups = {};
+  var out = [];
+  var emitted = {};
+  var mode = atagStringAggregateMode(cfg);
+  var separator = atagStringJoinSeparator(cfg);
+  var i;
+  var it;
+  var key;
+  var group;
+  var clone;
+  var parts;
+
+  for (i = 0; i < (items || []).length; i++) {
+    it = items[i];
+    if (!atagCanAggregateStringItem(it)) continue;
+    key = String(it.name || "").toLowerCase();
+    if (!groups[key]) {
+      groups[key] = {
+        items: [],
+        parts: []
+      };
+    }
+    groups[key].items.push(it);
+    parts = atagStringParts(it);
+    groups[key].parts = groups[key].parts.concat(parts);
+  }
+
+  for (i = 0; i < (items || []).length; i++) {
+    it = items[i];
+    if (!atagCanAggregateStringItem(it)) {
+      out.push(it);
+      continue;
+    }
+
+    key = String(it.name || "").toLowerCase();
+    group = groups[key];
+    if (!group || group.items.length <= 1) {
+      out.push(it);
+      continue;
+    }
+    if (emitted[key]) continue;
+    emitted[key] = true;
+
+    if (mode === "last") clone = cloneAtagItem(group.items[group.items.length - 1]);
+    else clone = cloneAtagItem(group.items[0]);
+
+    if (mode === "join") {
+      clone.attrText = group.parts.join(separator);
+      clone.attrValue = clone.attrText;
+      clone.rawText = clone.attrText;
+    }
+
+    out.push(clone);
+  }
+
+  return out;
 }
 
 function buildAtagTextLines(items, cfg) {
@@ -988,17 +1095,17 @@ function exportAtags(cfg) {
   }
 
   if (targetFieldType === "text") {
-    entryObj.set(targetField, buildAtagTextLines(sortedItems, cfg).join("\n"));
+    entryObj.set(targetField, buildAtagTextLines(aggregateAtagRepeatedStringItems(sortedItems, cfg), cfg).join("\n"));
     return;
   }
 
   if (targetFieldType === "md") {
-    entryObj.set(targetField, buildAtagNormalMarkdown(items, cfg));
+    entryObj.set(targetField, buildAtagNormalMarkdown(aggregateAtagRepeatedStringItems(items, cfg), cfg));
     return;
   }
 
   if (targetFieldType === "tree_md") {
-    entryObj.set(targetField, buildAtagTreeMarkdown(sortedItems, cfg));
+    entryObj.set(targetField, buildAtagTreeMarkdown(aggregateAtagRepeatedStringItems(sortedItems, cfg), cfg));
     return;
   }
 
@@ -1013,7 +1120,7 @@ function exportAtags(cfg) {
   }
 
   if (targetFieldType === "json") {
-    entryObj.set(targetField, stringifyValueMap(buildValueMap(sortedItems)));
+    entryObj.set(targetField, stringifyValueMap(buildValueMap(aggregateAtagRepeatedStringItems(sortedItems, cfg))));
     return;
   }
 }

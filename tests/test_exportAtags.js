@@ -132,6 +132,73 @@ exportAtags({
   entryObj: entryObj,
   result: {
     items: [
+      item("prot", "Bechler", "Bechler", "Bechler"),
+      item("prot", "Enda", "Enda", "Enda"),
+      item("info", "Erstens, Zweitens", "Erstens, Zweitens", "Erstens, Zweitens"),
+      item("info", "Drittens", "Drittens", "Drittens")
+    ]
+  },
+  targetField: "Text",
+  targetFieldType: "text"
+});
+assertEqual(
+  "text-joins-repeated-strings",
+  entryObj.field("Text"),
+  "info: Erstens, Zweitens, Drittens\nprot: Bechler, Enda"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("prot", "test und interessant", "test und interessant", "\"test und interessant\""),
+      item("prot", "auch Test", "auch Test", "auch Test")
+    ]
+  },
+  targetField: "MD",
+  targetFieldType: "md"
+});
+assertEqual(
+  "md-joins-repeated-texts",
+  entryObj.field("MD"),
+  "prot: test und interessant, auch Test"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("prot", "Bechler", "Bechler", "Bechler"),
+      item("prot", "Enda", "Enda", "Enda")
+    ]
+  },
+  targetField: "Text",
+  targetFieldType: "text",
+  rowAggregateMode: "last"
+});
+assertEqual("text-string-last-follows-row-aggregate-mode", entryObj.field("Text"), "prot: Enda");
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("prot", "Bechler", "Bechler", "Bechler"),
+      item("prot", "Enda", "Enda", "Enda")
+    ]
+  },
+  targetField: "Json",
+  targetFieldType: "json"
+});
+assertEqual("json-joins-repeated-strings", entryObj.field("Json"), "{\"prot\":\"Bechler, Enda\"}");
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
       item("Soziales_Regeln", "Spielen", ["Spielen"], "Spielen", null, null, null, "sr", [], "category"),
       item("Spielen", "+2", 2, "+2", null, null, null, "Sp", ["Soziales_Regeln"])
     ]
@@ -910,7 +977,7 @@ exportAtags({
 assertEqual(
   "json-repeated-values",
   entryObj.field("Json"),
-  "{\"emo\":[1,3],\"info\":[\"a\",\"b\"]}"
+  "{\"emo\":[1,3],\"info\":\"a, b\"}"
 );
 
 entryObj = makeEntry({ MD: "keep" });

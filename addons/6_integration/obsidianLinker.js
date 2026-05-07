@@ -1,6 +1,6 @@
 /*
 ========================================
-B8 Obsidian Linker v1.13 (sys 2.21)
+B8 Obsidian Linker v1.14 (sys 2.21)
 ========================================
 
 Changes
@@ -23,6 +23,7 @@ Changes
 - mark opened overwrite links as pending insert
 - keep obsidian-only configs from creating overwrite links
 - write connected Obsidian fields as bare Markdown links
+- allow obsidianMarkdownField-only configs to create/open overwrite links
 
 Usage
 
@@ -335,7 +336,7 @@ function makeObsidianMementoUri(cfg) {
   var e = cfg.entryObj || entry();
   var l = cfg.libObj || lib();
   var vault = cfg.vault || "RasObs";
-  var overwriteField = cfg.overwriteMarkdownField || cfg.overwriteHtmlField || cfg.overwriteLinkField || cfg.markdownTargetField || cfg.htmlTargetField || cfg.targetField;
+  var overwriteField = cfg.overwriteMarkdownField || cfg.overwriteHtmlField || cfg.overwriteLinkField || cfg.markdownTargetField || cfg.htmlTargetField || cfg.targetField || cfg.obsidianMarkdownField || cfg.obsidianHtmlField || cfg.obsidianLinkField || cfg.openLinkField;
   var obsidianField = cfg.obsidianMarkdownField || cfg.obsidianHtmlField || cfg.obsidianLinkField || cfg.openLinkField || cfg.overwriteMarkdownField || cfg.overwriteHtmlField || cfg.overwriteLinkField || cfg.markdownTargetField || cfg.htmlTargetField || cfg.targetField;
   var hasOverwriteField = !!overwriteField;
   var obsidianRaw = obsidianField ? String(e.field(obsidianField) || "") : "";
@@ -383,8 +384,12 @@ function makeObsidianMementoUri(cfg) {
 
     if (cfg.open && createUri) {
       openResult = obsOpenUri(createUri, cfg);
-      e.set(overwriteField, obsPendingInsertMarkdown(cfg));
-      return { overwriteUri: "", obsidianUri: "", mode: openResult.ok ? "opened_overwrite_pending_insert_same_field" : "open_overwrite_pending_insert_same_field", openResult: openResult };
+      if (openResult.ok) {
+        e.set(overwriteField, obsPendingInsertMarkdown(cfg));
+        return { overwriteUri: "", obsidianUri: "", mode: "opened_overwrite_pending_insert_same_field", openResult: openResult };
+      }
+      obsSetLinkField(e, overwriteField, createUri);
+      return { overwriteUri: createUri, obsidianUri: "", mode: "open_failed_created_overwrite_same_field", openResult: openResult };
     }
 
     obsSetLinkField(e, overwriteField, createUri);

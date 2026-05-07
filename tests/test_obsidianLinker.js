@@ -368,7 +368,28 @@ function testSameFieldCreatesOverwriteWhenNoObsidianLinkExists() {
   assertContains("same-field-create-markdown", e.field("Link"), "[obsidian://advanced-uri");
 }
 
-function testObsidianOnlyFieldDoesNotCreateOverwriteLink() {
+function testObsidianOnlyFieldCreatesOverwriteLink() {
+  var e = makeEntry({
+    Text: "Body",
+    "Obsidian Link": ""
+  });
+
+  var result = makeObsidianMementoUri({
+    entryObj: e,
+    libObj: lib(),
+    contentField: "Text",
+    obsidianMarkdownField: "Obsidian Link",
+    vault: "RasObs"
+  });
+
+  assertEquals("obsidian-only-mode", result.mode, "created_overwrite_same_field");
+  assertContains("obsidian-only-field", e.field("Obsidian Link"), "[obsidian://advanced-uri");
+  assertContains("obsidian-only-field-mode", e.field("Obsidian Link"), "mode=overwrite");
+  assertContains("obsidian-only-overwrite-return", result.overwriteUri, "obsidian://advanced-uri");
+  assertEquals("obsidian-only-open-attempted", result.openResult.attempted, false);
+}
+
+function testObsidianOnlyOpenFailureKeepsOverwriteLink() {
   var e = makeEntry({
     Text: "Body",
     "Obsidian Link": ""
@@ -382,14 +403,15 @@ function testObsidianOnlyFieldDoesNotCreateOverwriteLink() {
     vault: "RasObs",
     open: true,
     openFunction: function() {
-      fail("obsidian-only-should-not-open-created-overwrite");
+      throw new Error("blocked");
     }
   });
 
-  assertEquals("obsidian-only-mode", result.mode, "obsidian_only_no_overwrite");
-  assertEquals("obsidian-only-field-untouched", e.field("Obsidian Link"), "");
-  assertContains("obsidian-only-overwrite-return", result.overwriteUri, "obsidian://advanced-uri");
-  assertEquals("obsidian-only-open-attempted", result.openResult.attempted, false);
+  assertEquals("obsidian-only-open-fail-mode", result.mode, "open_failed_created_overwrite_same_field");
+  assertContains("obsidian-only-open-fail-field", e.field("Obsidian Link"), "[obsidian://advanced-uri");
+  assertContains("obsidian-only-open-fail-return", result.overwriteUri, "obsidian://advanced-uri");
+  assertEquals("obsidian-only-open-fail-attempted", result.openResult.attempted, true);
+  assertEquals("obsidian-only-open-fail-ok", result.openResult.ok, false);
 }
 
 function testObsidianOnlyFieldStillOpensExistingObsidianLink() {
@@ -411,7 +433,7 @@ function testObsidianOnlyFieldStillOpensExistingObsidianLink() {
     }
   });
 
-  assertEquals("obsidian-only-existing-mode", result.mode, "connected_obsidian");
+  assertEquals("obsidian-only-existing-mode", result.mode, "connected_obsidian_same_field");
   assertEquals("obsidian-only-existing-open", openedUri, "obsidian://adv-uri?vault=RasObs&uid=abc123");
   assertEquals("obsidian-only-existing-field", e.field("Obsidian Link"), "[obsidian://adv-uri?vault=RasObs&uid=abc123](obsidian://adv-uri?vault=RasObs&uid=abc123)");
 }
@@ -427,7 +449,8 @@ testOpenCreateSeparateFieldsClearsOverwriteAndMarksPendingInsert();
 testPendingInsertDoesNotOpenOrOverwriteAgain();
 testOpenOptionFallsBackToJavaTypeRundllOnDesktop();
 testSameFieldCreatesOverwriteWhenNoObsidianLinkExists();
-testObsidianOnlyFieldDoesNotCreateOverwriteLink();
+testObsidianOnlyFieldCreatesOverwriteLink();
+testObsidianOnlyOpenFailureKeepsOverwriteLink();
 testObsidianOnlyFieldStillOpensExistingObsidianLink();
 
 WScript.Echo("OK");

@@ -21,7 +21,7 @@
 
 - Systemversion auf `sys 2.21` angehoben
 - Header aller Module und `ATAG_SYS_VERSION` auf `2.21` aktualisiert
-- `exportAtags` auf `v1.69` angehoben
+- `exportAtags` auf `v1.70` angehoben
 - `Atag Helpers` auf `v2.03` angehoben
 - Feature: `computeAggregate` unterstuetzt `min`, `max`, `add`/`sum`, `avg`, `median`, `first`, `last` und `amount`
 - Feature: Kategorie-Parents zeigen in `text`, `md` und `tree_md` standardmaessig den Mittelwert numerischer Unterpunkte; zuvor wird je Unterpunkt per `categoryRowAggregateMode`/`categoryChildAggregateMode` aggregiert, Standard fuer Kategorien ist `max`
@@ -32,6 +32,7 @@
 - Feature: `cat_display_values`/`categoryDisplayValues` steuert Kategorie-Kinderinfo mit `none`, `count`, `names`, `all`; Tree-Standard ist `none`, andere Exporte behalten `names`
 - Aenderung: Detailwerte direkt vor eckigen Klammern nutzen ` - ` als sichtbares Zwischenzeichen, damit die kompakte Wertliste stabil getrennt bleibt
 - Aenderung: Die kurze Count-Form wie `Kopfschmerz 1,7 [3]` bleibt ohne Strich
+- Feature: Mehrfach vorkommende Textwerte werden in `text`, `md`, `tree_md` und `json` aggregiert; Standard ist `join`, `first` und `last` folgen `stringAggregateMode` oder `rowAggregateMode`
 - `Addon Tag Cleaner` auf `v1.21` angehoben
 - Feature: Tag Cleaner normalisiert die neuen Issue-#38-Formen wie `tag+`, `tag--`, `tag++2`, `tag00`, `tag02` und `tag-0,2` in die vereinfachte Superscript-Schreibweise
 - Aenderung: Tag Cleaner uebernimmt Template-Werte `tag:_` und `tag:: _` nicht in die Tagleiste
@@ -117,6 +118,8 @@
 - `Addon Obsidian Linker` auf `v1.13` angehoben
 - Aenderung: Bestehende Obsidian-Links werden im Obsidian-Feld ohne `Link:`-Prefix als reine Markdown-Links geschrieben; `Link: EINFÜGEN` bleibt nur fuer den Wartezustand
 - Doku: Getesteten Obsidian-Linker-Workflow mit Markdown-Feldern und `open: true` als empfohlene Windows-/Android-Konfiguration dokumentiert
+- `Addon Obsidian Linker` auf `v1.14` angehoben
+- Fix: Ein Aufruf nur mit `obsidianMarkdownField` erzeugt und oeffnet wieder einen Overwrite-Link; wenn `open: true` scheitert, bleibt der Markdown-Link im Feld sichtbar
 - `Addon Typed Text Fields` auf `v1.00` ergaenzt
 - Feature: `syncTypedTextFields()` integriert, um Felder mit `(t-dd)`, `(t-d)`, `(t-i)`, `(t-r)`, `(t-tag)` und `(t-l)` in passende Zielfelder zu konvertieren
 - Test/Doku: WSH-Regressionen fuer Einzelentry, Bulk, Optionen und Konvertierungen sowie README- und Versioning-Eintraege ergaenzt
