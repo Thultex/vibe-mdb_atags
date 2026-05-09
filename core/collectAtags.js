@@ -1,9 +1,10 @@
 /*
 ========================================
-A1 collectAtags v1.42 (sys 2.21)
+A1 collectAtags v1.43 (sys 2.21)
 ========================================
 
 Changes
+- support opt-in multiAliasTargets for one alias token mapping to multiple tags
 - parse cumulative +/-, explicit null 00 and zero-decimal forms from issue #38
 - ignore template tag values `_` in `tag:_` and `tag:: _`
 - alias brackets define categories, e.g. `@@Tag (T)[self, help]: alias`
@@ -32,7 +33,6 @@ Changes
 - decimal values still supported
 - row system stays active
 
-========================================
 */
 
 function buildAtagQuoteState(str) {
@@ -73,6 +73,7 @@ function collectAtags(cfg) {
 
   var textFields = cfg.textFields || [];
   var excludeNames = cfg.excludeNames || [];
+  var multiAliasTargets = cfg.multiAliasTargets === true;
 
   function isReservedSystemName(name) {
     var s = String(name || "").toLowerCase();
@@ -328,7 +329,17 @@ function collectAtags(cfg) {
     var map = {};
     map._categories = {};
     map._fixedChildCats = {};
+    map._multiAliasTargets = {};
     var lines = String(text || "").split(/\r?\n/);
+
+    function registerAlias(key, info) {
+      if (!key) return;
+      if (multiAliasTargets) {
+        if (!map._multiAliasTargets[key]) map._multiAliasTargets[key] = [];
+        map._multiAliasTargets[key].push(info);
+      }
+      map[key] = info;
+    }
 
     for (var i = 0; i < lines.length; i++) {
       var line = String(lines[i] || "").replace(/^\s+|\s+$/g, "");
@@ -363,22 +374,22 @@ function collectAtags(cfg) {
       if (isExcluded(baseName)) continue;
       addCategoryDefinitions(map, baseName, categories);
 
-      map[baseName.toLowerCase()] = {
+      registerAlias(baseName.toLowerCase(), {
         name: baseName,
         shortName: shortName || baseName,
         invert: false,
         fixedRaw: null,
         cats: categories
-      };
+      });
 
       if (shortName && !isExcluded(shortName)) {
-        map[shortName.toLowerCase()] = {
+        registerAlias(shortName.toLowerCase(), {
           name: baseName,
           shortName: shortName,
           invert: false,
           fixedRaw: null,
           cats: categories
-        };
+        });
       }
 
       var parts = splitAliasList(m[4] || "");
@@ -406,13 +417,13 @@ function collectAtags(cfg) {
 
         if (!/^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*$/.test(alias)) continue;
 
-        map[alias.toLowerCase()] = {
+        registerAlias(alias.toLowerCase(), {
           name: baseName,
           shortName: shortName || baseName,
           invert: invert,
           fixedRaw: fixedRaw,
           cats: categories
-        };
+        });
       }
     }
 
@@ -501,6 +512,13 @@ function collectAtags(cfg) {
     return aliasInfo;
   }
 
+  function resolveAliases(name, aliasMap) {
+    var key = String(name || "").toLowerCase();
+    var multi = aliasMap && aliasMap._multiAliasTargets ? aliasMap._multiAliasTargets[key] : null;
+    if (multi && multi.length) return multi;
+    return [resolveAlias(name, aliasMap)];
+  }
+
   function decodeReadableSuperscript(raw) {
     var s = String(raw || "");
     var out = "";
@@ -541,57 +559,46 @@ function collectAtags(cfg) {
     return out;
   }
 
-  function addReadableTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw) {
-    var aliasInfo = resolveAlias(name, aliasMap);
-    var resolvedName = aliasInfo.name;
+  function addResolvedTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw, skipTemplates) {
+    var aliases = resolveAliases(name, aliasMap);
+    var ai;
+    var aliasInfo;
+    var resolvedName;
     var norm;
-    var effectiveRaw = aliasInfo.fixedRaw != null ? aliasInfo.fixedRaw : raw;
+    var effectiveRaw;
 
-    if (!resolvedName || isExcluded(resolvedName)) return;
+    for (ai = 0; ai < aliases.length; ai++) {
+      aliasInfo = aliases[ai];
+      resolvedName = aliasInfo.name;
+      effectiveRaw = aliasInfo.fixedRaw != null ? aliasInfo.fixedRaw : raw;
 
-    norm = normalizeAttr(effectiveRaw);
-    if (aliasInfo.invert) norm = invertNormalizedAttr(norm);
+      if (!resolvedName || isExcluded(resolvedName)) continue;
+      if (skipTemplates && /^\/\//.test(String(effectiveRaw || ""))) continue;
+      if (skipTemplates && String(effectiveRaw || "").replace(/^\s+|\s+$/g, "") === "_") continue;
 
-    addItem(
-      items, seen,
-      resolvedName,
-      norm.attrText, norm.attrValue, effectiveRaw,
+      norm = normalizeAttr(effectiveRaw);
+      if (aliasInfo.invert) norm = invertNormalizedAttr(norm);
+
+      addItem(
+        items, seen,
+        resolvedName,
+        norm.attrText, norm.attrValue, effectiveRaw,
         rowValue, rowUnit, rowRaw,
-      aliasInfo.shortName || resolvedName,
-      aliasInfo.cats || []
-    );
+        aliasInfo.shortName || resolvedName,
+        aliasInfo.cats || []
+      );
+    }
+  }
+
+  function addReadableTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw) {
+    addResolvedTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw, false);
   }
 
   function addParsedTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw) {
     var cleanName = normalizeTagName(name);
-    var aliasInfo;
-    var resolvedName;
-    var effectiveRaw;
-    var norm;
 
     if (!cleanName || /^\d+$/.test(cleanName)) return;
-
-    aliasInfo = resolveAlias(cleanName, aliasMap);
-    resolvedName = aliasInfo.name;
-    effectiveRaw = aliasInfo.fixedRaw != null ? aliasInfo.fixedRaw : raw;
-
-    if (!resolvedName || isExcluded(resolvedName)) return;
-    if (/^\/\//.test(String(effectiveRaw || ""))) return;
-    if (String(effectiveRaw || "").replace(/^\s+|\s+$/g, "") === "_") return;
-
-    norm = normalizeAttr(effectiveRaw);
-    if (aliasInfo.invert) norm = invertNormalizedAttr(norm);
-
-    addItem(
-      items, seen,
-      resolvedName,
-      norm.attrText,
-      norm.attrValue,
-      effectiveRaw,
-      rowValue, rowUnit, rowRaw,
-      aliasInfo.shortName || resolvedName,
-      aliasInfo.cats || []
-    );
+    addResolvedTagValue(cleanName, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw, true);
   }
 
   function addReadableTagLineItems(tagText, items, seen, aliasMap, rowValue, rowUnit, rowRaw) {
@@ -832,22 +839,12 @@ function collectAtags(cfg) {
         rawQuotedAttr = String(rawQuotedAttr).replace(/,+$/g, "");
         if (!rawQuotedName) continue;
 
-        var quotedAlias = resolveAlias(rawQuotedName, aliasMap);
-        rawQuotedName = quotedAlias.name;
-
-        if (isExcluded(rawQuotedName)) continue;
-
-        var normQuoted = normalizeAttr(rawQuotedAttr);
-        if (quotedAlias.fixedRaw != null) normQuoted = normalizeAttr(quotedAlias.fixedRaw);
-        if (quotedAlias.invert) normQuoted = invertNormalizedAttr(normQuoted);
-
-        addItem(
-          items, seen,
+        addResolvedTagValue(
           rawQuotedName,
-          normQuoted.attrText, normQuoted.attrValue, quotedAlias.fixedRaw != null ? quotedAlias.fixedRaw : rawQuotedAttr,
+          rawQuotedAttr,
+          items, seen, aliasMap,
           currentRowValue, currentRowUnit, currentRowRaw,
-          quotedAlias.shortName || rawQuotedName,
-          quotedAlias.cats || []
+          false
         );
       }
 
@@ -909,23 +906,12 @@ function collectAtags(cfg) {
         if (!nameH || rawH === "") continue;
         if (isInsideAtagQuoteState(quoteState, mh.index)) continue;
 
-        var aliasH = resolveAlias(nameH, aliasMap);
-        nameH = aliasH.name;
-
-        if (isExcluded(nameH)) continue;
-
-        var normH = normalizeAttr(aliasH.fixedRaw != null ? aliasH.fixedRaw : rawH);
-        if (aliasH.invert) normH = invertNormalizedAttr(normH);
-
-        addItem(
-          items, seen,
+        addResolvedTagValue(
           nameH,
-          normH.attrText,
-          normH.attrValue,
-          aliasH.fixedRaw != null ? aliasH.fixedRaw : rawH,
+          rawH,
+          items, seen, aliasMap,
           currentRowValue, currentRowUnit, currentRowRaw,
-          aliasH.shortName || nameH,
-          aliasH.cats || []
+          false
         );
       }
 
@@ -968,24 +954,14 @@ function collectAtags(cfg) {
         // emo1,2 without an explicit sign is not allowed
         if (/^[1-9]\d*[.,]\d+$/.test(rawN)) continue;
 
-        var aliasN = resolveAlias(nameN, aliasMap);
-        nameN = aliasN.name;
-
-        if (isExcluded(nameN)) continue;
         if (isInsideAtagQuoteState(quoteState, mn.index)) continue;
 
-        var normN = normalizeAttr(aliasN.fixedRaw != null ? aliasN.fixedRaw : rawN);
-        if (aliasN.invert) normN = invertNormalizedAttr(normN);
-
-        addItem(
-          items, seen,
+        addResolvedTagValue(
           nameN,
-          normN.attrText,
-          normN.attrValue,
-          aliasN.fixedRaw != null ? aliasN.fixedRaw : rawN,
+          rawN,
+          items, seen, aliasMap,
           currentRowValue, currentRowUnit, currentRowRaw,
-          aliasN.shortName || nameN,
-          aliasN.cats || []
+          false
         );
       }
 
@@ -999,23 +975,12 @@ function collectAtags(cfg) {
         if (!nameSup) continue;
         if (isInsideAtagQuoteState(quoteState, msup.index)) continue;
 
-        var aliasSup = resolveAlias(nameSup, aliasMap);
-        nameSup = aliasSup.name;
-
-        if (isExcluded(nameSup)) continue;
-
-        var normSup = normalizeAttr(aliasSup.fixedRaw != null ? aliasSup.fixedRaw : rawSup);
-        if (aliasSup.invert) normSup = invertNormalizedAttr(normSup);
-
-        addItem(
-          items, seen,
+        addResolvedTagValue(
           nameSup,
-          normSup.attrText,
-          normSup.attrValue,
-          aliasSup.fixedRaw != null ? aliasSup.fixedRaw : rawSup,
+          rawSup,
+          items, seen, aliasMap,
           currentRowValue, currentRowUnit, currentRowRaw,
-          aliasSup.shortName || nameSup,
-          aliasSup.cats || []
+          false
         );
       }
 
@@ -1027,21 +992,12 @@ function collectAtags(cfg) {
         if (!nameS) continue;
         if (isInsideAtagQuoteState(quoteState, ms.index)) continue;
 
-        var aliasS = resolveAlias(nameS, aliasMap);
-        nameS = aliasS.name;
-
-        if (isExcluded(nameS)) continue;
-
-        var normS = aliasS.fixedRaw != null ? normalizeAttr(aliasS.fixedRaw) : { attrText: null, attrValue: null };
-        if (aliasS.invert) normS = invertNormalizedAttr(normS);
-
-        addItem(
-          items, seen,
+        addResolvedTagValue(
           nameS,
-          normS.attrText, normS.attrValue, aliasS.fixedRaw != null ? aliasS.fixedRaw : "",
+          "",
+          items, seen, aliasMap,
           currentRowValue, currentRowUnit, currentRowRaw,
-          aliasS.shortName || nameS,
-          aliasS.cats || []
+          false
         );
       }
 
@@ -1053,21 +1009,12 @@ function collectAtags(cfg) {
         if (!nameCst) continue;
         if (isInsideAtagQuoteState(quoteState, mcst.index)) continue;
 
-        var aliasCst = resolveAlias(nameCst, aliasMap);
-        nameCst = aliasCst.name;
-
-        if (isExcluded(nameCst)) continue;
-
-        var normCst = aliasCst.fixedRaw != null ? normalizeAttr(aliasCst.fixedRaw) : { attrText: null, attrValue: null };
-        if (aliasCst.invert) normCst = invertNormalizedAttr(normCst);
-
-        addItem(
-          items, seen,
+        addResolvedTagValue(
           nameCst,
-          normCst.attrText, normCst.attrValue, aliasCst.fixedRaw != null ? aliasCst.fixedRaw : "",
+          "",
+          items, seen, aliasMap,
           currentRowValue, currentRowUnit, currentRowRaw,
-          aliasCst.shortName || nameCst,
-          aliasCst.cats || []
+          false
         );
       }
 

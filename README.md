@@ -247,11 +247,13 @@ updateSequenceSpree({
   fieldSequence: "Reihe",
   fieldSpree: "Spree",
   fieldSequenceMax: "Reihe Max",
-  fieldSpreeMax: "Spree Max"
+  fieldSpreeMax: "Spree Max",
+  fieldBiasedSpree: "Biased Spree",
+  biasedSpreeCount: 2
 });
 ```
 
-Ziel-Felder sind optional. Mit `currentEntry` wird nur der aktuelle Eintrag geschrieben; ohne `currentEntry` werden alle berechneten Eintraege aktualisiert. `clearOnEmpty: false` verhindert das Leeren der Ziel-Felder, wenn ein Gruppierungsfeld leer ist.
+Ziel-Felder sind optional. `fieldBiasedSpree` setzt fuer die ersten `biasedSpreeCount` Eintraege jeder Spree `true`, danach `false`; ein explizites `biasedSpreeCount: 0` loescht bestehende Markierungen ueber `false`. Mit `currentEntry` wird nur der aktuelle Eintrag geschrieben; wenn `fieldBiasedSpree` und `biasedSpreeCount` gesetzt sind, wird das Bias-Feld auch fuer die uebrigen berechneten Eintraege aktualisiert, damit alte Markierungen verschwinden. Ohne `currentEntry` werden alle berechneten Eintraege aktualisiert. `clearOnEmpty: false` verhindert das Leeren der Ziel-Felder, wenn ein Gruppierungsfeld leer ist.
 
 **Floating Average (Workflow)**
 
@@ -627,6 +629,7 @@ tag2 (tg2)[self]: 3
 - Basistags mit abschließendem Punkt sind erlaubt (z. B. `mood.`)
 - inverse Aliase mit Präfix `-` kehren numerische Werte um (`down2` → `mood.-2`)
 - Alias-Einträge dürfen feste Werte tragen (`Kopfdruck1` → `Kopfschmerz+1`)
+- Doppelte Aliasnamen behalten standardmaessig die letzte Definition; mit `multiAliasTargets: true` erzeugt ein Alias mehrere Ziel-Tags, z. B. `@@Pos: x` und `@@Neg: -x` machen aus `x2` `Pos+2` und `Neg-2`
 - Kategorie-Aliase werden mit `@@@` definiert, z. B. `@@@self (sf)`
 - `@@@help: Spielen, Musik, Laufen` setzt die rechte Seite direkt als Kategorie-Kinder, nicht als Aliase
 - Kategorien werden nur im Alias-Bereich mit `[...]` festgelegt

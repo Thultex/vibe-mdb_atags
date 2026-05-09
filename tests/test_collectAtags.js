@@ -141,6 +141,36 @@ function assertMissing(label, input, unexpectedName) {
   if (item) fail(label + ": unexpected item '" + unexpectedName + "' found in " + input);
 }
 
+function assertItemsWithOptions(label, input, options, expected) {
+  var cfg = options || {};
+  var result;
+  var i;
+  var found;
+  var item;
+
+  cfg.entryObj = makeEntry({ Note: input });
+  cfg.textFields = ["Note"];
+  result = collectAtags(cfg);
+
+  for (i = 0; i < expected.length; i++) {
+    found = false;
+    for (var j = 0; j < result.items.length; j++) {
+      item = result.items[j];
+      if (
+        item.name === expected[i].name &&
+        item.attrText === expected[i].attrText &&
+        String(item.attrValue) === String(expected[i].attrValue)
+      ) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      fail(label + ": expected item " + expected[i].name + " " + expected[i].attrText + " not found");
+    }
+  }
+}
+
 if (WScript.Arguments.length > 0) {
   dumpItems(WScript.Arguments(0));
   WScript.Quit(0);
@@ -205,6 +235,26 @@ assertMissing("quoted-colon-inside-text", "'tag: 5'", "tag");
 assertItem("quoted-text-outside-row", "10: Kopfruhe1, Innere_Anspannung1 geringer, Klarheit1, ' das hier# sollte aber nicht#23 drin sein'", "Kopfruhe", "+1", 1, 10, null);
 assertItem("alias-short", "@@Kopfschmerzen (ks): Kopfschmerz, Kschm\nks2", "Kopfschmerzen", "+2", 2, null, null);
 assertDisplayName("alias-short-display", "@@Kopfschmerzen (ks): Kopfschmerz, Kschm\nKopfschmerz2", "Kopfschmerzen", "ks");
+assertItem("alias-duplicate-default-last-wins", "@@Pos: x\n@@Neg: -x\nx2", "Neg", "-2", -2, null, null);
+assertMissing("alias-duplicate-default-no-first-target", "@@Pos: x\n@@Neg: -x\nx2", "Pos");
+assertItemsWithOptions(
+  "alias-duplicate-multi-targets",
+  "@@Pos: x\n@@Neg: -x\nx2",
+  { multiAliasTargets: true },
+  [
+    { name: "Pos", attrText: "+2", attrValue: 2 },
+    { name: "Neg", attrText: "-2", attrValue: -2 }
+  ]
+);
+assertItemsWithOptions(
+  "alias-duplicate-multi-targets-hash",
+  "@@Pos: x\n@@Neg: -x\nx#2",
+  { multiAliasTargets: true },
+  [
+    { name: "Pos", attrText: "+2", attrValue: 2 },
+    { name: "Neg", attrText: "-2", attrValue: -2 }
+  ]
+);
 assertCats("alias-category-on-parsed-tag", "@@tag1 (tg1)[self, help]: 3\ntg1#3", "tag1", ["self", "help"]);
 assertCategoryTag("alias-category-item", "@@@self (sf)\n@@tag1 (tg1)[self]: 3\n@@tag2 (tg2)[self]: 3\ntg1# tg2#", "self", ["tag1", "tag2"], "sf");
 assertMissing("cat-alias-is-not-normal-tag-alias", "@@@self (sf)\nsf2", "self");

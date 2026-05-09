@@ -1,6 +1,6 @@
 /*
 ========================================
-A2 exportAtags v1.70 (sys 2.21)
+A2 exportAtags v1.71 (sys 2.21)
 ========================================
 
 Notes:
@@ -11,6 +11,7 @@ Notes:
 - tree_md shows child values by default
 - tree_md only shows category children that actually occur unless enabled
 - tree_md uses Markdown hard line breaks for desktop rendering
+- tree_md defaults repeated child row values to max unless rowAggregateMode is explicit
 - categoryFilter filters all export types by OR categories
 - tag export skips empty category tags
 - tag export writes spaces as underscores
@@ -239,7 +240,7 @@ function collectAtagValueSummary(itemName, items, cfg, context) {
   var firstItem = null;
   var hasDecimal = false;
   var cumulative = false;
-  var mode = cfg && cfg.rowAggregateMode !== undefined ? cfg.rowAggregateMode : "avg";
+  var mode = cfg && cfg.rowAggregateMode !== undefined ? cfg.rowAggregateMode : (context === "tree" ? "max" : "avg");
   var decimals = cfg && cfg.rowAggregateDecimals != null ? cfg.rowAggregateDecimals : 1;
   var displayMode = atagRowDisplayValuesMode(cfg, context || "default");
   var i;

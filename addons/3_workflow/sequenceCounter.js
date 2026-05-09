@@ -1,9 +1,11 @@
 /*
 ========================================
-B6 Sequence Counter v1.03 (sys 2.21)
+B6 Sequence Counter v1.04 (sys 2.21)
 ========================================
 
 Changes
+- refresh biased spree flags across calculated entries when biasedSpreeCount is explicit
+- mark the first biasedSpreeCount entries of each spree via fieldBiasedSpree
 - replace stale entries item with currentEntry for calculation
 - include currentEntry in calculation if it is missing from entries
 - support entry id functions when matching currentEntry
@@ -22,7 +24,9 @@ updateSequenceSpree({
   fieldSequence: "Reihe",
   fieldSpree: "Spree",
   fieldSequenceMax: "Reihe Max",
-  fieldSpreeMax: "Spree Max"
+  fieldSpreeMax: "Spree Max",
+  fieldBiasedSpree: "Biased Spree",
+  biasedSpreeCount: 2
 });
 
 ========================================
@@ -154,18 +158,25 @@ function sequenceSetIfTarget(entryObj, fieldName, value, result) {
   result.written.push(fieldName);
 }
 
-function sequenceBuildRows(entries, fieldDate, groupFields) {
+function sequenceHasExplicitBiasedSpreeCount(cfg) {
+  return cfg && cfg.biasedSpreeCount != null && cfg.biasedSpreeCount !== "";
+}
+
+function sequenceBuildRows(entries, fieldDate, groupFields, biasedSpreeCount) {
   var dated = [];
   var rows = [];
   var blocks = [];
   var sequence = 0;
   var spree = 0;
+  var biasedLimit = Number(biasedSpreeCount || 0);
   var currentBlock = null;
   var prevValidEntry = null;
   var i;
   var entryObj;
   var t;
   var row;
+
+  if (isNaN(biasedLimit) || biasedLimit < 0) biasedLimit = 0;
 
   for (i = 0; i < entries.length; i++) {
     entryObj = entries[i];
@@ -198,7 +209,8 @@ function sequenceBuildRows(entries, fieldDate, groupFields) {
         valid: false,
         sequence: null,
         spree: null,
-        spreeMax: null
+        spreeMax: null,
+        biasedSpree: null
       });
       prevValidEntry = null;
       currentBlock = null;
@@ -219,7 +231,8 @@ function sequenceBuildRows(entries, fieldDate, groupFields) {
       valid: true,
       sequence: sequence,
       spree: spree,
-      spreeMax: null
+      spreeMax: null,
+      biasedSpree: biasedLimit > 0 && spree <= biasedLimit
     };
 
     currentBlock.items.push(row);
@@ -250,7 +263,10 @@ function updateSequenceSpree(cfg) {
   var fieldSpree = cfg.fieldSpree || "";
   var fieldSequenceMax = cfg.fieldSequenceMax || "";
   var fieldSpreeMax = cfg.fieldSpreeMax || "";
+  var fieldBiasedSpree = cfg.fieldBiasedSpree || "";
+  var biasedSpreeCount = cfg.biasedSpreeCount;
   var clearOnEmpty = cfg.clearOnEmpty !== false;
+  var refreshBiasedSpree = sequenceHasTarget(fieldBiasedSpree) && sequenceHasExplicitBiasedSpreeCount(cfg);
   var calcEntries = entries;
   var calculated;
   var rows;
@@ -267,7 +283,7 @@ function updateSequenceSpree(cfg) {
 
   if (!calcEntries || !calcEntries.length || !fieldDate) return result;
 
-  calculated = sequenceBuildRows(calcEntries, fieldDate, groupFields);
+  calculated = sequenceBuildRows(calcEntries, fieldDate, groupFields, biasedSpreeCount);
   rows = calculated.rows;
   result.sequenceMax = calculated.sequenceMax;
 
@@ -276,6 +292,9 @@ function updateSequenceSpree(cfg) {
     e = row.entry;
 
     if (currentEntry && !sequenceSameEntry(e, currentEntry)) {
+      if (refreshBiasedSpree) {
+        sequenceSetIfTarget(e, fieldBiasedSpree, row.valid ? row.biasedSpree : null, result);
+      }
       result.skipped.push(sequenceEntryId(e));
       continue;
     }
@@ -286,6 +305,7 @@ function updateSequenceSpree(cfg) {
         sequenceSetIfTarget(e, fieldSpree, null, result);
         sequenceSetIfTarget(e, fieldSequenceMax, null, result);
         sequenceSetIfTarget(e, fieldSpreeMax, null, result);
+        sequenceSetIfTarget(e, fieldBiasedSpree, null, result);
       }
       continue;
     }
@@ -294,6 +314,7 @@ function updateSequenceSpree(cfg) {
     sequenceSetIfTarget(e, fieldSpree, row.spree, result);
     sequenceSetIfTarget(e, fieldSequenceMax, calculated.sequenceMax, result);
     sequenceSetIfTarget(e, fieldSpreeMax, row.spreeMax, result);
+    sequenceSetIfTarget(e, fieldBiasedSpree, row.biasedSpree, result);
   }
 
   return result;

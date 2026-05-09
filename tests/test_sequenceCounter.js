@@ -63,6 +63,53 @@ function testBulkSequenceAndSpree() {
   assertEquals("sequence-max", entries[3].field("SeqMax"), 3);
 }
 
+function testBiasedSpreeMarksFirstEntries() {
+  var entries = [
+    makeEntry("1", { Date: "2026-04-01", Dose: "10" }),
+    makeEntry("2", { Date: "2026-04-02", Dose: "10" }),
+    makeEntry("3", { Date: "2026-04-03", Dose: "10" }),
+    makeEntry("4", { Date: "2026-04-04", Dose: "20" })
+  ];
+
+  updateSequenceSpree({
+    entries: entries,
+    fieldDate: "Date",
+    groupFields: ["Dose"],
+    fieldSpree: "Spree",
+    fieldBiasedSpree: "Biased",
+    biasedSpreeCount: 2
+  });
+
+  assertEquals("biased-spree-first", entries[0].field("Biased"), true);
+  assertEquals("biased-spree-second", entries[1].field("Biased"), true);
+  assertEquals("biased-spree-third", entries[2].field("Biased"), false);
+  assertEquals("biased-spree-new-block", entries[3].field("Biased"), true);
+}
+
+function testExplicitZeroRefreshesSkippedBiasedSpreeFlags() {
+  var current = makeEntry("2", { Date: "2026-04-02", Dose: "10", Biased: true });
+  var entries = [
+    makeEntry("1", { Date: "2026-04-01", Dose: "10", Biased: true }),
+    current,
+    makeEntry("3", { Date: "2026-04-03", Dose: "10", Biased: true })
+  ];
+
+  updateSequenceSpree({
+    entries: entries,
+    currentEntry: current,
+    fieldDate: "Date",
+    groupFields: ["Dose"],
+    fieldSpree: "Spree",
+    fieldBiasedSpree: "Biased",
+    biasedSpreeCount: 0
+  });
+
+  assertEquals("biased-zero-refreshes-previous", entries[0].field("Biased"), false);
+  assertEquals("biased-zero-refreshes-current", current.field("Biased"), false);
+  assertEquals("biased-zero-refreshes-next", entries[2].field("Biased"), false);
+  assertEquals("biased-zero-keeps-other-fields-skipped", entries[0].field("Spree"), undefined);
+}
+
 function testCurrentEntryOnlyAndEmptyClear() {
   var current = makeEntry("2", { Date: "2026-04-02", Dose: "10" });
   var empty = makeEntry("3", { Date: "2026-04-03", Dose: "", Seq: "old", Spree: "old" });
@@ -95,11 +142,14 @@ function testCurrentEntryOnlyAndEmptyClear() {
     groupFields: ["Dose"],
     fieldSequence: "Seq",
     fieldSpree: "Spree",
+    fieldBiasedSpree: "Biased",
+    biasedSpreeCount: 1,
     clearOnEmpty: true
   });
 
   assertEquals("empty-cleared-seq", empty.field("Seq"), null);
   assertEquals("empty-cleared-spree", empty.field("Spree"), null);
+  assertEquals("empty-cleared-biased", empty.field("Biased"), null);
 }
 
 function testIssue25SingleCurrentEntryWithoutSequenceMax() {
@@ -180,6 +230,8 @@ function testCurrentEntryReplacesStaleEntryFromLibEntries() {
 }
 
 testBulkSequenceAndSpree();
+testBiasedSpreeMarksFirstEntries();
+testExplicitZeroRefreshesSkippedBiasedSpreeFlags();
 testCurrentEntryOnlyAndEmptyClear();
 testIssue25SingleCurrentEntryWithoutSequenceMax();
 testCurrentEntryContinuesLatestSequenceWhenMissingFromEntries();

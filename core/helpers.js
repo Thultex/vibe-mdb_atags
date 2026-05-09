@@ -1,9 +1,10 @@
 /*
 ========================================
-A3 Atag Helpers v2.03 (sys 2.21)
+A3 Atag Helpers v2.04 (sys 2.21)
 ========================================
 
 Changes
+- pass multiAliasTargets through applyTags wrapper
 - aggregate helper supports min, max, add, avg, median, first, last and amount
 - markdown/text exports use long tag names by default; short display names are opt-in
 - pass includeBlankTags through export wrappers
@@ -466,7 +467,8 @@ function collectAtagsFromCfg(cfg, entryObj) {
   return collectAtags({
     entryObj: entryObj,
     textFields: cfg.textFields || [],
-    excludeNames: cfg.excludeNames || []
+    excludeNames: cfg.excludeNames || [],
+    multiAliasTargets: cfg.multiAliasTargets
   });
 }
 

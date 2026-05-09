@@ -282,6 +282,17 @@ assertEqual(
   "listtag: a,b"
 );
 
+entryObj = makeEntry({ Note: "@@Pos: x\n@@Neg: -x\nx2" });
+applyTags({
+  entryObj: entryObj,
+  textFields: ["Note"],
+  targetField: "Tags",
+  targetFieldType: "tags",
+  mergeWithExistingTags: false,
+  multiAliasTargets: true
+});
+assertArray("apply-multi-alias-targets", entryObj.field("Tags"), ["Neg", "Pos"]);
+
 entryObj = makeEntry({});
 exportAtags({
   entryObj: entryObj,
@@ -378,6 +389,31 @@ assertEqual(
   entryObj.field("Tree"),
   "spannung_schmerz 2  \n" +
   "\u251c\u2500\u2500 Kopfschmerz 2 [2]  \n" +
+  "\u251c\u2500\u2500 Nackenschmerz 2  \n" +
+  "\u2514\u2500\u2500 Spannung 2"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("spannung_schmerz", "Kopfschmerz,Nackenschmerz,Spannung", ["Kopfschmerz", "Nackenschmerz", "Spannung"], "Kopfschmerz,Nackenschmerz,Spannung", null, null, null, "ss", [], "category"),
+      item("Kopfschmerz", "+1", 1, "+1", 1, null, "1"),
+      item("Kopfschmerz", "+3", 3, "+3", 2, null, "2"),
+      item("Nackenschmerz", "+2", 2, "+2", 1, null, "1"),
+      item("Spannung", "+2", 2, "+2", 1, null, "1")
+    ]
+  },
+  targetField: "Tree",
+  targetFieldType: "tree_md",
+  rowAggregateDecimals: 1
+});
+assertEqual(
+  "tree_md-default-row-aggregation-is-max",
+  entryObj.field("Tree"),
+  "spannung_schmerz 2,3  \n" +
+  "\u251c\u2500\u2500 Kopfschmerz 3 [2]  \n" +
   "\u251c\u2500\u2500 Nackenschmerz 2  \n" +
   "\u2514\u2500\u2500 Spannung 2"
 );

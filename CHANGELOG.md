@@ -17,6 +17,19 @@
 - Test/Doku: ...
 ```
 
+## 2026-05-09
+
+- `exportAtags` auf `v1.71` angehoben
+- Fix: `tree_md` nutzt fuer wiederholte Kind-Row-Werte ohne explizites `rowAggregateMode` wieder `max`; explizites `rowAggregateMode: "avg"` bleibt unveraendert moeglich
+- Test: Regression fuer Tree-Default `max` bei Kindwerten und daraus berechneter Kategorie-Anzeige ergaenzt
+- `Sequence Counter` auf `v1.04` angehoben
+- Feature: `fieldBiasedSpree` und `biasedSpreeCount` markieren die ersten X Eintraege jeder Spree mit `true`; spaetere Eintraege werden mit `false` geschrieben
+- Aenderung: Bei explizitem `biasedSpreeCount` wird das Bias-Feld auch im `currentEntry`-Modus fuer uebersprungene berechnete Eintraege aktualisiert, damit alte Markierungen verschwinden; `0` schreibt `false`
+- Test/Doku: Regression fuer Biased-Spree-Markierung, explizites Loeschen mit `0` und README-Beispiel ergaenzt
+- `collectAtags` auf `v1.43` und `Atag Helpers` auf `v2.04` angehoben
+- Feature: `multiAliasTargets: true` erlaubt, dass ein Alias-Token mehrere Ziel-Tags erzeugt, z. B. gleichzeitig positiv und negativ; ohne Option gewinnt weiter die letzte Aliasdefinition
+- Test/Doku: Regression fuer doppelte Aliasnamen mit und ohne `multiAliasTargets` sowie README-Hinweis ergaenzt
+
 ## 2026-05-01
 
 - Systemversion auf `sys 2.21` angehoben
