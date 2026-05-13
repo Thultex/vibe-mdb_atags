@@ -196,6 +196,32 @@ function testMissingSourceFieldLogsAndReturnsEmpty() {
   assertLogContains("missing-source-log", "cannot read source field 'Missing Hours'");
 }
 
+function testEmptyHoursShowsFirstBlockByDefault() {
+  var e = makeEntry({ Hours: "", Guide: "" });
+  var html = applyHourGuide({
+    entryObj: e,
+    sourceHoursField: "Hours",
+    targetField: "Guide"
+  });
+
+  assertContains("empty-hours-first-block", html, "Aufstehen");
+  assertEquals("empty-hours-target", e.field("Guide"), html);
+}
+
+function testExplicitSourceEntryFeedsTargetEntry() {
+  var source = makeEntry({ Hours: "4" });
+  var target = makeEntry({ Guide: "" });
+  var html = applyHourGuide({
+    entryObj: target,
+    sourceEntry: source,
+    sourceHoursField: "Hours",
+    targetField: "Guide"
+  });
+
+  assertContains("source-entry-peak", html, "Peak");
+  assertEquals("source-entry-target", target.field("Guide"), html);
+}
+
 testHtmlForPeakWindow();
 testCutoffReturnsEmpty();
 testApplyWritesTarget();
@@ -206,5 +232,7 @@ testMissingTargetFieldDoesNotThrow();
 testEntryNotReadyDoesNotThrow();
 testMissingPlanFieldFallsBackToDefault();
 testMissingSourceFieldLogsAndReturnsEmpty();
+testEmptyHoursShowsFirstBlockByDefault();
+testExplicitSourceEntryFeedsTargetEntry();
 
 WScript.Echo("OK");

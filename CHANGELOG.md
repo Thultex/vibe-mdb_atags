@@ -17,6 +17,17 @@
 - Test/Doku: ...
 ```
 
+## 2026-05-13
+
+- `Sync Last From Latest` auf `v1.03` angehoben
+- Aenderung: `syncLastFromLatest()` nutzt ohne `fieldDate` direkt den neuesten erstellten Library-Eintrag
+- Aenderung: Bei `fieldDate` scannt `syncLastFromLatest()` standardmaessig maximal 100 Library-Eintraege; `maxEntries: 0` nimmt direkt den neuesten erstellten Eintrag, `maxEntries: -1` scannt alle
+- Feature: `getNewestLibraryEntry()` nimmt fuer den neuesten erstellten Library-Eintrag direkt das erste Element aus `lib().entries()`
+- Feature: `findNewestEntry()` sowie `getNewestLibraryEntry({ mode: "modified" })` bleiben fuer den langsameren Scan nach `modifiedTime` mit ID-Fallback verfuegbar
+- `Hour Guide` auf `v1.28` angehoben
+- Feature/Fix: `applyHourGuide()` akzeptiert konkrete `entryObj`-/`sourceEntry`-Eingaben und zeigt bei leerem, `null`- oder `0`-Stundenwert den ersten Planblock
+- Test/Doku: Regressionen fuer Newest-Entry-Suche, `maxEntries`, Modified-Mode, konkrete Hour-Guide-Entries und README-Beispiele ergaenzt
+
 ## 2026-05-09
 
 - `exportAtags` auf `v1.71` angehoben

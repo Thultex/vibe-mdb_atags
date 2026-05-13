@@ -30,9 +30,17 @@ function assertArrayEquals(label, actual, expected) {
   }
 }
 
+function assertSame(label, actual, expected) {
+  if (actual !== expected) {
+    fail(label + ": expected same object");
+  }
+}
+
 function makeEntry(fields) {
   return {
     _fields: fields,
+    id: fields && fields.id != null ? fields.id : null,
+    modifiedTime: fields && fields.modifiedTime != null ? fields.modifiedTime : null,
     field: function(name) {
       return this._fields[name];
     },
@@ -93,7 +101,103 @@ function testMapAndOnlyIfEmpty() {
   assertArrayEquals("map-skipped", result.skipped, ["Dosis"]);
 }
 
+function testSyncWithoutDateFieldUsesNewestLibraryEntry() {
+  var current = makeEntry({ Dosis: "" });
+  var newest = makeEntry({ Dosis: "20" });
+  var older = makeEntry({ Dosis: "10" });
+  _entries = [current, newest, older];
+
+  var result = syncLastFromLatest({
+    fields: ["Dosis"]
+  });
+
+  assertEquals("no-date-newest-value", current.field("Dosis"), "20");
+  assertSame("no-date-source-entry", result.sourceEntry, newest);
+}
+
+function testDateFieldScanDefaultsCanBeLimited() {
+  var current = makeEntry({ Einnahmedatum: "2026-04-04", Dosis: "" });
+  var inRange = makeEntry({ Einnahmedatum: "2026-04-01", Dosis: "10" });
+  var ignoredNewer = makeEntry({ Einnahmedatum: "2026-04-03", Dosis: "30" });
+  _entries = [current, inRange, makeEntry({ Einnahmedatum: "2026-04-02", Dosis: "20" }), ignoredNewer];
+
+  var result = syncLastFromLatest({
+    fieldDate: "Einnahmedatum",
+    maxEntries: 3,
+    fields: ["Dosis"]
+  });
+
+  assertEquals("date-max-entries-value", current.field("Dosis"), "20");
+}
+
+function testDateFieldMaxEntriesZeroUsesNewestEntry() {
+  var current = makeEntry({ Einnahmedatum: "2026-04-04", Dosis: "" });
+  var newest = makeEntry({ Einnahmedatum: "2026-04-01", Dosis: "10" });
+  var newerByDate = makeEntry({ Einnahmedatum: "2026-04-03", Dosis: "30" });
+  _entries = [current, newest, newerByDate];
+
+  var result = syncLastFromLatest({
+    fieldDate: "Einnahmedatum",
+    maxEntries: 0,
+    fields: ["Dosis"]
+  });
+
+  assertEquals("date-zero-newest-value", current.field("Dosis"), "10");
+  assertSame("date-zero-newest-source", result.sourceEntry, newest);
+}
+
+function testDateFieldMaxEntriesMinusOneScansAll() {
+  var current = makeEntry({ Einnahmedatum: "2026-04-04", Dosis: "" });
+  var inRange = makeEntry({ Einnahmedatum: "2026-04-01", Dosis: "10" });
+  var later = makeEntry({ Einnahmedatum: "2026-04-03", Dosis: "30" });
+  _entries = [current, inRange, makeEntry({ Einnahmedatum: "2026-04-02", Dosis: "" }), later];
+
+  var result = syncLastFromLatest({
+    fieldDate: "Einnahmedatum",
+    maxEntries: -1,
+    fields: ["Dosis"]
+  });
+
+  assertEquals("date-minus-one-value", current.field("Dosis"), "30");
+  assertSame("date-minus-one-source", result.sourceEntry, later);
+}
+
+function testFindNewestEntryUsesModifiedTimeAndIdFallback() {
+  var old = makeEntry({ id: 1, modifiedTime: 100, Name: "old" });
+  var sameTimeLowerId = makeEntry({ id: 2, modifiedTime: 200, Name: "lower" });
+  var newest = makeEntry({ id: 3, modifiedTime: 200, Name: "newest" });
+
+  var result = findNewestEntry([old, newest, sameTimeLowerId]);
+
+  assertSame("newest-entry", result, newest);
+}
+
+function testFindNewestEntryMaxScanCanTradePrecisionForSpeed() {
+  var first = makeEntry({ id: 1, modifiedTime: 100, Name: "first" });
+  var later = makeEntry({ id: 2, modifiedTime: 300, Name: "later" });
+
+  var result = findNewestEntry([first, later], { maxScan: 1 });
+
+  assertSame("max-scan-first-only", result, first);
+}
+
+function testGetNewestLibraryEntryDefaultsToFirstEntry() {
+  var first = makeEntry({ id: 1, modifiedTime: 100, Name: "first" });
+  var modifiedLater = makeEntry({ id: 2, modifiedTime: 300, Name: "modified" });
+  _entries = [first, modifiedLater];
+
+  assertSame("newest-default-first", getNewestLibraryEntry(), first);
+  assertSame("newest-modified-mode", getNewestLibraryEntry({ mode: "modified" }), modifiedLater);
+}
+
 testCopiesLatestPreviousEntry();
 testMapAndOnlyIfEmpty();
+testSyncWithoutDateFieldUsesNewestLibraryEntry();
+testDateFieldScanDefaultsCanBeLimited();
+testDateFieldMaxEntriesZeroUsesNewestEntry();
+testDateFieldMaxEntriesMinusOneScansAll();
+testFindNewestEntryUsesModifiedTimeAndIdFallback();
+testFindNewestEntryMaxScanCanTradePrecisionForSpeed();
+testGetNewestLibraryEntryDefaultsToFirstEntry();
 
 WScript.Echo("OK");

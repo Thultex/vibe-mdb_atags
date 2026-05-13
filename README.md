@@ -115,6 +115,7 @@ Ziel-Felder
   - optionales Ueberschreiben ueber `overwrite: true`
 - `B4` `addons/2_syncing/syncLastFromLatest.js` (Felder aus dem neuesten frueheren Eintrag uebernehmen)
   - `syncLastFromLatest()`
+  - `getNewestLibraryEntry()` / `findNewestEntry()`
   - `fields` oder `map`
   - optional `onlyIfEmpty`
 
@@ -203,6 +204,35 @@ syncLastFromLatest({
   fieldDate: "Einnahmedatum",
   fields: ["Dosis", "Wirkstoff"],
   onlyIfEmpty: true
+});
+```
+
+Zum schnellen Finden des neuesten Library-Eintrags gibt es zusaetzliche Helper. `lib().entries()` ist laut Memento-Scripting-Doku nach Erstellzeit sortiert, neuester zuerst; `getNewestLibraryEntry()` nimmt deshalb direkt den ersten Eintrag. Nur fuer "zuletzt geaendert" kann explizit `mode: "modified"` gesetzt werden; dann scannt der Helper nach `modifiedTime` und nutzt bei gleicher Zeit die hoehere ID als Fallback.
+
+```js
+var newest = getNewestLibraryEntry();
+
+if (newest) {
+  applyHourGuide({
+    entryObj: newest,
+    sourceEntry: newest,
+    sourceHoursField: "hours since dose",
+    targetField: "Hour Guide"
+  });
+}
+```
+
+Bei `syncLastFromLatest()` ist `fieldDate` optional. Ohne `fieldDate` wird der neueste erstellte Library-Eintrag verwendet. Mit `fieldDate` werden standardmaessig nur die ersten 100 Library-Eintraege nach Datumsfeld verglichen. `maxEntries: 0` nutzt direkt den neuesten erstellten Eintrag, `maxEntries: -1` scannt alle Eintraege.
+
+```js
+syncLastFromLatest({
+  fields: ["Dosis"]
+});
+
+syncLastFromLatest({
+  fieldDate: "Einnahmedatum",
+  maxEntries: -1,
+  fields: ["Dosis"]
 });
 ```
 
@@ -463,6 +493,19 @@ applyHourGuide({
   sourceHoursField: "hours since dose",
   targetField: "Hour Guide",
   maxHours: 16
+});
+```
+
+Leere, `null`- oder `0`-Stundenwerte zeigen standardmaessig den ersten Planblock; fehlende Quellfelder loggen weiter und schreiben leer. Mit konkreter Entry-Eingabe kann der Hour Guide nach einer neuesten-Entry-Suche ausgefuehrt werden. `sourceEntry` darf vom Ziel-Entry abweichen.
+
+```js
+var newest = getNewestLibraryEntry();
+
+applyHourGuide({
+  entryObj: newest,
+  sourceEntry: newest,
+  sourceHoursField: "hours since dose",
+  targetField: "Hour Guide"
 });
 ```
 

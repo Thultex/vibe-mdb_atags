@@ -1,9 +1,10 @@
 /*
 ========================================
-C3 Hour Guide v1.27 (sys 2.21)
+C3 Hour Guide v1.28 (sys 2.21)
 ========================================
 
 Changes
+- support explicit entry/source entry input and empty-hour fallback to first block
 - restore original Stundenhilfe content and visual style from issue #20
 - treat guide section headers as content, not fixed API names
 - use German built-in guide contents and cleaner phase header
@@ -77,8 +78,6 @@ Zwischenstriche werden beim Rendern automatisch ergaenzt.
     }
   ]
 }
-
-========================================
 */
 
 function hourGuideToNumber(val) {
@@ -148,6 +147,16 @@ function hourGuideReadField(entryObj, fieldName, role) {
   } catch (e) {
     hourGuideLog("cannot read " + (role || "field") + " '" + fieldName + "'");
     return null;
+  }
+}
+
+function hourGuideReadFieldInfo(entryObj, fieldName, role) {
+  if (!entryObj || !fieldName) return { ok: false, value: null };
+  try {
+    return { ok: true, value: entryObj.field(fieldName) };
+  } catch (e) {
+    hourGuideLog("cannot read " + (role || "field") + " '" + fieldName + "'");
+    return { ok: false, value: null };
   }
 }
 
@@ -436,18 +445,38 @@ function hourGuideReadPlanFromEntry(entryObj, cfg) {
   return null;
 }
 
+function hourGuideFirstBlockStart(planInfo) {
+  var blocks = planInfo && planInfo.blocks ? planInfo.blocks : [];
+  var i;
+  var n;
+
+  for (i = 0; i < blocks.length; i++) {
+    if (!blocks[i]) continue;
+    n = hourGuideToNumber(blocks[i].from);
+    if (n != null) return n;
+  }
+
+  return 0;
+}
+
 function makeHourGuideHtml(hours, cfg) {
   cfg = cfg || {};
 
-  var h = hourGuideToNumber(hours);
   var planInfo = hourGuidePlanFromRaw(cfg.plan || cfg.planJson || cfg.json || hourGuideDefaultPlan());
+  var h = hourGuideToNumber(hours);
   var maxHours = cfg.maxHours == null ? (planInfo.maxHours == null ? 16 : hourGuideToNumber(planInfo.maxHours)) : hourGuideToNumber(cfg.maxHours);
   var block;
   var sections;
   var html;
   var i;
 
-  if (h == null) return "";
+  if (h == null) {
+    if (cfg.emptyHoursUseFirstBlock === true || cfg.emptyHoursAsFirstBlock === true) {
+      h = hourGuideFirstBlockStart(planInfo);
+    } else {
+      return "";
+    }
+  }
   if (maxHours != null && h >= maxHours) return "";
 
   block = hourGuideGetBlock(h, planInfo);
@@ -468,15 +497,23 @@ function makeHourGuideHtml(hours, cfg) {
 function applyHourGuide(cfg) {
   cfg = cfg || {};
 
-  var e = cfg.entryObj || hourGuideEntry();
+  var e = cfg.entryObj || cfg.currentEntry || cfg.targetEntry || cfg.entry || hourGuideEntry();
+  var sourceEntry = cfg.sourceEntry || cfg.hoursEntry || e;
   var sourceField = cfg.sourceHoursField || cfg.hoursField || "hours since dose";
   var plan = hourGuideReadPlanFromEntry(e, cfg);
+  var sourceInfo;
   var out;
 
   if (!e) return "";
 
   if (plan) cfg.plan = plan;
-  out = makeHourGuideHtml(hourGuideReadField(e, sourceField, "source field"), cfg);
+  sourceInfo = hourGuideReadFieldInfo(sourceEntry, sourceField, "source field");
+  if (!sourceInfo.ok) {
+    out = "";
+  } else {
+    cfg.emptyHoursUseFirstBlock = cfg.emptyHoursUseFirstBlock !== false;
+    out = makeHourGuideHtml(sourceInfo.value, cfg);
+  }
 
   if (cfg.targetField) {
     hourGuideWriteField(e, cfg.targetField, out, "target field");

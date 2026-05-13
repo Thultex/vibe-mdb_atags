@@ -1,9 +1,14 @@
 /*
 ========================================
-B4 Sync Last From Latest v1.01 (sys 2.21)
+B4 Sync Last From Latest v1.03 (sys 2.21)
 ========================================
 
 Changes
+- support maxEntries 0 for newest entry and -1 for full date scan
+- use newest library entry when syncLastFromLatest has no fieldDate
+- limit date-field scans by maxEntries/maxScan with default 100
+- default newest-library helper to first lib().entries() item
+- add explicit modified-time newest-entry helper with id fallback
 - parse ISO-like date strings in WSH
 - add latest-entry field sync addon
 - support fields list or target-to-source map
@@ -26,7 +31,8 @@ syncLastFromLatest({
   }
 });
 
-========================================
+var newest = getNewestLibraryEntry();
+if (newest) applyHourGuide({ entryObj: newest });
 */
 
 function slflTrim(s) {
@@ -35,6 +41,44 @@ function slflTrim(s) {
 
 function slflIsArray(val) {
   return Object.prototype.toString.call(val) === "[object Array]";
+}
+
+function slflIsString(val) {
+  return typeof val === "string" || Object.prototype.toString.call(val) === "[object String]";
+}
+
+function slflListLength(val) {
+  var n;
+
+  if (val == null || slflIsString(val)) return null;
+  if (slflIsArray(val)) return val.length;
+
+  try {
+    n = Number(val.length);
+    if (!isNaN(n) && n >= 0 && Math.floor(n) === n) return n;
+  } catch (e0) {}
+
+  try {
+    n = Number(val.length());
+    if (!isNaN(n) && n >= 0 && Math.floor(n) === n) return n;
+  } catch (e1) {}
+
+  try {
+    n = Number(val.size());
+    if (!isNaN(n) && n >= 0 && Math.floor(n) === n) return n;
+  } catch (e2) {}
+
+  return null;
+}
+
+function slflListItem(val, index) {
+  try {
+    if (typeof val.get === "function") return val.get(index);
+  } catch (e0) {}
+  try {
+    if (typeof val.item === "function") return val.item(index);
+  } catch (e1) {}
+  return val[index];
 }
 
 function slflIsEmpty(val) {
@@ -47,6 +91,64 @@ function slflIsEmpty(val) {
 function slflClone(val) {
   if (slflIsArray(val)) return val.slice(0);
   return val;
+}
+
+function slflEntryIdValue(entryObj) {
+  var raw;
+  var n;
+
+  if (!entryObj) return 0;
+
+  try {
+    raw = typeof entryObj.id === "function" ? entryObj.id() : entryObj.id;
+  } catch (e0) {
+    raw = 0;
+  }
+
+  n = Number(raw);
+  if (isNaN(n)) return 0;
+  return n;
+}
+
+function slflEntryModifiedTimeValue(entryObj) {
+  var raw;
+  var n;
+  var d;
+
+  if (!entryObj) return 0;
+
+  try {
+    raw = typeof entryObj.modifiedTime === "function" ? entryObj.modifiedTime() : entryObj.modifiedTime;
+  } catch (e0) {
+    raw = null;
+  }
+
+  if (raw instanceof Date) return raw.getTime();
+
+  n = Number(raw);
+  if (!isNaN(n) && n > 0) return n;
+
+  d = slflDateTime(raw);
+  return d == null ? 0 : d;
+}
+
+function slflNewestScanLimit(entries, cfg) {
+  var len = slflListLength(entries);
+  var maxScan = cfg && (cfg.maxScan != null ? cfg.maxScan : cfg.limit);
+  var n;
+
+  if (len == null) return 0;
+  if (maxScan == null || maxScan === "") return len;
+
+  n = Number(maxScan);
+  if (isNaN(n) || n < 1) return len;
+  if (n > len) return len;
+  return Math.floor(n);
+}
+
+function slflFirstEntry(entries) {
+  if (!entries || slflListLength(entries) < 1) return null;
+  return slflListItem(entries, 0);
 }
 
 function slflDateTime(val) {
@@ -94,14 +196,22 @@ function slflNormalizeFields(fields) {
 function slflFindLatestEntry(entries, currentEntry, fieldDate) {
   var latest = null;
   var latestTime = null;
+  var maxEntries = 100;
+  var len = slflListLength(entries);
   var i;
   var e;
   var t;
 
-  if (!entries || !entries.length) return null;
+  if (!entries || len == null || len < 1) return null;
+  if (arguments.length > 3 && arguments[3] != null && arguments[3] !== "") {
+    maxEntries = Number(arguments[3]);
+    if (maxEntries === -1) maxEntries = len;
+    if (isNaN(maxEntries) || maxEntries < 1) maxEntries = len;
+  }
+  if (maxEntries > len) maxEntries = len;
 
-  for (i = 0; i < entries.length; i++) {
-    e = entries[i];
+  for (i = 0; i < maxEntries; i++) {
+    e = slflListItem(entries, i);
     if (!e || e === currentEntry) continue;
 
     t = slflDateTime(e.field(fieldDate));
@@ -114,6 +224,63 @@ function slflFindLatestEntry(entries, currentEntry, fieldDate) {
   }
 
   return latest;
+}
+
+function slflFindNewestOtherEntry(entries, currentEntry) {
+  var len = slflListLength(entries);
+  var i;
+  var e;
+
+  if (!entries || len == null || len < 1) return null;
+
+  for (i = 0; i < len; i++) {
+    e = slflListItem(entries, i);
+    if (e && e !== currentEntry) return e;
+  }
+
+  return null;
+}
+
+function findNewestEntry(entries, cfg) {
+  cfg = cfg || {};
+
+  var len = slflNewestScanLimit(entries, cfg);
+  var newest = null;
+  var newestTime = -1;
+  var newestId = -1;
+  var i;
+  var e;
+  var t;
+  var id;
+
+  for (i = 0; i < len; i++) {
+    e = slflListItem(entries, i);
+    if (!e) continue;
+
+    t = slflEntryModifiedTimeValue(e);
+    id = slflEntryIdValue(e);
+
+    if (!newest || t > newestTime || (t === newestTime && id > newestId)) {
+      newest = e;
+      newestTime = t;
+      newestId = id;
+    }
+  }
+
+  return newest;
+}
+
+function getNewestLibraryEntry(cfg) {
+  cfg = cfg || {};
+
+  var entries = cfg.entries || lib().entries();
+  var mode = cfg.mode || cfg.by || cfg.sortBy || "creation";
+
+  if (String(mode).toLowerCase() === "modified" || String(mode).toLowerCase() === "modifiedtime") {
+    return findNewestEntry(entries, cfg);
+  }
+
+  return slflFirstEntry(entries);
 }
 
 function slflCopyField(sourceEntry, targetEntry, sourceField, targetField, onlyIfEmpty, result) {
@@ -145,9 +312,11 @@ function syncLastFromLatest(cfg) {
 
   var currentEntry = cfg.entryObj || entry();
   var entries = cfg.entries || lib().entries();
-  var fieldDate = cfg.fieldDate || "Einnahmedatum";
+  var fieldDate = cfg.fieldDate || cfg.dateField || null;
+  var maxEntries = cfg.maxEntries != null ? cfg.maxEntries : cfg.maxScan;
+  var maxEntryCount = maxEntries == null ? 100 : Number(maxEntries);
   var onlyIfEmpty = cfg.onlyIfEmpty === true;
-  var latestEntry = slflFindLatestEntry(entries, currentEntry, fieldDate);
+  var latestEntry = fieldDate && maxEntryCount !== 0 ? slflFindLatestEntry(entries, currentEntry, fieldDate, maxEntries == null ? 100 : maxEntries) : slflFindNewestOtherEntry(entries, currentEntry);
   var result = {
     sourceEntry: latestEntry,
     updated: [],
