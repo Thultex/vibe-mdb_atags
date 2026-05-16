@@ -1,6 +1,6 @@
 /*
 ========================================
-A1 collectAtags v1.44 (sys 2.21)
+A1 collectAtags v1.45 (sys 2.21)
 ========================================
 
 Changes
@@ -11,6 +11,7 @@ Changes
 - category aliases can use `@@@self (sf)`
 - category aliases can define fixed children, e.g. `@@@help: Spielen, Musik`
 - category aliases can invert fixed child values, e.g. `@@@body: -Pain, Safety`
+- exclude name checks use a per-run lookup map
 - category tags are emitted as list tags containing their occurring member tags
 - parsed items keep their categories in `cats`
 - skip alias declaration lines during normal parsing
@@ -75,6 +76,12 @@ function collectAtags(cfg) {
   var textFields = cfg.textFields || [];
   var excludeNames = cfg.excludeNames || [];
   var multiAliasTargets = cfg.multiAliasTargets === true;
+  var excludeMap = {};
+  var ei;
+
+  for (ei = 0; ei < excludeNames.length; ei++) {
+    excludeMap[String(excludeNames[ei]).toLowerCase()] = true;
+  }
 
   function isReservedSystemName(name) {
     var s = String(name || "").toLowerCase();
@@ -95,11 +102,7 @@ function collectAtags(cfg) {
   function isExcluded(name) {
     var n = String(name || "").toLowerCase();
     if (isReservedSystemName(n)) return true;
-
-    for (var i = 0; i < excludeNames.length; i++) {
-      if (String(excludeNames[i]).toLowerCase() === n) return true;
-    }
-    return false;
+    return !!excludeMap[n];
   }
 
   function normalizeTagName(rawName) {
@@ -514,6 +517,8 @@ function collectAtags(cfg) {
     var child;
     var childKey;
     var catKey;
+    var aliasKey;
+    var childAlias;
     var sign;
 
     if (!catName || isExcluded(catName)) return;
@@ -536,8 +541,10 @@ function collectAtags(cfg) {
     for (i = 0; i < (children || []).length; i++) {
       child = typeof children[i] === "string" ? children[i] : children[i].name;
       sign = typeof children[i] === "string" ? 1 : (children[i].sign === -1 ? -1 : 1);
-      if (aliasMap[String(child || "").toLowerCase()] && aliasMap[String(child || "").toLowerCase()].name) {
-        child = aliasMap[String(child || "").toLowerCase()].name;
+      aliasKey = String(child || "").toLowerCase();
+      childAlias = aliasMap[aliasKey];
+      if (childAlias && childAlias.name) {
+        child = childAlias.name;
       }
       childKey = String(child).toLowerCase();
       if (!child || bucket.seen[childKey]) continue;

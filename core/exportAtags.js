@@ -1,6 +1,6 @@
 /*
 ========================================
-A2 exportAtags v1.74 (sys 2.21)
+A2 exportAtags v1.75 (sys 2.21)
 ========================================
 
 Notes:
@@ -20,6 +20,7 @@ Notes:
 - tree_md category parents default to max_abs for signed fixed children
 - negated category children are marked with subscript minus before the name in category displays
 - category and tree value summaries reuse a per-export value index
+- repeated string aggregation returns early when no repeated string tags exist
 - repeated string values aggregate with first, last, or join
 - cumulative +/- values force sum aggregation in row exports
 - Keep this header ASCII-only for the Memento editor
@@ -382,6 +383,7 @@ function aggregateAtagRepeatedStringItems(items, cfg) {
   var groups = {};
   var out = [];
   var emitted = {};
+  var hasRepeated = false;
   var mode = atagStringAggregateMode(cfg);
   var separator = atagStringJoinSeparator(cfg);
   var i;
@@ -401,10 +403,14 @@ function aggregateAtagRepeatedStringItems(items, cfg) {
         parts: []
       };
     }
+    if (groups[key].items.length > 0) hasRepeated = true;
     groups[key].items.push(it);
     parts = atagStringParts(it);
     groups[key].parts = groups[key].parts.concat(parts);
   }
+
+  if (!hasRepeated) return items;
+  out = [];
 
   for (i = 0; i < (items || []).length; i++) {
     it = items[i];

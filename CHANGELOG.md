@@ -19,13 +19,16 @@
 
 ## 2026-05-16
 
-- `collectAtags` auf `v1.44` angehoben
+- `collectAtags` auf `v1.45` angehoben
 - Feature: Kategorie-Aliase koennen feste Kinder mit negativem Vorzeichen definieren, z. B. `@@@Koerper: -Kopfschmerz`
 - Feature: Feste Kategorie-Kinder werden ueber Alias- und Kurznamen auf ihren Langnamen aufgeloest, auch wenn die Kategoriezeile vor der Aliasdefinition steht
-- `exportAtags` auf `v1.74` angehoben
+- Performance: Ausgeschlossene Namen werden pro Parserlauf als Lookup-Map vorbereitet
+- Performance: Kategorie-Kind-Aliase vermeiden doppelte Key-Berechnung
+- `exportAtags` auf `v1.75` angehoben
 - Aenderung: `tree_md` nutzt fuer Kategorie-Eltern standardmaessig `max_abs`
 - Aenderung: Negierte Kategorie-Kinder werden im Tree und in Kategorie-Details mit tiefgestelltem Minus vor dem Namen markiert, z. B. `₋Kopfschmerz -2` und `Koerper: -2 - [₋Kopfschmerz: -2]`
 - Performance: Text-, Markdown- und Tree-Exports verwenden einen pro Export aufgebauten Wertindex fuer Kategorie- und Kind-Zusammenfassungen
+- Performance: Wiederholte Stringwerte werden nur dann aggregiert, wenn ein String-Tag tatsaechlich mehrfach vorkommt
 - `Atag Helpers` auf `v2.07` angehoben
 - Feature: `computeAggregate` unterstuetzt `max_abs` und `min_abs` mit positivem Tie-Break bei gleichem Betrag
 - Aenderung: Kategorie-Anzeigeoptionen wie `cat_display_values` werden durch `applyTags` durchgereicht
