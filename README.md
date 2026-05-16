@@ -675,9 +675,24 @@ tag2 (tg2)[self]: 3
 - Doppelte Aliasnamen behalten standardmaessig die letzte Definition; mit `multiAliasTargets: true` erzeugt ein Alias mehrere Ziel-Tags, z. B. `@@Pos: x` und `@@Neg: -x` machen aus `x2` `Pos+2` und `Neg-2`
 - Kategorie-Aliase werden mit `@@@` definiert, z. B. `@@@self (sf)`
 - `@@@help: Spielen, Musik, Laufen` setzt die rechte Seite direkt als Kategorie-Kinder, nicht als Aliase
+- Feste Kategorie-Kinder koennen mit `-` negiert werden, z. B. `@@@Koerper: -Kopfschmerz`; Alias- und Kurznamen werden dabei auf den Langnamen aufgeloest
 - Kategorien werden nur im Alias-Bereich mit `[...]` festgelegt
 - Kategorie-Tags enthalten ihre Untertags als Liste, z. B. `self` enthält `tag1, tag2`
 - normale Tags behalten ihre Kategorien in `cats`, z. B. `tag1` hat `self, help`
+
+Negierte Kategorie-Kinder bleiben normale Tags, werden aber innerhalb der Kategorie mit umgekehrtem Vorzeichen gerechnet und in Kategorie-Anzeigen mit tiefgestelltem Minus vor dem Namen markiert:
+
+```text
+@@Kopfschmerz (KSch): ks
+@@@Koerper: -Kopfschmerz, Koerpersicher
+ks² Koerpersicher1
+```
+
+```text
+Koerper -2
+├── ₋Kopfschmerz -2
+└── Koerpersicher 1
+```
 
 Aus dem Beispiel entsteht fuer `tree_md`:
 
@@ -751,7 +766,7 @@ Optionen:
 
 Mehrfach vorkommende Textwerte werden in `text`, `md`, `tree_md` und `json` standardmaessig per `join` zusammengefuehrt, z. B. `prot: Bechler` + `prot: Enda` zu `prot: Bechler, Enda`. Wenn `rowAggregateMode` oder `stringAggregateMode` auf `first` oder `last` steht, gilt diese Auswahl auch fuer Textwerte.
 
-Kategorie-Parents zeigen standardmaessig den Mittelwert ihrer numerischen Unterpunkte. Dabei wird zuerst je Unterpunkt aggregiert, fuer Kategorien standardmaessig mit `max`, danach werden diese Unterpunkt-Ergebnisse im Parent standardmaessig mit `avg` aggregiert. Vor Detailangaben mit Namen oder Einzelwerten steht ` - `, z. B. `kaufen: 22,2 - [pc, garten]`; die kurze Count-Form bleibt ohne Strich, z. B. `Kopfschmerz 1,7 [3]`. Im `tree_md` steht am Parent standardmaessig nur der Wert, weil die Unterpunkte direkt darunter sichtbar sind. Unterpunkte im `tree_md` nutzen dieselbe Wert-Zusammenfassung wie `md`; mehrfach vorkommende Row-Werte werden im Tree standardmaessig gekuerzt als Anzahl angezeigt, waehrend `md`/`text` standardmaessig alle Einzelwerte zeigen. Tree-Defaults sind `cat_display_values: "none"` und `row_display_values: "count"`; fuer andere Exporte gelten `cat_display_values: "names"` und `row_display_values: "all"`. `rowAggregateMode` fuer Tabellen bleibt standardmaessig `avg`; `categoryRowAggregateMode`/`categoryChildAggregateMode` und `categoryAggregateMode`/`categoryValueMode` koennen `min`, `max`, `add`, `sum`, `avg`, `median`, `first`, `last` oder `amount` nutzen.
+Kategorie-Parents zeigen standardmaessig den Mittelwert ihrer numerischen Unterpunkte. Dabei wird zuerst je Unterpunkt aggregiert, fuer Kategorien standardmaessig mit `max`, danach werden diese Unterpunkt-Ergebnisse im Parent standardmaessig mit `avg` aggregiert. Im `tree_md` ist der Parent-Standard `max_abs`, damit negierte Kategorie-Kinder nach Betrag gewertet werden und ihr Vorzeichen behalten. Vor Detailangaben mit Namen oder Einzelwerten steht ` - `, z. B. `kaufen: 22,2 - [pc, garten]`; bei `cat_display_values: "all"` werden negierte Kinder als `₋Kopfschmerz: -2` angezeigt. Die kurze Count-Form bleibt ohne Strich, z. B. `Kopfschmerz 1,7 [3]`. Im `tree_md` steht am Parent standardmaessig nur der Wert, weil die Unterpunkte direkt darunter sichtbar sind. Unterpunkte im `tree_md` nutzen dieselbe Wert-Zusammenfassung wie `md`; mehrfach vorkommende Row-Werte werden im Tree standardmaessig gekuerzt als Anzahl angezeigt, waehrend `md`/`text` standardmaessig alle Einzelwerte zeigen. Tree-Defaults sind `cat_display_values: "none"` und `row_display_values: "count"`; fuer andere Exporte gelten `cat_display_values: "names"` und `row_display_values: "all"`. `rowAggregateMode` fuer Tabellen bleibt standardmaessig `avg`; `categoryRowAggregateMode`/`categoryChildAggregateMode` und `categoryAggregateMode`/`categoryValueMode` koennen `min`, `max`, `max_abs`, `min_abs`, `add`, `sum`, `avg`, `median`, `first`, `last` oder `amount` nutzen.
 
 ## Aktuelle Funktionsaufrufe
 

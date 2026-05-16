@@ -1,6 +1,6 @@
 /*
 ========================================
-A1 collectAtags v1.45 (sys 2.21)
+A1 collectAtags v1.46 (sys 2.21)
 ========================================
 
 Changes
@@ -12,6 +12,7 @@ Changes
 - category aliases can define fixed children, e.g. `@@@help: Spielen, Musik`
 - category aliases can invert fixed child values, e.g. `@@@body: -Pain, Safety`
 - exclude name checks use a per-run lookup map
+- local trim helper reduces repeated whitespace-normalization code
 - category tags are emitted as list tags containing their occurring member tags
 - parsed items keep their categories in `cats`
 - skip alias declaration lines during normal parsing
@@ -105,9 +106,12 @@ function collectAtags(cfg) {
     return !!excludeMap[n];
   }
 
+  function trimAtagString(val) {
+    return String(val || "").replace(/^\s+|\s+$/g, "");
+  }
+
   function normalizeTagName(rawName) {
-    var s = String(rawName || "");
-    s = s.replace(/^\s+|\s+$/g, "");
+    var s = trimAtagString(rawName);
     s = s.replace(/\s+/g, "_");
     s = s.replace(/^_+|_+$/g, "");
     return s;
@@ -118,7 +122,7 @@ function collectAtags(cfg) {
       return { attrText: null, attrValue: null };
     }
 
-    var s = String(attrRaw).replace(/^\s+|\s+$/g, "");
+    var s = trimAtagString(attrRaw);
     var sNum = s.replace(",", ".");
     var m;
 
@@ -291,7 +295,7 @@ function collectAtags(cfg) {
     var key;
 
     for (i = 0; i < parts.length; i++) {
-      rawPart = String(parts[i] || "").replace(/^\s+|\s+$/g, "");
+      rawPart = trimAtagString(parts[i]);
       sign = 1;
 
       if (rawPart.charAt(0) === "-") {
@@ -317,7 +321,7 @@ function collectAtags(cfg) {
     var lines = String(text || "").split(/\r?\n/);
 
     for (var i = 0; i < lines.length; i++) {
-      var line = String(lines[i] || "").replace(/^\s+|\s+$/g, "");
+      var line = trimAtagString(lines[i]);
       if (!/^@@/.test(line)) continue;
 
       var m = line.match(/^@@([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*\.?)\s*:\s*(.+)$/);
@@ -338,7 +342,7 @@ function collectAtags(cfg) {
       var parts = rawAliases.split(",");
 
       for (var j = 0; j < parts.length; j++) {
-        var alias = String(parts[j] || "").replace(/^\s+|\s+$/g, "");
+        var alias = trimAtagString(parts[j]);
         var invert = false;
 
         if (!alias) continue;
@@ -381,7 +385,7 @@ function collectAtags(cfg) {
     }
 
     for (var i = 0; i < lines.length; i++) {
-      var line = String(lines[i] || "").replace(/^\s+|\s+$/g, "");
+      var line = trimAtagString(lines[i]);
       var aliasLine = line;
       var hasAliasPrefix = /^@@/.test(line);
       var catAliasMatch;
@@ -433,7 +437,7 @@ function collectAtags(cfg) {
       var parts = splitAliasList(m[4] || "");
 
       for (var j = 0; j < parts.length; j++) {
-        var alias = String(parts[j] || "").replace(/^\s+|\s+$/g, "");
+        var alias = trimAtagString(parts[j]);
         var invert = false;
         var fixedRaw = null;
         var fixedMatch;
@@ -478,7 +482,7 @@ function collectAtags(cfg) {
   }
 
   function isAliasDeclarationLine(line) {
-    var s = String(line || "").replace(/^\s+|\s+$/g, "");
+    var s = trimAtagString(line);
     if (/^@@/.test(s)) return true;
     return /^[^\[(:(]+?(?:\s*\(\s*([^)]+)\s*\))?\s*\[\s*[^\]]+\s*\]\s*:/.test(s);
   }
@@ -637,7 +641,7 @@ function collectAtags(cfg) {
 
       if (!resolvedName || isExcluded(resolvedName)) continue;
       if (skipTemplates && /^\/\//.test(String(effectiveRaw || ""))) continue;
-      if (skipTemplates && String(effectiveRaw || "").replace(/^\s+|\s+$/g, "") === "_") continue;
+      if (skipTemplates && trimAtagString(effectiveRaw) === "_") continue;
 
       norm = normalizeAttr(effectiveRaw);
       if (aliasInfo.invert) norm = invertNormalizedAttr(norm);
@@ -948,7 +952,7 @@ function collectAtags(cfg) {
       while ((m1 = rxColon.exec(parseLine)) !== null) {
         var name1 = m1[2];
         var raw1 = m1[3] != null && m1[3] !== "" ? m1[3] : (m1[4] || "");
-        raw1 = String(raw1).replace(/^\s+|\s+$/g, "");
+        raw1 = trimAtagString(raw1);
 
         if (!name1) continue;
         if (isInsideAtagQuoteState(quoteState, m1.index)) continue;
@@ -965,7 +969,7 @@ function collectAtags(cfg) {
       var rxColonExplicit = /(^|[\s\n\r])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*::\s*(?:"([^"]*)"|([^\r\n,;.!?()\[\]{}]+))/g;
       while ((m1 = rxColonExplicit.exec(parseLine)) !== null) {
         raw1 = m1[3] != null && m1[3] !== "" ? m1[3] : (m1[4] || "");
-        raw1 = String(raw1).replace(/^\s+|\s+$/g, "");
+        raw1 = trimAtagString(raw1);
         if (isInsideAtagQuoteState(quoteState, m1.index)) continue;
         addParsedTagValue(m1[2] || "", raw1, items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw);
       }

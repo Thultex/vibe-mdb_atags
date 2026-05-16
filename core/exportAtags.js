@@ -1,6 +1,6 @@
 /*
 ========================================
-A2 exportAtags v1.75 (sys 2.21)
+A2 exportAtags v1.76 (sys 2.21)
 ========================================
 
 Notes:
@@ -21,6 +21,7 @@ Notes:
 - negated category children are marked with subscript minus before the name in category displays
 - category and tree value summaries reuse a per-export value index
 - repeated string aggregation returns early when no repeated string tags exist
+- category and string aggregation share one item clone helper
 - repeated string values aggregate with first, last, or join
 - cumulative +/- values force sum aggregation in row exports
 - Keep this header ASCII-only for the Memento editor
@@ -334,10 +335,7 @@ function collectAtagValueSummary(itemName, items, cfg, context, valueMultiplier,
 function categorySummaryItem(item, items, cfg, context, valueIndex) {
   var clone;
   if (!atagItemIsCategory(item)) return item;
-  clone = {};
-  for (var k in item) {
-    if (item.hasOwnProperty(k)) clone[k] = item[k];
-  }
+  clone = cloneAtagItem(item);
   clone.attrText = formatAtagCategorySummary(item, items, cfg, context, valueIndex);
   clone.rawText = clone.attrText;
   return clone;
