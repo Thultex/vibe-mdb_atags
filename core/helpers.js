@@ -1,6 +1,6 @@
 /*
 ========================================
-A3 Atag Helpers v2.06 (sys 2.21)
+A3 Atag Helpers v2.07 (sys 2.21)
 ========================================
 
 Changes
@@ -23,6 +23,7 @@ Changes
 - consolidate wrapper export config
 - pass category aggregate config through applyTags wrapper
 - pass category display config through applyTags wrapper
+- compute min/max/max_abs/min_abs aggregates without sorting
 
 ========================================
 */
@@ -387,6 +388,8 @@ function computeAggregate(values, mode) {
   var sorted;
   var mid;
   var m = String(mode == null ? "avg" : mode).toLowerCase();
+  var best;
+  var d;
 
   if (!values.length) return null;
 
@@ -395,32 +398,30 @@ function computeAggregate(values, mode) {
   if (m === "first") return values[0];
   if (m === "last") return values[values.length - 1];
   if (m === "min") {
-    sorted = values.slice(0);
-    sorted.sort(function(a, b) { return a - b; });
-    return sorted[0];
+    best = values[0];
+    for (i = 1; i < values.length; i++) if (values[i] < best) best = values[i];
+    return best;
   }
   if (m === "max") {
-    sorted = values.slice(0);
-    sorted.sort(function(a, b) { return a - b; });
-    return sorted[sorted.length - 1];
+    best = values[0];
+    for (i = 1; i < values.length; i++) if (values[i] > best) best = values[i];
+    return best;
   }
   if (m === "max_abs" || m === "maxabs") {
-    sorted = values.slice(0);
-    sorted.sort(function(a, b) {
-      var d = Math.abs(b) - Math.abs(a);
-      if (d !== 0) return d;
-      return b - a;
-    });
-    return sorted[0];
+    best = values[0];
+    for (i = 1; i < values.length; i++) {
+      d = Math.abs(values[i]) - Math.abs(best);
+      if (d > 0 || (d === 0 && values[i] > best)) best = values[i];
+    }
+    return best;
   }
   if (m === "min_abs" || m === "minabs") {
-    sorted = values.slice(0);
-    sorted.sort(function(a, b) {
-      var d = Math.abs(a) - Math.abs(b);
-      if (d !== 0) return d;
-      return b - a;
-    });
-    return sorted[0];
+    best = values[0];
+    for (i = 1; i < values.length; i++) {
+      d = Math.abs(values[i]) - Math.abs(best);
+      if (d < 0 || (d === 0 && values[i] > best)) best = values[i];
+    }
+    return best;
   }
   if (m === "median") {
     sorted = values.slice(0);
