@@ -1,6 +1,6 @@
 /*
 ========================================
-A2 exportAtags v1.76 (sys 2.21)
+A2 exportAtags v1.77 (sys 2.21)
 ========================================
 
 Notes:
@@ -22,6 +22,7 @@ Notes:
 - category and tree value summaries reuse a per-export value index
 - repeated string aggregation returns early when no repeated string tags exist
 - category and string aggregation share one item clone helper
+- rows_md and rows_html share row table view construction
 - repeated string values aggregate with first, last, or join
 - cumulative +/- values force sum aggregation in row exports
 - Keep this header ASCII-only for the Memento editor
@@ -668,8 +669,7 @@ function buildAtagNormalMarkdown(items, cfg) {
   return rendered;
 }
 
-// ===== ROWS MD =====
-function buildAtagRowsMarkdown(items, cfg) {
+function buildAtagRowTableView(items, cfg) {
   var data = collectAtagRowTableData(items);
   var rows = data.rows;
   var tagOrder = data.tagOrder;
@@ -680,46 +680,79 @@ function buildAtagRowsMarkdown(items, cfg) {
   var includeUnits = !(cfg && cfg.rowIncludeUnits === false);
   var decimals = cfg && cfg.rowAggregateDecimals != null ? cfg.rowAggregateDecimals : 1;
   var shortenHeaders = cfg && cfg.shortenTableHeaders != null ? cfg.shortenTableHeaders : 0;
+  var header;
+  var bodyRows = [];
+  var aggregateRow = null;
+  var ri;
+  var r;
+  var cells;
+  var tj;
+  var v;
+  var tk;
+  var aggInfo;
+  var agg;
 
-  if (!rows.length || !tagOrder.length) return "";
+  if (!rows.length || !tagOrder.length) return null;
 
-  var lines = [];
-  var header = ["rval"];
-  var aligns = [":---"];
+  header = ["rval"];
 
   for (var t = 0; t < tagOrder.length; t++) {
     header.push(shortenTableWord(buildAtagTagHeaderLabel(tagOrder[t], tagDisplay[tagOrder[t]], cfg), shortenHeaders));
-    aligns.push("---:");
   }
 
-  lines.push("| " + header.join(" | ") + " |");
-  lines.push("| " + aligns.join(" | ") + " |");
+  for (ri = 0; ri < rows.length; ri++) {
+    r = rows[ri];
+    cells = [buildAtagRowHeaderLabel(r, includeUnits)];
 
-  for (var ri = 0; ri < rows.length; ri++) {
-    var r = rows[ri];
-    var cells = [buildAtagRowHeaderLabel(r, includeUnits)];
-
-    for (var tj = 0; tj < tagOrder.length; tj++) {
-      var v = r.values[tagOrder[tj]];
+    for (tj = 0; tj < tagOrder.length; tj++) {
+      v = r.values[tagOrder[tj]];
       cells.push(v == null ? "" : formatTagNumberLocale(v, decimals, !!tagHasDecimal[tagOrder[tj]]));
     }
 
-    lines.push("| " + cells.join(" | ") + " |");
+    bodyRows.push(cells);
   }
 
   if (mode === "avg" || mode === "sum") {
-    var aggCells = [mode];
+    aggregateRow = [mode];
 
-    for (var tk = 0; tk < tagOrder.length; tk++) {
-      var aggInfo = tagAgg[tagOrder[tk]];
-      var agg = null;
+    for (tk = 0; tk < tagOrder.length; tk++) {
+      aggInfo = tagAgg[tagOrder[tk]];
+      agg = null;
       if (aggInfo && aggInfo.count) {
         agg = (mode === "sum" || aggInfo.cumulative === true) ? aggInfo.sum : (aggInfo.sum / aggInfo.count);
       }
-      aggCells.push(agg == null ? "" : formatTagNumberLocale(agg, decimals, !!tagHasDecimal[tagOrder[tk]]));
+      aggregateRow.push(agg == null ? "" : formatTagNumberLocale(agg, decimals, !!tagHasDecimal[tagOrder[tk]]));
     }
+  }
 
-    lines.push("| " + aggCells.join(" | ") + " |");
+  return {
+    header: header,
+    bodyRows: bodyRows,
+    aggregateRow: aggregateRow
+  };
+}
+
+// ===== ROWS MD =====
+function buildAtagRowsMarkdown(items, cfg) {
+  var view = buildAtagRowTableView(items, cfg);
+  var lines = [];
+  var aligns;
+  var i;
+
+  if (!view) return "";
+
+  aligns = [":---"];
+  for (i = 1; i < view.header.length; i++) aligns.push("---:");
+
+  lines.push("| " + view.header.join(" | ") + " |");
+  lines.push("| " + aligns.join(" | ") + " |");
+
+  for (i = 0; i < view.bodyRows.length; i++) {
+    lines.push("| " + view.bodyRows[i].join(" | ") + " |");
+  }
+
+  if (view.aggregateRow) {
+    lines.push("| " + view.aggregateRow.join(" | ") + " |");
   }
 
   return lines.join("  \n");
@@ -727,71 +760,38 @@ function buildAtagRowsMarkdown(items, cfg) {
 
 // ===== ROWS HTML =====
 function buildAtagRowsHtml(items, cfg) {
-  var data = collectAtagRowTableData(items);
-  var rows = data.rows;
-  var tagOrder = data.tagOrder;
-  var tagDisplay = data.tagDisplay || {};
-  var tagHasDecimal = data.tagHasDecimal || {};
-  var tagAgg = data.tagAgg || {};
-  var mode = cfg && cfg.rowAggregateMode != null ? cfg.rowAggregateMode : "avg";
-  var includeUnits = !(cfg && cfg.rowIncludeUnits === false);
-  var decimals = cfg && cfg.rowAggregateDecimals != null ? cfg.rowAggregateDecimals : 1;
-  var shortenHeaders = cfg && cfg.shortenTableHeaders != null ? cfg.shortenTableHeaders : 0;
-
-  if (!rows.length || !tagOrder.length) return "";
-
+  var view = buildAtagRowTableView(items, cfg);
   var html = [];
+  var i;
+  var j;
+  var row;
+
+  if (!view) return "";
+
   html.push('<table style="font-family:sans-serif;">');
   html.push("<thead>");
   html.push("<tr>");
-  html.push('<th style="text-align:left;">rval</th>');
-
-  for (var t = 0; t < tagOrder.length; t++) {
-    html.push(
-      '<th style="text-align:right;">' +
-      escapeHtml(shortenTableWord(buildAtagTagHeaderLabel(tagOrder[t], tagDisplay[tagOrder[t]], cfg), shortenHeaders)) +
-      "</th>"
-    );
+  for (i = 0; i < view.header.length; i++) {
+    html.push('<th style="text-align:' + (i === 0 ? "left" : "right") + ';">' + escapeHtml(view.header[i]) + "</th>");
   }
-
   html.push("</tr>");
   html.push("</thead>");
   html.push("<tbody>");
 
-  for (var ri = 0; ri < rows.length; ri++) {
-    var r = rows[ri];
+  for (i = 0; i < view.bodyRows.length; i++) {
+    row = view.bodyRows[i];
     html.push("<tr>");
-    html.push('<td style="text-align:left;">' + escapeHtml(buildAtagRowHeaderLabel(r, includeUnits)) + "</td>");
-
-    for (var tj = 0; tj < tagOrder.length; tj++) {
-      var v = r.values[tagOrder[tj]];
-      html.push(
-        '<td style="text-align:right;">' +
-        escapeHtml(v == null ? "" : formatTagNumberLocale(v, decimals, !!tagHasDecimal[tagOrder[tj]])) +
-        "</td>"
-      );
+    for (j = 0; j < row.length; j++) {
+      html.push('<td style="text-align:' + (j === 0 ? "left" : "right") + ';">' + escapeHtml(row[j]) + "</td>");
     }
-
     html.push("</tr>");
   }
 
-  if (mode === "avg" || mode === "sum") {
+  if (view.aggregateRow) {
     html.push("<tr>");
-    html.push('<td style="text-align:left;">' + escapeHtml(mode) + "</td>");
-
-    for (var tk = 0; tk < tagOrder.length; tk++) {
-      var aggInfo = tagAgg[tagOrder[tk]];
-      var agg = null;
-      if (aggInfo && aggInfo.count) {
-        agg = (mode === "sum" || aggInfo.cumulative === true) ? aggInfo.sum : (aggInfo.sum / aggInfo.count);
-      }
-      html.push(
-        '<td style="text-align:right;">' +
-        escapeHtml(agg == null ? "" : formatTagNumberLocale(agg, decimals, !!tagHasDecimal[tagOrder[tk]])) +
-        "</td>"
-      );
+    for (j = 0; j < view.aggregateRow.length; j++) {
+      html.push('<td style="text-align:' + (j === 0 ? "left" : "right") + ';">' + escapeHtml(view.aggregateRow[j]) + "</td>");
     }
-
     html.push("</tr>");
   }
 
