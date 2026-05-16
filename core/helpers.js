@@ -1,11 +1,11 @@
 /*
 ========================================
-A3 Atag Helpers v2.04 (sys 2.21)
+A3 Atag Helpers v2.06 (sys 2.21)
 ========================================
 
 Changes
 - pass multiAliasTargets through applyTags wrapper
-- aggregate helper supports min, max, add, avg, median, first, last and amount
+- aggregate helper supports min, max, max_abs, min_abs, add, avg, median, first, last and amount
 - markdown/text exports use long tag names by default; short display names are opt-in
 - pass includeBlankTags through export wrappers
 - pass markdownGroupSeparator/markdownGroupSeparators through export wrappers
@@ -21,6 +21,8 @@ Changes
 - markdown sorting treats category tags as their own group before blanks
 - JSON value maps keep category tag arrays as arrays
 - consolidate wrapper export config
+- pass category aggregate config through applyTags wrapper
+- pass category display config through applyTags wrapper
 
 ========================================
 */
@@ -402,6 +404,24 @@ function computeAggregate(values, mode) {
     sorted.sort(function(a, b) { return a - b; });
     return sorted[sorted.length - 1];
   }
+  if (m === "max_abs" || m === "maxabs") {
+    sorted = values.slice(0);
+    sorted.sort(function(a, b) {
+      var d = Math.abs(b) - Math.abs(a);
+      if (d !== 0) return d;
+      return b - a;
+    });
+    return sorted[0];
+  }
+  if (m === "min_abs" || m === "minabs") {
+    sorted = values.slice(0);
+    sorted.sort(function(a, b) {
+      var d = Math.abs(a) - Math.abs(b);
+      if (d !== 0) return d;
+      return b - a;
+    });
+    return sorted[0];
+  }
   if (m === "median") {
     sorted = values.slice(0);
     sorted.sort(function(a, b) { return a - b; });
@@ -454,6 +474,19 @@ function exportAtagsFromCfg(cfg, entryObj, result) {
     rowAggregateMode: cfg.rowAggregateMode,
     rowIncludeUnits: cfg.rowIncludeUnits,
     rowAggregateDecimals: cfg.rowAggregateDecimals,
+    categoryAggregateMode: cfg.categoryAggregateMode,
+    categoryValueMode: cfg.categoryValueMode,
+    categoryRowAggregateMode: cfg.categoryRowAggregateMode,
+    categoryChildAggregateMode: cfg.categoryChildAggregateMode,
+    categoryAggregateDecimals: cfg.categoryAggregateDecimals,
+    categoryFilter: cfg.categoryFilter,
+    catFilter: cfg.catFilter,
+    cat_display_values: cfg.cat_display_values,
+    category_display_values: cfg.category_display_values,
+    catDisplayValues: cfg.catDisplayValues,
+    categoryDisplayValues: cfg.categoryDisplayValues,
+    categoryValueDisplay: cfg.categoryValueDisplay,
+    categoryDisplayMode: cfg.categoryDisplayMode,
     shortenTableHeaders: cfg.shortenTableHeaders,
     tableHeaderNames: cfg.tableHeaderNames,
     markdownLabelNames: cfg.markdownLabelNames,

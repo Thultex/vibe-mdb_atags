@@ -45,7 +45,7 @@ function assertArray(label, actual, expected) {
   }
 }
 
-function item(name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, displayName, cats, kind, cumulative) {
+function item(name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, displayName, cats, kind, cumulative, categoryChildSigns) {
   var out = {
     name: name,
     attrText: attrText,
@@ -62,6 +62,7 @@ function item(name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, dis
     if (kind === "category") out.isCategory = true;
   }
   if (cumulative) out.cumulative = true;
+  if (categoryChildSigns) out.categoryChildSigns = categoryChildSigns;
   return out;
 }
 
@@ -145,6 +146,120 @@ assertEqual(
   "text-joins-repeated-strings",
   entryObj.field("Text"),
   "info: Erstens, Zweitens, Drittens\nprot: Bechler, Enda"
+);
+
+entryObj = makeEntry({ Note: "@@@Koerper: -ks, Koerpersicher\n@@Kopfschmerzen (ks)\nks2 Koerpersicher1" });
+applyTags({
+  entryObj: entryObj,
+  textFields: ["Note"],
+  targetField: "Tree",
+  targetFieldType: "tree_md",
+  categoryAggregateMode: "max_abs"
+});
+assertEqual(
+  "tree-category-negative-short-child",
+  entryObj.field("Tree"),
+  "Koerper -2  \n" +
+  "\u251c\u2500\u2500 Koerpersicher 1  \n" +
+  "\u2514\u2500\u2500 \u208BKopfschmerzen -2"
+);
+
+entryObj = makeEntry({ Note: "@@Kopfschmerz (KSch):  ks\n@@@Koerper: -Kopfschmerz\nks2" });
+applyTags({
+  entryObj: entryObj,
+  textFields: ["Note"],
+  targetField: "Tree",
+  targetFieldType: "tree_md",
+  categoryAggregateMode: "max_abs"
+});
+assertEqual(
+  "tree-category-negative-long-child-with-separate-alias",
+  entryObj.field("Tree"),
+  "Koerper -2  \n" +
+  "\u2514\u2500\u2500 \u208BKopfschmerz -2"
+);
+
+entryObj = makeEntry({ Note: "@@Kopfschmerz (KSch):  ks\n@@@Koerper: -Kopfschmerz\nks\u00B2" });
+applyTags({
+  entryObj: entryObj,
+  textFields: ["Note"],
+  targetField: "Tree",
+  targetFieldType: "tree_md"
+});
+assertEqual(
+  "tree-category-default-max-abs-negative-long-child-with-superscript-alias",
+  entryObj.field("Tree"),
+  "Koerper -2  \n" +
+  "\u2514\u2500\u2500 \u208BKopfschmerz -2"
+);
+
+entryObj = makeEntry({ Note: "@@@Koerper: -Kopfschmerz, Koerpersicher\nKopfschmerz\u00B2 Koerpersicher1" });
+applyTags({
+  entryObj: entryObj,
+  textFields: ["Note"],
+  targetField: "Tree",
+  targetFieldType: "tree_md"
+});
+assertEqual(
+  "tree-category-default-max-abs",
+  entryObj.field("Tree"),
+  "Koerper -2  \n" +
+  "\u251c\u2500\u2500 Koerpersicher 1  \n" +
+  "\u2514\u2500\u2500 \u208BKopfschmerz -2"
+);
+
+entryObj = makeEntry({ Note: "@@@Koerper: -Kopfschmerz, Koerpersicher\nKopfschmerz\u00B2 Koerpersicher1" });
+applyTags({
+  entryObj: entryObj,
+  textFields: ["Note"],
+  targetField: "MD",
+  targetFieldType: "md",
+  categoryAggregateMode: "max_abs",
+  cat_display_values: "all"
+});
+assertEqual(
+  "md-category-negated-child-value-marker",
+  entryObj.field("MD"),
+  "Koerpersicher: +1  \n" +
+  "Kopfschmerz: +2  \n" +
+  "Koerper: -2 - [Koerpersicher: 1, \u208BKopfschmerz: -2]"
+);
+
+entryObj = makeEntry({ Note: "@@Kopfschmerz (KSch):  ks\n@@@Koerper: -Kopfschmerz\n| ks\u00B2" });
+applyTags({
+  entryObj: entryObj,
+  textFields: ["Note"],
+  targetField: "Tree",
+  targetFieldType: "tree_md",
+  categoryAggregateMode: "max_abs"
+});
+assertEqual(
+  "tree-category-negative-long-child-with-readable-superscript-alias",
+  entryObj.field("Tree"),
+  "Koerper -2  \n" +
+  "\u2514\u2500\u2500 \u208BKopfschmerz -2"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("Koerper", "Kopfschmerzen,Koerpersicher", ["Kopfschmerzen", "Koerpersicher"], "Kopfschmerzen,Koerpersicher", null, null, null, "Koerper", [], "category", false, { kopfschmerzen: -1, koerpersicher: 1 }),
+      item("Kopfschmerzen", "+2", 2, "+2", null, null, null, "ks"),
+      item("Koerpersicher", "+1", 1, "+1")
+    ]
+  },
+  targetField: "Tree",
+  targetFieldType: "tree_md",
+  categoryAggregateMode: "max_abs"
+});
+assertEqual(
+  "tree-category-negative-child",
+  entryObj.field("Tree"),
+  "Koerper -2  \n" +
+  "\u251c\u2500\u2500 Koerpersicher 1  \n" +
+  "\u2514\u2500\u2500 \u208BKopfschmerzen -2"
 );
 
 entryObj = makeEntry({});
@@ -372,6 +487,66 @@ exportAtags({
   entryObj: entryObj,
   result: {
     items: [
+      item("Koerper", "Kopfschmerzen,Koerpersicher", ["Kopfschmerzen", "Koerpersicher"], "Kopfschmerzen,Koerpersicher", null, null, null, "Koerper", [], "category", false, { kopfschmerzen: -1, koerpersicher: 1 }),
+      item("Kopfschmerzen", "+3", 3, "+3"),
+      item("Koerpersicher", "+2", 2, "+2")
+    ]
+  },
+  targetField: "Text",
+  targetFieldType: "text",
+  categoryAggregateMode: "max_abs"
+});
+assertEqual(
+  "text-category-negative-child-max-abs",
+  entryObj.field("Text"),
+  "Koerper: -3 - [Kopfschmerzen, Koerpersicher]\nKoerpersicher: +2\nKopfschmerzen: +3"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("Koerper", "Kopfschmerzen,Koerpersicher", ["Kopfschmerzen", "Koerpersicher"], "Kopfschmerzen,Koerpersicher", null, null, null, "Koerper", [], "category", false, { kopfschmerzen: -1, koerpersicher: 1 }),
+      item("Kopfschmerzen", "+3", 3, "+3"),
+      item("Koerpersicher", "+2", 2, "+2")
+    ]
+  },
+  targetField: "Text",
+  targetFieldType: "text",
+  categoryAggregateMode: "min_abs"
+});
+assertEqual(
+  "text-category-negative-child-min-abs",
+  entryObj.field("Text"),
+  "Koerper: 2 - [Kopfschmerzen, Koerpersicher]\nKoerpersicher: +2\nKopfschmerzen: +3"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("Koerper", "Kopfschmerzen,Koerpersicher", ["Kopfschmerzen", "Koerpersicher"], "Kopfschmerzen,Koerpersicher", null, null, null, "Koerper", [], "category", false, { kopfschmerzen: -1, koerpersicher: 1 }),
+      item("Kopfschmerzen", "+2", 2, "+2"),
+      item("Koerpersicher", "+2", 2, "+2")
+    ]
+  },
+  targetField: "Text",
+  targetFieldType: "text",
+  categoryAggregateMode: "max_abs"
+});
+assertEqual(
+  "text-category-max-abs-prefers-positive-tie",
+  entryObj.field("Text"),
+  "Koerper: 2 - [Kopfschmerzen, Koerpersicher]\nKoerpersicher: +2\nKopfschmerzen: +2"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
       item("spannung_schmerz", "Kopfschmerz,Nackenschmerz,Spannung", ["Kopfschmerz", "Nackenschmerz", "Spannung"], "Kopfschmerz,Nackenschmerz,Spannung", null, null, null, "ss", [], "category"),
       item("Kopfschmerz", "+1", 1, "+1", 1, null, "1"),
       item("Kopfschmerz", "+3", 3, "+3", 2, null, "2"),
@@ -412,7 +587,7 @@ exportAtags({
 assertEqual(
   "tree_md-default-row-aggregation-is-max",
   entryObj.field("Tree"),
-  "spannung_schmerz 2,3  \n" +
+  "spannung_schmerz 3  \n" +
   "\u251c\u2500\u2500 Kopfschmerz 3 [2]  \n" +
   "\u251c\u2500\u2500 Nackenschmerz 2  \n" +
   "\u2514\u2500\u2500 Spannung 2"

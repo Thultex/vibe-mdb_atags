@@ -1,6 +1,6 @@
 /*
 ========================================
-A2 exportAtags v1.71 (sys 2.21)
+A2 exportAtags v1.73 (sys 2.21)
 ========================================
 
 Notes:
@@ -17,6 +17,8 @@ Notes:
 - tag export writes spaces as underscores
 - tag export prefixes category tags with @
 - category parents show aggregated numeric child values in text/md/tree exports
+- tree_md category parents default to max_abs for signed fixed children
+- negated category children are marked with subscript minus before the name in category displays
 - repeated string values aggregate with first, last, or join
 - cumulative +/- values force sum aggregation in row exports
 - Keep this header ASCII-only for the Memento editor
@@ -60,9 +62,10 @@ applyTags({
 */
 
 // ===== TEXT =====
-function atagCategoryAggregateMode(cfg) {
+function atagCategoryAggregateMode(cfg, context) {
   if (cfg && cfg.categoryAggregateMode !== undefined) return cfg.categoryAggregateMode;
   if (cfg && cfg.categoryValueMode !== undefined) return cfg.categoryValueMode;
+  if (context === "tree") return "max_abs";
   return "avg";
 }
 
@@ -142,13 +145,21 @@ function atagCategoryDetailPrefix(displayMode, context) {
   return displayMode === "count" ? atagCountDetailPrefix(context) : atagMarkdownDetailPrefix(context);
 }
 
+function atagCategoryChildNamePrefix(sign) {
+  return sign === -1 ? "\u208B" : "";
+}
 
-function collectAtagCategoryChildValues(items, childNames, cfg) {
+function formatAtagCategoryChildDetail(name, sign, value, decimals, hasDecimal) {
+  return atagCategoryChildNamePrefix(sign) + String(name || "") + ": " + formatTagNumberLocale(value, decimals, hasDecimal);
+}
+
+function collectAtagCategoryChildValues(items, childNames, cfg, categoryItem) {
   var valuesByChild = {};
   var out = [];
   var childSet = {};
   var childOrder = [];
   var childHasDecimal = {};
+  var childSigns = categoryItem && categoryItem.categoryChildSigns ? categoryItem.categoryChildSigns : {};
   var mode = atagCategoryRowAggregateMode(cfg);
   var i;
   var it;
@@ -174,6 +185,7 @@ function collectAtagCategoryChildValues(items, childNames, cfg) {
     if (!childSet[key]) continue;
     num = toNumberIfPossible(it.attrValue);
     if (num == null) continue;
+    if (childSigns[key] === -1) num = -num;
     if (!valuesByChild[key]) valuesByChild[key] = [];
     valuesByChild[key].push(num);
     if (itemHasDecimalValue(it)) childHasDecimal[key] = true;
@@ -188,7 +200,8 @@ function collectAtagCategoryChildValues(items, childNames, cfg) {
     out.push({
       name: childSet[key],
       value: agg,
-      hasDecimal: !!childHasDecimal[key]
+      hasDecimal: !!childHasDecimal[key],
+      sign: childSigns[key] === -1 ? -1 : 1
     });
   }
 
@@ -197,9 +210,9 @@ function collectAtagCategoryChildValues(items, childNames, cfg) {
 
 function formatAtagCategorySummary(item, items, cfg, context) {
   var children = isArrayValue(item && item.attrValue) ? item.attrValue : [];
-  var values = collectAtagCategoryChildValues(items, children, cfg);
+  var values = collectAtagCategoryChildValues(items, children, cfg, item);
   var decimals = atagCategoryAggregateDecimals(cfg);
-  var mode = atagCategoryAggregateMode(cfg);
+  var mode = atagCategoryAggregateMode(cfg, context);
   var nums = [];
   var names = [];
   var detailParts = [];
@@ -211,7 +224,7 @@ function formatAtagCategorySummary(item, items, cfg, context) {
   for (i = 0; i < values.length; i++) {
     nums.push(values[i].value);
     names.push(values[i].name);
-    detailParts.push(values[i].name + ": " + formatTagNumberLocale(values[i].value, decimals, values[i].hasDecimal));
+    detailParts.push(formatAtagCategoryChildDetail(values[i].name, values[i].sign, values[i].value, decimals, values[i].hasDecimal));
     if (values[i].hasDecimal) forceDecimal = true;
   }
 
@@ -234,12 +247,13 @@ function formatAtagCategorySummary(item, items, cfg, context) {
   return item && item.attrText != null ? item.attrText : "";
 }
 
-function collectAtagValueSummary(itemName, items, cfg, context) {
+function collectAtagValueSummary(itemName, items, cfg, context, valueMultiplier) {
   var vals = [];
   var parts = [];
   var firstItem = null;
   var hasDecimal = false;
   var cumulative = false;
+  var multiplier = valueMultiplier === -1 ? -1 : 1;
   var mode = cfg && cfg.rowAggregateMode !== undefined ? cfg.rowAggregateMode : (context === "tree" ? "max" : "avg");
   var decimals = cfg && cfg.rowAggregateDecimals != null ? cfg.rowAggregateDecimals : 1;
   var displayMode = atagRowDisplayValuesMode(cfg, context || "default");
@@ -255,6 +269,7 @@ function collectAtagValueSummary(itemName, items, cfg, context) {
     if (!firstItem) firstItem = it;
     num = toNumberIfPossible(it.attrValue);
     if (num == null) continue;
+    num *= multiplier;
     vals.push(num);
     parts.push(formatTagNumberLocale(num, decimals, itemHasDecimalValue(it)));
     if (itemHasDecimalValue(it)) hasDecimal = true;
@@ -945,7 +960,9 @@ function buildAtagTreeMarkdown(items, cfg) {
         name: name,
         displayName: displayName || name,
         children: [],
-        childSeen: {}
+        childSeen: {},
+        childSigns: {},
+        categoryItem: null
       };
       order.push(key);
     } else if (displayName && categories[key].displayName === categories[key].name) {
@@ -953,6 +970,17 @@ function buildAtagTreeMarkdown(items, cfg) {
     }
 
     return categories[key];
+  }
+
+  function rememberCategoryItem(catObj, item) {
+    var signs;
+    var signKey;
+    if (!catObj || !item) return;
+    catObj.categoryItem = item;
+    signs = item.categoryChildSigns || {};
+    for (signKey in signs) {
+      if (signs.hasOwnProperty(signKey)) catObj.childSigns[signKey] = signs[signKey];
+    }
   }
 
   function rememberItem(item) {
@@ -963,16 +991,17 @@ function buildAtagTreeMarkdown(items, cfg) {
     itemByName[key] = item;
   }
 
-  function treeChildLabel(name) {
+  function treeChildLabel(name, catObj) {
     var label = String(name || "");
     var summary;
+    var sign = catObj && catObj.childSigns ? catObj.childSigns[label.toLowerCase()] : null;
 
     if (!showValues) return label;
 
-    summary = collectAtagValueSummary(label, items, cfg, "tree");
+    summary = collectAtagValueSummary(name, items, cfg, "tree", sign);
     if (!summary || !summary.text) return label;
 
-    return label + " " + summary.text;
+    return atagCategoryChildNamePrefix(sign) + label + " " + summary.text;
   }
 
   function treeChildExists(name) {
@@ -1001,6 +1030,7 @@ function buildAtagTreeMarkdown(items, cfg) {
 
     if (isArrayValue(it.attrValue)) {
       cat = ensureCategory(it.name, it.name);
+      rememberCategoryItem(cat, it);
       for (j = 0; j < it.attrValue.length; j++) {
         child = String(it.attrValue[j] || "");
         if (!child) continue;
@@ -1042,14 +1072,22 @@ function buildAtagTreeMarkdown(items, cfg) {
     lines.push(treeCategoryLabel(cat));
 
     for (j = 0; j < cat.children.length; j++) {
-      lines.push((j === cat.children.length - 1 ? lastBranch : branch) + treeChildLabel(cat.children[j]));
+      lines.push((j === cat.children.length - 1 ? lastBranch : branch) + treeChildLabel(cat.children[j], cat));
     }
   }
 
   return lines.join("  \n");
 
   function treeCategoryLabel(catObj) {
-    var summary = formatAtagCategorySummary({ attrValue: catObj.children }, items, cfg, "tree");
+    var summaryItem = {};
+    var source = catObj.categoryItem || {};
+    var prop;
+    var summary;
+    for (prop in source) {
+      if (source.hasOwnProperty(prop)) summaryItem[prop] = source[prop];
+    }
+    summaryItem.attrValue = catObj.children;
+    summary = formatAtagCategorySummary(summaryItem, items, cfg, "tree");
     var label = catObj.name;
     if (showValues && summary && /^\S/.test(summary)) label += " " + summary;
     return label;

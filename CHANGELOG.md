@@ -17,6 +17,19 @@
 - Test/Doku: ...
 ```
 
+## 2026-05-16
+
+- `collectAtags` auf `v1.44` angehoben
+- Feature: Kategorie-Aliase koennen feste Kinder mit negativem Vorzeichen definieren, z. B. `@@@Koerper: -Kopfschmerz`
+- Feature: Feste Kategorie-Kinder werden ueber Alias- und Kurznamen auf ihren Langnamen aufgeloest, auch wenn die Kategoriezeile vor der Aliasdefinition steht
+- `exportAtags` auf `v1.73` angehoben
+- Aenderung: `tree_md` nutzt fuer Kategorie-Eltern standardmaessig `max_abs`
+- Aenderung: Negierte Kategorie-Kinder werden im Tree und in Kategorie-Details mit tiefgestelltem Minus vor dem Namen markiert, z. B. `₋Kopfschmerz -2` und `Koerper: -2 - [₋Kopfschmerz: -2]`
+- `Atag Helpers` auf `v2.06` angehoben
+- Feature: `computeAggregate` unterstuetzt `max_abs` und `min_abs` mit positivem Tie-Break bei gleichem Betrag
+- Aenderung: Kategorie-Anzeigeoptionen wie `cat_display_values` werden durch `applyTags` durchgereicht
+- Test: Regressionen fuer negative Kategorie-Kinder, Alias-Aufloesung, Superscript-Werte und Tree-/Text-Ausgabe ergaenzt
+
 ## 2026-05-13
 
 - `Sync Last From Latest` auf `v1.03` angehoben

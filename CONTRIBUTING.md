@@ -104,6 +104,7 @@ Pflege-Regeln für diese Headerform:
 
 - Die erste Zeile bleibt ein klassischer Blockkommentar `/*`.
 - Darunter stehen immer Titelzeile, Versionszeile und die schließende Linie aus `=` in derselben Grundform.
+- `========================================`-Linien werden nur im Titelblock oben verwendet, nicht in der Mitte des Kommentars und nicht als Abschluss direkt vor `*/`.
 - Die Modulbezeichnung im Header muss zum tatsächlichen Dateizweck passen, zum Beispiel `collectAtags`, `exportAtags` oder `Atag Helpers`.
 - Nach der Versionszeile folgt ein Leerblock und dann mindestens der Abschnitt `Änderungen`.
 - Wenn die Datei bereits weitere Blöcke wie `Anwendung`, `Beispiele` oder ähnliche Dokumentationsabschnitte hat, bleiben diese erhalten und werden bei Bedarf mit gepflegt.

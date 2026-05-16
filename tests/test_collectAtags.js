@@ -119,6 +119,25 @@ function assertCategoryTag(label, input, categoryName, expectedMembers, expected
   }
 }
 
+function assertCategorySigns(label, input, categoryName, expectedSigns) {
+  var result = collectAtags({
+    entryObj: makeEntry({ Note: input }),
+    textFields: ["Note"]
+  });
+  var item = findItem(result.items, categoryName);
+  var signs;
+  var k;
+
+  if (!item) fail(label + ": category '" + categoryName + "' not found in " + input);
+  signs = item.categoryChildSigns || {};
+  for (k in expectedSigns) {
+    if (!expectedSigns.hasOwnProperty(k)) continue;
+    if (signs[k] !== expectedSigns[k]) {
+      fail(label + ": sign for '" + k + "' expected '" + expectedSigns[k] + "' but got '" + signs[k] + "'");
+    }
+  }
+}
+
 function assertSimpleTag(label, input, expectedName) {
   var result = collectAtags({
     entryObj: makeEntry({ Note: input }),
@@ -260,6 +279,16 @@ assertCategoryTag("alias-category-item", "@@@self (sf)\n@@tag1 (tg1)[self]: 3\n@
 assertMissing("cat-alias-is-not-normal-tag-alias", "@@@self (sf)\nsf2", "self");
 assertMissing("cat-alias-fixed-children-without-occurrence", "@@@help: Spielen, Musik, Laufen", "help");
 assertCategoryTag("cat-alias-fixed-children-with-occurrence", "@@@help: Spielen, Musik, Laufen\nSpielen1", "help", ["Spielen"], "help");
+assertCategoryTag("cat-alias-fixed-negative-child", "@@@Koerper: -Kopfschmerzen, Koerpersicher\nKopfschmerzen2 Koerpersicher1", "Koerper", ["Kopfschmerzen", "Koerpersicher"], "Koerper");
+assertCategorySigns("cat-alias-fixed-negative-child-sign", "@@@Koerper: -Kopfschmerzen, Koerpersicher\nKopfschmerzen2 Koerpersicher1", "Koerper", { kopfschmerzen: -1, koerpersicher: 1 });
+assertCategoryTag("cat-alias-fixed-negative-short-child", "@@@Koerper: -ks, Koerpersicher\n@@Kopfschmerzen (ks)\nks2 Koerpersicher1", "Koerper", ["Kopfschmerzen", "Koerpersicher"], "Koerper");
+assertCategorySigns("cat-alias-fixed-negative-short-child-sign", "@@@Koerper: -ks, Koerpersicher\n@@Kopfschmerzen (ks)\nks2 Koerpersicher1", "Koerper", { kopfschmerzen: -1, koerpersicher: 1 });
+assertCategoryTag("cat-alias-fixed-negative-short-child-before-cat", "@@Kopfschmerzen (ks)\n@@@Koerper: -ks, Koerpersicher\nks2 Koerpersicher1", "Koerper", ["Kopfschmerzen", "Koerpersicher"], "Koerper");
+assertCategoryTag("cat-alias-fixed-negative-long-child-with-separate-alias", "@@Kopfschmerz (KSch):  ks\n@@@Koerper: -Kopfschmerz\nks2", "Koerper", ["Kopfschmerz"], "Koerper");
+assertCategorySigns("cat-alias-fixed-negative-long-child-with-separate-alias-sign", "@@Kopfschmerz (KSch):  ks\n@@@Koerper: -Kopfschmerz\nks2", "Koerper", { kopfschmerz: -1 });
+assertCategoryTag("cat-alias-fixed-negative-long-child-with-superscript-alias", "@@Kopfschmerz (KSch):  ks\n@@@Koerper: -Kopfschmerz\nks\u00B2", "Koerper", ["Kopfschmerz"], "Koerper");
+assertCategorySigns("cat-alias-fixed-negative-long-child-with-superscript-alias-sign", "@@Kopfschmerz (KSch):  ks\n@@@Koerper: -Kopfschmerz\nks\u00B2", "Koerper", { kopfschmerz: -1 });
+assertCategoryTag("cat-alias-fixed-negative-long-child-with-readable-superscript-alias", "@@Kopfschmerz (KSch):  ks\n@@@Koerper: -Kopfschmerz\n| ks\u00B2", "Koerper", ["Kopfschmerz"], "Koerper");
 assertCategoryTag("cat-alias-children-are-not-aliases", "@@@help: Spielen, Musik\n@@Spielen (Sp): play\nplay2", "help", ["Spielen"], "help");
 assertCategoryTag("alias-category-line-without-prefix", "tag1 (tg1)[self]: 3\ntag2 (tg2)[self]: 3\ntg1# tg2#", "self", ["tag1", "tag2"], "self");
 assertItem("alias-fixed-bare", "@@Kopfschmerz (KSch): ks, Kopfdruck1\n#Kopfdruck", "Kopfschmerz", "+1", 1, null, null);
