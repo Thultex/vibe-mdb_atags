@@ -1,6 +1,6 @@
 /*
 ========================================
-A2 exportAtags v1.77 (sys 2.21)
+A2 exportAtags v1.78 (sys 2.21)
 ========================================
 
 Notes:
@@ -23,6 +23,7 @@ Notes:
 - repeated string aggregation returns early when no repeated string tags exist
 - category and string aggregation share one item clone helper
 - rows_md and rows_html share row table view construction
+- rows_html renders table rows through a shared helper
 - repeated string values aggregate with first, last, or join
 - cumulative +/- values force sum aggregation in row exports
 - Keep this header ASCII-only for the Memento editor
@@ -759,40 +760,42 @@ function buildAtagRowsMarkdown(items, cfg) {
 }
 
 // ===== ROWS HTML =====
+function renderAtagHtmlTableRow(cells, cellTag) {
+  var tag = cellTag || "td";
+  var html = ["<tr>"];
+  var i;
+
+  for (i = 0; i < cells.length; i++) {
+    html.push(
+      "<" + tag + ' style="text-align:' + (i === 0 ? "left" : "right") + ';">' +
+      escapeHtml(cells[i]) +
+      "</" + tag + ">"
+    );
+  }
+
+  html.push("</tr>");
+  return html.join("");
+}
+
 function buildAtagRowsHtml(items, cfg) {
   var view = buildAtagRowTableView(items, cfg);
   var html = [];
   var i;
-  var j;
-  var row;
 
   if (!view) return "";
 
   html.push('<table style="font-family:sans-serif;">');
   html.push("<thead>");
-  html.push("<tr>");
-  for (i = 0; i < view.header.length; i++) {
-    html.push('<th style="text-align:' + (i === 0 ? "left" : "right") + ';">' + escapeHtml(view.header[i]) + "</th>");
-  }
-  html.push("</tr>");
+  html.push(renderAtagHtmlTableRow(view.header, "th"));
   html.push("</thead>");
   html.push("<tbody>");
 
   for (i = 0; i < view.bodyRows.length; i++) {
-    row = view.bodyRows[i];
-    html.push("<tr>");
-    for (j = 0; j < row.length; j++) {
-      html.push('<td style="text-align:' + (j === 0 ? "left" : "right") + ';">' + escapeHtml(row[j]) + "</td>");
-    }
-    html.push("</tr>");
+    html.push(renderAtagHtmlTableRow(view.bodyRows[i], "td"));
   }
 
   if (view.aggregateRow) {
-    html.push("<tr>");
-    for (j = 0; j < view.aggregateRow.length; j++) {
-      html.push('<td style="text-align:' + (j === 0 ? "left" : "right") + ';">' + escapeHtml(view.aggregateRow[j]) + "</td>");
-    }
-    html.push("</tr>");
+    html.push(renderAtagHtmlTableRow(view.aggregateRow, "td"));
   }
 
   html.push("</tbody>");

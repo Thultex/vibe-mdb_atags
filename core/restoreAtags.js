@@ -1,6 +1,6 @@
 /*
 ========================================
-A4 restoreAtags v2.01 (sys 2.21)
+A4 restoreAtags v2.02 (sys 2.21)
 ========================================
 
 Notes:
@@ -15,6 +15,7 @@ Notes:
 - auto restore skips targets missing from lib().fields()
 - bulkRestoreAtags is a legacy wrapper
 - alias brackets are reserved for categories, not restore mappings
+- mapped and auto restore share one target-write helper
 
 Examples:
 
@@ -287,6 +288,22 @@ function writeValueByType(entryObj, targetField, val, force_type) {
   entryObj.set(targetField, isNaN(num) ? String(val) : num);
 }
 
+function restoreWriteTarget(entryObj, targetField, val, forceType, cfg, okMessage, errorMessage, skipMessage) {
+  if (!restoreTargetExists(cfg, targetField)) {
+    restoreDebugPush(cfg, skipMessage);
+    return false;
+  }
+
+  try {
+    writeValueByType(entryObj, targetField, val, forceType);
+    restoreDebugPush(cfg, okMessage);
+    return true;
+  } catch (eWrite) {
+    restoreDebugPush(cfg, errorMessage + " :: " + eWrite);
+    return false;
+  }
+}
+
 function selectRestoreValue(val, valueMode, force_type) {
   var values;
   var mode;
@@ -536,18 +553,18 @@ function restoreMappedAtags(entryObj, obj, mappings, clearFirst, valueMode, cfg)
 
   for (i = 0; i < mappings.length; i++) {
     m = mappings[i];
-    if (!restoreTargetExists(cfg, m.targetField)) {
-      restoreDebugPush(cfg, "map skip missing target: " + m.tagName + " -> " + m.targetField);
-      continue;
-    }
     val = selectRestoreValue(obj[m.tagName], m.valueMode || valueMode, m.force_type);
     if (val == null) continue;
-    try {
-      writeValueByType(entryObj, m.targetField, val, m.force_type);
-      restoreDebugPush(cfg, "map ok: " + m.tagName + " -> " + m.targetField + " = " + String(val));
-    } catch (eWrite) {
-      restoreDebugPush(cfg, "map error: " + m.tagName + " -> " + m.targetField + " :: " + eWrite);
-    }
+    restoreWriteTarget(
+      entryObj,
+      m.targetField,
+      val,
+      m.force_type,
+      cfg,
+      "map ok: " + m.tagName + " -> " + m.targetField + " = " + String(val),
+      "map error: " + m.tagName + " -> " + m.targetField,
+      "map skip missing target: " + m.tagName + " -> " + m.targetField
+    );
   }
 }
 
@@ -558,8 +575,10 @@ function restoreAutoAtags(entryObj, obj, cfg) {
   var key;
   var val;
   var isList;
-  var num;
   var target;
+  var writeVal;
+  var writeType;
+  var writeLabel;
 
   for (key in obj) {
     try {
@@ -570,50 +589,47 @@ function restoreAutoAtags(entryObj, obj, cfg) {
 
       if (force === "list") {
         target = key + (listSuffix || suffix);
-        if (!restoreTargetExists(cfg, target)) {
-          restoreDebugPush(cfg, "auto skip missing target: " + key + " -> " + target);
-          continue;
-        }
-        entryObj.set(target, parseListValue(val));
-        restoreDebugPush(cfg, "auto ok: " + key + " -> " + target + " = list");
+        restoreWriteTarget(
+          entryObj, target, val, "list", cfg,
+          "auto ok: " + key + " -> " + target + " = list",
+          "auto error: " + key,
+          "auto skip missing target: " + key + " -> " + target
+        );
         continue;
       }
 
       if (force === "text") {
         target = key + (isList && listSuffix ? listSuffix : suffix);
-        if (!restoreTargetExists(cfg, target)) {
-          restoreDebugPush(cfg, "auto skip missing target: " + key + " -> " + target);
-          continue;
-        }
-        entryObj.set(
-          target,
-          isList
-            ? parseListValue(val).join("\n")
-            : String(val)
+        restoreWriteTarget(
+          entryObj, target, val, "text", cfg,
+          "auto ok: " + key + " -> " + target + " = " + String(val),
+          "auto error: " + key,
+          "auto skip missing target: " + key + " -> " + target
         );
-        restoreDebugPush(cfg, "auto ok: " + key + " -> " + target + " = " + String(val));
         continue;
       }
 
       if (isList && listSuffix) {
         target = key + listSuffix;
-        if (!restoreTargetExists(cfg, target)) {
-          restoreDebugPush(cfg, "auto skip missing target: " + key + " -> " + target);
-          continue;
-        }
-        entryObj.set(target, parseListValue(val));
-        restoreDebugPush(cfg, "auto ok: " + key + " -> " + target + " = list");
+        restoreWriteTarget(
+          entryObj, target, val, "list", cfg,
+          "auto ok: " + key + " -> " + target + " = list",
+          "auto error: " + key,
+          "auto skip missing target: " + key + " -> " + target
+        );
         continue;
       }
 
       target = key + suffix;
-      if (!restoreTargetExists(cfg, target)) {
-        restoreDebugPush(cfg, "auto skip missing target: " + key + " -> " + target);
-        continue;
-      }
-      num = Number(val);
-      entryObj.set(target, isNaN(num) ? String(val) : num);
-      restoreDebugPush(cfg, "auto ok: " + key + " -> " + target + " = " + String(isNaN(num) ? String(val) : num));
+      writeVal = Number(val);
+      writeType = null;
+      writeLabel = String(isNaN(writeVal) ? String(val) : writeVal);
+      restoreWriteTarget(
+        entryObj, target, val, writeType, cfg,
+        "auto ok: " + key + " -> " + target + " = " + writeLabel,
+        "auto error: " + key,
+        "auto skip missing target: " + key + " -> " + target
+      );
     } catch (e) {
       restoreDebugPush(cfg, "auto error: " + key + " :: " + e);
     }

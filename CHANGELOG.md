@@ -25,17 +25,20 @@
 - Performance: Ausgeschlossene Namen werden pro Parserlauf als Lookup-Map vorbereitet
 - Performance: Kategorie-Kind-Aliase vermeiden doppelte Key-Berechnung
 - Refactor: Wiederholte Trim-Operationen laufen ueber einen lokalen Parser-Helfer
-- `exportAtags` auf `v1.77` angehoben
+- `exportAtags` auf `v1.78` angehoben
 - Aenderung: `tree_md` nutzt fuer Kategorie-Eltern standardmaessig `max_abs`
 - Aenderung: Negierte Kategorie-Kinder werden im Tree und in Kategorie-Details mit tiefgestelltem Minus vor dem Namen markiert, z. B. `₋Kopfschmerz -2` und `Koerper: -2 - [₋Kopfschmerz: -2]`
 - Performance: Text-, Markdown- und Tree-Exports verwenden einen pro Export aufgebauten Wertindex fuer Kategorie- und Kind-Zusammenfassungen
 - Performance: Wiederholte Stringwerte werden nur dann aggregiert, wenn ein String-Tag tatsaechlich mehrfach vorkommt
 - Refactor: Kategorie- und String-Aggregation nutzen denselben Clone-Helfer
 - Refactor: `rows_md` und `rows_html` teilen sich eine gemeinsame Tabellen-View fuer Header, Datenzeilen und Aggregatzeile
+- Refactor: `rows_html` rendert Header-, Daten- und Aggregatzeilen ueber einen gemeinsamen HTML-Row-Helfer
 - `Atag Helpers` auf `v2.07` angehoben
 - Feature: `computeAggregate` unterstuetzt `max_abs` und `min_abs` mit positivem Tie-Break bei gleichem Betrag
 - Aenderung: Kategorie-Anzeigeoptionen wie `cat_display_values` werden durch `applyTags` durchgereicht
 - Performance: `min`, `max`, `max_abs` und `min_abs` werden ohne Sortierung linear berechnet
+- `restoreAtags` auf `v2.02` angehoben
+- Refactor: Mapped- und Auto-Restore schreiben Zielwerte ueber einen gemeinsamen Target-Write-Helfer
 - Test: Regressionen fuer negative Kategorie-Kinder, Alias-Aufloesung, Superscript-Werte und Tree-/Text-Ausgabe ergaenzt
 
 ## 2026-05-13
