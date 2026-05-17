@@ -47,6 +47,12 @@ assertEquals(
 );
 
 assertEquals(
+  "inline-issue50-mixed-suffix-conversions",
+  makeTagCleanerText("TempoHalb\u02E32 test\u2070\u207003 tag\u00B2\u02E3 tag\u00B2# Tem\u02E300"),
+  "TempoHalb\u00B2 test\u2070\u00B3 tag\u02E3 tag\u02E3 Tem\u2070\u2070"
+);
+
+assertEquals(
   "standalone-superscript-to-normal-text",
   makeTagCleanerText("Nr \u00B2 und Wert \u207B\u2070\u00B2 aber tag\u00B2 bleibt"),
   "Nr 2 und Wert -0,2 aber tag\u00B2 bleibt"

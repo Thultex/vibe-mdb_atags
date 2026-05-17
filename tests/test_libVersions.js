@@ -31,7 +31,7 @@ assertEquals("helpers-lib-own-version", getHelpersLibVersion().version, "2.11");
 assertEquals("helpers-lib-sys-version", getHelpersLibVersion().sysVersion, "2.30");
 assertEquals("collect-lib-own-version", getCollectAtagsLibVersion().version, "1.55");
 assertEquals("export-lib-own-version", getExportAtagsLibVersion().version, "1.82");
-assertEquals("tag-cleaner-own-version", getTagCleanerVersion().version, "1.34");
+assertEquals("tag-cleaner-own-version", getTagCleanerVersion().version, "1.35");
 assertEquals("helpers-own-version", getHelpersVersion().version, "1.02");
 assertEquals("helpers-mem-compat-version", getHelpersMemVersion().version, "1.02");
 

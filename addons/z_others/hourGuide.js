@@ -1,10 +1,11 @@
 /*
 ========================================
-C3 Hour Guide v1.29 (sys 2.30)
+C3 Hour Guide v1.30 (sys 2.30)
 ========================================
 
 Changes
 - support explicit entry/source entry input and empty-hour fallback to first block
+- restore anonymized default guide content row
 - restore original Stundenhilfe content and visual style from issue #20
 - treat guide section headers as content, not fixed API names
 - use German built-in guide contents and cleaner phase header
@@ -220,7 +221,7 @@ function hourGuideDefaultPlan() {
       sections: [
         { title: "Energie", rows: [["Energie", "nicht pushen"]] },
         { title: "Fokus", rows: [["Vereinfachen", "leichter"], ["Streuen", "mehr Wechsel"]] },
-        { title: "Emotion", rows: [["MetricE", "Bewegung"]] }
+        { title: "Emotion", rows: [["Spannung", "Bewegung"]] }
       ]
     },
     spaet: {

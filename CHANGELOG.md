@@ -19,16 +19,20 @@
 
 ## 2026-05-16
 
+- `Hour Guide` auf `v1.30` angehoben
+- Fix: In der eingebauten Hour-Guide-Vorgabe wurde ein zu stark anonymisierter Platzhalter wieder durch den vollstaendigen neutralen Inhalt `Spannung` ersetzt
+
 - `helpers_lib` auf `v2.11` angehoben
 - `collectAtags` auf `v1.55` angehoben
 - `exportAtags` auf `v1.82` angehoben
 - `restoreAtags` auf `v2.04` angehoben
-- `tagCleaner` auf `v1.34` angehoben
+- `tagCleaner` auf `v1.35` angehoben
 - Benennung: Header von `A4 Tag Cleaner Core` auf `A4 Tag Cleaner` vereinfacht
 - API: `applyCleanTags()` als kurzer Alias fuer `applyTagCleaner()` ergaenzt
 - API: `applyCleanTags()` kann ohne Optionsobjekt genutzt werden und verwendet dann `Notiz`
 - Doku: Kurze `applyCleanTags()`-Beispiele direkt im Tag-Cleaner-Header ergaenzt
 - Refactor: Reine Durchreicher zu `helpers_lib` und eine ungenutzte Sortierfunktion aus dem Tag Cleaner entfernt
+- Fix: Issue #50 - gemischte Suffixformen wie `TempoHalbˣ2`, `test⁰⁰03`, `tag²x`/`tag²#` und `Temˣ00` werden im Cleaner normalisiert
 - `libVersions` auf `v1.08` angehoben
 - Fix: Doppelte Aliasziele sind standardmaessig aktiv, damit ein Alias wie `abgeschlagen` gleichzeitig positiv in `Erschoepfung` und negativ in `Stimmung` zaehlt; `multiAliasTargets: false` stellt das alte Last-Wins-Verhalten wieder her
 - `helpers` auf `v1.02` angehoben

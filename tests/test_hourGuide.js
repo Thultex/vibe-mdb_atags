@@ -67,6 +67,12 @@ function testHtmlForPeakWindow() {
   assertContains("row-dash", html, "• <b>Steuern</b> - <i>HF beachten</i>");
 }
 
+function testDefaultGuideContentIsComplete() {
+  var html = makeHourGuideHtml(8, {});
+  assertContains("abklingend-label", html, "Abklingend · 7–10 h");
+  assertContains("restored-content", html, "• <b>Spannung</b> - <i>Bewegung</i>");
+}
+
 function testCutoffReturnsEmpty() {
   assertEquals("cutoff-empty", makeHourGuideHtml(16, { maxHours: 16 }), "");
   assertEquals("invalid-empty", makeHourGuideHtml("nope", {}), "");
@@ -223,6 +229,7 @@ function testExplicitSourceEntryFeedsTargetEntry() {
 }
 
 testHtmlForPeakWindow();
+testDefaultGuideContentIsComplete();
 testCutoffReturnsEmpty();
 testApplyWritesTarget();
 testJsonPlanFieldWithFlexibleSections();
