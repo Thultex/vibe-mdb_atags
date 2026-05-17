@@ -1,6 +1,6 @@
 /*
 ========================================
-A5 Tag Cleaner Core v1.28 (sys 2.30)
+A4 Tag Cleaner v1.34 (sys 2.30)
 ========================================
 
 Notes
@@ -9,8 +9,13 @@ Notes
 - Supports cumulative +/-, 00/null and zero-decimal tag forms.
 - Exclusive tag bars keep body text unchanged.
 
-makeTagCleanerTextWithOptions(text, {
-  tagBarPosition: "top",
+Example: clean the default note field "Notiz"
+applyCleanTags();
+
+Example: clean a custom field with options
+applyCleanTags({
+  textField: "Notiz",
+  tagBarPosition: "time_top",
   tagBarSpacing: "blank",
   formatValues: "keep"
 });
@@ -21,14 +26,10 @@ makeTagCleanerTextWithOptions(text, {
 function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
-    version: "1.28",
+    version: "1.34",
     sysVersion: "2.30",
     path: "core/tagCleaner.js"
   };
-}
-
-function trimTagCleanerString(s) {
-  return trimAtagLibString(s);
 }
 
 function splitTagCleanerLines(text) {
@@ -123,7 +124,7 @@ function normalizeTagCleanerFieldList(fields) {
 }
 
 function cleanTagCleanerUserTagName(raw) {
-  var s = trimTagCleanerString(raw);
+  var s = trimAtagLibString(raw);
   if (!/^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*$/.test(s)) return "";
   return s;
 }
@@ -147,27 +148,17 @@ function tagCleanerTagList(rawTags) {
   if (rawTags == null) return out;
   if (Object.prototype.toString.call(rawTags) === "[object Array]") {
     for (i = 0; i < rawTags.length; i++) {
-      if (trimTagCleanerString(rawTags[i])) out.push(trimTagCleanerString(rawTags[i]));
+      if (trimAtagLibString(rawTags[i])) out.push(trimAtagLibString(rawTags[i]));
     }
     return out;
   }
 
   parts = String(rawTags || "").split(/\n|,\s*/);
   for (i = 0; i < parts.length; i++) {
-    if (trimTagCleanerString(parts[i])) out.push(trimTagCleanerString(parts[i]));
+    if (trimAtagLibString(parts[i])) out.push(trimAtagLibString(parts[i]));
   }
 
   return out;
-}
-
-function sortTagCleanerNames(tags) {
-  tags.sort(function(a, b) {
-    var aa = String(a || "").toLowerCase();
-    var bb = String(b || "").toLowerCase();
-    if (aa < bb) return -1;
-    if (aa > bb) return 1;
-    return 0;
-  });
 }
 
 function extractTagCleanerFormatValueMode(text) {
@@ -181,7 +172,7 @@ function removeTagCleanerFormatValueDirectives(text) {
 }
 
 function normalizeTagCleanerStringValue(raw) {
-  var s = trimTagCleanerString(raw);
+  var s = trimAtagLibString(raw);
   var quote = s.charAt(0);
   var inner;
 
@@ -199,7 +190,7 @@ function isTagCleanerFormatValueDirectiveLine(line) {
 }
 
 function normalizeTagCleanerValue(raw) {
-  var s = trimTagCleanerString(raw);
+  var s = trimAtagLibString(raw);
   var sign = "";
   var body;
 
@@ -316,16 +307,8 @@ function decodeTagCleanerSuperscript(raw) {
   return out;
 }
 
-function tagCleanerQuoteState(str) {
-  return buildAtagLibQuoteState(str);
-}
-
-function tagCleanerInsideQuote(state, pos) {
-  return isInsideAtagLibQuoteState(state, pos);
-}
-
 function cleanTagCleanerToken(token, bareAsHash, positiveSignMode) {
-  var s = trimTagCleanerString(token);
+  var s = trimAtagLibString(token);
   var mode = normalizeTagCleanerFormatValueMode(positiveSignMode);
   var m;
 
@@ -474,7 +457,7 @@ function splitTagCleanerBarTokens(text) {
 
 function extractTagCleanerUserTagsFromLine(line, userTags, userTagSeen, enabled) {
   var s = String(line || "");
-  var state = tagCleanerQuoteState(s);
+  var state = buildAtagLibQuoteState(s);
   var rx = /(^|[\s,;.!?()\[\]{}])(?:##([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)(?=$|[\s,;.!?()\[\]{}])|([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)##(?=$|[\s,;.!?()\[\]{}]))/g;
   var out = [];
   var last = 0;
@@ -487,7 +470,7 @@ function extractTagCleanerUserTagsFromLine(line, userTags, userTagSeen, enabled)
     prefix = m[1] || "";
     start = m.index + prefix.length;
 
-    if (!tagCleanerInsideQuote(state, start)) {
+    if (!isInsideAtagLibQuoteState(state, start)) {
       name = m[2] || m[3] || "";
       if (enabled) {
         addUniqueTagCleanerName(userTags, userTagSeen, name);
@@ -506,7 +489,7 @@ function extractTagCleanerUserTagsFromLine(line, userTags, userTagSeen, enabled)
 
 function cleanTagCleanerSimpleHashTagsInLine(line) {
   var s = String(line || "");
-  var state = tagCleanerQuoteState(s);
+  var state = buildAtagLibQuoteState(s);
   var rx = /(^|[\s,;.!?()\[\]{}])(?:#([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)(?=$|[\s,;.!?()\[\]{}])|([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#(?=$|[\s,;.!?()\[\]{}]))/g;
   var out = [];
   var last = 0;
@@ -519,7 +502,7 @@ function cleanTagCleanerSimpleHashTagsInLine(line) {
     prefix = m[1] || "";
     start = m.index + prefix.length;
 
-    if (!tagCleanerInsideQuote(state, start)) {
+    if (!isInsideAtagLibQuoteState(state, start)) {
       name = m[2] || m[3] || "";
       out.push(s.substring(last, m.index));
       out.push(prefix + name + tagCleanerTagSuffix());
@@ -535,7 +518,7 @@ function cleanTagCleanerSimpleHashTagsInLine(line) {
 
 function normalizeStandaloneTagCleanerSuperscriptsInLine(line) {
   var s = String(line || "");
-  var state = tagCleanerQuoteState(s);
+  var state = buildAtagLibQuoteState(s);
   var rx = /(^|[\s,;.!?()\[\]{}])([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B]+)(?=$|[\s,;.!?()\[\]{}])/g;
   var out = [];
   var last = 0;
@@ -544,7 +527,7 @@ function normalizeStandaloneTagCleanerSuperscriptsInLine(line) {
 
   while ((m = rx.exec(s)) !== null) {
     start = m.index + String(m[1] || "").length;
-    if (!tagCleanerInsideQuote(state, start)) {
+    if (!isInsideAtagLibQuoteState(state, start)) {
       out.push(s.substring(last, start));
       out.push(decodeTagCleanerSuperscript(m[2] || ""));
       last = start + String(m[2] || "").length;
@@ -559,7 +542,7 @@ function normalizeStandaloneTagCleanerSuperscriptsInLine(line) {
 
 function normalizeTagCleanerDoubleColonSpacingInLine(line) {
   var s = String(line || "");
-  var state = tagCleanerQuoteState(s);
+  var state = buildAtagLibQuoteState(s);
   var rx = /(^|[\s,;.!?()\[\]{}])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)::\s*("[^"]*"|'[^']*'|[^\s,;.!?()\[\]{}]+)/g;
   var out = [];
   var last = 0;
@@ -568,7 +551,7 @@ function normalizeTagCleanerDoubleColonSpacingInLine(line) {
 
   while ((m = rx.exec(s)) !== null) {
     start = m.index + String(m[1] || "").length;
-    if (!tagCleanerInsideQuote(state, start)) {
+    if (!isInsideAtagLibQuoteState(state, start)) {
       out.push(s.substring(last, start));
       out.push((m[2] || "") + ":: " + (m[3] || ""));
       last = rx.lastIndex;
@@ -587,7 +570,7 @@ function cleanTagCleanerInlineLine(line, positiveSignMode, userTags, userTagSeen
   s = cleanTagCleanerSimpleHashTagsInLine(s);
   if (normalizeTagCleanerFormatValueMode(positiveSignMode) === "none") return s;
 
-  var state = tagCleanerQuoteState(s);
+  var state = buildAtagLibQuoteState(s);
   var rx = /(^|[\s,;.!?()\[\]{}])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)(\+{2,}\d*|-{2,}\d*|[+\-]?\d+(?:[.,]\d+)?|\++|-+|[+\-][\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079]+|[\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B]+)(?=$|[\s,;.!?()\[\]{}])/g;
   var out = [];
   var last = 0;
@@ -626,7 +609,7 @@ function cleanTagCleanerInlineLine(line, positiveSignMode, userTags, userTagSeen
       }
     }
 
-    if (!tagCleanerInsideQuote(state, start)) {
+    if (!isInsideAtagLibQuoteState(state, start)) {
       if (/_$/.test(name)) {
         if (m[0] === "") rx.lastIndex++;
         continue;
@@ -726,7 +709,7 @@ function makeTagCleanerTextWithOptions(sourceText, cfg) {
     body.push(exclusiveTagBar ? line : cleanTagCleanerInlineLine(line, positiveSignMode, userTags, userTagSeen, userTagsEnabled));
   }
 
-  while (body.length && trimTagCleanerString(body[body.length - 1]) === "") body.pop();
+  while (body.length && trimAtagLibString(body[body.length - 1]) === "") body.pop();
   sortTagCleanerTokens(barTokens);
 
   if ((tagBarPosition === "auto" || tagBarPosition === "time_top" || tagBarPosition === "timestamps_top") && hasTimestampLine) {
@@ -737,7 +720,7 @@ function makeTagCleanerTextWithOptions(sourceText, cfg) {
     var formattedBarTokens = formatTagCleanerBarTokens(barTokens);
     barLine = (exclusiveTagBar ? '"|' : "|") + (formattedBarTokens ? " " + formattedBarTokens : "");
     if (tagBarPosition === "top" || tagBarPosition === "above") {
-      while (body.length && trimTagCleanerString(body[0]) === "") body.shift();
+      while (body.length && trimAtagLibString(body[0]) === "") body.shift();
       for (j = 0; body.length && j < spacingLines; j++) body.unshift("");
       body.unshift(barLine);
     } else {
@@ -746,8 +729,8 @@ function makeTagCleanerTextWithOptions(sourceText, cfg) {
     }
   }
 
-  while (body.length && trimTagCleanerString(body[0]) === "") body.shift();
-  while (body.length && trimTagCleanerString(body[body.length - 1]) === "") body.pop();
+  while (body.length && trimAtagLibString(body[0]) === "") body.shift();
+  while (body.length && trimAtagLibString(body[body.length - 1]) === "") body.pop();
   cfg._tagCleanerUserTags = userTags;
 
   return body.join("\n");
@@ -769,6 +752,12 @@ function applyTagCleaner(cfg) {
   out = makeTagCleanerTextWithOptions(sourceText == null ? "" : String(sourceText), cfg);
   entryObj.set(targetField, out);
   return out;
+}
+
+function applyCleanTags(cfg) {
+  cfg = cfg || {};
+  if (!cfg.textField && !cfg.sourceTextField) cfg.textField = "Notiz";
+  return applyTagCleaner(cfg);
 }
 
 function bulkApplyTagCleaner(cfg) {

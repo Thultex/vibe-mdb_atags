@@ -294,4 +294,25 @@ applyTagCleaner({
 
 assertEquals("apply-same-field", entryObj.field("Note"), "emo\u00B2\n\n| activityc\u02E3 stress\u02E3");
 
+var cleanEntryObj = makeEntry({
+  Note: "tag2\n| stress3"
+});
+
+applyCleanTags({
+  entryObj: cleanEntryObj,
+  textField: "Note"
+});
+
+assertEquals("apply-clean-tags-alias", cleanEntryObj.field("Note"), "tag\u00B2\n\n| stress\u00B3");
+
+var defaultCleanEntryObj = makeEntry({
+  Notiz: "tag2\n| stress3"
+});
+
+applyCleanTags({
+  entryObj: defaultCleanEntryObj
+});
+
+assertEquals("apply-clean-tags-default-field", defaultCleanEntryObj.field("Notiz"), "tag\u00B2\n\n| stress\u00B3");
+
 WScript.Echo("OK");

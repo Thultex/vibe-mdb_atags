@@ -1,6 +1,6 @@
 /*
 ========================================
-A2 exportAtags Lib v1.80 (sys 2.30)
+#2 exportAtags Lib v1.82 (sys 2.30)
 ========================================
 
 Notes:
@@ -30,8 +30,8 @@ Notes:
 
 Examples:
 
-These examples use applyTags() from core/helpers_mem.js.
-When only this remote lib is loaded, call exportAtags() directly or load core/helpers_mem.js after the libs.
+These examples use applyTags() from core/helpers.js.
+When only this remote lib is loaded, call exportAtags() directly or load core/helpers.js after the libs.
 
 applyTags({
   enabled: true,
@@ -73,14 +73,14 @@ applyTags({
 function getExportAtagsLibVersion() {
   return {
     name: "exportAtags_lib",
-    version: "1.80",
+    version: "1.82",
     sysVersion: "2.30",
     path: "core_lib/exportAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("exportAtags_lib", "1.80", "2.30", "core_lib/exportAtags_lib.js");
+  registerAtagLibVersion("exportAtags_lib", "1.82", "2.30", "core_lib/exportAtags_lib.js");
 }
 function atagCategoryAggregateMode(cfg, context) {
   if (cfg && cfg.categoryAggregateMode !== undefined) return cfg.categoryAggregateMode;

@@ -1,6 +1,6 @@
 /*
 ========================================
-A3 Atag Helpers Lib v2.10 (sys 2.30)
+#3 Atag Helpers Lib v2.11 (sys 2.30)
 ========================================
 
 Changes
@@ -23,14 +23,14 @@ var ATAG_SYS_VERSION = "2.30";
 function getHelpersLibVersion() {
   return {
     name: "helpers_lib",
-    version: "2.10",
+    version: "2.11",
     sysVersion: ATAG_SYS_VERSION,
     path: "core_lib/helpers_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("helpers_lib", "2.10", ATAG_SYS_VERSION, "core_lib/helpers_lib.js");
+  registerAtagLibVersion("helpers_lib", "2.11", ATAG_SYS_VERSION, "core_lib/helpers_lib.js");
 }
 
 // ===== BASIC =====

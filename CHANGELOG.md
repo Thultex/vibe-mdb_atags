@@ -19,13 +19,23 @@
 
 ## 2026-05-16
 
-- `tagCleaner` auf `v1.28` angehoben
-- `exportAtags` auf `v1.80` angehoben
-- `libVersions` auf `v1.05` angehoben
+- `helpers_lib` auf `v2.11` angehoben
+- `collectAtags` auf `v1.54` angehoben
+- `exportAtags` auf `v1.82` angehoben
+- `restoreAtags` auf `v2.04` angehoben
+- `tagCleaner` auf `v1.34` angehoben
+- Benennung: Header von `A4 Tag Cleaner Core` auf `A4 Tag Cleaner` vereinfacht
+- API: `applyCleanTags()` als kurzer Alias fuer `applyTagCleaner()` ergaenzt
+- API: `applyCleanTags()` kann ohne Optionsobjekt genutzt werden und verwendet dann `Notiz`
+- Doku: Kurze `applyCleanTags()`-Beispiele direkt im Tag-Cleaner-Header ergaenzt
+- Refactor: Reine Durchreicher zu `helpers_lib` und eine ungenutzte Sortierfunktion aus dem Tag Cleaner entfernt
+- `libVersions` auf `v1.07` angehoben
+- `helpers` auf `v1.02` angehoben
+- Nummerierung: Remote-Libs nutzen `#1`-`#3`, Core nutzt `A1`-`A4`; die Reihenfolge folgt wieder alphanumerisch den Dateinamen im jeweiligen Bereich
 - Feature: `checkAtagLibVersions()` prueft automatisch alle erwarteten Remote-Libs und optional mit `checkAccess: true` die aufrufbaren Versionsfunktionen
 - Struktur: Versions-Checker nach `core/_checkLibs.js` umbenannt, damit klar ist, dass er selbst keine Remote-Lib ist
 - Fix: `makeTagCleanerTextWithOptions()` splittet Zeilen ohne Regex-Literal, damit Memento/Rhino-Kopierpfade an der Einstiegstelle robuster bleiben
-- Doku/Test: Lade-Reihenfolge fuer `core/helpers_mem.js` und Regression fuer CRLF-Zeilen im TagCleaner ergaenzt
+- Doku/Test: Lade-Reihenfolge fuer `core/helpers.js` und Regression fuer CRLF-Zeilen im TagCleaner ergaenzt
 
 - Struktur: Remote-nutzbare Lib-Dateien nach `core_lib/` verschoben und mit `_lib` gekennzeichnet (`collectAtags_lib`, `exportAtags_lib`, `helpers_lib`)
 - Struktur: `tagCleaner` aus den Addons nach `core/tagCleaner.js` verschoben; Core-Funktionen bleiben feldschreibfrei, `applyTagCleaner` bleibt als optionaler Memento-Wrapper erhalten
@@ -33,7 +43,7 @@
 - Doku/Test: Pfade, Versionierungscheck und TagCleaner-Beispiele an die neue Struktur angepasst
 - Feature: `core/_checkLibs.js` mit `checkLibVersions()` und eigener Versionsfunktion pro Lib ergaenzt
 - Doku: `core_lib/LIB_VERSIONS.md` als statische Uebersicht der aktuellen Remote-Lib-Versionen ergaenzt
-- Struktur: `core/helpers_mem.js` enthaelt gezielt Memento-Wrapper wie `applyTags`; `helpers_mem` und `tagCleaner` werden nicht als Remote-Libs registriert
+- Struktur: `core/helpers.js` enthaelt gezielt Memento-Wrapper wie `applyTags`, verweist auf `core_lib/helpers_lib.js`; `helpers` und `tagCleaner` werden nicht als Remote-Libs registriert
 - Systemversion auf `sys 2.30` angehoben
 
 - `collectAtags` auf `v1.52` angehoben

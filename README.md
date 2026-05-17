@@ -22,8 +22,8 @@ Jede funktionale Änderung wird an zwei Stellen dokumentiert:
 Regeln:
 
 - Modulversion pro geänderter Datei anheben
-- Jede Core-/Addon-Datei hat eine stabile Kennung im Header: `A` fuer Core, `B` fuer Addons, `C` fuer geloeste eigenstaendige Module; aktuell gibt es noch keine `C`-Module.
-- Die Nummer folgt der Repo-Reihenfolge im Dateibaum. Core: `A1` bis `A4`; Addons: `B1` bis `B9`; geloeste generelle Module: `C1` bis `C3`.
+- Jede Datei hat eine stabile Kennung im Header: `#` fuer Remote-Libs, `A` fuer Core, `B` fuer Addons, `C` fuer geloeste eigenstaendige Module.
+- Die Nummer folgt der alphanumerischen Repo-Reihenfolge im jeweiligen Dateibereich. Remote-Libs: `#1` bis `#3`; Core: `A1` bis `A4`; Addons: `B1` bis `B9`; geloeste generelle Module: `C1` bis `C3`.
 - Kopfblöcke in Moduldateien sehr kurz halten; ausführliche Änderungen gehören in `CHANGELOG.md`
 - In Kopfblöcken vorsichtig mit Quotes, Backticks, langen `Änderungen`-Listen und Sonderzeichen umgehen, weil der Memento-Java-Editor daran hängen bleiben kann
 - Changelog mit Datum, Versionssprung und Wirkung ergänzen
@@ -94,22 +94,24 @@ Ziel-Felder
 
 **Core Lib**
 
-- `A1` `core_lib/collectAtags_lib.js`
-- `A2` `core_lib/exportAtags_lib.js`
-- `A3` `core_lib/helpers_lib.js`
+- `#1` `core_lib/collectAtags_lib.js`
+- `#2` `core_lib/exportAtags_lib.js`
+- `#3` `core_lib/helpers_lib.js`
 
 Empfohlene Lade-Reihenfolge: `helpers_lib`, dann `collectAtags_lib`, dann `exportAtags_lib`. `core/tagCleaner.js` nutzt ebenfalls `helpers_lib`.
 Optional vorher `core/_checkLibs.js` laden; dann koennen die erwarteten Remote-Libs ueber `checkAtagLibVersions({ checkAccess: true })` geprueft werden. Die aktuelle statische Uebersicht liegt in `core_lib/LIB_VERSIONS.md`.
-Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportAtags()` nutzt, muss danach zusaetzlich `core/helpers_mem.js` geladen werden.
+Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportAtags()` nutzt, muss danach zusaetzlich `core/helpers.js` geladen werden. Diese Datei nutzt `core_lib/helpers_lib.js`.
 
 **Core**
 
-- `A4` `core/restoreAtags.js`
-- `A5` `core/tagCleaner.js` (reine Notiz-/Tagleisten-Normalisierung)
+- `A1` `core/_checkLibs.js` (Versions-Checker, keine Remote-Lib)
+- `A2` `core/helpers.js` (Memento-Wrapper fuer Lib-Funktionen, keine Remote-Lib; nutzt `core_lib/helpers_lib.js`)
+- `A3` `core/restoreAtags.js`
+- `A4` `core/tagCleaner.js` (reine Notiz-/Tagleisten-Normalisierung)
   - `makeTagCleanerText()`
   - `makeTagCleanerTextWithOptions()`
+  - `applyCleanTags()` als kurzer Memento-Wrapper; ohne Optionen nutzt er `Notiz`
   - `applyTagCleaner()` als optionaler Memento-Wrapper
-- `A6` `core/helpers_mem.js` (Memento-Wrapper fuer Lib-Funktionen, keine Remote-Lib)
 
 **Tagging Add-ons**
 - `B2` `addons/1_tagging/tagPairParser.js` (Parser-Preprocessing)
@@ -772,7 +774,7 @@ Ausführliche Beispiele liegen hier in der README, nicht in den Script-Kopfkomme
 
 **Basis-Export in Tags**
 
-`applyTags()` gehoert zu `core/helpers_mem.js`. In Memento muss diese Datei nach `helpers_lib`, `collectAtags_lib` und `exportAtags_lib` geladen sein.
+`applyTags()` gehoert zu `core/helpers.js`. In Memento muss diese Datei nach `helpers_lib`, `collectAtags_lib` und `exportAtags_lib` geladen sein.
 
 ```js
 applyTags({

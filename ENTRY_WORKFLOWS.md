@@ -56,11 +56,11 @@ Vor dem `AfterEntry()`-Code muessen die genutzten Dateien in dieser Reihenfolge 
 1. `core_lib/helpers_lib.js`
 2. `core_lib/collectAtags_lib.js`
 3. `core_lib/exportAtags_lib.js`
-4. `core/helpers_mem.js` fuer `applyTags()`
+4. `core/helpers.js` fuer `applyTags()`; diese Datei nutzt `core_lib/helpers_lib.js`
 5. `core/tagCleaner.js` fuer `applyTagCleaner()`
 6. benoetigte Add-ons, z. B. `timeMarker`, `tagPairParser`, `multiChoiceHelpers`, `globalFieldSync`, `obsidianLinker`
 
-Ohne `core/helpers_mem.js` sind `applyTags()`, `bulkApplyTags()` und `bulkExportAtags()` nicht definiert.
+Ohne `core/helpers.js` sind `applyTags()`, `bulkApplyTags()` und `bulkExportAtags()` nicht definiert.
 
 1. **Zeitmarker bereinigen**
    - `cleanupTimeMarker()` normalisiert Marker-Rows in `Notiz`.

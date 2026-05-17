@@ -7,7 +7,7 @@ $moduleFiles = @(
   "core_lib/helpers_lib.js",
   "core/restoreAtags.js",
   "core/tagCleaner.js",
-  "core/helpers_mem.js",
+  "core/helpers.js",
   "addons/1_tagging/tagPairParser.js",
   "addons/2_syncing/globalFieldSync.js",
   "addons/2_syncing/syncLastFromLatest.js",
@@ -22,13 +22,13 @@ $moduleFiles = @(
 )
 
 $moduleIds = @{
-  "core/_checkLibs.js" = "A0"
-  "core_lib/collectAtags_lib.js" = "A1"
-  "core_lib/exportAtags_lib.js" = "A2"
-  "core_lib/helpers_lib.js" = "A3"
-  "core/restoreAtags.js" = "A4"
-  "core/tagCleaner.js" = "A5"
-  "core/helpers_mem.js" = "A6"
+  "core/_checkLibs.js" = "A1"
+  "core/helpers.js" = "A2"
+  "core/restoreAtags.js" = "A3"
+  "core/tagCleaner.js" = "A4"
+  "core_lib/collectAtags_lib.js" = "#1"
+  "core_lib/exportAtags_lib.js" = "#2"
+  "core_lib/helpers_lib.js" = "#3"
   "addons/1_tagging/tagPairParser.js" = "B2"
   "addons/2_syncing/globalFieldSync.js" = "B3"
   "addons/2_syncing/syncLastFromLatest.js" = "B4"
@@ -48,9 +48,9 @@ function Get-VersionLine {
     [string]$Path
   )
 
-  $match = [regex]::Match($Content, '(?m)^([ABC]\d+) [^\r\n]* v(\d+\.\d+) \(sys (\d+\.\d+)\)$')
+  $match = [regex]::Match($Content, '(?m)^((?:#|[ABC])\d+) [^\r\n]* v(\d+\.\d+) \(sys (\d+\.\d+)\)$')
   if (-not $match.Success) {
-    throw "Keine Versionszeile im erwarteten Format gefunden: $Path (erwartet z.B. A1 collectAtags v1.37 (sys 2.20))"
+    throw "Keine Versionszeile im erwarteten Format gefunden: $Path (erwartet z.B. A1 restoreAtags v1.37 (sys 2.20) oder #1 helpers_lib v2.11 (sys 2.30))"
   }
 
   return [pscustomobject]@{
