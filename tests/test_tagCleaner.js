@@ -125,9 +125,27 @@ assertEquals(
 );
 
 assertEquals(
-  "double-hash-unchanged-without-tag-fields",
+  "double-hash-markers-move-to-tagbar",
   makeTagCleanerText("vor ##essen tag##\n| ##leiste emo2"),
-  "vor ##essen tag##\n\n| emo\u00B2, ##leiste"
+  "vor\n\n| emo\u00B2, essen\u02E3 leiste\u02E3 tag\u02E3"
+);
+
+assertEquals(
+  "double-hash-markers-with-values-move-to-tagbar",
+  makeTagCleanerText("vor ##essen2 tag##3"),
+  "vor\n\n| essen\u00B2 tag\u00B3"
+);
+
+assertEquals(
+  "double-hash-markers-with-string-values-move-to-tagbar",
+  makeTagCleanerText("vor tag##inhalt info##\"das ist ein test\""),
+  "vor\n\n| info:\"das ist ein test\" tag:inhalt"
+);
+
+assertEquals(
+  "double-hash-markers-in-timestamp-rows-move-to-tagbar",
+  makeTagCleanerText("0: vor tag##inhalt\n| base"),
+  "0: vor\n\n| tag:inhalt, base\u02E3"
 );
 
 assertEquals(

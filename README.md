@@ -357,7 +357,7 @@ Pro Notiz kann die Werteformatierung über `fv` in der Tagleiste gesetzt werden:
 
 In der Tagleiste wird nach Gruppen sortiert: erst Werttags, dann String-Werte, dann leere Tags, dann Funktions-Tags wie `fv`. Zwischen Gruppen steht `, `, innerhalb einer Gruppe nur ein Leerzeichen. String-Werte werden kompakt als `tag:wert` ausgegeben. Quotes bleiben nur erhalten, wenn sie nötig sind, z. B. bei mehreren Wörtern.
 
-`##tag` oder `tag##` wird aus der Notiz entfernt und in die angegebenen `tagFields` geschrieben. Ohne `tagFields` wird der sichtbare Text trotzdem bereinigt, es wird aber kein Tagfeld geschrieben.
+`##tag` oder `tag##` wird aus der Notiz entfernt und als leerer Tag in die Tagleiste uebernommen.
 
 Beispiele:
 

@@ -26,13 +26,16 @@
 - `collectAtags` auf `v1.55` angehoben
 - `exportAtags` auf `v1.82` angehoben
 - `restoreAtags` auf `v2.04` angehoben
-- `tagCleaner` auf `v1.35` angehoben
+- `tagCleaner` auf `v1.38` angehoben
 - Benennung: Header von `A4 Tag Cleaner Core` auf `A4 Tag Cleaner` vereinfacht
 - API: `applyCleanTags()` als kurzer Alias fuer `applyTagCleaner()` ergaenzt
 - API: `applyCleanTags()` kann ohne Optionsobjekt genutzt werden und verwendet dann `Notiz`
 - Doku: Kurze `applyCleanTags()`-Beispiele direkt im Tag-Cleaner-Header ergaenzt
 - Refactor: Reine Durchreicher zu `helpers_lib` und eine ungenutzte Sortierfunktion aus dem Tag Cleaner entfernt
 - Fix: Issue #50 - gemischte Suffixformen wie `TempoHalbˣ2`, `test⁰⁰03`, `tag²x`/`tag²#` und `Temˣ00` werden im Cleaner normalisiert
+- Aenderung: `##tag`/`tag##` wird jetzt direkt in die Tagbar uebernommen; der alte `tagFields`-Sammelpfad im Cleaner wurde entfernt
+- Fix: `tag##3` wird wie `##tag3` als Werttag in die Tagbar uebernommen
+- Fix: `tag##inhalt` und `tag##\"das ist ein test\"` werden als Stringwerte in die Tagbar uebernommen
 - `libVersions` auf `v1.08` angehoben
 - Fix: Doppelte Aliasziele sind standardmaessig aktiv, damit ein Alias wie `abgeschlagen` gleichzeitig positiv in `Erschoepfung` und negativ in `Stimmung` zaehlt; `multiAliasTargets: false` stellt das alte Last-Wins-Verhalten wieder her
 - `helpers` auf `v1.02` angehoben

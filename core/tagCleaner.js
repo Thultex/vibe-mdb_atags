@@ -1,6 +1,6 @@
 /*
 ========================================
-A4 Tag Cleaner v1.35 (sys 2.30)
+A4 Tag Cleaner v1.38 (sys 2.30)
 ========================================
 
 Notes
@@ -26,7 +26,7 @@ applyCleanTags({
 function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
-    version: "1.35",
+    version: "1.38",
     sysVersion: "2.30",
     path: "core/tagCleaner.js"
   };
@@ -117,48 +117,10 @@ function tagCleanerModeFromConfig(cfg) {
   return "keep";
 }
 
-function normalizeTagCleanerFieldList(fields) {
-  if (fields == null) return [];
-  if (Object.prototype.toString.call(fields) === "[object Array]") return fields;
-  return [fields];
-}
-
-function cleanTagCleanerUserTagName(raw) {
+function cleanTagCleanerMarkedTagName(raw) {
   var s = trimAtagLibString(raw);
   if (!/^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*$/.test(s)) return "";
   return s;
-}
-
-function addUniqueTagCleanerName(out, seen, name) {
-  var clean = cleanTagCleanerUserTagName(name);
-  var key;
-
-  if (!clean) return;
-  key = clean.toLowerCase();
-  if (seen[key]) return;
-  seen[key] = 1;
-  out.push(clean);
-}
-
-function tagCleanerTagList(rawTags) {
-  var out = [];
-  var parts;
-  var i;
-
-  if (rawTags == null) return out;
-  if (Object.prototype.toString.call(rawTags) === "[object Array]") {
-    for (i = 0; i < rawTags.length; i++) {
-      if (trimAtagLibString(rawTags[i])) out.push(trimAtagLibString(rawTags[i]));
-    }
-    return out;
-  }
-
-  parts = String(rawTags || "").split(/\n|,\s*/);
-  for (i = 0; i < parts.length; i++) {
-    if (trimAtagLibString(parts[i])) out.push(trimAtagLibString(parts[i]));
-  }
-
-  return out;
 }
 
 function extractTagCleanerFormatValueMode(text) {
@@ -521,25 +483,34 @@ function splitTagCleanerBarTokens(text) {
   return combined;
 }
 
-function extractTagCleanerUserTagsFromLine(line, userTags, userTagSeen, enabled) {
+function extractTagCleanerMarkedTagsFromLine(line) {
   var s = String(line || "");
   var state = buildAtagLibQuoteState(s);
-  var rx = /(^|[\s,;.!?()\[\]{}])(?:##([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)(?=$|[\s,;.!?()\[\]{}])|([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)##(?=$|[\s,;.!?()\[\]{}]))/g;
+  var rx = /(^|[\s,;.!?()\[\]{}])(?:##([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)(?=$|[\s,;.!?()\[\]{}])|([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)##("[^"]*"|'[^']*'|[+\-]?\d+(?:[.,]\d+)?|\++|-+|[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)?(?=$|[\s,;.!?()\[\]{}]))/g;
   var out = [];
+  var tags = [];
   var last = 0;
   var m;
   var start;
-  var name;
   var prefix;
+  var clean;
+  var base;
+  var rawValue;
 
   while ((m = rx.exec(s)) !== null) {
     prefix = m[1] || "";
     start = m.index + prefix.length;
 
     if (!isInsideAtagLibQuoteState(state, start)) {
-      name = m[2] || m[3] || "";
-      if (enabled) {
-        addUniqueTagCleanerName(userTags, userTagSeen, name);
+      if (m[2]) {
+        clean = cleanTagCleanerMarkedTagName(m[2]);
+      } else {
+        base = cleanTagCleanerMarkedTagName(m[3] || "");
+        rawValue = m[4] || "";
+        clean = base ? base + (rawValue ? ":" + rawValue : "") : "";
+      }
+      if (clean) {
+        tags.push(clean);
         out.push(s.substring(last, m.index));
         if (prefix && !/^[,;.!?]$/.test(prefix)) out.push(prefix);
         last = rx.lastIndex;
@@ -550,7 +521,10 @@ function extractTagCleanerUserTagsFromLine(line, userTags, userTagSeen, enabled)
   }
 
   out.push(s.substring(last));
-  return compactTagCleanerTextSpaces(out.join(""));
+  return {
+    text: compactTagCleanerTextSpaces(out.join("")),
+    tags: tags
+  };
 }
 
 function cleanTagCleanerSimpleHashTagsInLine(line) {
@@ -630,9 +604,8 @@ function normalizeTagCleanerDoubleColonSpacingInLine(line) {
   return out.join("");
 }
 
-function cleanTagCleanerInlineLine(line, positiveSignMode, userTags, userTagSeen, userTagsEnabled) {
+function cleanTagCleanerInlineLine(line, positiveSignMode) {
   var s = String(line || "");
-  s = extractTagCleanerUserTagsFromLine(s, userTags || [], userTagSeen || {}, userTagsEnabled);
   s = normalizeTagCleanerIssue50SuffixesInLine(s, positiveSignMode);
   s = cleanTagCleanerSimpleHashTagsInLine(s);
   if (normalizeTagCleanerFormatValueMode(positiveSignMode) === "none") return s;
@@ -706,8 +679,6 @@ function makeTagCleanerTextWithOptions(sourceText, cfg) {
   var body = [];
   var barTokens = [];
   var seen = {};
-  var userTags = [];
-  var userTagSeen = {};
   var i;
   var line;
   var m;
@@ -720,13 +691,13 @@ function makeTagCleanerTextWithOptions(sourceText, cfg) {
   var positiveSignMode = tagCleanerModeFromConfig(cfg);
   var barLine;
   var formatModeFromLine;
-  var userTagsEnabled = normalizeTagCleanerFieldList(cfg.tagFields || cfg.userTagFields || cfg.tagField || cfg.userTagField).length > 0;
   var hasTimestampLine = false;
   var spacingLines = tagCleanerSpacingLines(tagBarSpacing);
   var singleBarExclusive = cfg.singleBarExclusive !== false && cfg.emptyBarExclusive !== false;
   var exclusiveTagBar = false;
   var hasTagBarLine = false;
   var tagBar;
+  var marked;
 
   function addBarToken(raw) {
     cleaned = cleanTagCleanerToken(raw, true, positiveSignMode);
@@ -762,7 +733,9 @@ function makeTagCleanerTextWithOptions(sourceText, cfg) {
     if (tagBar) {
       formatModeFromLine = extractTagCleanerFormatValueMode(tagBar.text || "");
       if (formatModeFromLine != null) addBarToken("fv:" + formatModeFromLine);
-      line = extractTagCleanerUserTagsFromLine(removeTagCleanerFormatValueDirectives(tagBar.text || ""), userTags, userTagSeen, userTagsEnabled);
+      marked = extractTagCleanerMarkedTagsFromLine(removeTagCleanerFormatValueDirectives(tagBar.text || ""));
+      line = marked.text;
+      for (j = 0; j < marked.tags.length; j++) addBarToken(marked.tags[j]);
       parts = splitTagCleanerBarTokens(line);
       for (j = 0; j < parts.length; j++) addBarToken(parts[j]);
       continue;
@@ -774,7 +747,13 @@ function makeTagCleanerTextWithOptions(sourceText, cfg) {
       continue;
     }
 
-    body.push(exclusiveTagBar ? line : cleanTagCleanerInlineLine(line, positiveSignMode, userTags, userTagSeen, userTagsEnabled));
+    if (exclusiveTagBar) {
+      body.push(line);
+    } else {
+      marked = extractTagCleanerMarkedTagsFromLine(line);
+      for (j = 0; j < marked.tags.length; j++) addBarToken(marked.tags[j]);
+      body.push(cleanTagCleanerInlineLine(marked.text, positiveSignMode));
+    }
   }
 
   while (body.length && trimAtagLibString(body[body.length - 1]) === "") body.pop();
@@ -799,8 +778,6 @@ function makeTagCleanerTextWithOptions(sourceText, cfg) {
 
   while (body.length && trimAtagLibString(body[0]) === "") body.shift();
   while (body.length && trimAtagLibString(body[body.length - 1]) === "") body.pop();
-  cfg._tagCleanerUserTags = userTags;
-
   return body.join("\n");
 }
 
