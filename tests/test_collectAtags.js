@@ -314,6 +314,10 @@ assertItem("readable-global-decimal", "|| tag\u207A\u00B9  info: \"neuer lauf\" 
 assertItem("readable-global-text", "|| tag\u207A\u00B9  test: 12,5  info: \"neuer lauf\"  trial\u207F", "info", "neuer lauf", "neuer lauf", null, null);
 assertSimpleTag("readable-global-bare", "|| tag\u207A\u00B9  test: 12,5  info: \"neuer lauf\"  trial\u207F", "trial");
 assertItem("exclusive-readable-leading-quote", "bodytag2\n\"| tag\u00B3", "tag", "+3", 3, null, null);
+assertItem("exclusive-readable-superscript-value", "\"| test\u00B2", "test", "+2", 2, null, null);
+assertItem("exclusive-readable-runtime-quote-superscript-value", String.fromCharCode(34) + "| test\u00B2", "test", "+2", 2, null, null);
+assertItem("exclusive-readable-comma-ended-superscript-value", "\"| testa\u00B2 testb\u00B3 testc\u2074, re\u02E3 schreiben\u02E3", "testc", "+4", 4, null, null);
+assertSimpleTag("exclusive-readable-comma-ended-cleaner-suffix", "\"| testa\u00B2 testb\u00B3 testc\u2074, re\u02E3 schreiben\u02E3", "re");
 assertMissing("exclusive-readable-leading-quote-skips-body", "bodytag2\n\"| tag\u00B3", "bodytag");
 assertItem("readable-global-double-bar-is-not-exclusive-body", "bodytag2\n|| tag\u00B3", "bodytag", "+2", 2, null, null);
 

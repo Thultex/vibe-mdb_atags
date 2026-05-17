@@ -19,6 +19,18 @@
 
 ## 2026-05-16
 
+- `collectAtags` auf `v1.52` angehoben
+- Fix: Superscript-Werte in Readable-/Tagbar-Zeilen werden auch vor Satzzeichen erkannt, z. B. `testc⁴,`
+- Test: Regression fuer `"| testa² testb³ testc⁴, reˣ schreibenˣ` ergaenzt
+
+- `collectAtags` auf `v1.51` angehoben
+- Fix: Exklusive `"|`-Readable-Zeilen werden vor der normalen Quote-Logik direkt ueber die sichtbaren Anfangszeichen erkannt
+- Test: Regression prueft `"| test²` mit Laufzeit-Quote ohne Escape-Backslash
+
+- `Tag Cleaner` auf `v1.25` angehoben
+- Fix: Superscript-Werte in Tagleisten werden auch erkannt, wenn Name und Wert durch Leerzeichen getrennt ankommen, z. B. `test ²` -> `test²`
+- Test: Regressionen fuer `test²` in normalen und gesplitteten Tagleisten ergaenzt
+
 - `collectAtags` auf `v1.50` angehoben
 - `Tag Cleaner` auf `v1.24` angehoben
 - Aenderung: Der Core parst weiter normales `|`, normales `||` und exklusives `"|`; `|"`/`|'` sind reine Cleaner-Eingabeformen

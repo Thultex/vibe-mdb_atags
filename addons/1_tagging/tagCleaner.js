@@ -1,6 +1,6 @@
 /*
 ========================================
-B1 Tag Cleaner v1.24 (sys 2.21)
+B1 Tag Cleaner v1.25 (sys 2.21)
 ========================================
 
 Notes
@@ -473,6 +473,15 @@ function splitTagCleanerBarTokens(text) {
   if (token) out.push(token);
 
   for (i = 0; i < out.length; i++) {
+    if (
+      /^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*$/.test(out[i]) &&
+      i + 1 < out.length &&
+      /^[\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B]+$/.test(out[i + 1])
+    ) {
+      combined.push(out[i] + out[i + 1]);
+      i++;
+      continue;
+    }
     if (/^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*::$/.test(out[i]) && i + 1 < out.length) {
       combined.push(out[i] + out[i + 1]);
       i++;

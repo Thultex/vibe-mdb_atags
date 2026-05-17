@@ -81,6 +81,24 @@ assertEquals(
 );
 
 assertEquals(
+  "tagbar-superscript-value-token",
+  makeTagCleanerText("Text\n| test\u00B2"),
+  "Text\n\n| test\u00B2"
+);
+
+assertEquals(
+  "tagbar-split-superscript-value-token",
+  makeTagCleanerText("Text\n| test \u00B2"),
+  "Text\n\n| test\u00B2"
+);
+
+assertEquals(
+  "exclusive-tagbar-output-uses-plain-runtime-quote",
+  makeTagCleanerText("Text\n|| test\u00B2").split("\n")[2].charAt(0),
+  String.fromCharCode(34)
+);
+
+assertEquals(
   "tagbar-issue38-values-and-templates",
   makeTagCleanerText("Text\n| tag+ tag-- tag++2 tag00 tag02 test:_ test:: _"),
   "Text\n\n| tag\u207A tag\u207B\u207B tag\u207A\u207A\u00B2 tag\u2070\u2070 tag\u2070\u00B2"
@@ -292,5 +310,3 @@ assertEquals("double-hash-tags", userTagEntry.field("Tags").join(","), "alt,esse
 assertEquals("double-hash-user-tags", userTagEntry.field("UserTags").join(","), "essen,leiste,tag");
 
 WScript.Echo("OK");
-
-

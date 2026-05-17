@@ -1,6 +1,6 @@
 /*
 ========================================
-A1 collectAtags v1.50 (sys 2.21)
+A1 collectAtags v1.52 (sys 2.21)
 ========================================
 
 Changes
@@ -674,7 +674,7 @@ function collectAtags(cfg) {
     var s = String(tagText || "");
     var used = [];
     var rxColon = /(^|\s+)([^\s:|][^:\s|]*)\s*:\s*(?:"([^"]*)"|([^\s]+))/g;
-    var rxSuper = /([^\s:|]+?)([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B\u207F]+)(?=$|\s+)/g;
+    var rxSuper = /([^\s:|]+?)([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B\u207F]+)(?=$|[\s,;.!?()\[\]{}]+)/g;
     var m;
     var name;
     var raw;
@@ -712,7 +712,7 @@ function collectAtags(cfg) {
       if (m[0] === "") rxSuper.lastIndex++;
     }
 
-    var rxCleanerSimple = /(^|\s+)([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\u02E3(?=$|\s+)/g;
+    var rxCleanerSimple = /(^|[\s,;.!?()\[\]{}]+)([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\u02E3(?=$|[\s,;.!?()\[\]{}]+)/g;
     while ((m = rxCleanerSimple.exec(s)) !== null) {
       if (isUsed(m.index)) {
         if (m[0] === "") rxCleanerSimple.lastIndex++;
@@ -753,9 +753,11 @@ function collectAtags(cfg) {
   function readAtagReadableTagLine(line) {
     var s = String(line || "");
     var m;
+    var trimmed = s.replace(/^\s+/, "");
 
-    m = s.match(/^\s*"\|\s*(.*)$/);
-    if (m) return { text: m[1] || "", exclusive: true, row: false };
+    if (trimmed.charAt(0) === '"' && trimmed.charAt(1) === "|") {
+      return { text: trimmed.substring(2).replace(/^\s+/, ""), exclusive: true, row: false };
+    }
 
     m = s.match(/^\s*\|\|\s*(.*)$/);
     if (m) return { text: m[1] || "", exclusive: false, row: false };
