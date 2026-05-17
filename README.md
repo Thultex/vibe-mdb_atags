@@ -99,7 +99,8 @@ Ziel-Felder
 - `A3` `core_lib/helpers_lib.js`
 
 Empfohlene Lade-Reihenfolge: `helpers_lib`, dann `collectAtags_lib`, dann `exportAtags_lib`. `core/tagCleaner.js` nutzt ebenfalls `helpers_lib`.
-Optional vorher `core/libVersions.js` laden; dann koennen die geladenen Remote-Libs ueber `checkLibVersions()` geprueft werden. Die aktuelle statische Uebersicht liegt in `core_lib/LIB_VERSIONS.md`.
+Optional vorher `core/_checkLibs.js` laden; dann koennen die erwarteten Remote-Libs ueber `checkAtagLibVersions({ checkAccess: true })` geprueft werden. Die aktuelle statische Uebersicht liegt in `core_lib/LIB_VERSIONS.md`.
+Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportAtags()` nutzt, muss danach zusaetzlich `core/helpers_mem.js` geladen werden.
 
 **Core**
 
@@ -770,6 +771,8 @@ Kategorie-Parents zeigen standardmaessig den Mittelwert ihrer numerischen Unterp
 Ausführliche Beispiele liegen hier in der README, nicht in den Script-Kopfkommentaren. Die Script-Kommentare bleiben kurz, damit der Memento-Java-Editor nicht am Syntax-Highlighting hängen bleibt.
 
 **Basis-Export in Tags**
+
+`applyTags()` gehoert zu `core/helpers_mem.js`. In Memento muss diese Datei nach `helpers_lib`, `collectAtags_lib` und `exportAtags_lib` geladen sein.
 
 ```js
 applyTags({

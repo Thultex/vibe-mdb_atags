@@ -277,6 +277,12 @@ assertEquals(
   "tag\u00B2"
 );
 
+assertEquals(
+  "line-split-crlf",
+  makeTagCleanerTextWithOptions("tag2\r\n| stress3", {}),
+  "tag\u00B2\n\n| stress\u00B3"
+);
+
 var entryObj = makeEntry({
   Note: "emo2\n| stress activityc"
 });

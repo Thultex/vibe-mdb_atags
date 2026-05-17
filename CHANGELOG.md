@@ -19,11 +19,19 @@
 
 ## 2026-05-16
 
+- `tagCleaner` auf `v1.28` angehoben
+- `exportAtags` auf `v1.80` angehoben
+- `libVersions` auf `v1.05` angehoben
+- Feature: `checkAtagLibVersions()` prueft automatisch alle erwarteten Remote-Libs und optional mit `checkAccess: true` die aufrufbaren Versionsfunktionen
+- Struktur: Versions-Checker nach `core/_checkLibs.js` umbenannt, damit klar ist, dass er selbst keine Remote-Lib ist
+- Fix: `makeTagCleanerTextWithOptions()` splittet Zeilen ohne Regex-Literal, damit Memento/Rhino-Kopierpfade an der Einstiegstelle robuster bleiben
+- Doku/Test: Lade-Reihenfolge fuer `core/helpers_mem.js` und Regression fuer CRLF-Zeilen im TagCleaner ergaenzt
+
 - Struktur: Remote-nutzbare Lib-Dateien nach `core_lib/` verschoben und mit `_lib` gekennzeichnet (`collectAtags_lib`, `exportAtags_lib`, `helpers_lib`)
 - Struktur: `tagCleaner` aus den Addons nach `core/tagCleaner.js` verschoben; Core-Funktionen bleiben feldschreibfrei, `applyTagCleaner` bleibt als optionaler Memento-Wrapper erhalten
 - Refactor: String-/Quote-Basishelfer aus dem Cleaner in `helpers_lib` ausgelagert
 - Doku/Test: Pfade, Versionierungscheck und TagCleaner-Beispiele an die neue Struktur angepasst
-- Feature: `core/libVersions.js` mit `checkLibVersions()` und eigener Versionsfunktion pro Lib ergaenzt
+- Feature: `core/_checkLibs.js` mit `checkLibVersions()` und eigener Versionsfunktion pro Lib ergaenzt
 - Doku: `core_lib/LIB_VERSIONS.md` als statische Uebersicht der aktuellen Remote-Lib-Versionen ergaenzt
 - Struktur: `core/helpers_mem.js` enthaelt gezielt Memento-Wrapper wie `applyTags`; `helpers_mem` und `tagCleaner` werden nicht als Remote-Libs registriert
 - Systemversion auf `sys 2.30` angehoben

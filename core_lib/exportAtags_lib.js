@@ -1,6 +1,6 @@
 /*
 ========================================
-A2 exportAtags Lib v1.79 (sys 2.30)
+A2 exportAtags Lib v1.80 (sys 2.30)
 ========================================
 
 Notes:
@@ -29,6 +29,9 @@ Notes:
 - Keep this header ASCII-only for the Memento editor
 
 Examples:
+
+These examples use applyTags() from core/helpers_mem.js.
+When only this remote lib is loaded, call exportAtags() directly or load core/helpers_mem.js after the libs.
 
 applyTags({
   enabled: true,
@@ -70,14 +73,14 @@ applyTags({
 function getExportAtagsLibVersion() {
   return {
     name: "exportAtags_lib",
-    version: "1.79",
+    version: "1.80",
     sysVersion: "2.30",
     path: "core_lib/exportAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("exportAtags_lib", "1.79", "2.30", "core_lib/exportAtags_lib.js");
+  registerAtagLibVersion("exportAtags_lib", "1.80", "2.30", "core_lib/exportAtags_lib.js");
 }
 function atagCategoryAggregateMode(cfg, context) {
   if (cfg && cfg.categoryAggregateMode !== undefined) return cfg.categoryAggregateMode;

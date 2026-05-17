@@ -1,10 +1,10 @@
 /*
 ========================================
-A5 Tag Cleaner Core v1.27 (sys 2.30)
+A5 Tag Cleaner Core v1.28 (sys 2.30)
 ========================================
 
 Notes
-- remote/library-safe tag cleaner core.
+- core tag cleaner module.
 - Details live in README.md and CHANGELOG.md.
 - Supports cumulative +/-, 00/null and zero-decimal tag forms.
 - Exclusive tag bars keep body text unchanged.
@@ -21,7 +21,7 @@ makeTagCleanerTextWithOptions(text, {
 function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
-    version: "1.27",
+    version: "1.28",
     sysVersion: "2.30",
     path: "core/tagCleaner.js"
   };
@@ -29,6 +29,25 @@ function getTagCleanerVersion() {
 
 function trimTagCleanerString(s) {
   return trimAtagLibString(s);
+}
+
+function splitTagCleanerLines(text) {
+  var s = String(text == null ? "" : text);
+  var out = [];
+  var start = 0;
+  var i;
+  var code;
+
+  for (i = 0; i < s.length; i++) {
+    code = s.charCodeAt(i);
+    if (code !== 10 && code !== 13) continue;
+    out.push(s.substring(start, i));
+    if (code === 13 && i + 1 < s.length && s.charCodeAt(i + 1) === 10) i++;
+    start = i + 1;
+  }
+
+  out.push(s.substring(start));
+  return out;
 }
 
 function compactTagCleanerTextSpaces(s) {
@@ -629,10 +648,10 @@ function makeTagCleanerText(text) {
   return makeTagCleanerTextWithOptions(text, {});
 }
 
-function makeTagCleanerTextWithOptions(text, cfg) {
+function makeTagCleanerTextWithOptions(sourceText, cfg) {
   cfg = cfg || {};
 
-  var lines = String(text || "").split(/\r?\n/);
+  var lines = splitTagCleanerLines(sourceText);
   var body = [];
   var barTokens = [];
   var seen = {};

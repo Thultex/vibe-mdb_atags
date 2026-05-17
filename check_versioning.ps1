@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $moduleFiles = @(
-  "core/libVersions.js",
+  "core/_checkLibs.js",
   "core_lib/collectAtags_lib.js",
   "core_lib/exportAtags_lib.js",
   "core_lib/helpers_lib.js",
@@ -22,7 +22,7 @@ $moduleFiles = @(
 )
 
 $moduleIds = @{
-  "core/libVersions.js" = "A0"
+  "core/_checkLibs.js" = "A0"
   "core_lib/collectAtags_lib.js" = "A1"
   "core_lib/exportAtags_lib.js" = "A2"
   "core_lib/helpers_lib.js" = "A3"
