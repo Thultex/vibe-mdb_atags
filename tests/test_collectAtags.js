@@ -313,6 +313,11 @@ assertItem("readable-global-number", "|| tag\u207A\u00B9  test: 12,5  info: \"ne
 assertItem("readable-global-decimal", "|| tag\u207A\u00B9  info: \"neuer lauf\" test: 12,5  trial\u207F", "test", "12,5", 12.5, null, null);
 assertItem("readable-global-text", "|| tag\u207A\u00B9  test: 12,5  info: \"neuer lauf\"  trial\u207F", "info", "neuer lauf", "neuer lauf", null, null);
 assertSimpleTag("readable-global-bare", "|| tag\u207A\u00B9  test: 12,5  info: \"neuer lauf\"  trial\u207F", "trial");
+assertItem("exclusive-double-pipe-only-tagbar", "body emo2\n|| tag\u00B3\n5: ks2", "tag", "+3", 3, null, null);
+assertMissing("exclusive-double-pipe-skips-body-tags", "body emo2\n|| tag\u00B3\n5: ks2", "emo");
+assertMissing("exclusive-double-pipe-skips-row-tags", "body emo2\n|| tag\u00B3\n5: ks2", "ks");
+assertItem("exclusive-quoted-pipe-marker", "5: body\n|\" tag\u00B2\n| other\u00B3", "tag", "+2", 2, null, null);
+assertItem("exclusive-quoted-pipe-collects-other-taglines-without-row", "5: body\n|\" tag\u00B2\n| other\u00B3", "other", "+3", 3, null, null);
 
 print("OK");
 

@@ -308,7 +308,7 @@ Mit `currentEntry` wird nur der aktuelle Eintrag geschrieben. Falls `lib().entri
 
 **Tag Cleaner (Tagging)**
 
-Normalisiert einfache Werttags im Text und führt `|`-/`||`-Tagleisten zusammen. Die Ausgabe nutzt eine einfache `|`-Tagleiste. Standard ist Tagleiste unten mit einer Leerzeile Abstand.
+Normalisiert einfache Werttags im Text und führt `|`-/`||`-Tagleisten zusammen. Die Ausgabe nutzt eine einfache `|`-Tagleiste. Standard ist Tagleiste unten mit einer Leerzeile Abstand. Exklusive Tagleisten beginnen mit `"|`, `||`, `|'` oder `|"`: Dann werden nur Tagleisten gesammelt, der übrige Notiztext wird nicht gecleant und die Ausgabe nutzt wieder `"|`.
 
 ```js
 applyTagCleaner({
@@ -345,6 +345,23 @@ Optionen:
 - `formatValues: "max"` erzwingt `+` bei positiven Zahlen
 - `formatValues: "none"` lässt Werttags unverändert
 - `tagFields: ["Tags", "User Tags"]` schreibt `##tag`/`tag##` als User-Tags in mehrere Tagfelder
+
+Exklusive Tagleisten:
+
+```text
+Text emo2
+|" stress3
+5: ks2
+```
+
+wird zu:
+
+```text
+Text emo2
+5: ks2
+
+"| stress³
+```
 
 Pro Notiz kann die Werteformatierung über `fv` in der Tagleiste gesetzt werden:
 

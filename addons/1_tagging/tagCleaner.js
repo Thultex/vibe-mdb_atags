@@ -1,12 +1,13 @@
 /*
 ========================================
-B1 Tag Cleaner v1.21 (sys 2.21)
+B1 Tag Cleaner v1.22 (sys 2.21)
 ========================================
 
 Notes
 - Short header for the Memento Java editor.
 - Details live in README.md and CHANGELOG.md.
 - Supports cumulative +/-, 00/null and zero-decimal tag forms.
+- Exclusive tag bars use `"|` and keep surrounding text unchanged.
 
 applyTagCleaner({
   textField: "Notiz",
@@ -46,6 +47,25 @@ function isTagCleanerNumberValue(s) {
 
 function isTagCleanerTimestampLine(line) {
   return /^\s*\d+(?:[.,]\d+)?\s*:/.test(String(line || ""));
+}
+
+function readTagCleanerBarLine(line) {
+  var s = String(line || "");
+  var m;
+
+  m = s.match(/^\s*"\|\s*(.*)$/);
+  if (m) return { text: m[1] || "", exclusive: true };
+
+  m = s.match(/^\s*\|\|\s*(.*)$/);
+  if (m) return { text: m[1] || "", exclusive: true };
+
+  m = s.match(/^\s*\|["']\s*(.*)$/);
+  if (m) return { text: m[1] || "", exclusive: true };
+
+  m = s.match(/^\s*\|\s*(.*)$/);
+  if (m) return { text: m[1] || "", exclusive: false };
+
+  return null;
 }
 
 function tagCleanerSpacingLines(spacing) {
@@ -663,6 +683,8 @@ function makeTagCleanerTextWithOptions(text, cfg) {
   var userTagsEnabled = normalizeTagCleanerFieldList(cfg.tagFields || cfg.userTagFields || cfg.tagField || cfg.userTagField).length > 0;
   var hasTimestampLine = false;
   var spacingLines = tagCleanerSpacingLines(tagBarSpacing);
+  var exclusiveTagBar = false;
+  var tagBar;
 
   function addBarToken(raw) {
     cleaned = cleanTagCleanerToken(raw, true, positiveSignMode);
@@ -676,9 +698,10 @@ function makeTagCleanerTextWithOptions(text, cfg) {
   for (i = 0; i < lines.length; i++) {
     line = String(lines[i] || "");
     if (isTagCleanerTimestampLine(line)) hasTimestampLine = true;
-    m = line.match(/^\s*\|\|?\s*(.*)$/);
-    if (!m) continue;
-    formatModeFromLine = extractTagCleanerFormatValueMode(m[1] || "");
+    tagBar = readTagCleanerBarLine(line);
+    if (!tagBar) continue;
+    if (tagBar.exclusive) exclusiveTagBar = true;
+    formatModeFromLine = extractTagCleanerFormatValueMode(tagBar.text || "");
     if (formatModeFromLine != null) positiveSignMode = formatModeFromLine;
   }
 
@@ -691,12 +714,12 @@ function makeTagCleanerTextWithOptions(text, cfg) {
 
   for (i = 0; i < lines.length; i++) {
     line = String(lines[i] || "");
-    m = line.match(/^\s*\|\|?\s*(.*)$/);
+    tagBar = readTagCleanerBarLine(line);
 
-    if (m) {
-      formatModeFromLine = extractTagCleanerFormatValueMode(m[1] || "");
+    if (tagBar) {
+      formatModeFromLine = extractTagCleanerFormatValueMode(tagBar.text || "");
       if (formatModeFromLine != null) addBarToken("fv:" + formatModeFromLine);
-      line = extractTagCleanerUserTagsFromLine(removeTagCleanerFormatValueDirectives(m[1] || ""), userTags, userTagSeen, userTagsEnabled);
+      line = extractTagCleanerUserTagsFromLine(removeTagCleanerFormatValueDirectives(tagBar.text || ""), userTags, userTagSeen, userTagsEnabled);
       parts = splitTagCleanerBarTokens(line);
       for (j = 0; j < parts.length; j++) addBarToken(parts[j]);
       continue;
@@ -708,7 +731,7 @@ function makeTagCleanerTextWithOptions(text, cfg) {
       continue;
     }
 
-    body.push(cleanTagCleanerInlineLine(line, positiveSignMode, userTags, userTagSeen, userTagsEnabled));
+    body.push(exclusiveTagBar ? line : cleanTagCleanerInlineLine(line, positiveSignMode, userTags, userTagSeen, userTagsEnabled));
   }
 
   while (body.length && trimTagCleanerString(body[body.length - 1]) === "") body.pop();
@@ -719,7 +742,7 @@ function makeTagCleanerTextWithOptions(text, cfg) {
   }
 
   if (barTokens.length) {
-    barLine = "| " + formatTagCleanerBarTokens(barTokens);
+    barLine = (exclusiveTagBar ? '"| ' : "| ") + formatTagCleanerBarTokens(barTokens);
     if (tagBarPosition === "top" || tagBarPosition === "above") {
       while (body.length && trimTagCleanerString(body[0]) === "") body.shift();
       for (j = 0; body.length && j < spacingLines; j++) body.unshift("");

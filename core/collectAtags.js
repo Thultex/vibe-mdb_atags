@@ -1,6 +1,6 @@
 /*
 ========================================
-A1 collectAtags v1.46 (sys 2.21)
+A1 collectAtags v1.47 (sys 2.21)
 ========================================
 
 Changes
@@ -18,6 +18,7 @@ Changes
 - skip alias declaration lines during normal parsing
 - add compact, explicit, and inverted text tag syntaxes
 - parse bare tags in readable tag lines
+- exclusive readable tag lines parse only tag lines and ignore body tags
 - simple tag suffix `x` is parsed as an empty explicit tag
 - alias entries can carry fixed values, e.g. `@@Kopfschmerz (KSch): ks, Kopfdruck1`
 - superscript value suffixes like `emo²` and `tag⁻⁰³` are parsed in normal text
@@ -748,6 +749,37 @@ function collectAtags(cfg) {
     };
   }
 
+  function readAtagReadableTagLine(line) {
+    var s = String(line || "");
+    var m;
+
+    m = s.match(/^\s*"\|\s*(.*)$/);
+    if (m) return { text: m[1] || "", exclusive: true, row: false };
+
+    m = s.match(/^\s*\|\|\s*(.*)$/);
+    if (m) return { text: m[1] || "", exclusive: true, row: false };
+
+    m = s.match(/^\s*\|["']\s*(.*)$/);
+    if (m) return { text: m[1] || "", exclusive: true, row: false };
+
+    m = s.match(/^\s*\|\s*([^|].*)$/);
+    if (m) return { text: m[1] || "", exclusive: false, row: true };
+
+    return null;
+  }
+
+  function hasExclusiveAtagReadableTagLine(lines) {
+    var i;
+    var tagLine;
+
+    for (i = 0; i < lines.length; i++) {
+      tagLine = readAtagReadableTagLine(lines[i]);
+      if (tagLine && tagLine.exclusive) return true;
+    }
+
+    return false;
+  }
+
   function addCategoryItems(items, seen, aliasMap) {
     var map = {};
     var order = [];
@@ -864,32 +896,26 @@ function collectAtags(cfg) {
     var lastRowValue = null;
     var lastRowUnit = null;
     var lastRowRaw = null;
+    var exclusiveReadableTags = hasExclusiveAtagReadableTagLine(lines);
 
     for (var ln = 0; ln < lines.length; ln++) {
       var line = String(lines[ln] || "");
       var rowCtx = detectRowPrefix(line);
-      var readableGlobalLine = line.match(/^\s*\|\|\s*(.+)$/);
-      var readableRowLine = line.match(/^\s*\|\s*([^|].*)$/);
+      var readableTagLine = readAtagReadableTagLine(line);
 
-      if (readableGlobalLine) {
+      if (readableTagLine) {
         addReadableTagLineItems(
-          readableGlobalLine[1],
+          readableTagLine.text,
           items, seen, aliasMap,
-          null, null, null
-        );
-        continue;
-      }
-
-      if (readableRowLine) {
-        addReadableTagLineItems(
-          readableRowLine[1],
-          items, seen, aliasMap,
-          lastRowValue, lastRowUnit, lastRowRaw
+          exclusiveReadableTags || !readableTagLine.row ? null : lastRowValue,
+          exclusiveReadableTags || !readableTagLine.row ? null : lastRowUnit,
+          exclusiveReadableTags || !readableTagLine.row ? null : lastRowRaw
         );
         continue;
       }
 
       if (isAliasDeclarationLine(line)) continue;
+      if (exclusiveReadableTags) continue;
 
       var currentRowValue = null;
       var currentRowUnit = null;

@@ -71,7 +71,7 @@ assertEquals(
 assertEquals(
   "tagbar-merge",
   makeTagCleanerText("Text\n|| tag3 info#\"das ist info\"\n| info2\n| stress laufen emo3"),
-  "Text\n\n| emo\u00B3 info\u00B2 tag\u00B3, info:\"das ist info\", laufen\u02E3 stress\u02E3"
+  "Text\n\n\"| emo\u00B3 info\u00B2 tag\u00B3, info:\"das ist info\", laufen\u02E3 stress\u02E3"
 );
 
 assertEquals(
@@ -167,7 +167,7 @@ assertEquals(
     tagBarPosition: "top",
     tagBarSpacing: "none"
   }),
-  "| Ks+3 Stress+3, fv:none\nText emo2"
+  "\"| Ks+3 Stress+3, fv:none\nText emo2"
 );
 
 assertEquals(
@@ -230,7 +230,13 @@ assertEquals(
     tagBarPosition: "top",
     tagBarSpacing: "none"
   }),
-  "| emo\u00B3, laufen\u02E3 stress\u02E3\nText"
+  "\"| emo\u00B3, laufen\u02E3 stress\u02E3\nText"
+);
+
+assertEquals(
+  "exclusive-tagbar-keeps-body-unchanged",
+  makeTagCleanerText("emo2\n|\" stress3\n5: ks2"),
+  "emo2\n5: ks2\n\n\"| stress\u00B3"
 );
 
 var entryObj = makeEntry({

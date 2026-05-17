@@ -17,6 +17,14 @@
 - Test/Doku: ...
 ```
 
+## 2026-05-17
+
+- `collectAtags` auf `v1.47` angehoben
+- Feature: Exklusive Tagleisten mit `"|`, `||`, `|'` oder `|"` parsen nur die Tagleisten und ignorieren Tags sowie Row-Kontext im uebrigen Notiztext
+- `Tag Cleaner` auf `v1.22` angehoben
+- Feature: Exklusive Tagleisten werden zusammengefuehrt und als `"|` ausgegeben; der Notiztext ausserhalb der Tagleisten bleibt dabei unveraendert
+- Test/Doku: Regressionen fuer exklusives Parser- und Cleaner-Verhalten ergaenzt
+
 ## 2026-05-16
 
 - `collectAtags` auf `v1.46` angehoben
