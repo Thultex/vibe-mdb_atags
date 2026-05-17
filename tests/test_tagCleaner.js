@@ -83,6 +83,12 @@ assertEquals(
 );
 
 assertEquals(
+  "tagbar-no-space-after-pipe",
+  makeTagCleanerText("Text\n|tag1"),
+  "Text\n\n| tag\u00B9"
+);
+
+assertEquals(
   "tagbar-superscript-value-token",
   makeTagCleanerText("Text\n| test\u00B2"),
   "Text\n\n| test\u00B2"

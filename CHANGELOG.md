@@ -20,7 +20,7 @@
 ## 2026-05-16
 
 - `helpers_lib` auf `v2.11` angehoben
-- `collectAtags` auf `v1.54` angehoben
+- `collectAtags` auf `v1.55` angehoben
 - `exportAtags` auf `v1.82` angehoben
 - `restoreAtags` auf `v2.04` angehoben
 - `tagCleaner` auf `v1.34` angehoben
@@ -29,7 +29,8 @@
 - API: `applyCleanTags()` kann ohne Optionsobjekt genutzt werden und verwendet dann `Notiz`
 - Doku: Kurze `applyCleanTags()`-Beispiele direkt im Tag-Cleaner-Header ergaenzt
 - Refactor: Reine Durchreicher zu `helpers_lib` und eine ungenutzte Sortierfunktion aus dem Tag Cleaner entfernt
-- `libVersions` auf `v1.07` angehoben
+- `libVersions` auf `v1.08` angehoben
+- Fix: Doppelte Aliasziele sind standardmaessig aktiv, damit ein Alias wie `abgeschlagen` gleichzeitig positiv in `Erschoepfung` und negativ in `Stimmung` zaehlt; `multiAliasTargets: false` stellt das alte Last-Wins-Verhalten wieder her
 - `helpers` auf `v1.02` angehoben
 - Nummerierung: Remote-Libs nutzen `#1`-`#3`, Core nutzt `A1`-`A4`; die Reihenfolge folgt wieder alphanumerisch den Dateinamen im jeweiligen Bereich
 - Feature: `checkAtagLibVersions()` prueft automatisch alle erwarteten Remote-Libs und optional mit `checkAccess: true` die aufrufbaren Versionsfunktionen

@@ -254,8 +254,23 @@ assertMissing("quoted-colon-inside-text", "'tag: 5'", "tag");
 assertItem("quoted-text-outside-row", "10: MetricC1, MetricB1 geringer, MetricD1, ' das hier# sollte aber nicht#23 drin sein'", "MetricC", "+1", 1, 10, null);
 assertItem("alias-short", "@@SymptomA (sa): SymptomA, SymAlias\nsa2", "SymptomA", "+2", 2, null, null);
 assertDisplayName("alias-short-display", "@@SymptomA (sa): SymptomA, SymAlias\nSymptomA2", "SymptomA", "sa");
-assertItem("alias-duplicate-default-last-wins", "@@Pos: x\n@@Neg: -x\nx2", "Neg", "-2", -2, null, null);
-assertMissing("alias-duplicate-default-no-first-target", "@@Pos: x\n@@Neg: -x\nx2", "Pos");
+assertItemsWithOptions(
+  "alias-duplicate-default-multi-targets",
+  "@@Pos: x\n@@Neg: -x\nx2",
+  {},
+  [
+    { name: "Pos", attrText: "+2", attrValue: 2 },
+    { name: "Neg", attrText: "-2", attrValue: -2 }
+  ]
+);
+assertItemsWithOptions(
+  "alias-duplicate-last-wins-can-be-restored",
+  "@@Pos: x\n@@Neg: -x\nx2",
+  { multiAliasTargets: false },
+  [
+    { name: "Neg", attrText: "-2", attrValue: -2 }
+  ]
+);
 assertItemsWithOptions(
   "alias-duplicate-multi-targets",
   "@@Pos: x\n@@Neg: -x\nx2",
@@ -272,6 +287,15 @@ assertItemsWithOptions(
   [
     { name: "Pos", attrText: "+2", attrValue: 2 },
     { name: "Neg", attrText: "-2", attrValue: -2 }
+  ]
+);
+assertItemsWithOptions(
+  "alias-duplicate-category-overlap-default",
+  "0: Etwas tief\u00B2, abgeschlagen\u00B9\n\n@@Ersch\u00F6pfung (Ersch): ersch\u00F6pft, abgeschlagen\n@@Stimmung (Emo): ok, Gef\u00FChl, Freude, -abgeschlagen, mental",
+  {},
+  [
+    { name: "Ersch\u00F6pfung", attrText: "+1", attrValue: 1 },
+    { name: "Stimmung", attrText: "-1", attrValue: -1 }
   ]
 );
 assertCats("alias-category-on-parsed-tag", "@@tag1 (tg1)[self, help]: 3\ntg1#3", "tag1", ["self", "help"]);

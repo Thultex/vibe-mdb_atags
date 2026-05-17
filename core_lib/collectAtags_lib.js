@@ -1,10 +1,10 @@
 /*
 ========================================
-#1 collectAtags Lib v1.54 (sys 2.30)
+#1 collectAtags Lib v1.55 (sys 2.30)
 ========================================
 
 Changes
-- support opt-in multiAliasTargets for one alias token mapping to multiple tags
+- multiAliasTargets defaults to true for one alias token mapping to multiple tags
 - parse cumulative +/-, explicit null 00 and zero-decimal forms from issue #38
 - ignore template tag values `_` in `tag:_` and `tag:: _`
 - alias brackets define categories, e.g. `@@Tag (T)[self, help]: alias`
@@ -43,14 +43,14 @@ Changes
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.54",
+    version: "1.55",
     sysVersion: "2.30",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.54", "2.30", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.55", "2.30", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");
@@ -91,7 +91,7 @@ function collectAtags(cfg) {
 
   var textFields = cfg.textFields || [];
   var excludeNames = cfg.excludeNames || [];
-  var multiAliasTargets = cfg.multiAliasTargets === true;
+  var multiAliasTargets = cfg.multiAliasTargets !== false;
   var excludeMap = {};
   var ei;
 

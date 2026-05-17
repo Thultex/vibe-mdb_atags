@@ -4,7 +4,7 @@ Aktuelle Library-Dateien und Versionen:
 
 | Name | Version | Sys | Pfad |
 | --- | ---: | ---: | --- |
-| #1 collectAtags_lib | 1.54 | 2.30 | `core_lib/collectAtags_lib.js` |
+| #1 collectAtags_lib | 1.55 | 2.30 | `core_lib/collectAtags_lib.js` |
 | #2 exportAtags_lib | 1.82 | 2.30 | `core_lib/exportAtags_lib.js` |
 | #3 helpers_lib | 2.11 | 2.30 | `core_lib/helpers_lib.js` |
 
@@ -14,7 +14,7 @@ Aktuelle Library-Dateien und Versionen:
 
 | Name | Version | Sys | Pfad |
 | --- | ---: | ---: | --- |
-| A1 libVersions | 1.07 | 2.30 | `core/_checkLibs.js` |
+| A1 libVersions | 1.08 | 2.30 | `core/_checkLibs.js` |
 
 ## Zugehoerige Memento-Dateien
 
