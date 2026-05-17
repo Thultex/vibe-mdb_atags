@@ -19,6 +19,15 @@
 
 ## 2026-05-16
 
+- Struktur: Remote-nutzbare Lib-Dateien nach `core_lib/` verschoben und mit `_lib` gekennzeichnet (`collectAtags_lib`, `exportAtags_lib`, `helpers_lib`)
+- Struktur: `tagCleaner` aus den Addons nach `core/tagCleaner.js` verschoben; Core-Funktionen bleiben feldschreibfrei, `applyTagCleaner` bleibt als optionaler Memento-Wrapper erhalten
+- Refactor: String-/Quote-Basishelfer aus dem Cleaner in `helpers_lib` ausgelagert
+- Doku/Test: Pfade, Versionierungscheck und TagCleaner-Beispiele an die neue Struktur angepasst
+- Feature: `core/libVersions.js` mit `checkLibVersions()` und eigener Versionsfunktion pro Lib ergaenzt
+- Doku: `core_lib/LIB_VERSIONS.md` als statische Uebersicht der aktuellen Remote-Lib-Versionen ergaenzt
+- Struktur: `core/helpers_mem.js` enthaelt gezielt Memento-Wrapper wie `applyTags`; `helpers_mem` und `tagCleaner` werden nicht als Remote-Libs registriert
+- Systemversion auf `sys 2.30` angehoben
+
 - `collectAtags` auf `v1.52` angehoben
 - Fix: Superscript-Werte in Readable-/Tagbar-Zeilen werden auch vor Satzzeichen erkannt, z. B. `testc⁴,`
 - Test: Regression fuer `"| testa² testb³ testc⁴, reˣ schreibenˣ` ergaenzt

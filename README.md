@@ -1,4 +1,4 @@
-# ATAG System (sys 2.21)
+# ATAG System (sys 2.30)
 
 ## Inhalt
 
@@ -92,17 +92,25 @@ Ziel-Felder
 
 ## Module
 
+**Core Lib**
+
+- `A1` `core_lib/collectAtags_lib.js`
+- `A2` `core_lib/exportAtags_lib.js`
+- `A3` `core_lib/helpers_lib.js`
+
+Empfohlene Lade-Reihenfolge: `helpers_lib`, dann `collectAtags_lib`, dann `exportAtags_lib`. `core/tagCleaner.js` nutzt ebenfalls `helpers_lib`.
+Optional vorher `core/libVersions.js` laden; dann koennen die geladenen Remote-Libs ueber `checkLibVersions()` geprueft werden. Die aktuelle statische Uebersicht liegt in `core_lib/LIB_VERSIONS.md`.
+
 **Core**
 
-- `A1` `core/collectAtags.js`
-- `A2` `core/exportAtags.js`
-- `A3` `core/helpers.js`
 - `A4` `core/restoreAtags.js`
+- `A5` `core/tagCleaner.js` (reine Notiz-/Tagleisten-Normalisierung)
+  - `makeTagCleanerText()`
+  - `makeTagCleanerTextWithOptions()`
+  - `applyTagCleaner()` als optionaler Memento-Wrapper
+- `A6` `core/helpers_mem.js` (Memento-Wrapper fuer Lib-Funktionen, keine Remote-Lib)
 
 **Tagging Add-ons**
-- `B1` `addons/1_tagging/tagCleaner.js` (einfache Notiz-/Tagleisten-Normalisierung)
-  - `applyTagCleaner()`
-  - `bulkApplyTagCleaner()`
 - `B2` `addons/1_tagging/tagPairParser.js` (Parser-Preprocessing)
   - `applyTagPairParser()`
   - `bulkApplyTagPairParser()`
@@ -306,32 +314,20 @@ updateAverage({
 
 Mit `currentEntry` wird nur der aktuelle Eintrag geschrieben. Falls `lib().entries()` noch den alten Stand enthaelt, ersetzt `currentEntry` diesen Eintrag im Berechnungsset.
 
-**Tag Cleaner (Tagging)**
+**Tag Cleaner Core**
 
-Normalisiert einfache Werttags im Text und führt `|`-/`||`-Tagleisten zusammen. Die Ausgabe nutzt eine einfache `|`-Tagleiste. Standard ist Tagleiste unten mit einer Leerzeile Abstand.
+Normalisiert einfache Werttags im Text und fuehrt `|`-/`||`-Tagleisten zusammen. Die Ausgabe nutzt eine einfache `|`-Tagleiste. Standard ist Tagleiste unten mit einer Leerzeile Abstand. Der Core schreibt keine Felder; Memento-Trigger lesen/schreiben das Feld selbst.
 
 ```js
-applyTagCleaner({
-  textField: "Notiz",
-  tagFields: ["Tags", "User Tags"],
+var e = entry();
+var text = e.field("Notiz");
+var cleaned = makeTagCleanerTextWithOptions(text, {
   tagBarPosition: "bottom",
   tagBarSpacing: "blank",
   formatValues: "keep"
 });
+e.set("Notiz", cleaned);
 ```
-
-Bulk-Aufruf:
-
-```js
-bulkApplyTagCleaner({
-  textField: "Notiz",
-  tagFields: ["Tags", "User Tags"],
-  tagBarPosition: "top",
-  tagBarSpacing: "none",
-  formatValues: "keep"
-});
-```
-
 Optionen:
 
 - `tagBarPosition: "bottom"` setzt die Tagleiste ans Ende (Standard)
@@ -346,7 +342,6 @@ Optionen:
 - `formatValues: "none"` lässt Werttags unverändert
 - `||`, `|"` und `|'` werden beim Cleanen als exklusive Tagleiste zu `"|` normalisiert
 - Eine einzelne leere `|`-Zeile wird standardmaessig ebenfalls zu `"|`; mit `singleBarExclusive: false` bleibt sie normale leere Tagleiste
-- `tagFields: ["Tags", "User Tags"]` schreibt `##tag`/`tag##` als User-Tags in mehrere Tagfelder
 
 Pro Notiz kann die Werteformatierung über `fv` in der Tagleiste gesetzt werden:
 

@@ -1,8 +1,8 @@
 var fso = new ActiveXObject("Scripting.FileSystemObject");
 var scriptDir = fso.GetParentFolderName(WScript.ScriptFullName);
-var helperPath = fso.BuildPath(scriptDir, "..\\core\\helpers.js");
-var collectPath = fso.BuildPath(scriptDir, "..\\core\\collectAtags.js");
-var exportPath = fso.BuildPath(scriptDir, "..\\core\\exportAtags.js");
+var helperPath = fso.BuildPath(scriptDir, "..\\core_lib\\helpers_lib.js");
+var collectPath = fso.BuildPath(scriptDir, "..\\core_lib\\collectAtags_lib.js");
+var exportPath = fso.BuildPath(scriptDir, "..\\core_lib\\exportAtags_lib.js");
 
 eval(fso.OpenTextFile(helperPath, 1).ReadAll());
 eval(fso.OpenTextFile(collectPath, 1).ReadAll());
@@ -25,6 +25,56 @@ function makeEntry(fields) {
       fields[name] = value;
     }
   };
+}
+
+function applyTags(cfg) {
+  var enabled = cfg ? cfg.enabled : null;
+  var entryObj = cfg.entryObj || entry();
+  var result;
+
+  if (enabled === false || enabled === 0 || String(enabled == null ? "" : enabled).toLowerCase() === "false") return null;
+  if (!entryObj) return null;
+
+  result = cfg.result || collectAtags({
+    entryObj: entryObj,
+    textFields: cfg.textFields || [],
+    excludeNames: cfg.excludeNames || [],
+    multiAliasTargets: cfg.multiAliasTargets
+  });
+
+  exportAtags({
+    entryObj: entryObj,
+    result: result,
+    targetField: cfg.targetField,
+    targetFieldType: cfg.targetFieldType,
+    mergeWithExistingTags: cfg.mergeWithExistingTags,
+    preserveForeignTagsField: cfg.preserveForeignTagsField,
+    parserOwnedTagsField: cfg.parserOwnedTagsField,
+    rowAggregateMode: cfg.rowAggregateMode,
+    rowIncludeUnits: cfg.rowIncludeUnits,
+    rowAggregateDecimals: cfg.rowAggregateDecimals,
+    categoryAggregateMode: cfg.categoryAggregateMode,
+    categoryValueMode: cfg.categoryValueMode,
+    categoryRowAggregateMode: cfg.categoryRowAggregateMode,
+    categoryChildAggregateMode: cfg.categoryChildAggregateMode,
+    categoryAggregateDecimals: cfg.categoryAggregateDecimals,
+    categoryFilter: cfg.categoryFilter,
+    catFilter: cfg.catFilter,
+    cat_display_values: cfg.cat_display_values,
+    category_display_values: cfg.category_display_values,
+    catDisplayValues: cfg.catDisplayValues,
+    categoryDisplayValues: cfg.categoryDisplayValues,
+    categoryValueDisplay: cfg.categoryValueDisplay,
+    categoryDisplayMode: cfg.categoryDisplayMode,
+    shortenTableHeaders: cfg.shortenTableHeaders,
+    tableHeaderNames: cfg.tableHeaderNames,
+    markdownLabelNames: cfg.markdownLabelNames,
+    includeBlankTags: cfg.includeBlankTags,
+    markdownGroupSeparators: cfg.markdownGroupSeparators,
+    markdownGroupSeparator: cfg.markdownGroupSeparator
+  });
+
+  return result;
 }
 
 function assertEqual(label, actual, expected) {

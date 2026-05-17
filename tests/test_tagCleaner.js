@@ -1,7 +1,9 @@
 var fso = new ActiveXObject("Scripting.FileSystemObject");
 var scriptDir = fso.GetParentFolderName(WScript.ScriptFullName);
-var addonPath = fso.BuildPath(scriptDir, "..\\addons\\1_tagging\\tagCleaner.js");
+var helperPath = fso.BuildPath(scriptDir, "..\\core_lib\\helpers_lib.js");
+var addonPath = fso.BuildPath(scriptDir, "..\\core\\tagCleaner.js");
 
+eval(fso.OpenTextFile(helperPath, 1).ReadAll());
 eval(fso.OpenTextFile(addonPath, 1).ReadAll());
 
 function fail(msg) {
@@ -285,28 +287,5 @@ applyTagCleaner({
 });
 
 assertEquals("apply-same-field", entryObj.field("Note"), "emo\u00B2\n\n| activityc\u02E3 stress\u02E3");
-
-applyTagCleaner({
-  entryObj: entryObj,
-  textField: "Note"
-});
-
-assertEquals("apply-same-field-recursive", entryObj.field("Note"), "emo\u00B2\n\n| activityc\u02E3 stress\u02E3");
-
-var userTagEntry = makeEntry({
-  Note: "\nvor ##essen  text tag##\n| ##leiste emo2\n",
-  Tags: ["alt"],
-  UserTags: []
-});
-
-applyTagCleaner({
-  entryObj: userTagEntry,
-  textField: "Note",
-  tagFields: ["Tags", "UserTags"]
-});
-
-assertEquals("double-hash-note-cleaned", userTagEntry.field("Note"), "vor text\n\n| emo\u00B2");
-assertEquals("double-hash-tags", userTagEntry.field("Tags").join(","), "alt,essen,leiste,tag");
-assertEquals("double-hash-user-tags", userTagEntry.field("UserTags").join(","), "essen,leiste,tag");
 
 WScript.Echo("OK");

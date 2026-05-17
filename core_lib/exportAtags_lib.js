@@ -1,6 +1,6 @@
 /*
 ========================================
-A2 exportAtags v1.78 (sys 2.21)
+A2 exportAtags Lib v1.79 (sys 2.30)
 ========================================
 
 Notes:
@@ -67,6 +67,18 @@ applyTags({
 */
 
 // ===== TEXT =====
+function getExportAtagsLibVersion() {
+  return {
+    name: "exportAtags_lib",
+    version: "1.79",
+    sysVersion: "2.30",
+    path: "core_lib/exportAtags_lib.js"
+  };
+}
+
+if (typeof registerAtagLibVersion === "function") {
+  registerAtagLibVersion("exportAtags_lib", "1.79", "2.30", "core_lib/exportAtags_lib.js");
+}
 function atagCategoryAggregateMode(cfg, context) {
   if (cfg && cfg.categoryAggregateMode !== undefined) return cfg.categoryAggregateMode;
   if (cfg && cfg.categoryValueMode !== undefined) return cfg.categoryValueMode;
@@ -1140,7 +1152,8 @@ function buildAtagTreeMarkdown(items, cfg) {
 
 // ===== EXPORT =====
 function exportAtags(cfg) {
-  var entryObj = cfg.entryObj || entry();
+  cfg = cfg || {};
+  var entryObj = cfg.entryObj || (typeof entry === "function" ? entry() : null);
   if (!entryObj) return;
 
   var result = cfg.result || {};

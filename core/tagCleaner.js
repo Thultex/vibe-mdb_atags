@@ -1,34 +1,34 @@
 /*
 ========================================
-B1 Tag Cleaner v1.25 (sys 2.21)
+A5 Tag Cleaner Core v1.27 (sys 2.30)
 ========================================
 
 Notes
-- Short header for the Memento Java editor.
+- remote/library-safe tag cleaner core.
 - Details live in README.md and CHANGELOG.md.
 - Supports cumulative +/-, 00/null and zero-decimal tag forms.
 - Exclusive tag bars keep body text unchanged.
 
-applyTagCleaner({
-  textField: "Notiz",
+makeTagCleanerTextWithOptions(text, {
   tagBarPosition: "top",
   tagBarSpacing: "blank",
-  formatValues: "keep"
-});
-
-bulkApplyTagCleaner({
-  textField: "Notiz",
-  tagFields: ["Tags", "User Tags"],
-  tagBarPosition: "top",
-  tagBarSpacing: "none",
   formatValues: "keep"
 });
 
 ========================================
 */
 
+function getTagCleanerVersion() {
+  return {
+    name: "tagCleaner",
+    version: "1.27",
+    sysVersion: "2.30",
+    path: "core/tagCleaner.js"
+  };
+}
+
 function trimTagCleanerString(s) {
-  return String(s || "").replace(/^\s+|\s+$/g, "");
+  return trimAtagLibString(s);
 }
 
 function compactTagCleanerTextSpaces(s) {
@@ -149,29 +149,6 @@ function sortTagCleanerNames(tags) {
     if (aa > bb) return 1;
     return 0;
   });
-}
-
-function addTagCleanerUserTagsToFields(entryObj, fields, tags) {
-  var fieldList = normalizeTagCleanerFieldList(fields);
-  var i;
-  var j;
-  var existing;
-  var out;
-  var seen;
-
-  if (!entryObj || !fieldList.length || !tags || !tags.length) return;
-
-  for (i = 0; i < fieldList.length; i++) {
-    if (!fieldList[i]) continue;
-    existing = tagCleanerTagList(entryObj.field(fieldList[i]));
-    out = [];
-    seen = {};
-
-    for (j = 0; j < existing.length; j++) addUniqueTagCleanerName(out, seen, existing[j]);
-    for (j = 0; j < tags.length; j++) addUniqueTagCleanerName(out, seen, tags[j]);
-    sortTagCleanerNames(out);
-    entryObj.set(fieldList[i], out);
-  }
 }
 
 function extractTagCleanerFormatValueMode(text) {
@@ -321,31 +298,11 @@ function decodeTagCleanerSuperscript(raw) {
 }
 
 function tagCleanerQuoteState(str) {
-  var s = String(str || "");
-  var state = [];
-  var inSingle = false;
-  var inDouble = false;
-  var i;
-  var ch;
-
-  for (i = 0; i <= s.length; i++) {
-    state[i] = inSingle || inDouble;
-    if (i >= s.length) break;
-
-    ch = s.charAt(i);
-    if (ch === "'" && !inDouble) inSingle = !inSingle;
-    else if (ch === '"' && !inSingle) inDouble = !inDouble;
-  }
-
-  return state;
+  return buildAtagLibQuoteState(str);
 }
 
 function tagCleanerInsideQuote(state, pos) {
-  var p = Number(pos);
-  if (!state || isNaN(p)) return false;
-  if (p < 0) p = 0;
-  if (p >= state.length) p = state.length - 1;
-  return !!state[p];
+  return isInsideAtagLibQuoteState(state, pos);
 }
 
 function cleanTagCleanerToken(token, bareAsHash, positiveSignMode) {
@@ -781,7 +738,7 @@ function applyTagCleaner(cfg) {
   cfg = cfg || {};
   if (cfg.enabled === false) return "";
 
-  var entryObj = cfg.entryObj || entry();
+  var entryObj = cfg.entryObj || (typeof entry === "function" ? entry() : null);
   var sourceField = cfg.sourceTextField || cfg.textField;
   var targetField = cfg.targetTextField || sourceField;
   var sourceText;
@@ -792,13 +749,13 @@ function applyTagCleaner(cfg) {
   sourceText = entryObj.field(sourceField);
   out = makeTagCleanerTextWithOptions(sourceText == null ? "" : String(sourceText), cfg);
   entryObj.set(targetField, out);
-  addTagCleanerUserTagsToFields(entryObj, cfg.tagFields || cfg.userTagFields || cfg.tagField || cfg.userTagField, cfg._tagCleanerUserTags);
   return out;
 }
 
 function bulkApplyTagCleaner(cfg) {
   cfg = cfg || {};
   if (cfg.enabled === false) return [];
+  if (typeof lib !== "function") return [];
 
   var all = lib().entries();
   var results = [];

@@ -134,14 +134,18 @@ Die Versionsnummer im Dateikopf ist dateibezogen.
 
 Das bedeutet:
 
-- `core/collectAtags.js`, `core/exportAtags.js`, `core/helpers.js`, `core/restoreAtags.js`, `addons/1_tagging/tagPairParser.js` und `addons/2_syncing/globalFieldSync.js` dürfen unterschiedliche Versionsstände haben.
+- `core_lib/collectAtags_lib.js`, `core_lib/exportAtags_lib.js`, `core_lib/helpers_lib.js`, `core/restoreAtags.js`, `core/tagCleaner.js`, `addons/1_tagging/tagPairParser.js` und `addons/2_syncing/globalFieldSync.js` dürfen unterschiedliche Versionsstände haben.
 - Nur die Datei bekommt einen Versionssprung, die tatsächlich geändert wurde.
 - Wenn mehrere Module geändert werden, wird jede betroffene Datei separat angehoben.
+- Remote-nutzbare Libs liegen in `core_lib/` oder als Loader in `core/libVersions.js`. Sie bieten eine eigene `get...Version()`-Funktion und registrieren sich bei geladenem `registerAtagLibVersion()`.
+- `core/helpers_mem.js` gehoert funktionell zur Lib-Nutzung, bleibt aber Memento-spezifisch und wird nicht in `checkLibVersions()` registriert.
+- `core/tagCleaner.js` ist ein Core-Modul, keine Remote-Lib. Es hat eine eigene Versionsfunktion, steht aber nicht in der Remote-Lib-Registry.
+- Wenn eine Remote-Lib-Version steigt, `core/libVersions.js`, `core_lib/LIB_VERSIONS.md` und die Versionstests mitpruefen.
 
 Beispiele:
 
-- Parser-Fix nur in `core/collectAtags.js`: nur `collectAtags` bekommt die nächste Version.
-- Export-Änderung nur in `core/exportAtags.js`: nur `exportAtags` bekommt die nächste Version.
+- Parser-Fix nur in `core_lib/collectAtags_lib.js`: nur `collectAtags` bekommt die nächste Version.
+- Export-Änderung nur in `core_lib/exportAtags_lib.js`: nur `exportAtags` bekommt die nächste Version.
 
 ## Changelog-Regeln
 

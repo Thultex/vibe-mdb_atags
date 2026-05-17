@@ -1,11 +1,13 @@
 $ErrorActionPreference = "Stop"
 
 $moduleFiles = @(
-  "core/collectAtags.js",
-  "core/exportAtags.js",
-  "core/helpers.js",
+  "core/libVersions.js",
+  "core_lib/collectAtags_lib.js",
+  "core_lib/exportAtags_lib.js",
+  "core_lib/helpers_lib.js",
   "core/restoreAtags.js",
-  "addons/1_tagging/tagCleaner.js",
+  "core/tagCleaner.js",
+  "core/helpers_mem.js",
   "addons/1_tagging/tagPairParser.js",
   "addons/2_syncing/globalFieldSync.js",
   "addons/2_syncing/syncLastFromLatest.js",
@@ -18,6 +20,27 @@ $moduleFiles = @(
   "addons/z_generell/typedTextFields.js",
   "addons/z_others/hourGuide.js"
 )
+
+$moduleIds = @{
+  "core/libVersions.js" = "A0"
+  "core_lib/collectAtags_lib.js" = "A1"
+  "core_lib/exportAtags_lib.js" = "A2"
+  "core_lib/helpers_lib.js" = "A3"
+  "core/restoreAtags.js" = "A4"
+  "core/tagCleaner.js" = "A5"
+  "core/helpers_mem.js" = "A6"
+  "addons/1_tagging/tagPairParser.js" = "B2"
+  "addons/2_syncing/globalFieldSync.js" = "B3"
+  "addons/2_syncing/syncLastFromLatest.js" = "B4"
+  "addons/3_workflow/floatingAverage.js" = "B5"
+  "addons/3_workflow/sequenceCounter.js" = "B6"
+  "addons/3_workflow/timeMarker.js" = "B7"
+  "addons/6_integration/obsidianLinker.js" = "B8"
+  "addons/6_integration/wikiLinker.js" = "B9"
+  "addons/z_generell/multiChoiceHelpers.js" = "C1"
+  "addons/z_generell/typedTextFields.js" = "C2"
+  "addons/z_others/hourGuide.js" = "C3"
+}
 
 function Get-VersionLine {
   param(
@@ -41,20 +64,8 @@ function Get-VersionLine {
 function Get-ExpectedModuleId {
   param([string]$Path)
 
-  $index = [array]::IndexOf($moduleFiles, $Path)
-  if ($index -lt 0) {
-    return $null
-  }
-
-  if ($Path -like "core/*") {
-    return "A" + ($index + 1)
-  }
-
-  if ($Path -like "addons/z_generell/*" -or $Path -like "addons/z_others/*") {
-    return "C" + ($index - 12)
-  }
-
-  return "B" + ($index - 3)
+  if ($moduleIds.ContainsKey($Path)) { return $moduleIds[$Path] }
+  return $null
 }
 
 $changedFiles = @(

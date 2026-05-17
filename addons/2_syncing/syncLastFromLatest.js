@@ -1,6 +1,6 @@
 /*
 ========================================
-B4 Sync Last From Latest v1.03 (sys 2.21)
+B4 Sync Last From Latest v1.03 (sys 2.30)
 ========================================
 
 Changes

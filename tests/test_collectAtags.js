@@ -1,7 +1,7 @@
 var fso = new ActiveXObject("Scripting.FileSystemObject");
 var shell = new ActiveXObject("WScript.Shell");
 var scriptDir = fso.GetParentFolderName(WScript.ScriptFullName);
-var collectPath = fso.BuildPath(scriptDir, "..\\core\\collectAtags.js");
+var collectPath = fso.BuildPath(scriptDir, "..\\core_lib\\collectAtags_lib.js");
 var code = fso.OpenTextFile(collectPath, 1).ReadAll();
 
 eval(code);

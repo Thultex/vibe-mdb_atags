@@ -1,6 +1,6 @@
 /*
 ========================================
-A1 collectAtags v1.52 (sys 2.21)
+A1 collectAtags Lib v1.53 (sys 2.30)
 ========================================
 
 Changes
@@ -40,6 +40,18 @@ Changes
 
 */
 
+function getCollectAtagsLibVersion() {
+  return {
+    name: "collectAtags_lib",
+    version: "1.53",
+    sysVersion: "2.30",
+    path: "core_lib/collectAtags_lib.js"
+  };
+}
+
+if (typeof registerAtagLibVersion === "function") {
+  registerAtagLibVersion("collectAtags_lib", "1.53", "2.30", "core_lib/collectAtags_lib.js");
+}
 function buildAtagQuoteState(str) {
   var s = String(str || "");
   var state = [];
@@ -73,7 +85,8 @@ function isInsideAtagQuoteState(state, pos) {
 
 // ===== CORE =====
 function collectAtags(cfg) {
-  var entryObj = cfg.entryObj || entry();
+  cfg = cfg || {};
+  var entryObj = cfg.entryObj || (typeof entry === "function" ? entry() : null);
   if (!entryObj) return { items: [] };
 
   var textFields = cfg.textFields || [];
