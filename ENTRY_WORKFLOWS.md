@@ -166,7 +166,7 @@ function AfterEntry() {
     overwriteMarkdownField: "Obsidian Uri",
     obsidianMarkdownField: "Obsidian Link",
     dateField: "Datum/Zeit",
-    vault: "RasObs",
+    vault: "ExampleVault",
     open: true
   });
 

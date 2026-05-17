@@ -88,8 +88,8 @@ var rowItems = [
 ];
 
 var shortRowItems = [
-  item("Kopfschmerz", "+2", 2, "+2", 0.5, null, "0,5", "ks"),
-  item("Innere_Anspannung", "+1", 1, "+1", 0.5, null, "0,5", "IA")
+  item("SymptomA", "+2", 2, "+2", 0.5, null, "0,5", "sa"),
+  item("MetricB", "+1", 1, "+1", 0.5, null, "0,5", "IA")
 ];
 
 var entryObj;
@@ -148,7 +148,7 @@ assertEqual(
   "info: Erstens, Zweitens, Drittens\nprot: Bechler, Enda"
 );
 
-entryObj = makeEntry({ Note: "@@@Koerper: -ks, Koerpersicher\n@@Kopfschmerzen (ks)\nks2 Koerpersicher1" });
+entryObj = makeEntry({ Note: "@@@Body: -sa, BodySafe\n@@SymptomA (sa)\nsa2 BodySafe1" });
 applyTags({
   entryObj: entryObj,
   textFields: ["Note"],
@@ -159,12 +159,12 @@ applyTags({
 assertEqual(
   "tree-category-negative-short-child",
   entryObj.field("Tree"),
-  "Koerper -2  \n" +
-  "\u251c\u2500\u2500 Koerpersicher 1  \n" +
-  "\u2514\u2500\u2500 \u208BKopfschmerzen -2"
+  "Body -2  \n" +
+  "\u251c\u2500\u2500 BodySafe 1  \n" +
+  "\u2514\u2500\u2500 \u208BSymptomA -2"
 );
 
-entryObj = makeEntry({ Note: "@@Kopfschmerz (KSch):  ks\n@@@Koerper: -Kopfschmerz\nks2" });
+entryObj = makeEntry({ Note: "@@SymptomA (SA):  sa\n@@@Body: -SymptomA\nsa2" });
 applyTags({
   entryObj: entryObj,
   textFields: ["Note"],
@@ -175,11 +175,11 @@ applyTags({
 assertEqual(
   "tree-category-negative-long-child-with-separate-alias",
   entryObj.field("Tree"),
-  "Koerper -2  \n" +
-  "\u2514\u2500\u2500 \u208BKopfschmerz -2"
+  "Body -2  \n" +
+  "\u2514\u2500\u2500 \u208BSymptomA -2"
 );
 
-entryObj = makeEntry({ Note: "@@Kopfschmerz (KSch):  ks\n@@@Koerper: -Kopfschmerz\nks\u00B2" });
+entryObj = makeEntry({ Note: "@@SymptomA (SA):  sa\n@@@Body: -SymptomA\nsa\u00B2" });
 applyTags({
   entryObj: entryObj,
   textFields: ["Note"],
@@ -189,11 +189,11 @@ applyTags({
 assertEqual(
   "tree-category-default-max-abs-negative-long-child-with-superscript-alias",
   entryObj.field("Tree"),
-  "Koerper -2  \n" +
-  "\u2514\u2500\u2500 \u208BKopfschmerz -2"
+  "Body -2  \n" +
+  "\u2514\u2500\u2500 \u208BSymptomA -2"
 );
 
-entryObj = makeEntry({ Note: "@@@Koerper: -Kopfschmerz, Koerpersicher\nKopfschmerz\u00B2 Koerpersicher1" });
+entryObj = makeEntry({ Note: "@@@Body: -SymptomA, BodySafe\nSymptomA\u00B2 BodySafe1" });
 applyTags({
   entryObj: entryObj,
   textFields: ["Note"],
@@ -203,12 +203,12 @@ applyTags({
 assertEqual(
   "tree-category-default-max-abs",
   entryObj.field("Tree"),
-  "Koerper -2  \n" +
-  "\u251c\u2500\u2500 Koerpersicher 1  \n" +
-  "\u2514\u2500\u2500 \u208BKopfschmerz -2"
+  "Body -2  \n" +
+  "\u251c\u2500\u2500 BodySafe 1  \n" +
+  "\u2514\u2500\u2500 \u208BSymptomA -2"
 );
 
-entryObj = makeEntry({ Note: "@@@Koerper: -Kopfschmerz, Koerpersicher\nKopfschmerz\u00B2 Koerpersicher1" });
+entryObj = makeEntry({ Note: "@@@Body: -SymptomA, BodySafe\nSymptomA\u00B2 BodySafe1" });
 applyTags({
   entryObj: entryObj,
   textFields: ["Note"],
@@ -220,12 +220,12 @@ applyTags({
 assertEqual(
   "md-category-negated-child-value-marker",
   entryObj.field("MD"),
-  "Koerpersicher: +1  \n" +
-  "Kopfschmerz: +2  \n" +
-  "Koerper: -2 - [Koerpersicher: 1, \u208BKopfschmerz: -2]"
+  "BodySafe: +1  \n" +
+  "SymptomA: +2  \n" +
+  "Body: -2 - [BodySafe: 1, \u208BSymptomA: -2]"
 );
 
-entryObj = makeEntry({ Note: "@@Kopfschmerz (KSch):  ks\n@@@Koerper: -Kopfschmerz\n| ks\u00B2" });
+entryObj = makeEntry({ Note: "@@SymptomA (SA):  sa\n@@@Body: -SymptomA\n| sa\u00B2" });
 applyTags({
   entryObj: entryObj,
   textFields: ["Note"],
@@ -236,8 +236,8 @@ applyTags({
 assertEqual(
   "tree-category-negative-long-child-with-readable-superscript-alias",
   entryObj.field("Tree"),
-  "Koerper -2  \n" +
-  "\u2514\u2500\u2500 \u208BKopfschmerz -2"
+  "Body -2  \n" +
+  "\u2514\u2500\u2500 \u208BSymptomA -2"
 );
 
 entryObj = makeEntry({});
@@ -245,9 +245,9 @@ exportAtags({
   entryObj: entryObj,
   result: {
     items: [
-      item("Koerper", "Kopfschmerzen,Koerpersicher", ["Kopfschmerzen", "Koerpersicher"], "Kopfschmerzen,Koerpersicher", null, null, null, "Koerper", [], "category", false, { kopfschmerzen: -1, koerpersicher: 1 }),
-      item("Kopfschmerzen", "+2", 2, "+2", null, null, null, "ks"),
-      item("Koerpersicher", "+1", 1, "+1")
+      item("Body", "SymptomA,BodySafe", ["SymptomA", "BodySafe"], "SymptomA,BodySafe", null, null, null, "Body", [], "category", false, { symptoma: -1, bodysafe: 1 }),
+      item("SymptomA", "+2", 2, "+2", null, null, null, "sa"),
+      item("BodySafe", "+1", 1, "+1")
     ]
   },
   targetField: "Tree",
@@ -257,9 +257,9 @@ exportAtags({
 assertEqual(
   "tree-category-negative-child",
   entryObj.field("Tree"),
-  "Koerper -2  \n" +
-  "\u251c\u2500\u2500 Koerpersicher 1  \n" +
-  "\u2514\u2500\u2500 \u208BKopfschmerzen -2"
+  "Body -2  \n" +
+  "\u251c\u2500\u2500 BodySafe 1  \n" +
+  "\u2514\u2500\u2500 \u208BSymptomA -2"
 );
 
 entryObj = makeEntry({});
@@ -314,15 +314,15 @@ exportAtags({
   entryObj: entryObj,
   result: {
     items: [
-      item("Soziales_Regeln", "Spielen", ["Spielen"], "Spielen", null, null, null, "sr", [], "category"),
-      item("Spielen", "+2", 2, "+2", null, null, null, "Sp", ["Soziales_Regeln"])
+      item("Soziales_Regeln", "ActivityA", ["ActivityA"], "ActivityA", null, null, null, "sr", [], "category"),
+      item("ActivityA", "+2", 2, "+2", null, null, null, "Sp", ["Soziales_Regeln"])
     ]
   },
   targetField: "Tags",
   targetFieldType: "tags",
   mergeWithExistingTags: false
 });
-assertArray("tags-keep-category-tags-with-children", entryObj.field("Tags"), ["@Soziales_Regeln", "Spielen"]);
+assertArray("tags-keep-category-tags-with-children", entryObj.field("Tags"), ["@Soziales_Regeln", "ActivityA"]);
 
 entryObj = makeEntry({});
 exportAtags({
@@ -330,14 +330,14 @@ exportAtags({
   result: {
     items: [
       item("Soziales_Regeln", "", [], "", null, null, null, "sr", [], "category"),
-      item("Spielen", "+2", 2, "+2")
+      item("ActivityA", "+2", 2, "+2")
     ]
   },
   targetField: "Tags",
   targetFieldType: "tags",
   mergeWithExistingTags: false
 });
-assertArray("tags-skip-empty-category-tags", entryObj.field("Tags"), ["Spielen"]);
+assertArray("tags-skip-empty-category-tags", entryObj.field("Tags"), ["ActivityA"]);
 
 entryObj = makeEntry({
   Tags: ["zForeign", "alpha", "mForeign"],
@@ -487,9 +487,9 @@ exportAtags({
   entryObj: entryObj,
   result: {
     items: [
-      item("Koerper", "Kopfschmerzen,Koerpersicher", ["Kopfschmerzen", "Koerpersicher"], "Kopfschmerzen,Koerpersicher", null, null, null, "Koerper", [], "category", false, { kopfschmerzen: -1, koerpersicher: 1 }),
-      item("Kopfschmerzen", "+3", 3, "+3"),
-      item("Koerpersicher", "+2", 2, "+2")
+      item("Body", "SymptomA,BodySafe", ["SymptomA", "BodySafe"], "SymptomA,BodySafe", null, null, null, "Body", [], "category", false, { symptoma: -1, bodysafe: 1 }),
+      item("SymptomA", "+3", 3, "+3"),
+      item("BodySafe", "+2", 2, "+2")
     ]
   },
   targetField: "Text",
@@ -499,7 +499,7 @@ exportAtags({
 assertEqual(
   "text-category-negative-child-max-abs",
   entryObj.field("Text"),
-  "Koerper: -3 - [Kopfschmerzen, Koerpersicher]\nKoerpersicher: +2\nKopfschmerzen: +3"
+  "Body: -3 - [SymptomA, BodySafe]\nBodySafe: +2\nSymptomA: +3"
 );
 
 entryObj = makeEntry({});
@@ -507,9 +507,9 @@ exportAtags({
   entryObj: entryObj,
   result: {
     items: [
-      item("Koerper", "Kopfschmerzen,Koerpersicher", ["Kopfschmerzen", "Koerpersicher"], "Kopfschmerzen,Koerpersicher", null, null, null, "Koerper", [], "category", false, { kopfschmerzen: -1, koerpersicher: 1 }),
-      item("Kopfschmerzen", "+3", 3, "+3"),
-      item("Koerpersicher", "+2", 2, "+2")
+      item("Body", "SymptomA,BodySafe", ["SymptomA", "BodySafe"], "SymptomA,BodySafe", null, null, null, "Body", [], "category", false, { symptoma: -1, bodysafe: 1 }),
+      item("SymptomA", "+3", 3, "+3"),
+      item("BodySafe", "+2", 2, "+2")
     ]
   },
   targetField: "Text",
@@ -519,7 +519,7 @@ exportAtags({
 assertEqual(
   "text-category-negative-child-min-abs",
   entryObj.field("Text"),
-  "Koerper: 2 - [Kopfschmerzen, Koerpersicher]\nKoerpersicher: +2\nKopfschmerzen: +3"
+  "Body: 2 - [SymptomA, BodySafe]\nBodySafe: +2\nSymptomA: +3"
 );
 
 entryObj = makeEntry({});
@@ -527,9 +527,9 @@ exportAtags({
   entryObj: entryObj,
   result: {
     items: [
-      item("Koerper", "Kopfschmerzen,Koerpersicher", ["Kopfschmerzen", "Koerpersicher"], "Kopfschmerzen,Koerpersicher", null, null, null, "Koerper", [], "category", false, { kopfschmerzen: -1, koerpersicher: 1 }),
-      item("Kopfschmerzen", "+2", 2, "+2"),
-      item("Koerpersicher", "+2", 2, "+2")
+      item("Body", "SymptomA,BodySafe", ["SymptomA", "BodySafe"], "SymptomA,BodySafe", null, null, null, "Body", [], "category", false, { symptoma: -1, bodysafe: 1 }),
+      item("SymptomA", "+2", 2, "+2"),
+      item("BodySafe", "+2", 2, "+2")
     ]
   },
   targetField: "Text",
@@ -539,7 +539,7 @@ exportAtags({
 assertEqual(
   "text-category-max-abs-prefers-positive-tie",
   entryObj.field("Text"),
-  "Koerper: 2 - [Kopfschmerzen, Koerpersicher]\nKoerpersicher: +2\nKopfschmerzen: +2"
+  "Body: 2 - [SymptomA, BodySafe]\nBodySafe: +2\nSymptomA: +2"
 );
 
 entryObj = makeEntry({});
@@ -547,11 +547,11 @@ exportAtags({
   entryObj: entryObj,
   result: {
     items: [
-      item("spannung_schmerz", "Kopfschmerz,Nackenschmerz,Spannung", ["Kopfschmerz", "Nackenschmerz", "Spannung"], "Kopfschmerz,Nackenschmerz,Spannung", null, null, null, "ss", [], "category"),
-      item("Kopfschmerz", "+1", 1, "+1", 1, null, "1"),
-      item("Kopfschmerz", "+3", 3, "+3", 2, null, "2"),
-      item("Nackenschmerz", "+2", 2, "+2", 1, null, "1"),
-      item("Spannung", "+2", 2, "+2", 1, null, "1")
+      item("category_metric", "SymptomA,SymptomB,MetricE", ["SymptomA", "SymptomB", "MetricE"], "SymptomA,SymptomB,MetricE", null, null, null, "ss", [], "category"),
+      item("SymptomA", "+1", 1, "+1", 1, null, "1"),
+      item("SymptomA", "+3", 3, "+3", 2, null, "2"),
+      item("SymptomB", "+2", 2, "+2", 1, null, "1"),
+      item("MetricE", "+2", 2, "+2", 1, null, "1")
     ]
   },
   targetField: "Tree",
@@ -562,10 +562,10 @@ exportAtags({
 assertEqual(
   "tree_md-child-values-use-md-aggregation",
   entryObj.field("Tree"),
-  "spannung_schmerz 2  \n" +
-  "\u251c\u2500\u2500 Kopfschmerz 2 [2]  \n" +
-  "\u251c\u2500\u2500 Nackenschmerz 2  \n" +
-  "\u2514\u2500\u2500 Spannung 2"
+  "category_metric 2  \n" +
+  "\u251c\u2500\u2500 MetricE 2  \n" +
+  "\u251c\u2500\u2500 SymptomA 2 [2]  \n" +
+  "\u2514\u2500\u2500 SymptomB 2"
 );
 
 entryObj = makeEntry({});
@@ -573,11 +573,11 @@ exportAtags({
   entryObj: entryObj,
   result: {
     items: [
-      item("spannung_schmerz", "Kopfschmerz,Nackenschmerz,Spannung", ["Kopfschmerz", "Nackenschmerz", "Spannung"], "Kopfschmerz,Nackenschmerz,Spannung", null, null, null, "ss", [], "category"),
-      item("Kopfschmerz", "+1", 1, "+1", 1, null, "1"),
-      item("Kopfschmerz", "+3", 3, "+3", 2, null, "2"),
-      item("Nackenschmerz", "+2", 2, "+2", 1, null, "1"),
-      item("Spannung", "+2", 2, "+2", 1, null, "1")
+      item("category_metric", "SymptomA,SymptomB,MetricE", ["SymptomA", "SymptomB", "MetricE"], "SymptomA,SymptomB,MetricE", null, null, null, "ss", [], "category"),
+      item("SymptomA", "+1", 1, "+1", 1, null, "1"),
+      item("SymptomA", "+3", 3, "+3", 2, null, "2"),
+      item("SymptomB", "+2", 2, "+2", 1, null, "1"),
+      item("MetricE", "+2", 2, "+2", 1, null, "1")
     ]
   },
   targetField: "Tree",
@@ -587,10 +587,10 @@ exportAtags({
 assertEqual(
   "tree_md-default-row-aggregation-is-max",
   entryObj.field("Tree"),
-  "spannung_schmerz 3  \n" +
-  "\u251c\u2500\u2500 Kopfschmerz 3 [2]  \n" +
-  "\u251c\u2500\u2500 Nackenschmerz 2  \n" +
-  "\u2514\u2500\u2500 Spannung 2"
+  "category_metric 3  \n" +
+  "\u251c\u2500\u2500 MetricE 2  \n" +
+  "\u251c\u2500\u2500 SymptomA 3 [2]  \n" +
+  "\u2514\u2500\u2500 SymptomB 2"
 );
 
 entryObj = makeEntry({});
@@ -598,11 +598,11 @@ exportAtags({
   entryObj: entryObj,
   result: {
     items: [
-      item("spannung_schmerz", "Kopfschmerz,Nackenschmerz,Spannung", ["Kopfschmerz", "Nackenschmerz", "Spannung"], "Kopfschmerz,Nackenschmerz,Spannung", null, null, null, "ss", [], "category"),
-      item("Kopfschmerz", "+1", 1, "+1", 1, null, "1"),
-      item("Kopfschmerz", "+3", 3, "+3", 2, null, "2"),
-      item("Nackenschmerz", "+2", 2, "+2", 1, null, "1"),
-      item("Spannung", "+2", 2, "+2", 1, null, "1")
+      item("category_metric", "SymptomA,SymptomB,MetricE", ["SymptomA", "SymptomB", "MetricE"], "SymptomA,SymptomB,MetricE", null, null, null, "ss", [], "category"),
+      item("SymptomA", "+1", 1, "+1", 1, null, "1"),
+      item("SymptomA", "+3", 3, "+3", 2, null, "2"),
+      item("SymptomB", "+2", 2, "+2", 1, null, "1"),
+      item("MetricE", "+2", 2, "+2", 1, null, "1")
     ]
   },
   targetField: "Tree",
@@ -615,10 +615,10 @@ exportAtags({
 assertEqual(
   "tree_md-display-values-all",
   entryObj.field("Tree"),
-  "spannung_schmerz 2 - [Kopfschmerz, Nackenschmerz, Spannung]  \n" +
-  "\u251c\u2500\u2500 Kopfschmerz 2 - [1, 3]  \n" +
-  "\u251c\u2500\u2500 Nackenschmerz 2  \n" +
-  "\u2514\u2500\u2500 Spannung 2"
+  "category_metric 2 - [MetricE, SymptomA, SymptomB]  \n" +
+  "\u251c\u2500\u2500 MetricE 2  \n" +
+  "\u251c\u2500\u2500 SymptomA 2 - [1, 3]  \n" +
+  "\u2514\u2500\u2500 SymptomB 2"
 );
 
 entryObj = makeEntry({});
@@ -741,7 +741,7 @@ exportAtags({
 });
 assertEqual("tree_md-hides-category-with-only-missing-children", entryObj.field("Tree"), "");
 
-entryObj = makeEntry({ Note: "@@@help: Spielen, Musik\nSpielen1" });
+entryObj = makeEntry({ Note: "@@@help: ActivityA, ActivityB\nActivityA1" });
 applyTags({
   entryObj: entryObj,
   textFields: ["Note"],
@@ -749,9 +749,9 @@ applyTags({
   targetFieldType: "tags",
   mergeWithExistingTags: false
 });
-assertArray("apply-tags-skips-missing-alias-children", entryObj.field("Tags"), ["@help", "Spielen"]);
+assertArray("apply-tags-skips-missing-alias-children", entryObj.field("Tags"), ["@help", "ActivityA"]);
 
-entryObj = makeEntry({ Note: "@@@help: Spielen, Musik\nSpielen1" });
+entryObj = makeEntry({ Note: "@@@help: ActivityA, ActivityB\nActivityA1" });
 applyTags({
   entryObj: entryObj,
   textFields: ["Note"],
@@ -761,11 +761,11 @@ applyTags({
 assertEqual(
   "apply-md-skips-missing-alias-children",
   entryObj.field("MD"),
-  "Spielen: +1  \n" +
-  "help: 1 - [Spielen]"
+  "ActivityA: +1  \n" +
+  "help: 1 - [ActivityA]"
 );
 
-entryObj = makeEntry({ Note: "@@@help: Spielen, Musik\nSpielen1" });
+entryObj = makeEntry({ Note: "@@@help: ActivityA, ActivityB\nActivityA1" });
 applyTags({
   entryObj: entryObj,
   textFields: ["Note"],
@@ -775,10 +775,10 @@ applyTags({
 assertEqual(
   "apply-json-skips-missing-alias-children",
   entryObj.field("Json"),
-  "{\"help\":[\"Spielen\"],\"Spielen\":1}"
+  "{\"ActivityA\":1,\"help\":[\"ActivityA\"]}"
 );
 
-entryObj = makeEntry({ Note: "@@@help: Spielen, Musik" });
+entryObj = makeEntry({ Note: "@@@help: ActivityA, ActivityB" });
 applyTags({
   entryObj: entryObj,
   textFields: ["Note"],
@@ -822,11 +822,11 @@ exportAtags({
   entryObj: entryObj,
   result: {
     items: [
-      item("help", "Spielen,Musik", ["Spielen", "Musik"], "Spielen,Musik", null, null, null, "help", [], "category"),
-      item("home", "Haushalt", ["Haushalt"], "Haushalt", null, null, null, "home", [], "category"),
-      item("Spielen", "+2", 2, "+2", null, null, null, "Sp", ["help"]),
-      item("Musik", "laut", "laut", "laut", null, null, null, "Mu", ["help"]),
-      item("Haushalt", "+1", 1, "+1", null, null, null, "HH", ["home"]),
+      item("help", "ActivityA,ActivityB", ["ActivityA", "ActivityB"], "ActivityA,ActivityB", null, null, null, "help", [], "category"),
+      item("home", "TaskA", ["TaskA"], "TaskA", null, null, null, "home", [], "category"),
+      item("ActivityA", "+2", 2, "+2", null, null, null, "Sp", ["help"]),
+      item("ActivityB", "laut", "laut", "laut", null, null, null, "Mu", ["help"]),
+      item("TaskA", "+1", 1, "+1", null, null, null, "HH", ["home"]),
       item("Andere", "+9", 9, "+9")
     ]
   },
@@ -837,9 +837,9 @@ exportAtags({
 assertEqual(
   "category-filter-md",
   entryObj.field("MD"),
-  "Spielen: +2  \n" +
-  "Musik: laut  \n" +
-  "help: 2 - [Spielen]"
+  "ActivityA: +2  \n" +
+  "ActivityB: laut  \n" +
+  "help: 2 - [ActivityA]"
 );
 
 entryObj = makeEntry({});
@@ -847,11 +847,11 @@ exportAtags({
   entryObj: entryObj,
   result: {
     items: [
-      item("help", "Spielen,Musik", ["Spielen", "Musik"], "Spielen,Musik", null, null, null, "help", [], "category"),
-      item("home", "Haushalt", ["Haushalt"], "Haushalt", null, null, null, "home", [], "category"),
-      item("Spielen", "+2", 2, "+2", null, null, null, "Sp", ["help"]),
-      item("Musik", "laut", "laut", "laut", null, null, null, "Mu", ["help"]),
-      item("Haushalt", "+1", 1, "+1", null, null, null, "HH", ["home"]),
+      item("help", "ActivityA,ActivityB", ["ActivityA", "ActivityB"], "ActivityA,ActivityB", null, null, null, "help", [], "category"),
+      item("home", "TaskA", ["TaskA"], "TaskA", null, null, null, "home", [], "category"),
+      item("ActivityA", "+2", 2, "+2", null, null, null, "Sp", ["help"]),
+      item("ActivityB", "laut", "laut", "laut", null, null, null, "Mu", ["help"]),
+      item("TaskA", "+1", 1, "+1", null, null, null, "HH", ["home"]),
       item("Andere", "+9", 9, "+9")
     ]
   },
@@ -860,18 +860,18 @@ exportAtags({
   categoryFilter: ["help", "home"],
   mergeWithExistingTags: false
 });
-assertArray("category-filter-tags", entryObj.field("Tags"), ["@help", "@home", "Haushalt", "Musik", "Spielen"]);
+assertArray("category-filter-tags", entryObj.field("Tags"), ["@help", "@home", "ActivityA", "ActivityB", "TaskA"]);
 
 entryObj = makeEntry({});
 exportAtags({
   entryObj: entryObj,
   result: {
     items: [
-      item("help", "Spielen,Musik", ["Spielen", "Musik"], "Spielen,Musik", null, null, null, "help", [], "category"),
-      item("home", "Haushalt", ["Haushalt"], "Haushalt", null, null, null, "home", [], "category"),
-      item("Spielen", "+2", 2, "+2", null, null, null, "Sp", ["help"]),
-      item("Musik", "laut", "laut", "laut", null, null, null, "Mu", ["help"]),
-      item("Haushalt", "+1", 1, "+1", null, null, null, "HH", ["home"]),
+      item("help", "ActivityA,ActivityB", ["ActivityA", "ActivityB"], "ActivityA,ActivityB", null, null, null, "help", [], "category"),
+      item("home", "TaskA", ["TaskA"], "TaskA", null, null, null, "home", [], "category"),
+      item("ActivityA", "+2", 2, "+2", null, null, null, "Sp", ["help"]),
+      item("ActivityB", "laut", "laut", "laut", null, null, null, "Mu", ["help"]),
+      item("TaskA", "+1", 1, "+1", null, null, null, "HH", ["home"]),
       item("Andere", "+9", 9, "+9")
     ]
   },
@@ -882,7 +882,7 @@ exportAtags({
 assertEqual(
   "category-filter-json",
   entryObj.field("Json"),
-  "{\"Haushalt\":1,\"home\":[\"Haushalt\"]}"
+  "{\"home\":[\"TaskA\"],\"TaskA\":1}"
 );
 
 entryObj = makeEntry({});
@@ -890,11 +890,11 @@ exportAtags({
   entryObj: entryObj,
   result: {
     items: [
-      item("help", "Spielen,Musik", ["Spielen", "Musik"], "Spielen,Musik", null, null, null, "help", [], "category"),
-      item("home", "Haushalt", ["Haushalt"], "Haushalt", null, null, null, "home", [], "category"),
-      item("Spielen", "+2", 2, "+2", null, null, null, "Sp", ["help"]),
-      item("Musik", "laut", "laut", "laut", null, null, null, "Mu", ["help"]),
-      item("Haushalt", "+1", 1, "+1", null, null, null, "HH", ["home"]),
+      item("help", "ActivityA,ActivityB", ["ActivityA", "ActivityB"], "ActivityA,ActivityB", null, null, null, "help", [], "category"),
+      item("home", "TaskA", ["TaskA"], "TaskA", null, null, null, "home", [], "category"),
+      item("ActivityA", "+2", 2, "+2", null, null, null, "Sp", ["help"]),
+      item("ActivityB", "laut", "laut", "laut", null, null, null, "Mu", ["help"]),
+      item("TaskA", "+1", 1, "+1", null, null, null, "HH", ["home"]),
       item("Andere", "+9", 9, "+9")
     ]
   },
@@ -906,8 +906,8 @@ assertEqual(
   "category-filter-tree",
   entryObj.field("Tree"),
   "help 2  \n" +
-  "\u251c\u2500\u2500 Musik laut  \n" +
-  "\u2514\u2500\u2500 Spielen 2"
+  "\u251c\u2500\u2500 ActivityA 2  \n" +
+  "\u2514\u2500\u2500 ActivityB laut"
 );
 
 entryObj = makeEntry({});
@@ -1074,7 +1074,7 @@ exportAtags({
 assertEqual(
   "rows_md-short-headers-by-default",
   entryObj.field("Rows"),
-  "| rval | IA | ks |  \n" +
+  "| rval | IA | sa |  \n" +
   "| :--- | ---: | ---: |  \n" +
   "| 0,5 | 1 | 2 |  \n" +
   "| avg | 1 | 2 |"
@@ -1119,7 +1119,7 @@ exportAtags({
 assertEqual(
   "rows_md-long-headers",
   entryObj.field("Rows"),
-  "| rval | Innere_Anspannung | Kopfschmerz |  \n" +
+  "| rval | MetricB | SymptomA |  \n" +
   "| :--- | ---: | ---: |  \n" +
   "| 0,5 | 1 | 2 |  \n" +
   "| avg | 1 | 2 |"
@@ -1139,7 +1139,7 @@ exportAtags({
 assertEqual(
   "rows_md-both-headers",
   entryObj.field("Rows"),
-  "| rval | IA (Innere_Anspannung) | ks (Kopfschmerz) |  \n" +
+  "| rval | IA (MetricB) | sa (SymptomA) |  \n" +
   "| :--- | ---: | ---: |  \n" +
   "| 0,5 | 1 | 2 |  \n" +
   "| avg | 1 | 2 |"

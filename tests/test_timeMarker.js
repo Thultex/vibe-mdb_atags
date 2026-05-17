@@ -221,7 +221,7 @@ function testRemovesBlankBetweenNewMarkerAndSingleTextLine() {
 
 function testRemovesBlankBetweenFilledAndCurrentTimestamp() {
   var entryObj = makeEntry({
-    Note: "13: Nackenschmerzen\u207A\u00B2, Ks\u207A\u00B9\n\n15: ",
+    Note: "13: SymptomB\u207A\u00B2, Sa\u207A\u00B9\n\n15: ",
     Hours: 15
   });
 
@@ -235,12 +235,12 @@ function testRemovesBlankBetweenFilledAndCurrentTimestamp() {
     maxHours: 30
   });
 
-  assertEquals("remove-blank-between-filled-and-current-timestamp", entryObj.field("Note"), "13: Nackenschmerzen\u207A\u00B2, Ks\u207A\u00B9\n15: ");
+  assertEquals("remove-blank-between-filled-and-current-timestamp", entryObj.field("Note"), "13: SymptomB\u207A\u00B2, Sa\u207A\u00B9\n15: ");
 }
 
 function testWritesCleanedBlankWhenSameTimestampAlreadyExists() {
   var entryObj = makeEntry({
-    Note: "13: Nackenschmerzen\u207A\u00B2, Ks\u207A\u00B9\n\n15: weiter",
+    Note: "13: SymptomB\u207A\u00B2, Sa\u207A\u00B9\n\n15: weiter",
     Hours: 15
   });
 
@@ -254,7 +254,7 @@ function testWritesCleanedBlankWhenSameTimestampAlreadyExists() {
     maxHours: 30
   });
 
-  assertEquals("write-cleaned-blank-when-same-timestamp-exists", entryObj.field("Note"), "13: Nackenschmerzen\u207A\u00B2, Ks\u207A\u00B9\n15: weiter");
+  assertEquals("write-cleaned-blank-when-same-timestamp-exists", entryObj.field("Note"), "13: SymptomB\u207A\u00B2, Sa\u207A\u00B9\n15: weiter");
 }
 
 function testUsesColonPlaceholderAsCurrentMarker() {
@@ -278,7 +278,7 @@ function testUsesColonPlaceholderAsCurrentMarker() {
 
 function testUsesColonPlaceholderAfterExistingMarker() {
   var entryObj = makeEntry({
-    Note: "0: Nase zu, ks\u00B2\n: sadf",
+    Note: "0: StatusA, sa\u00B2\n: sadf",
     Hours: 3
   });
 
@@ -292,7 +292,7 @@ function testUsesColonPlaceholderAfterExistingMarker() {
     maxHours: 30
   });
 
-  assertEquals("colon-placeholder-after-existing-marker", entryObj.field("Note"), "0: Nase zu, ks\u00B2\n3: sadf");
+  assertEquals("colon-placeholder-after-existing-marker", entryObj.field("Note"), "0: StatusA, sa\u00B2\n3: sadf");
 }
 
 function testRemovesEmptyColonPlaceholder() {
@@ -424,7 +424,7 @@ function testCleanupFillsColonPlaceholderWithCurrentRowAfterEmptyRow() {
 
 function testCleanupRemovesTrailingEmptyTimestamp() {
   var entryObj = makeEntry({
-    Note: "0: Nase zu, ks\u00B2\n3: "
+    Note: "0: StatusA, sa\u00B2\n3: "
   });
 
   var hasMarkers = cleanupTimeMarker({
@@ -432,13 +432,13 @@ function testCleanupRemovesTrailingEmptyTimestamp() {
     targetTextField: "Note"
   });
 
-  assertEquals("cleanup-removes-trailing-empty-timestamp", entryObj.field("Note"), "0: Nase zu, ks\u00B2");
+  assertEquals("cleanup-removes-trailing-empty-timestamp", entryObj.field("Note"), "0: StatusA, sa\u00B2");
   assertEquals("cleanup-return-true-after-trailing-empty", hasMarkers, true);
 }
 
 function testCleanupRemovesTrailingEmptyTimestampWithCarriageReturn() {
   var entryObj = makeEntry({
-    Note: "0: Nase zu, ks\u00B2\r3: "
+    Note: "0: StatusA, sa\u00B2\r3: "
   });
 
   cleanupTimeMarker({
@@ -446,12 +446,12 @@ function testCleanupRemovesTrailingEmptyTimestampWithCarriageReturn() {
     targetTextField: "Note"
   });
 
-  assertEquals("cleanup-removes-cr-trailing-empty-timestamp", entryObj.field("Note"), "0: Nase zu, ks\u00B2");
+  assertEquals("cleanup-removes-cr-trailing-empty-timestamp", entryObj.field("Note"), "0: StatusA, sa\u00B2");
 }
 
 function testCleanupRemovesNonBreakingSpaceTimestamp() {
   var entryObj = makeEntry({
-    Note: "0: Nase zu, ks\u00B2\n3:\u00A0"
+    Note: "0: StatusA, sa\u00B2\n3:\u00A0"
   });
 
   cleanupTimeMarker({
@@ -459,12 +459,12 @@ function testCleanupRemovesNonBreakingSpaceTimestamp() {
     targetTextField: "Note"
   });
 
-  assertEquals("cleanup-removes-nbsp-empty-timestamp", entryObj.field("Note"), "0: Nase zu, ks\u00B2");
+  assertEquals("cleanup-removes-nbsp-empty-timestamp", entryObj.field("Note"), "0: StatusA, sa\u00B2");
 }
 
 function testCleanupAcceptsTextFieldAlias() {
   var entryObj = makeEntry({
-    Note: "0: Nase zu, ks\u00B2\n3: "
+    Note: "0: StatusA, sa\u00B2\n3: "
   });
 
   cleanupTimeMarker({
@@ -472,7 +472,7 @@ function testCleanupAcceptsTextFieldAlias() {
     textField: "Note"
   });
 
-  assertEquals("cleanup-accepts-text-field-alias", entryObj.field("Note"), "0: Nase zu, ks\u00B2");
+  assertEquals("cleanup-accepts-text-field-alias", entryObj.field("Note"), "0: StatusA, sa\u00B2");
 }
 
 function testCleanupReturnsFalseWhenNoMarkersRemain() {

@@ -58,7 +58,7 @@ function testCreatesOverwriteLinkOnlyInOverwriteField() {
     contentField: "Text",
     overwriteMarkdownField: "Overwrite Link",
     obsidianMarkdownField: "Obsidian Link",
-    vault: "RasObs"
+    vault: "ExampleVault"
   });
 
   assertEquals("created-mode", result.mode, "created_overwrite");
@@ -74,7 +74,7 @@ function testUidClearsOverwriteAndWritesConnectedObsidianField() {
   var e = makeEntry({
     Text: "Body",
     "Overwrite Link": "old overwrite",
-    "Obsidian Link": '<a href="obsidian://adv-uri?vault=RasObs&amp;uid=abc123">open</a>'
+    "Obsidian Link": '<a href="obsidian://adv-uri?vault=ExampleVault&amp;uid=abc123">open</a>'
   });
 
   var result = makeObsidianMementoUri({
@@ -83,15 +83,15 @@ function testUidClearsOverwriteAndWritesConnectedObsidianField() {
     contentField: "Text",
     overwriteMarkdownField: "Overwrite Link",
     obsidianMarkdownField: "Obsidian Link",
-    vault: "RasObs"
+    vault: "ExampleVault"
   });
 
   assertEquals("uid-mode", result.mode, "connected_obsidian");
   assertEquals("uid-open-attempted", result.openResult.attempted, false);
   assertEquals("uid-overwrite-cleared", e.field("Overwrite Link"), "");
   assertEquals("uid-overwrite-return", result.overwriteUri, "");
-  assertContains("uid-open-link-label", e.field("Obsidian Link"), "[obsidian://adv-uri?vault=RasObs&uid=abc123]");
-  assertContains("uid-open-link", e.field("Obsidian Link"), "(obsidian://adv-uri?vault=RasObs&uid=abc123)");
+  assertContains("uid-open-link-label", e.field("Obsidian Link"), "[obsidian://adv-uri?vault=ExampleVault&uid=abc123]");
+  assertContains("uid-open-link", e.field("Obsidian Link"), "(obsidian://adv-uri?vault=ExampleVault&uid=abc123)");
   if (String(e.field("Obsidian Link")).indexOf("Link: [") >= 0) {
     fail("uid-existing-link-should-not-have-link-prefix");
   }
@@ -106,7 +106,7 @@ function testUidClearsOverwriteAndWritesConnectedObsidianField() {
 function testSameFieldMarksExistingObsidianLinkOnly() {
   var e = makeEntry({
     Text: "Body",
-    Link: '<a href="obsidian://adv-uri?vault=RasObs&amp;uid=abc123">open</a>'
+    Link: '<a href="obsidian://adv-uri?vault=ExampleVault&amp;uid=abc123">open</a>'
   });
 
   var result = makeObsidianMementoUri({
@@ -115,12 +115,12 @@ function testSameFieldMarksExistingObsidianLinkOnly() {
     contentField: "Text",
     overwriteMarkdownField: "Link",
     obsidianMarkdownField: "Link",
-    vault: "RasObs"
+    vault: "ExampleVault"
   });
 
   assertEquals("same-field-mode", result.mode, "connected_obsidian_same_field");
   assertEquals("same-field-overwrite-return", result.overwriteUri, "");
-  assertContains("same-field-keeps-open-link", e.field("Link"), "obsidian://adv-uri?vault=RasObs&uid=abc123");
+  assertContains("same-field-keeps-open-link", e.field("Link"), "obsidian://adv-uri?vault=ExampleVault&uid=abc123");
   if (String(e.field("Link")).indexOf("mode=overwrite") >= 0) {
     fail("same-field-should-not-overwrite-existing-obsidian-link");
   }
@@ -130,7 +130,7 @@ function testMarkdownLinkDoesNotSelfNestOnRepeatedRuns() {
   var e = makeEntry({
     Text: "Body",
     "Overwrite Link": "",
-    "Obsidian Link": "[obsidian://adv-uri?vault=RasObs&uid=abc123](obsidian://adv-uri?vault=RasObs&uid=abc123)"
+    "Obsidian Link": "[obsidian://adv-uri?vault=ExampleVault&uid=abc123](obsidian://adv-uri?vault=ExampleVault&uid=abc123)"
   });
 
   var first = makeObsidianMementoUri({
@@ -139,7 +139,7 @@ function testMarkdownLinkDoesNotSelfNestOnRepeatedRuns() {
     contentField: "Text",
     overwriteMarkdownField: "Overwrite Link",
     obsidianMarkdownField: "Obsidian Link",
-    vault: "RasObs"
+    vault: "ExampleVault"
   });
   var firstText = e.field("Obsidian Link");
   var second = makeObsidianMementoUri({
@@ -148,20 +148,20 @@ function testMarkdownLinkDoesNotSelfNestOnRepeatedRuns() {
     contentField: "Text",
     overwriteMarkdownField: "Overwrite Link",
     obsidianMarkdownField: "Obsidian Link",
-    vault: "RasObs"
+    vault: "ExampleVault"
   });
 
   assertEquals("markdown-repeat-first-mode", first.mode, "connected_obsidian");
   assertEquals("markdown-repeat-second-mode", second.mode, "connected_obsidian");
   assertEquals("markdown-repeat-stable", e.field("Obsidian Link"), firstText);
-  assertEquals("markdown-repeat-text", e.field("Obsidian Link"), "[obsidian://adv-uri?vault=RasObs&uid=abc123](obsidian://adv-uri?vault=RasObs&uid=abc123)");
+  assertEquals("markdown-repeat-text", e.field("Obsidian Link"), "[obsidian://adv-uri?vault=ExampleVault&uid=abc123](obsidian://adv-uri?vault=ExampleVault&uid=abc123)");
 }
 
 function testConnectedLinkUsesCustomWindowsBaseTemplate() {
   var e = makeEntry({
     Text: "Body",
     "Overwrite Link": "",
-    "Obsidian Link": '<a href="obsidian://adv-uri?vault=RasObs&amp;uid=abc123">open</a>'
+    "Obsidian Link": '<a href="obsidian://adv-uri?vault=ExampleVault&amp;uid=abc123">open</a>'
   });
 
   makeObsidianMementoUri({
@@ -170,7 +170,7 @@ function testConnectedLinkUsesCustomWindowsBaseTemplate() {
     contentField: "Text",
     overwriteMarkdownField: "Overwrite Link",
     obsidianMarkdownField: "Obsidian Link",
-    vault: "RasObs",
+    vault: "ExampleVault",
     windowsOpenBase: "http://localhost:3999/go/{uri}"
   });
 
@@ -183,7 +183,7 @@ function testOpenOptionCallsConfiguredOpenFunctionForConnectedLink() {
   var e = makeEntry({
     Text: "Body",
     "Overwrite Link": "old overwrite",
-    "Obsidian Link": '<a href="obsidian://adv-uri?vault=RasObs&amp;uid=abc123">open</a>'
+    "Obsidian Link": '<a href="obsidian://adv-uri?vault=ExampleVault&amp;uid=abc123">open</a>'
   });
 
   var result = makeObsidianMementoUri({
@@ -192,7 +192,7 @@ function testOpenOptionCallsConfiguredOpenFunctionForConnectedLink() {
     contentField: "Text",
     overwriteMarkdownField: "Overwrite Link",
     obsidianMarkdownField: "Obsidian Link",
-    vault: "RasObs",
+    vault: "ExampleVault",
     open: true,
     openFunction: function(uri) {
       openedUri = uri;
@@ -203,7 +203,7 @@ function testOpenOptionCallsConfiguredOpenFunctionForConnectedLink() {
   assertEquals("open-option-attempted", result.openResult.attempted, true);
   assertEquals("open-option-ok", result.openResult.ok, true);
   assertEquals("open-option-method", result.openResult.method, "openFunction");
-  assertEquals("open-option-uri", openedUri, "obsidian://adv-uri?vault=RasObs&uid=abc123");
+  assertEquals("open-option-uri", openedUri, "obsidian://adv-uri?vault=ExampleVault&uid=abc123");
 }
 
 function testOpenOptionCallsConfiguredOpenFunctionForCreateLink() {
@@ -219,7 +219,7 @@ function testOpenOptionCallsConfiguredOpenFunctionForCreateLink() {
     contentField: "Text",
     overwriteMarkdownField: "Link",
     obsidianMarkdownField: "Link",
-    vault: "RasObs",
+    vault: "ExampleVault",
     open: true,
     openFunction: function(uri) {
       openedUri = uri;
@@ -248,7 +248,7 @@ function testOpenCreateSeparateFieldsClearsOverwriteAndMarksPendingInsert() {
     contentField: "Text",
     overwriteMarkdownField: "Overwrite Link",
     obsidianMarkdownField: "Obsidian Link",
-    vault: "RasObs",
+    vault: "ExampleVault",
     open: true,
     openFunction: function(uri) {
       openedUri = uri;
@@ -275,7 +275,7 @@ function testPendingInsertDoesNotOpenOrOverwriteAgain() {
     contentField: "Text",
     overwriteMarkdownField: "Overwrite Link",
     obsidianMarkdownField: "Obsidian Link",
-    vault: "RasObs",
+    vault: "ExampleVault",
     open: true,
     openFunction: function() {
       opened += 1;
@@ -295,7 +295,7 @@ function testOpenOptionFallsBackToJavaTypeRundllOnDesktop() {
   var e = makeEntry({
     Text: "Body",
     "Overwrite Link": "old overwrite",
-    "Obsidian Link": '<a href="obsidian://adv-uri?vault=RasObs&amp;uid=abc123">open</a>'
+    "Obsidian Link": '<a href="obsidian://adv-uri?vault=ExampleVault&amp;uid=abc123">open</a>'
   });
 
   Java = {
@@ -332,14 +332,14 @@ function testOpenOptionFallsBackToJavaTypeRundllOnDesktop() {
     contentField: "Text",
     overwriteMarkdownField: "Overwrite Link",
     obsidianMarkdownField: "Obsidian Link",
-    vault: "RasObs",
+    vault: "ExampleVault",
     open: true
   });
 
   assertEquals("open-java-rundll-method", result.openResult.method, "java_type_rundll32");
   assertEquals("open-java-rundll-command", openedArgs[0], "rundll32.exe");
   assertEquals("open-java-rundll-handler", openedArgs[1], "url.dll,FileProtocolHandler");
-  assertEquals("open-java-rundll-uri", openedArgs[2], "obsidian://adv-uri?vault=RasObs&uid=abc123");
+  assertEquals("open-java-rundll-uri", openedArgs[2], "obsidian://adv-uri?vault=ExampleVault&uid=abc123");
 
   if (hadJava) {
     Java = previousJava;
@@ -360,7 +360,7 @@ function testSameFieldCreatesOverwriteWhenNoObsidianLinkExists() {
     contentField: "Text",
     overwriteMarkdownField: "Link",
     obsidianMarkdownField: "Link",
-    vault: "RasObs"
+    vault: "ExampleVault"
   });
 
   assertEquals("same-field-create-mode", result.mode, "created_overwrite_same_field");
@@ -379,7 +379,7 @@ function testObsidianOnlyFieldCreatesOverwriteLink() {
     libObj: lib(),
     contentField: "Text",
     obsidianMarkdownField: "Obsidian Link",
-    vault: "RasObs"
+    vault: "ExampleVault"
   });
 
   assertEquals("obsidian-only-mode", result.mode, "created_overwrite_same_field");
@@ -400,7 +400,7 @@ function testObsidianOnlyOpenFailureKeepsOverwriteLink() {
     libObj: lib(),
     contentField: "Text",
     obsidianMarkdownField: "Obsidian Link",
-    vault: "RasObs",
+    vault: "ExampleVault",
     open: true,
     openFunction: function() {
       throw new Error("blocked");
@@ -418,7 +418,7 @@ function testObsidianOnlyFieldStillOpensExistingObsidianLink() {
   var openedUri = "";
   var e = makeEntry({
     Text: "Body",
-    "Obsidian Link": "[obsidian://adv-uri?vault=RasObs&uid=abc123](obsidian://adv-uri?vault=RasObs&uid=abc123)"
+    "Obsidian Link": "[obsidian://adv-uri?vault=ExampleVault&uid=abc123](obsidian://adv-uri?vault=ExampleVault&uid=abc123)"
   });
 
   var result = makeObsidianMementoUri({
@@ -426,7 +426,7 @@ function testObsidianOnlyFieldStillOpensExistingObsidianLink() {
     libObj: lib(),
     contentField: "Text",
     obsidianMarkdownField: "Obsidian Link",
-    vault: "RasObs",
+    vault: "ExampleVault",
     open: true,
     openFunction: function(uri) {
       openedUri = uri;
@@ -434,8 +434,8 @@ function testObsidianOnlyFieldStillOpensExistingObsidianLink() {
   });
 
   assertEquals("obsidian-only-existing-mode", result.mode, "connected_obsidian_same_field");
-  assertEquals("obsidian-only-existing-open", openedUri, "obsidian://adv-uri?vault=RasObs&uid=abc123");
-  assertEquals("obsidian-only-existing-field", e.field("Obsidian Link"), "[obsidian://adv-uri?vault=RasObs&uid=abc123](obsidian://adv-uri?vault=RasObs&uid=abc123)");
+  assertEquals("obsidian-only-existing-open", openedUri, "obsidian://adv-uri?vault=ExampleVault&uid=abc123");
+  assertEquals("obsidian-only-existing-field", e.field("Obsidian Link"), "[obsidian://adv-uri?vault=ExampleVault&uid=abc123](obsidian://adv-uri?vault=ExampleVault&uid=abc123)");
 }
 
 testCreatesOverwriteLinkOnlyInOverwriteField();

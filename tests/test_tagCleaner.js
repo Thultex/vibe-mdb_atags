@@ -58,20 +58,20 @@ assertEquals(
 
 assertEquals(
   "explicit-positive-number-min",
-  makeTagCleanerTextWithOptions("ks+3", { formatValues: "min" }),
-  "ks\u00B3"
+  makeTagCleanerTextWithOptions("sa+3", { formatValues: "min" }),
+  "sa\u00B3"
 );
 
 assertEquals(
   "explicit-positive-number-max",
-  makeTagCleanerTextWithOptions("ks3", { formatValues: "max" }),
-  "ks\u207A\u00B3"
+  makeTagCleanerTextWithOptions("sa3", { formatValues: "max" }),
+  "sa\u207A\u00B3"
 );
 
 assertEquals(
   "tagbar-merge",
-  makeTagCleanerText("Text\n|| tag3 info#\"das ist info\"\n| info2\n| stress laufen emo3"),
-  "Text\n\n\"| emo\u00B3 info\u00B2 tag\u00B3, info:\"das ist info\", laufen\u02E3 stress\u02E3"
+  makeTagCleanerText("Text\n|| tag3 info#\"das ist info\"\n| info2\n| stress activityc emo3"),
+  "Text\n\n\"| emo\u00B3 info\u00B2 tag\u00B3, info:\"das ist info\", activityc\u02E3 stress\u02E3"
 );
 
 assertEquals(
@@ -100,20 +100,20 @@ assertEquals(
 
 assertEquals(
   "tagbar-top-no-spacing",
-  makeTagCleanerTextWithOptions("Text\n| stress laufen emo3", {
+  makeTagCleanerTextWithOptions("Text\n| stress activityc emo3", {
     tagBarPosition: "top",
     tagBarSpacing: "none"
   }),
-  "| emo\u00B3, laufen\u02E3 stress\u02E3\nText"
+  "| emo\u00B3, activityc\u02E3 stress\u02E3\nText"
 );
 
 assertEquals(
   "tagbar-top-default-preserve",
-  makeTagCleanerTextWithOptions("Text\n| Stress+3 Ks+3", {
+  makeTagCleanerTextWithOptions("Text\n| Stress+3 Sa+3", {
     tagBarPosition: "top",
     tagBarSpacing: "blank"
   }),
-  "| Ks\u207A\u00B3 Stress\u207A\u00B3\n\nText"
+  "| Sa\u207A\u00B3 Stress\u207A\u00B3\n\nText"
 );
 
 assertEquals(
@@ -154,20 +154,20 @@ assertEquals(
 
 assertEquals(
   "tagbar-format-values-min",
-  makeTagCleanerTextWithOptions("fv: \"min\"\nText\n| Stress+3 Ks+3", {
+  makeTagCleanerTextWithOptions("fv: \"min\"\nText\n| Stress+3 Sa+3", {
     tagBarPosition: "top",
     tagBarSpacing: "blank"
   }),
-  "| Ks\u00B3 Stress\u00B3, fv:min\n\nText"
+  "| Sa\u00B3 Stress\u00B3, fv:min\n\nText"
 );
 
 assertEquals(
   "tagbar-format-values-none",
-  makeTagCleanerTextWithOptions("|| fv: \"none\"\nText emo2\n| Stress+3 Ks+3", {
+  makeTagCleanerTextWithOptions("|| fv: \"none\"\nText emo2\n| Stress+3 Sa+3", {
     tagBarPosition: "top",
     tagBarSpacing: "none"
   }),
-  "\"| Ks+3 Stress+3, fv:none\nText emo2"
+  "\"| Sa+3 Stress+3, fv:none\nText emo2"
 );
 
 assertEquals(
@@ -226,21 +226,39 @@ assertEquals(
 
 assertEquals(
   "tagbar-top-no-spacing-recursive",
-  makeTagCleanerTextWithOptions("|| emo\u00B3 laufen# stress#\n\nText", {
+  makeTagCleanerTextWithOptions("|| emo\u00B3 activityc# stress#\n\nText", {
     tagBarPosition: "top",
     tagBarSpacing: "none"
   }),
-  "\"| emo\u00B3, laufen\u02E3 stress\u02E3\nText"
+  "\"| emo\u00B3, activityc\u02E3 stress\u02E3\nText"
 );
 
 assertEquals(
-  "exclusive-tagbar-keeps-body-unchanged",
-  makeTagCleanerText("emo2\n|\" stress3\n5: ks2"),
-  "emo2\n5: ks2\n\n\"| stress\u00B3"
+  "exclusive-tagbar-keeps-body-values-plain",
+  makeTagCleanerText("tag2\n|\" stress3"),
+  "tag2\n\n\"| stress\u00B3"
+);
+
+assertEquals(
+  "double-bar-cleans-to-exclusive-tagbar",
+  makeTagCleanerText("tag2\n|| stress3"),
+  "tag2\n\n\"| stress\u00B3"
+);
+
+assertEquals(
+  "empty-bar-cleans-to-exclusive-by-default",
+  makeTagCleanerText("tag2\n|"),
+  "tag2\n\n\"|"
+);
+
+assertEquals(
+  "empty-bar-exclusive-can-be-disabled",
+  makeTagCleanerTextWithOptions("tag2\n|", { singleBarExclusive: false }),
+  "tag\u00B2"
 );
 
 var entryObj = makeEntry({
-  Note: "emo2\n| stress laufen"
+  Note: "emo2\n| stress activityc"
 });
 
 applyTagCleaner({
@@ -248,14 +266,14 @@ applyTagCleaner({
   textField: "Note"
 });
 
-assertEquals("apply-same-field", entryObj.field("Note"), "emo\u00B2\n\n| laufen\u02E3 stress\u02E3");
+assertEquals("apply-same-field", entryObj.field("Note"), "emo\u00B2\n\n| activityc\u02E3 stress\u02E3");
 
 applyTagCleaner({
   entryObj: entryObj,
   textField: "Note"
 });
 
-assertEquals("apply-same-field-recursive", entryObj.field("Note"), "emo\u00B2\n\n| laufen\u02E3 stress\u02E3");
+assertEquals("apply-same-field-recursive", entryObj.field("Note"), "emo\u00B2\n\n| activityc\u02E3 stress\u02E3");
 
 var userTagEntry = makeEntry({
   Note: "\nvor ##essen  text tag##\n| ##leiste emo2\n",
@@ -274,7 +292,5 @@ assertEquals("double-hash-tags", userTagEntry.field("Tags").join(","), "alt,esse
 assertEquals("double-hash-user-tags", userTagEntry.field("UserTags").join(","), "essen,leiste,tag");
 
 WScript.Echo("OK");
-
-
 
 

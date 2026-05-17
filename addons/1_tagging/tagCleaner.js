@@ -1,13 +1,13 @@
 /*
 ========================================
-B1 Tag Cleaner v1.22 (sys 2.21)
+B1 Tag Cleaner v1.24 (sys 2.21)
 ========================================
 
 Notes
 - Short header for the Memento Java editor.
 - Details live in README.md and CHANGELOG.md.
 - Supports cumulative +/-, 00/null and zero-decimal tag forms.
-- Exclusive tag bars use `"|` and keep surrounding text unchanged.
+- Exclusive tag bars keep body text unchanged.
 
 applyTagCleaner({
   textField: "Notiz",
@@ -49,18 +49,22 @@ function isTagCleanerTimestampLine(line) {
   return /^\s*\d+(?:[.,]\d+)?\s*:/.test(String(line || ""));
 }
 
-function readTagCleanerBarLine(line) {
+function readTagCleanerBarLine(line, singleBarExclusive) {
   var s = String(line || "");
   var m;
 
   m = s.match(/^\s*"\|\s*(.*)$/);
   if (m) return { text: m[1] || "", exclusive: true };
 
+  m = s.match(/^\s*\|["']\s*(.*)$/);
+  if (m) return { text: m[1] || "", exclusive: true };
+
   m = s.match(/^\s*\|\|\s*(.*)$/);
   if (m) return { text: m[1] || "", exclusive: true };
 
-  m = s.match(/^\s*\|["']\s*(.*)$/);
-  if (m) return { text: m[1] || "", exclusive: true };
+  if (singleBarExclusive && /^\s*\|\s*$/.test(s)) {
+    return { text: "", exclusive: true, keepEmpty: true };
+  }
 
   m = s.match(/^\s*\|\s*(.*)$/);
   if (m) return { text: m[1] || "", exclusive: false };
@@ -683,7 +687,9 @@ function makeTagCleanerTextWithOptions(text, cfg) {
   var userTagsEnabled = normalizeTagCleanerFieldList(cfg.tagFields || cfg.userTagFields || cfg.tagField || cfg.userTagField).length > 0;
   var hasTimestampLine = false;
   var spacingLines = tagCleanerSpacingLines(tagBarSpacing);
+  var singleBarExclusive = cfg.singleBarExclusive !== false && cfg.emptyBarExclusive !== false;
   var exclusiveTagBar = false;
+  var hasTagBarLine = false;
   var tagBar;
 
   function addBarToken(raw) {
@@ -698,8 +704,9 @@ function makeTagCleanerTextWithOptions(text, cfg) {
   for (i = 0; i < lines.length; i++) {
     line = String(lines[i] || "");
     if (isTagCleanerTimestampLine(line)) hasTimestampLine = true;
-    tagBar = readTagCleanerBarLine(line);
+    tagBar = readTagCleanerBarLine(line, singleBarExclusive);
     if (!tagBar) continue;
+    hasTagBarLine = true;
     if (tagBar.exclusive) exclusiveTagBar = true;
     formatModeFromLine = extractTagCleanerFormatValueMode(tagBar.text || "");
     if (formatModeFromLine != null) positiveSignMode = formatModeFromLine;
@@ -714,7 +721,7 @@ function makeTagCleanerTextWithOptions(text, cfg) {
 
   for (i = 0; i < lines.length; i++) {
     line = String(lines[i] || "");
-    tagBar = readTagCleanerBarLine(line);
+    tagBar = readTagCleanerBarLine(line, singleBarExclusive);
 
     if (tagBar) {
       formatModeFromLine = extractTagCleanerFormatValueMode(tagBar.text || "");
@@ -741,8 +748,9 @@ function makeTagCleanerTextWithOptions(text, cfg) {
     tagBarPosition = "top";
   }
 
-  if (barTokens.length) {
-    barLine = (exclusiveTagBar ? '"| ' : "| ") + formatTagCleanerBarTokens(barTokens);
+  if (barTokens.length || (exclusiveTagBar && hasTagBarLine)) {
+    var formattedBarTokens = formatTagCleanerBarTokens(barTokens);
+    barLine = (exclusiveTagBar ? '"|' : "|") + (formattedBarTokens ? " " + formattedBarTokens : "");
     if (tagBarPosition === "top" || tagBarPosition === "above") {
       while (body.length && trimTagCleanerString(body[0]) === "") body.shift();
       for (j = 0; body.length && j < spacingLines; j++) body.unshift("");
@@ -800,4 +808,3 @@ function bulkApplyTagCleaner(cfg) {
 
   return results;
 }
-

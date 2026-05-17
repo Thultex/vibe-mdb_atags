@@ -17,25 +17,37 @@
 - Test/Doku: ...
 ```
 
-## 2026-05-17
-
-- `collectAtags` auf `v1.47` angehoben
-- Feature: Exklusive Tagleisten mit `"|`, `||`, `|'` oder `|"` parsen nur die Tagleisten und ignorieren Tags sowie Row-Kontext im uebrigen Notiztext
-- `Tag Cleaner` auf `v1.22` angehoben
-- Feature: Exklusive Tagleisten werden zusammengefuehrt und als `"|` ausgegeben; der Notiztext ausserhalb der Tagleisten bleibt dabei unveraendert
-- Test/Doku: Regressionen fuer exklusives Parser- und Cleaner-Verhalten ergaenzt
-
 ## 2026-05-16
 
+- `collectAtags` auf `v1.50` angehoben
+- `Tag Cleaner` auf `v1.24` angehoben
+- Aenderung: Der Core parst weiter normales `|`, normales `||` und exklusives `"|`; `|"`/`|'` sind reine Cleaner-Eingabeformen
+- Aenderung: Der Tag Cleaner normalisiert `||`, `|"` und `|'` zu exklusivem `"|`
+- Feature: Eine einzelne leere `|`-Zeile wird standardmaessig zu `"|`; per `singleBarExclusive: false` kann das deaktiviert werden
+- Test/Doku: Regressionen und README fuer die Tagleisten-Normalisierung ergaenzt
+
+- `collectAtags` auf `v1.49` angehoben
+- Fix: Exklusive Readable-Zeilen mit `"| ...` sind wieder aktiv und unterdruecken normale Body-Tag-Erkennung
+- Test: Regressionen fuer exklusive Readable-Zeilen und normales `|| ...`-Verhalten ergaenzt
+
+- `collectAtags` auf `v1.48` angehoben
+- `restoreAtags` auf `v2.03` angehoben
+- `Tag Cleaner` auf `v1.23` angehoben
+- `Obsidian Linker` auf `v1.15` angehoben
+- `Hour Guide` auf `v1.29` angehoben
+- Datenschutz: private Beispielnamen, Gesundheits-/Alltagsbegriffe und der konkrete Obsidian-Vault-Name wurden in README, Tests, Script-Beispielen und Workflow-Doku durch neutrale Platzhalter ersetzt
+- Doku: `CONTRIBUTING.md` ergaenzt Datenschutzregeln fuer oeffentlich teilbare Beispiele
+- Test: Voller Host-Testlauf mit anonymisierten Fixtures ausgefuehrt
+
 - `collectAtags` auf `v1.46` angehoben
-- Feature: Kategorie-Aliase koennen feste Kinder mit negativem Vorzeichen definieren, z. B. `@@@Koerper: -Kopfschmerz`
+- Feature: Kategorie-Aliase koennen feste Kinder mit negativem Vorzeichen definieren, z. B. `@@@Body: -SymptomA`
 - Feature: Feste Kategorie-Kinder werden ueber Alias- und Kurznamen auf ihren Langnamen aufgeloest, auch wenn die Kategoriezeile vor der Aliasdefinition steht
 - Performance: Ausgeschlossene Namen werden pro Parserlauf als Lookup-Map vorbereitet
 - Performance: Kategorie-Kind-Aliase vermeiden doppelte Key-Berechnung
 - Refactor: Wiederholte Trim-Operationen laufen ueber einen lokalen Parser-Helfer
 - `exportAtags` auf `v1.78` angehoben
 - Aenderung: `tree_md` nutzt fuer Kategorie-Eltern standardmaessig `max_abs`
-- Aenderung: Negierte Kategorie-Kinder werden im Tree und in Kategorie-Details mit tiefgestelltem Minus vor dem Namen markiert, z. B. `₋Kopfschmerz -2` und `Koerper: -2 - [₋Kopfschmerz: -2]`
+- Aenderung: Negierte Kategorie-Kinder werden im Tree und in Kategorie-Details mit tiefgestelltem Minus vor dem Namen markiert, z. B. `₋SymptomA -2` und `Body: -2 - [₋SymptomA: -2]`
 - Performance: Text-, Markdown- und Tree-Exports verwenden einen pro Export aufgebauten Wertindex fuer Kategorie- und Kind-Zusammenfassungen
 - Performance: Wiederholte Stringwerte werden nur dann aggregiert, wenn ein String-Tag tatsaechlich mehrfach vorkommt
 - Refactor: Kategorie- und String-Aggregation nutzen denselben Clone-Helfer
@@ -87,7 +99,7 @@
 - Feature: `row_display_values`/`rowDisplayValues` steuert Einzelwertanzeige mit `none`, `count`, `all`; Tree-Standard ist `count`, andere Exporte behalten `all`
 - Feature: `cat_display_values`/`categoryDisplayValues` steuert Kategorie-Kinderinfo mit `none`, `count`, `names`, `all`; Tree-Standard ist `none`, andere Exporte behalten `names`
 - Aenderung: Detailwerte direkt vor eckigen Klammern nutzen ` - ` als sichtbares Zwischenzeichen, damit die kompakte Wertliste stabil getrennt bleibt
-- Aenderung: Die kurze Count-Form wie `Kopfschmerz 1,7 [3]` bleibt ohne Strich
+- Aenderung: Die kurze Count-Form wie `SymptomA 1,7 [3]` bleibt ohne Strich
 - Feature: Mehrfach vorkommende Textwerte werden in `text`, `md`, `tree_md` und `json` aggregiert; Standard ist `join`, `first` und `last` folgen `stringAggregateMode` oder `rowAggregateMode`
 - `Addon Tag Cleaner` auf `v1.21` angehoben
 - Feature: Tag Cleaner normalisiert die neuen Issue-#38-Formen wie `tag+`, `tag--`, `tag++2`, `tag00`, `tag02` und `tag-0,2` in die vereinfachte Superscript-Schreibweise
@@ -107,9 +119,9 @@
 - `collectAtags` auf `v1.41` angehoben
 - Feature: Alias-Klammern `[...]` definieren Kategorien ausschliesslich im Alias-Bereich; normale Tags uebernehmen diese Kategorien in `cats`
 - Feature: Kategorie-Aliase koennen per `@@@self (sf)` definiert werden und erzeugen keinen normalen Tag-Alias
-- Feature: Kategorie-Aliase koennen per `@@@help: Spielen, Musik, Laufen` feste Kinderlisten definieren; diese Namen werden nicht als Aliase aufgeloest
+- Feature: Kategorie-Aliase koennen per `@@@help: ActivityA, ActivityB, ActivityC` feste Kinderlisten definieren; diese Namen werden nicht als Aliase aufgeloest
 - Feature: Kategorie-Tags werden automatisch als Listen ihrer Untertags erzeugt, z. B. `self` -> `tag1, tag2`
-- Aenderung: Kategorie-Listen werden in Text/Markdown mit Leerzeichen nach Kommas ausgegeben, z. B. `help: Spielen, Hausarbeit`
+- Aenderung: Kategorie-Listen werden in Text/Markdown mit Leerzeichen nach Kommas ausgegeben, z. B. `help: ActivityA, TaskA`
 - `Atag Helpers` auf `v2.02` angehoben
 - Aenderung: Kategorie-Tags bilden beim Markdown-Sortieren eine eigene Gruppe nach Listen und vor Blank-Tags
 - Aenderung: Kategorie-Tags behalten ihre Kinderlisten auch im JSON-Export als Array
@@ -196,7 +208,7 @@
 - Test/Doku: fokussierte Parser-Regressionen und README-Syntax ergaenzt
 - `restoreAtags` auf `v2.00` angehoben
 - Feature: Direkte Tag-Feld-Zuordnungen per `map`/`fields`/`mappings`, exklusiv per Default oder zusaetzlich mit `additional: true`
-- Feature: Alias-Zeilen koennen Restore-Felder sammeln, z. B. `@@Kopfschmerz (KSch)[Kopf Feld]: ks`
+- Feature: Alias-Zeilen koennen Restore-Felder sammeln, z. B. `@@SymptomA (SA)[Symptom Field]: sa`
 - Feature: `restoreAtags()` verarbeitet jetzt wahlweise den aktuellen Eintrag, `entryObj` oder eine Gruppe per `entries`/`entryGroup`/`group`; `bulkRestoreAtags()` bleibt nur als Kompatibilitaets-Wrapper
 - Feature: Gruppen koennen Arrays oder Objekte mit `.entries()` sein; gemappte Felder werden bei Gruppen vor dem Restore geleert
 - Feature: mehrere JSON-Werte und Aggregat-Texte wie `2 [3, 1]` werden per `valueMode` verdichtet; Standard ist `avg`, moeglich sind `avg`, `first`, `last`, `median`, `min` und `max`
@@ -239,7 +251,7 @@
 - Test/Doku: fokussierter WSH-Test fuer Bulk, `currentEntry` und leere Gruppenfelder ergaenzt
 - `collectAtags` auf `v1.36` angehoben
 - Fix: Alias-Deklarationszeilen mit `@@` werden nur noch fuer die Alias-Map genutzt und nicht mehr regulaer als Tags geparst
-- Fix: Readable-/Tagbar-Zeilen lesen bare Tags wie `|| Kopfdruck` selbst, statt indirekt von Alias-Zeilen abzuhängen
+- Fix: Readable-/Tagbar-Zeilen lesen bare Tags wie `|| SymptomAlias` selbst, statt indirekt von Alias-Zeilen abzuhängen
 - Test: Regression fuer Issue #18 ergaenzt
 - `Addon Sync Last From Latest` auf `v1.01` ergaenzt
 - `Addon Hour Guide` auf `v1.00` ergaenzt
@@ -413,8 +425,8 @@
 ## 2026-04-25
 
 - `collectAtags` auf `v1.33` angehoben
-- Feature: Alias-Einträge können feste Werte tragen, z. B. `@@Kopfschmerz (KSch): ks, Kopfdruck1`
-- Wirkung: `Kopfdruck`, `Kopfdruck3` oder `|| Kopfdruck` ergeben immer `Kopfschmerz+1`
+- Feature: Alias-Einträge können feste Werte tragen, z. B. `@@SymptomA (SA): sa, SymptomAlias1`
+- Wirkung: `SymptomAlias`, `SymptomAlias3` oder `|| SymptomAlias` ergeben immer `SymptomA+1`
 - Test/Doku: feste Alias-Werte in Parser-Regressionen und README ergänzt
 
 ## 2026-04-25
@@ -506,7 +518,7 @@
 
 ## 2026-04-25
 
-- Test/Doku: Alias-Beispiele klarer auf kanonischen Langtag ausgerichtet, z. B. `@@Kopfschmerzen (ks)` und `ks2 -> Kopfschmerzen`
+- Test/Doku: Alias-Beispiele klarer auf kanonischen Langtag ausgerichtet, z. B. `@@SymptomA (sa)` und `sa2 -> SymptomA`
 
 ## 2026-04-25
 
@@ -572,7 +584,7 @@
 - `collectAtags` auf `v1.30` angehoben
 - `Addon Readable Atag Text` auf `v1.10` angehoben
 - Feature: Readable-Ausgabe nutzt jetzt kompakte `|`-Row-Tagzeilen und `||` fuer globale Tags statt Blocklayout
-- Feature: Parser liest die neue Readable-Form mit Superscript-Werten wie `ks²`, `Wk⁺⁺`, `Gutⁿ`
+- Feature: Parser liest die neue Readable-Form mit Superscript-Werten wie `sa²`, `Wk⁺⁺`, `Gutⁿ`
 - Feature: Alias-Deklarationen ohne Aliasliste sind erlaubt, z. B. `@@Wirkung (Wk)` oder `@@Gut`
 - Feature: optionale Leerzeilen zwischen Rows ueber `blankLineBetweenRows: "tagged"` oder `"always"`
 - Test/Doku: Parser- und Add-on-Tests sowie `README.md` aktualisiert
@@ -581,8 +593,8 @@
 
 - `collectAtags` auf `v1.29` angehoben
 - `Addon Readable Atag Text` auf `v1.00` ergänzt
-- Feature: Alias-Definitionen unterstützen optionale Kürzel, z. B. `@@Kopfschmerz (ks): Kopfschmerzen`
-- Feature: `##`-Tagzeilen wie `## ks (3), emo (4)` werden im aktuellen Row-Kontext gelesen
+- Feature: Alias-Definitionen unterstützen optionale Kürzel, z. B. `@@SymptomA (sa): SymptomA`
+- Feature: `##`-Tagzeilen wie `## sa (3), emo (4)` werden im aktuellen Row-Kontext gelesen
 - Feature: neues Readable-Add-on schreibt schmale Row-Blöcke mit kompakter `##`-Tagzeile
 - Test/Doku: Parser- und Add-on-Tests sowie `README.md` ergänzt
 

@@ -1,6 +1,6 @@
 /*
 ========================================
-B8 Obsidian Linker v1.14 (sys 2.21)
+B8 Obsidian Linker v1.15 (sys 2.21)
 ========================================
 
 Changes
@@ -33,7 +33,7 @@ makeObsidianMementoUri({
   obsidianMarkdownField: "Obsidian Link",
   dateField: "Datum",
   mementoLinkField: "Memento Link",
-  vault: "RasObs",
+  vault: "ExampleVault",
   open: false
 });
 
@@ -287,7 +287,7 @@ function obsOpenUri(uri, cfg) {
 }
 
 function obsBuildOverwriteUri(cfg, e, l) {
-  var vault = cfg.vault || "RasObs";
+  var vault = cfg.vault || "ExampleVault";
   var dbNameRaw = obsLibName(l);
   var dbName = obsSanitizePath(dbNameRaw);
   var mementoId = obsTrim(obsEntryId(e));
@@ -335,7 +335,7 @@ function makeObsidianMementoUri(cfg) {
 
   var e = cfg.entryObj || entry();
   var l = cfg.libObj || lib();
-  var vault = cfg.vault || "RasObs";
+  var vault = cfg.vault || "ExampleVault";
   var overwriteField = cfg.overwriteMarkdownField || cfg.overwriteHtmlField || cfg.overwriteLinkField || cfg.markdownTargetField || cfg.htmlTargetField || cfg.targetField || cfg.obsidianMarkdownField || cfg.obsidianHtmlField || cfg.obsidianLinkField || cfg.openLinkField;
   var obsidianField = cfg.obsidianMarkdownField || cfg.obsidianHtmlField || cfg.obsidianLinkField || cfg.openLinkField || cfg.overwriteMarkdownField || cfg.overwriteHtmlField || cfg.overwriteLinkField || cfg.markdownTargetField || cfg.htmlTargetField || cfg.targetField;
   var hasOverwriteField = !!overwriteField;

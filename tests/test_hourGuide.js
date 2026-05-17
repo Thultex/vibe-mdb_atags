@@ -93,7 +93,7 @@ function testJsonPlanFieldWithFlexibleSections() {
       "\"from\":1," +
       "\"to\":2," +
       "\"sections\":[" +
-        "{\"title\":\"Koerper\",\"rows\":[[\"Move\",\"**slow** walk\"]]}," +
+        "{\"title\":\"Body\",\"rows\":[[\"Move\",\"**slow** walk\"]]}," +
         "{\"title\":\"Mind\",\"rows\":[{\"title\":\"Plan\",\"text\":\"one thing\"}]}" +
       "]" +
     "}]" +
@@ -107,7 +107,7 @@ function testJsonPlanFieldWithFlexibleSections() {
   });
 
   assertContains("json-label", html, "Custom - 1-2 h");
-  assertContains("json-section-body", html, "KOERPER");
+  assertContains("json-section-body", html, "BODY");
   assertContains("json-section-mind", html, "MIND");
   assertContains("json-bold", html, "<b>slow</b> walk");
   assertEquals("json-target", e.field("Guide"), html);

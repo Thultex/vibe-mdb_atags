@@ -308,7 +308,7 @@ Mit `currentEntry` wird nur der aktuelle Eintrag geschrieben. Falls `lib().entri
 
 **Tag Cleaner (Tagging)**
 
-Normalisiert einfache Werttags im Text und führt `|`-/`||`-Tagleisten zusammen. Die Ausgabe nutzt eine einfache `|`-Tagleiste. Standard ist Tagleiste unten mit einer Leerzeile Abstand. Exklusive Tagleisten beginnen mit `"|`, `||`, `|'` oder `|"`: Dann werden nur Tagleisten gesammelt, der übrige Notiztext wird nicht gecleant und die Ausgabe nutzt wieder `"|`.
+Normalisiert einfache Werttags im Text und führt `|`-/`||`-Tagleisten zusammen. Die Ausgabe nutzt eine einfache `|`-Tagleiste. Standard ist Tagleiste unten mit einer Leerzeile Abstand.
 
 ```js
 applyTagCleaner({
@@ -344,24 +344,9 @@ Optionen:
 - `formatValues: "min"` lässt `+` bei positiven Zahlen weg
 - `formatValues: "max"` erzwingt `+` bei positiven Zahlen
 - `formatValues: "none"` lässt Werttags unverändert
+- `||`, `|"` und `|'` werden beim Cleanen als exklusive Tagleiste zu `"|` normalisiert
+- Eine einzelne leere `|`-Zeile wird standardmaessig ebenfalls zu `"|`; mit `singleBarExclusive: false` bleibt sie normale leere Tagleiste
 - `tagFields: ["Tags", "User Tags"]` schreibt `##tag`/`tag##` als User-Tags in mehrere Tagfelder
-
-Exklusive Tagleisten:
-
-```text
-Text emo2
-|" stress3
-5: ks2
-```
-
-wird zu:
-
-```text
-Text emo2
-5: ks2
-
-"| stress³
-```
 
 Pro Notiz kann die Werteformatierung über `fv` in der Tagleiste gesetzt werden:
 
@@ -398,7 +383,7 @@ Tagleisten:
 Text
 | tag3 info#"das ist info"
 | info2
-| stress laufen emo3
+| stress activityc emo3
 ```
 
 werden zu einer Tagleiste am Ende:
@@ -406,7 +391,7 @@ werden zu einer Tagleiste am Ende:
 ```text
 Text
 
-| emo³ info² tag³, info:"das ist info", laufenˣ stressˣ
+| emo³ info² tag³, info:"das ist info", activitycˣ stressˣ
 ```
 
 **Restore Add-on (Other, JSON → Felder)**
@@ -580,7 +565,7 @@ makeObsidianMementoUri({
   obsidianMarkdownField: "Obsidian Link",
   dateField: "Datum",
   mementoLinkField: "Memento Link",
-  vault: "RasObs",
+  vault: "ExampleVault",
   open: true
 });
 ```
@@ -640,7 +625,7 @@ inhalt(:tag)
 
 alias:
 @@emo: Emotion
-@@Kopfschmerzen (ks): Kopfschmerz, Kschm
+@@SymptomA (sa): SymptomA, SymAlias
 @@Wirkung (Wk)
 @@mood.: gut, -down
 
@@ -676,9 +661,9 @@ Kumulative `+`/`-`-Tags wie `tag+`, `tag++`, `tag--` und `tag++2` werden in Row-
 ```text
 @@emo: Emotion
 @@mood.: gut, -down
-@@Kopfschmerz (KSch): ks, Kopfdruck1
+@@SymptomA (SA): sa, SymptomAlias1
 @@@self (sf)
-@@@help: Spielen, Musik, Laufen
+@@@help: ActivityA, ActivityB, ActivityC
 tag1 (tg1)[self, help]: 3
 tag2 (tg2)[self]: 3
 ```
@@ -688,11 +673,11 @@ tag2 (tg2)[self]: 3
 - nur erlaubte Tagformen
 - Basistags mit abschließendem Punkt sind erlaubt (z. B. `mood.`)
 - inverse Aliase mit Präfix `-` kehren numerische Werte um (`down2` → `mood.-2`)
-- Alias-Einträge dürfen feste Werte tragen (`Kopfdruck1` → `Kopfschmerz+1`)
+- Alias-Einträge dürfen feste Werte tragen (`SymptomAlias1` → `SymptomA+1`)
 - Doppelte Aliasnamen behalten standardmaessig die letzte Definition; mit `multiAliasTargets: true` erzeugt ein Alias mehrere Ziel-Tags, z. B. `@@Pos: x` und `@@Neg: -x` machen aus `x2` `Pos+2` und `Neg-2`
 - Kategorie-Aliase werden mit `@@@` definiert, z. B. `@@@self (sf)`
-- `@@@help: Spielen, Musik, Laufen` setzt die rechte Seite direkt als Kategorie-Kinder, nicht als Aliase
-- Feste Kategorie-Kinder koennen mit `-` negiert werden, z. B. `@@@Koerper: -Kopfschmerz`; Alias- und Kurznamen werden dabei auf den Langnamen aufgeloest
+- `@@@help: ActivityA, ActivityB, ActivityC` setzt die rechte Seite direkt als Kategorie-Kinder, nicht als Aliase
+- Feste Kategorie-Kinder koennen mit `-` negiert werden, z. B. `@@@Body: -SymptomA`; Alias- und Kurznamen werden dabei auf den Langnamen aufgeloest
 - Kategorien werden nur im Alias-Bereich mit `[...]` festgelegt
 - Kategorie-Tags enthalten ihre Untertags als Liste, z. B. `self` enthält `tag1, tag2`
 - normale Tags behalten ihre Kategorien in `cats`, z. B. `tag1` hat `self, help`
@@ -700,24 +685,24 @@ tag2 (tg2)[self]: 3
 Negierte Kategorie-Kinder bleiben normale Tags, werden aber innerhalb der Kategorie mit umgekehrtem Vorzeichen gerechnet und in Kategorie-Anzeigen mit tiefgestelltem Minus vor dem Namen markiert:
 
 ```text
-@@Kopfschmerz (KSch): ks
-@@@Koerper: -Kopfschmerz, Koerpersicher
-ks² Koerpersicher1
+@@SymptomA (SA): sa
+@@@Body: -SymptomA, BodySafe
+sa² BodySafe1
 ```
 
 ```text
-Koerper -2
-├── ₋Kopfschmerz -2
-└── Koerpersicher 1
+Body -2
+├── ₋SymptomA -2
+└── BodySafe 1
 ```
 
 Aus dem Beispiel entsteht fuer `tree_md`:
 
 ```text
 help
-├── Laufen
-├── Musik
-├── Spielen
+├── ActivityC
+├── ActivityB
+├── ActivityA
 └── tag1
 
 sf
@@ -783,7 +768,7 @@ Optionen:
 
 Mehrfach vorkommende Textwerte werden in `text`, `md`, `tree_md` und `json` standardmaessig per `join` zusammengefuehrt, z. B. `prot: Bechler` + `prot: Enda` zu `prot: Bechler, Enda`. Wenn `rowAggregateMode` oder `stringAggregateMode` auf `first` oder `last` steht, gilt diese Auswahl auch fuer Textwerte.
 
-Kategorie-Parents zeigen standardmaessig den Mittelwert ihrer numerischen Unterpunkte. Dabei wird zuerst je Unterpunkt aggregiert, fuer Kategorien standardmaessig mit `max`, danach werden diese Unterpunkt-Ergebnisse im Parent standardmaessig mit `avg` aggregiert. Im `tree_md` ist der Parent-Standard `max_abs`, damit negierte Kategorie-Kinder nach Betrag gewertet werden und ihr Vorzeichen behalten. Vor Detailangaben mit Namen oder Einzelwerten steht ` - `, z. B. `kaufen: 22,2 - [pc, garten]`; bei `cat_display_values: "all"` werden negierte Kinder als `₋Kopfschmerz: -2` angezeigt. Die kurze Count-Form bleibt ohne Strich, z. B. `Kopfschmerz 1,7 [3]`. Im `tree_md` steht am Parent standardmaessig nur der Wert, weil die Unterpunkte direkt darunter sichtbar sind. Unterpunkte im `tree_md` nutzen dieselbe Wert-Zusammenfassung wie `md`; mehrfach vorkommende Row-Werte werden im Tree standardmaessig gekuerzt als Anzahl angezeigt, waehrend `md`/`text` standardmaessig alle Einzelwerte zeigen. Tree-Defaults sind `cat_display_values: "none"` und `row_display_values: "count"`; fuer andere Exporte gelten `cat_display_values: "names"` und `row_display_values: "all"`. `rowAggregateMode` fuer Tabellen bleibt standardmaessig `avg`; `categoryRowAggregateMode`/`categoryChildAggregateMode` und `categoryAggregateMode`/`categoryValueMode` koennen `min`, `max`, `max_abs`, `min_abs`, `add`, `sum`, `avg`, `median`, `first`, `last` oder `amount` nutzen.
+Kategorie-Parents zeigen standardmaessig den Mittelwert ihrer numerischen Unterpunkte. Dabei wird zuerst je Unterpunkt aggregiert, fuer Kategorien standardmaessig mit `max`, danach werden diese Unterpunkt-Ergebnisse im Parent standardmaessig mit `avg` aggregiert. Im `tree_md` ist der Parent-Standard `max_abs`, damit negierte Kategorie-Kinder nach Betrag gewertet werden und ihr Vorzeichen behalten. Vor Detailangaben mit Namen oder Einzelwerten steht ` - `, z. B. `kaufen: 22,2 - [pc, garten]`; bei `cat_display_values: "all"` werden negierte Kinder als `₋SymptomA: -2` angezeigt. Die kurze Count-Form bleibt ohne Strich, z. B. `SymptomA 1,7 [3]`. Im `tree_md` steht am Parent standardmaessig nur der Wert, weil die Unterpunkte direkt darunter sichtbar sind. Unterpunkte im `tree_md` nutzen dieselbe Wert-Zusammenfassung wie `md`; mehrfach vorkommende Row-Werte werden im Tree standardmaessig gekuerzt als Anzahl angezeigt, waehrend `md`/`text` standardmaessig alle Einzelwerte zeigen. Tree-Defaults sind `cat_display_values: "none"` und `row_display_values: "count"`; fuer andere Exporte gelten `cat_display_values: "names"` und `row_display_values: "all"`. `rowAggregateMode` fuer Tabellen bleibt standardmaessig `avg`; `categoryRowAggregateMode`/`categoryChildAggregateMode` und `categoryAggregateMode`/`categoryValueMode` koennen `min`, `max`, `max_abs`, `min_abs`, `add`, `sum`, `avg`, `median`, `first`, `last` oder `amount` nutzen.
 
 ## Aktuelle Funktionsaufrufe
 

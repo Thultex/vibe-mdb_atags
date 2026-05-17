@@ -117,8 +117,8 @@ function testAutoRestoreUsesUnderscoreSuffixByDefault() {
 
 function testAliasBracketsDoNotBuildRestoreMappings() {
   var entryObj = makeEntry({
-    Alias: "@@Kopfschmerz (KSch)[Kopf Feld]: ks, Kopfdruck1",
-    Json: "{\"Kopfschmerz\":3,\"other\":5}"
+    Alias: "@@SymptomA (SA)[Symptom Field]: sa, SymptomAlias1",
+    Json: "{\"SymptomA\":3,\"other\":5}"
   });
 
   restoreAtags({
@@ -128,8 +128,8 @@ function testAliasBracketsDoNotBuildRestoreMappings() {
     mode: "exclusive"
   });
 
-  assertEqual("alias-bracket-no-field-mapping", entryObj.field("Kopf Feld"), undefined);
-  assertEqual("alias-bracket-no-mapping-auto", entryObj.field("Kopfschmerz_"), undefined);
+  assertEqual("alias-bracket-no-field-mapping", entryObj.field("Symptom Field"), undefined);
+  assertEqual("alias-bracket-no-mapping-auto", entryObj.field("SymptomA_"), undefined);
 }
 
 function testRestoreGroupClearsMappedFieldsAndHonorsLimit() {
@@ -458,16 +458,16 @@ function testAutoRestoreAveragesRepeatedJsonArrayByDefault() {
 
 function testAutoRestoreAveragesAggregateTextByDefault() {
   var entryObj = makeEntry({
-    "Atag Json": "{\"Perserveration\":\"2 [3, 1]\"}"
+    "Atag Json": "{\"MetricA\":\"2 [3, 1]\"}"
   });
 
   restoreAtags({
     entryObj: entryObj,
     sourceField: "Atag Json",
-    targetFields: ["Perserveration_"]
+    targetFields: ["MetricA_"]
   });
 
-  assertEqual("auto-aggregate-text-default-avg", entryObj.field("Perserveration_"), 2);
+  assertEqual("auto-aggregate-text-default-avg", entryObj.field("MetricA_"), 2);
 }
 
 function testAggregateTextValueModesAreConfigurable() {
@@ -534,24 +534,24 @@ function testMappingValueModeOverridesGlobalMode() {
 
 function testRealFieldMappingFromJsonNumber() {
   var entryObj = makeEntry({
-    "Atag Json": "{\"Erschöpfung\":2,\"Haushalt\":null,\"jetzt\":null,\"Kopfschmerz\":2,\"Perserveration\":1,\"Ruhe\":2,\"Spielen\":null,\"überreizt\":2}"
+    "Atag Json": "{\"StateA\":2,\"TaskA\":null,\"jetzt\":null,\"SymptomA\":2,\"MetricA\":1,\"StateC\":2,\"ActivityA\":null,\"StateB\":2}"
   });
 
   restoreAtags({
     entryObj: entryObj,
     sourceField: "Atag Json",
     map: {
-      Perserveration: "Perserveration"
+      MetricA: "MetricA"
     },
     mode: "exclusive"
   });
 
-  assertEqual("real-field-number-mapping", entryObj.field("Perserveration"), 1);
+  assertEqual("real-field-number-mapping", entryObj.field("MetricA"), 1);
 }
 
 function testAutoRestoreAllowsEmptySuffixForSameNamedFields() {
   var entryObj = makeEntry({
-    "Atag Json": "{\"Perserveration\":1,\"Info\":\"a,b\"}"
+    "Atag Json": "{\"MetricA\":1,\"Info\":\"a,b\"}"
   });
 
   restoreAtags({
@@ -561,13 +561,13 @@ function testAutoRestoreAllowsEmptySuffixForSameNamedFields() {
     listSuffix: "_l"
   });
 
-  assertEqual("empty-suffix-real-field", entryObj.field("Perserveration"), 1);
+  assertEqual("empty-suffix-real-field", entryObj.field("MetricA"), 1);
   assertArray("empty-suffix-list-field", entryObj.field("Info_l"), ["a", "b"]);
 }
 
 function testAutoRestoreWritesUnderscoreSuffixedRealField() {
   var entryObj = makeEntry({
-    "Atag Json": "{\"Erschöpfung\":2,\"Haushalt\":null,\"jetzt\":null,\"Kopfschmerz\":2,\"Perserveration\":1,\"Ruhe\":2,\"Spielen\":null,\"überreizt\":2}"
+    "Atag Json": "{\"StateA\":2,\"TaskA\":null,\"jetzt\":null,\"SymptomA\":2,\"MetricA\":1,\"StateC\":2,\"ActivityA\":null,\"StateB\":2}"
   });
 
   restoreAtags({
@@ -577,14 +577,14 @@ function testAutoRestoreWritesUnderscoreSuffixedRealField() {
     listSuffix: "_l"
   });
 
-  assertEqual("underscore-suffix-real-field", entryObj.field("Perserveration_"), 1);
-  assertEqual("underscore-suffix-other-real-field", entryObj.field("Ruhe_"), 2);
+  assertEqual("underscore-suffix-real-field", entryObj.field("MetricA_"), 1);
+  assertEqual("underscore-suffix-other-real-field", entryObj.field("StateC_"), 2);
 }
 
 function testAutoRestoreContinuesAfterMissingTargetField() {
   var entryObj = makeStrictEntry({
-    "Atag Json": "{\"Erschöpfung\":2,\"Perserveration\":1,\"Ruhe\":2}",
-    "Perserveration_": null
+    "Atag Json": "{\"StateA\":2,\"MetricA\":1,\"StateC\":2}",
+    "MetricA_": null
   });
 
   restoreAtags({
@@ -594,12 +594,12 @@ function testAutoRestoreContinuesAfterMissingTargetField() {
     listSuffix: "_l"
   });
 
-  assertEqual("auto-continues-after-missing-field", entryObj.field("Perserveration_"), 1);
+  assertEqual("auto-continues-after-missing-field", entryObj.field("MetricA_"), 1);
 }
 
 function testDebugFieldReportsRestoreSteps() {
   var entryObj = makeEntry({
-    "Atag Json": "{\"Perserveration\":1}",
+    "Atag Json": "{\"MetricA\":1}",
     Debug: ""
   });
 
@@ -607,20 +607,20 @@ function testDebugFieldReportsRestoreSteps() {
     entryObj: entryObj,
     sourceField: "Atag Json",
     map: {
-      Perserveration: "Perserveration_"
+      MetricA: "MetricA_"
     },
     mode: "exclusive",
     debugField: "Debug"
   });
 
-  if (String(entryObj.field("Debug")).indexOf("map ok: Perserveration -> Perserveration_ = 1") < 0) {
+  if (String(entryObj.field("Debug")).indexOf("map ok: MetricA -> MetricA_ = 1") < 0) {
     fail("debug-field-missing-map-ok: " + entryObj.field("Debug"));
   }
 }
 
 function testDebugLogReportsRestoreSteps() {
   var entryObj = makeEntry({
-    "Atag Json": "{\"Perserveration\":1}"
+    "Atag Json": "{\"MetricA\":1}"
   });
   var oldLog = typeof log === "undefined" ? null : log;
   var hadLog = typeof log !== "undefined";
@@ -634,7 +634,7 @@ function testDebugLogReportsRestoreSteps() {
     entryObj: entryObj,
     sourceField: "Atag Json",
     map: {
-      Perserveration: "Perserveration_"
+      MetricA: "MetricA_"
     },
     mode: "exclusive",
     debugLog: true
@@ -643,30 +643,30 @@ function testDebugLogReportsRestoreSteps() {
   if (hadLog) log = oldLog;
   else log = undefined;
 
-  if (lines.join("\n").indexOf("map ok: Perserveration -> Perserveration_ = 1") < 0) {
+  if (lines.join("\n").indexOf("map ok: MetricA -> MetricA_ = 1") < 0) {
     fail("debug-log-missing-map-ok: " + lines.join("\n"));
   }
 }
 
 function testAutoRestoreSkipsMissingTargetsWhenFieldListIsKnown() {
   var entryObj = makeStrictEntry({
-    "Atag Json": "{\"Erschöpfung\":2,\"Perserveration\":2,\"Stimmung\":1}",
-    "Perserveration_": null,
+    "Atag Json": "{\"StateA\":2,\"MetricA\":2,\"Stimmung\":1}",
+    "MetricA_": null,
     Debug: ""
   });
 
   restoreAtags({
     entryObj: entryObj,
     sourceField: "Atag Json",
-    targetFields: ["Atag Json", "Perserveration_", "Debug"],
+    targetFields: ["Atag Json", "MetricA_", "Debug"],
     debugField: "Debug"
   });
 
-  assertEqual("known-field-list-perserveration", entryObj.field("Perserveration_"), 2);
+  assertEqual("known-field-list-metric-a", entryObj.field("MetricA_"), 2);
   if (String(entryObj.field("Debug")).indexOf("auto error:") >= 0) {
     fail("known-field-list-should-not-log-auto-error: " + entryObj.field("Debug"));
   }
-  if (String(entryObj.field("Debug")).indexOf("auto skip missing target: Erschöpfung -> Erschöpfung_") < 0) {
+  if (String(entryObj.field("Debug")).indexOf("auto skip missing target: StateA -> StateA_") < 0) {
     fail("known-field-list-missing-skip: " + entryObj.field("Debug"));
   }
 }

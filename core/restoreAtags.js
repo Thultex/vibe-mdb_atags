@@ -1,6 +1,6 @@
 /*
 ========================================
-A4 restoreAtags v2.02 (sys 2.21)
+A4 restoreAtags v2.03 (sys 2.21)
 ========================================
 
 Notes:
@@ -32,7 +32,7 @@ restoreAtags({
 restoreAtags({
   sourceField: "Atag Json",
   map: {
-    Perserveration: "Perserveration_"
+    MetricA: "MetricA_"
   },
   mode: "exclusive"
 });

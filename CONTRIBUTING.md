@@ -14,6 +14,18 @@ Die Repo-Struktur ist in Bereiche gegliedert:
 - `tests/` für Host-nahe Testskripte
 - Doku-Dateien wie `README.md`, `CHANGELOG.md` und `CONTRIBUTING.md` im Repo-Root
 
+## Datenschutz In Beispielen
+
+Dieses Repo kann oeffentlich geteilt werden. Beispiele in Code, Tests, README und Changelog sollen deshalb keine privaten Namen, echten Vault-/Bibliotheksnamen, persoenlichen Gesundheitsdaten, Alltagsnotizen, Pfade, Kontakte oder realen Inhalte enthalten.
+
+Regeln:
+
+- Fuer Vaults und externe Systeme neutrale Namen wie `ExampleVault`, `ExampleLibrary` oder `ExampleField` verwenden.
+- Fuer Tags und Kategorien neutrale Parser-Beispiele wie `SymptomA`, `SymptomB`, `Body`, `BodySafe`, `MetricA`, `TaskA` oder `ActivityA` verwenden.
+- Keine echten Obsidian-Vault-Namen, lokalen Benutzerpfade, Telefonnummern, E-Mail-Adressen, Tokens oder persoenlichen Notizen committen.
+- Wenn ein Test reale Semantik braucht, die Semantik anonymisieren und nur die technische Struktur erhalten.
+- Vor groesseren Doku- oder Testaenderungen kurz mit `rg` nach privaten Begriffen suchen.
+
 ## Kurze Versionsinfos Im Dateikopf
 
 Jede zentrale Script-Datei beginnt mit einem kurzen Kopfblock, zum Beispiel:

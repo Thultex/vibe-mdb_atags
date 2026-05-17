@@ -1,6 +1,6 @@
 /*
 ========================================
-A1 collectAtags v1.47 (sys 2.21)
+A1 collectAtags v1.50 (sys 2.21)
 ========================================
 
 Changes
@@ -9,21 +9,22 @@ Changes
 - ignore template tag values `_` in `tag:_` and `tag:: _`
 - alias brackets define categories, e.g. `@@Tag (T)[self, help]: alias`
 - category aliases can use `@@@self (sf)`
-- category aliases can define fixed children, e.g. `@@@help: Spielen, Musik`
-- category aliases can invert fixed child values, e.g. `@@@body: -Pain, Safety`
+- category aliases can define fixed children, e.g. `@@@help: ActivityA, ActivityB`
+- exclusive readable tag lines parse only tag lines and ignore body tags
+- category aliases can invert fixed child values, e.g. `@@@body: -MetricF, MetricG`
 - exclude name checks use a per-run lookup map
 - local trim helper reduces repeated whitespace-normalization code
 - category tags are emitted as list tags containing their occurring member tags
 - parsed items keep their categories in `cats`
+- alias map is built without an adjacent joinedText var for safer editor copying
 - skip alias declaration lines during normal parsing
 - add compact, explicit, and inverted text tag syntaxes
 - parse bare tags in readable tag lines
-- exclusive readable tag lines parse only tag lines and ignore body tags
 - simple tag suffix `x` is parsed as an empty explicit tag
-- alias entries can carry fixed values, e.g. `@@Kopfschmerz (KSch): ks, Kopfdruck1`
+- alias entries can carry fixed values, e.g. `@@SymptomA (SA): sa, SymptomAlias1`
 - superscript value suffixes like `emo²` and `tag⁻⁰³` are parsed in normal text
-- alias definitions can declare a short tag, e.g. `@@Kopfschmerz (ks): Kopfschmerzen`
-- readable tag lines like `| Angst-2 Gutn` with superscript values are parsed in row context
+- alias definitions can declare a short tag, e.g. `@@SymptomA (sa): SymptomA`
+- readable tag lines like `| MetricF-2 Gutn` with superscript values are parsed in row context
 - global readable tag lines like `|| tag: 1 info: "text"` are parsed without row context
 - alias declarations can omit the alias list, e.g. `@@Wirkung (Wk)`
 - parsed items keep alias short display names for exports
@@ -757,10 +758,7 @@ function collectAtags(cfg) {
     if (m) return { text: m[1] || "", exclusive: true, row: false };
 
     m = s.match(/^\s*\|\|\s*(.*)$/);
-    if (m) return { text: m[1] || "", exclusive: true, row: false };
-
-    m = s.match(/^\s*\|["']\s*(.*)$/);
-    if (m) return { text: m[1] || "", exclusive: true, row: false };
+    if (m) return { text: m[1] || "", exclusive: false, row: false };
 
     m = s.match(/^\s*\|\s*([^|].*)$/);
     if (m) return { text: m[1] || "", exclusive: false, row: true };
@@ -875,6 +873,7 @@ function collectAtags(cfg) {
   var seen = {};
   var cachedTexts = [];
   var fullText = [];
+  var aliasMap;
   var li;
 
   for (li = 0; li < textFields.length; li++) {
@@ -885,8 +884,7 @@ function collectAtags(cfg) {
     if (strVal) fullText.push(strVal);
   }
 
-  var joinedText = fullText.join("\n");
-  var aliasMap = buildAliasMap(joinedText);
+  aliasMap = buildAliasMap(fullText.join("\n"));
 
   for (li = 0; li < cachedTexts.length; li++) {
     var str = cachedTexts[li];

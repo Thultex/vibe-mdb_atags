@@ -1,6 +1,6 @@
 /*
 ========================================
-C3 Hour Guide v1.28 (sys 2.21)
+C3 Hour Guide v1.29 (sys 2.21)
 ========================================
 
 Changes
@@ -220,7 +220,7 @@ function hourGuideDefaultPlan() {
       sections: [
         { title: "Energie", rows: [["Energie", "nicht pushen"]] },
         { title: "Fokus", rows: [["Vereinfachen", "leichter"], ["Streuen", "mehr Wechsel"]] },
-        { title: "Emotion", rows: [["Spannung", "Bewegung"]] }
+        { title: "Emotion", rows: [["MetricE", "Bewegung"]] }
       ]
     },
     spaet: {
