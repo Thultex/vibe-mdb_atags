@@ -594,6 +594,7 @@ makeObsidianMementoUri({
   dateField: "Datum",
   mementoLinkField: "Memento Link",
   vault: "ExampleVault",
+  formatOnly: false,
   open: true
 });
 ```
@@ -603,6 +604,8 @@ Empfohlen fuer Windows Desktop und Android ist `open: true`: Das Addon schreibt 
 Wenn `open: true` einen neuen `mode=overwrite`-Link oeffnet, wird danach kein Overwrite-Link im Feld behalten. Das Overwrite-Feld wird geleert und das Obsidian-Feld auf `Link: EINFÜGEN` gesetzt. Dieser Marker ist die einzige Ausgabe mit `Link:`-Prefix und bedeutet: Obsidian wurde zum Erstellen/Oeffnen angestossen, der echte Obsidian-Link muss noch eingefuegt werden. Solange dieser Marker im Obsidian-Feld steht, erzeugt und oeffnet ein erneuter Script-Lauf keinen neuen Overwrite-Link.
 
 Wenn nur `obsidianMarkdownField` gesetzt ist, erzeugt das Addon dort den Overwrite-Link und nutzt dasselbe Feld spaeter zum Anzeigen/Oeffnen eines eingefuegten Obsidian-Links. Scheitert `open: true`, bleibt der Markdown-Link im Feld sichtbar.
+
+Für After-Entry-Workflows kann `formatOnly: true` genutzt werden. Dann formatiert das Addon nur einen bereits vorhandenen Obsidian-Link im Zielfeld, erzeugt keinen neuen `mode=overwrite`-Link und öffnet nichts. `createOverwriteLink: false` ist ein Alias für denselben Modus.
 
 Ohne lokalen Helper funktioniert `http://127.0.0.1:17890/...` nicht. `windowsOpenBase` sollte deshalb normalerweise leer bleiben. Fuer einen zusaetzlichen `Win:`-Link ohne Helper braucht `windowsOpenBase` eine echte Browser-Redirect-Seite, z.B. `https://example.org/obsidian-open?uri=` oder ein Template mit `{uri}`.
 

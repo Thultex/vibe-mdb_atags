@@ -1,6 +1,6 @@
 /*
 ========================================
-B8 Obsidian Linker v1.15 (sys 2.30)
+B8 Obsidian Linker v1.16 (sys 2.30)
 ========================================
 
 Changes
@@ -24,6 +24,7 @@ Changes
 - keep obsidian-only configs from creating overwrite links
 - write connected Obsidian fields as bare Markdown links
 - allow obsidianMarkdownField-only configs to create/open overwrite links
+- add formatOnly mode for after-entry formatting without creating/opening overwrite links
 
 Usage
 
@@ -34,6 +35,7 @@ makeObsidianMementoUri({
   dateField: "Datum",
   mementoLinkField: "Memento Link",
   vault: "ExampleVault",
+  formatOnly: false,
   open: false
 });
 
@@ -130,6 +132,14 @@ function obsPendingInsertMarkdown(cfg) {
 
 function obsIsPendingInsert(s, cfg) {
   return obsTrim(s) === obsPendingInsertMarkdown(cfg);
+}
+
+function obsFormatOnly(cfg) {
+  return cfg && (cfg.formatOnly === true || cfg.createOverwriteLink === false);
+}
+
+function obsFormatOnlyOpenResult() {
+  return { attempted: false, ok: false, method: "format_only", error: "" };
 }
 
 function obsSanitizePath(s) {
@@ -375,10 +385,14 @@ function makeObsidianMementoUri(cfg) {
     hasObsidianOpenLink = true;
   }
 
+  if (obsFormatOnly(cfg) && !hasObsidianOpenLink) {
+    return { overwriteUri: "", obsidianUri: "", mode: "format_only_no_link", openResult: { attempted: false, ok: false, method: "format_only", error: "" } };
+  }
+
   if (sameField) {
     if (hasObsidianOpenLink) {
       obsSetConnectedLinkField(e, obsidianField, openUri, cfg);
-      openResult = obsOpenUri(openUri, cfg);
+      openResult = obsFormatOnly(cfg) ? obsFormatOnlyOpenResult() : obsOpenUri(openUri, cfg);
       return { overwriteUri: "", obsidianUri: openUri, mode: "connected_obsidian_same_field", openResult: openResult };
     }
 
@@ -400,7 +414,7 @@ function makeObsidianMementoUri(cfg) {
   if (hasObsidianOpenLink) {
     obsClearField(e, overwriteField);
     obsSetConnectedLinkField(e, obsidianField, openUri, cfg);
-    openResult = obsOpenUri(openUri, cfg);
+    openResult = obsFormatOnly(cfg) ? obsFormatOnlyOpenResult() : obsOpenUri(openUri, cfg);
     return { overwriteUri: "", obsidianUri: openUri, mode: "connected_obsidian", openResult: openResult };
   }
 

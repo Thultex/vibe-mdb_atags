@@ -156,8 +156,8 @@ Für jeden funktionalen Eintrag:
 
 - Datum im Format `YYYY-MM-DD`
 - Dauer im Header als `### YYYY-MM-DD - (2,3h)` erfassen, wenn der Arbeitsblock im Chat nachvollziehbar ist; bei mehreren Sessions optional mit Anzahl, z. B. `(2,2h, 3x)`, sonst `(n/a)`
-- oben in `CHANGELOG.md` unter `Stats` kurze Zeilen fuer letzte Woche, letzten Monat, vorletzten Monat, Jahr und Insgesamt pflegen; keine Tabelle, Inhalte kurz halten
-- Eintraege stehen unter `## Log`; jeder Tagesblock ist ein `###`-Punkt
+- oben in `CHANGELOG.md` unter `Stats` kurze Zeilen für letzte Woche, letzten Monat, vorletzten Monat, Jahr und Insgesamt pflegen; keine Tabelle, Inhalte kurz halten
+- Einträge stehen unter `## Log`; jeder Tagesblock ist ein `###`-Punkt
 - gleiche Tage in einem Eintrag zusammenziehen; die Dauer ist die Tagesgesamtzeit, optional mit Session-Anzahl
 - ab 7 Punkten im Tagesblock als ersten Punkt eine kurze Zeile `Summary: ...` ergänzen
 - normale Änderungen als kurze Stichpunkte mit Typ schreiben, z. B. `- Feature: Cleaner erweitert/reduziert Aliase (#51); Details`

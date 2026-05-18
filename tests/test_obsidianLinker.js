@@ -438,6 +438,78 @@ function testObsidianOnlyFieldStillOpensExistingObsidianLink() {
   assertEquals("obsidian-only-existing-field", e.field("Obsidian Link"), "[obsidian://adv-uri?vault=ExampleVault&uid=abc123](obsidian://adv-uri?vault=ExampleVault&uid=abc123)");
 }
 
+function testFormatOnlyDoesNotCreateOrOpenOverwriteLink() {
+  var opened = 0;
+  var e = makeEntry({
+    Text: "Body",
+    "Obsidian Link": ""
+  });
+
+  var result = makeObsidianMementoUri({
+    entryObj: e,
+    libObj: lib(),
+    contentField: "Text",
+    obsidianMarkdownField: "Obsidian Link",
+    vault: "ExampleVault",
+    formatOnly: true,
+    open: true,
+    openFunction: function() {
+      opened += 1;
+    }
+  });
+
+  assertEquals("format-only-mode", result.mode, "format_only_no_link");
+  assertEquals("format-only-field", e.field("Obsidian Link"), "");
+  assertEquals("format-only-overwrite-return", result.overwriteUri, "");
+  assertEquals("format-only-open-attempted", result.openResult.attempted, false);
+  assertEquals("format-only-not-opened", opened, 0);
+}
+
+function testFormatOnlyStillFormatsExistingObsidianLink() {
+  var opened = 0;
+  var e = makeEntry({
+    Text: "Body",
+    "Obsidian Link": '<a href="obsidian://adv-uri?vault=ExampleVault&amp;uid=abc123">open</a>'
+  });
+
+  var result = makeObsidianMementoUri({
+    entryObj: e,
+    libObj: lib(),
+    contentField: "Text",
+    obsidianMarkdownField: "Obsidian Link",
+    vault: "ExampleVault",
+    formatOnly: true,
+    open: true,
+    openFunction: function() {
+      opened += 1;
+    }
+  });
+
+  assertEquals("format-only-existing-mode", result.mode, "connected_obsidian_same_field");
+  assertEquals("format-only-existing-not-opened", opened, 0);
+  assertEquals("format-only-existing-open-attempted", result.openResult.attempted, false);
+  assertEquals("format-only-existing-field", e.field("Obsidian Link"), "[obsidian://adv-uri?vault=ExampleVault&uid=abc123](obsidian://adv-uri?vault=ExampleVault&uid=abc123)");
+}
+
+function testCreateOverwriteLinkFalseIsFormatOnlyAlias() {
+  var e = makeEntry({
+    Text: "Body",
+    "Obsidian Link": ""
+  });
+
+  var result = makeObsidianMementoUri({
+    entryObj: e,
+    libObj: lib(),
+    contentField: "Text",
+    obsidianMarkdownField: "Obsidian Link",
+    vault: "ExampleVault",
+    createOverwriteLink: false
+  });
+
+  assertEquals("create-overwrite-false-mode", result.mode, "format_only_no_link");
+  assertEquals("create-overwrite-false-field", e.field("Obsidian Link"), "");
+}
+
 testCreatesOverwriteLinkOnlyInOverwriteField();
 testUidClearsOverwriteAndWritesConnectedObsidianField();
 testSameFieldMarksExistingObsidianLinkOnly();
@@ -452,5 +524,8 @@ testSameFieldCreatesOverwriteWhenNoObsidianLinkExists();
 testObsidianOnlyFieldCreatesOverwriteLink();
 testObsidianOnlyOpenFailureKeepsOverwriteLink();
 testObsidianOnlyFieldStillOpensExistingObsidianLink();
+testFormatOnlyDoesNotCreateOrOpenOverwriteLink();
+testFormatOnlyStillFormatsExistingObsidianLink();
+testCreateOverwriteLinkFalseIsFormatOnlyAlias();
 
 WScript.Echo("OK");

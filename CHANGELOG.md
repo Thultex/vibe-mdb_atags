@@ -2,11 +2,11 @@
 
 ## Stats
 
-- Letzte Woche (2026-05-12 bis 2026-05-18): 3 Tage, 84 Inhalte; Dauer: n/a; Inhalte: Tag-Cleaner, Changelog-Regeln, Core-Umbau.
+- Letzte Woche (2026-05-12 bis 2026-05-18): 3 Tage, 87 Inhalte; Dauer: n/a; Inhalte: Tag-Cleaner, Obsidian-Linker, Changelog-Regeln.
 - Letzter Monat (2026-04-01 bis 2026-04-30): 3 Tage, 175 Inhalte; Dauer: n/a; Inhalte: Cleaner/Readable, Sync/Time-Marker, Repo-Struktur.
-- Vorletzter Monat (2026-03-01 bis 2026-03-31): 0 Tage, 0 Inhalte; Dauer: n/a; Inhalte: keine Eintraege.
-- Jahr (2026-01-01 bis 2026-12-31): 8 Tage, 397 Inhalte; Dauer: n/a; Inhalte: Tag-Cleaner, Core-Umbau, Sync/Hour-Guide.
-- Insgesamt: 8 Tage, 397 Inhalte; Dauer: n/a; Inhalte: Tag-Cleaner, Core-Umbau, Sync/Hour-Guide.
+- Vorletzter Monat (2026-03-01 bis 2026-03-31): 0 Tage, 0 Inhalte; Dauer: n/a; Inhalte: keine Einträge.
+- Jahr (2026-01-01 bis 2026-12-31): 8 Tage, 400 Inhalte; Dauer: n/a; Inhalte: Tag-Cleaner, Obsidian-Linker, Core-Umbau.
+- Insgesamt: 8 Tage, 400 Inhalte; Dauer: n/a; Inhalte: Tag-Cleaner, Obsidian-Linker, Core-Umbau.
 
 
 ## Log
@@ -15,13 +15,16 @@
 
 - Summary: Tag-Cleaner-Aliasanzeige, Emoji-/Symbolformen, Kategorie-Alias-Polung und Changelog-Regeln zusammengefasst.
 - Doku: Changelog-Struktur vereinfacht; separates Arbeitslog entfernt, `CHANGELOG.md` ist jetzt Repo-Verlauf und Arbeits-/Zeitprotokoll.
-- Doku: Regeln angepasst; `CONTRIBUTING.md` beschreibt nur noch Dateiversionen und `CHANGELOG.md`, inklusive Dauerformat, Tageszusammenfassung und gesammelt aufgefuehrter Versionen.
+- Doku: Regeln angepasst; `CONTRIBUTING.md` beschreibt nur noch Dateiversionen und `CHANGELOG.md`, inklusive Dauerformat, Tageszusammenfassung und gesammelt aufgeführter Versionen.
 - Doku: Changelog-Vorgaben verschoben; Format und Vorlage stehen unten unter `Vorgaben`, damit der Verlauf direkt oben beginnt.
-- Doku: Changelog-Alteintraege normalisiert; gleiche Tage sind zusammengezogen, `Summary:` startet Tagesbloecke ab 7 Punkten, `Change:` ersetzt den alten Aenderungs-Prefix.
-- Doku: Versionspunkte vereinheitlicht; `Versionen:` steht in allen Tagesbloecken als letzter Punkt.
+- Doku: Changelog-Alteinträge normalisiert; gleiche Tage sind zusammengezogen, `Summary:` startet Tagesblöcke ab 7 Punkten, `Change:` ersetzt den alten Änderungs-Prefix.
+- Doku: Versionspunkte vereinheitlicht; `Versionen:` steht in allen Tagesblöcken als letzter Punkt.
 - Doku: Statistikblock ergaenzt; Wochen-, Monats-, Jahres- und Gesamtbereiche zeigen Inhalte und Dauer.
-- Doku: Changelog-Hierarchie angepasst; `Stats`, `Log` und `Vorgaben` sind Hauptbereiche, Tagesbloecke laufen als `###`.
-- Doku: Statistiktexte gekuerzt; Inhalte nennen nur noch kompakte Themenketten.
+- Doku: Changelog-Hierarchie angepasst; `Stats`, `Log` und `Vorgaben` sind Hauptbereiche, Tagesblöcke laufen als `###`.
+- Doku: Statistiktexte gekürzt; Inhalte nennen nur noch kompakte Themenketten.
+- Feature: Obsidian-Linker-Formatmodus (#55); `formatOnly: true` formatiert vorhandene Links für After-Entry-Läufe, ohne neue Overwrite-Links zu erzeugen.
+- Change: Obsidian-Linker-Erzeugung (#55); `createOverwriteLink: false` ist Alias für den Formatmodus.
+- Test/Doku: Obsidian-Linker-Formatmodus (#55); Regressionen und README-Hinweis ergänzt.
 - Feature: Cleaner-Anzeige-Override; `cleanerTagText` und `cleanerEmoji` koennen Alias-Header-Vorgaben uebersteuern.
 - Feature: Emoji-/Symbol-Position; `cleanerEmoji` unterstuetzt `prefix`, `suffix`, `only` und `none`.
 - Test/Doku: Override- und Prefix-Faelle sowie README-/Header-Beispiele aktualisiert.
@@ -37,7 +40,7 @@
 - Change: Passive Aliasquelle (#51); `applyCleanTags()` liest standardmaessig `Alias`, das Clean-Feld nur explizit per `aliasTextFields`.
 - Feature: Kategorie-Alias-Polung (#53); trailing `+`/`-` wird nach der Child-Aggregation angewendet, z. B. `@@@emo-: -aua` mit `aua+2` ergibt fuer `emo` wieder `2`.
 - Test: Kategorie-Alias-Polung (#53); Repro fuer `@@@emo-: -aua` mit `categoryAggregateMode: "max_abs"` ergaenzt.
-- Versionen: collectAtags v1.58, exportAtags v1.83, tagCleaner v1.44.
+- Versionen: collectAtags v1.58, exportAtags v1.83, tagCleaner v1.44, Obsidian Linker v1.16.
 
 ### 2026-05-16
 
