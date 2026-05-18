@@ -1,12 +1,11 @@
 # Pflege Und Versionierung
 
-Dieses Repo nutzt drei Ebenen von Versionsinfo:
+Dieses Repo nutzt zwei Ebenen von Versionsinfo:
 
 - Dateiversion im Kopf einer Script-Datei
 - Verlaufseintrag in `CHANGELOG.md`
-- Arbeitslog-Eintrag in `CHANGELOG.log`
 
-Eine funktionale Änderung ist erst sauber dokumentiert, wenn alle passenden Stellen gepflegt wurden.
+Eine funktionale Änderung ist erst sauber dokumentiert, wenn beide Stellen gepflegt wurden.
 
 Die Repo-Struktur ist in Bereiche gegliedert:
 
@@ -151,25 +150,32 @@ Beispiele:
 
 ## Changelog-Regeln
 
-`CHANGELOG.md` ist der Repo-Verlauf.
-`CHANGELOG.log` ist das fortlaufende Arbeitslog und wird bei jeder Code-, Test-, Doku- oder Issue-bezogenen Änderung gepflegt.
+`CHANGELOG.md` ist der Repo-Verlauf und zugleich das fortlaufende Arbeits-/Zeitprotokoll.
 
-Für jede funktionale Änderung:
+Für jeden funktionalen Eintrag:
 
 - Datum im Format `YYYY-MM-DD`
-- Datei oder Modul nennen
-- Versionssprung nennen
+- Dauer im Header als `### YYYY-MM-DD - (2,3h)` erfassen, wenn der Arbeitsblock im Chat nachvollziehbar ist; bei mehreren Sessions optional mit Anzahl, z. B. `(2,2h, 3x)`, sonst `(n/a)`
+- oben in `CHANGELOG.md` unter `Stats` kurze Zeilen fuer letzte Woche, letzten Monat, vorletzten Monat, Jahr und Insgesamt pflegen; keine Tabelle, Inhalte kurz halten
+- Eintraege stehen unter `## Log`; jeder Tagesblock ist ein `###`-Punkt
+- gleiche Tage in einem Eintrag zusammenziehen; die Dauer ist die Tagesgesamtzeit, optional mit Session-Anzahl
+- ab 7 Punkten im Tagesblock als ersten Punkt eine kurze Zeile `Summary: ...` ergänzen
+- normale Änderungen als kurze Stichpunkte mit Typ schreiben, z. B. `- Feature: Cleaner erweitert/reduziert Aliase (#51); Details`
+- Datei oder Modul nennen, wo es hilfreich ist
 - Wirkung der Änderung beschreiben
 - Test oder Doku kurz erwähnen, wenn ergänzt
+- Versionssprünge nicht einzeln als eigene Hauptpunkte aufführen
+- Versionen nur bei Bedarf immer als letzten Stichpunkt des Tages kurz sammeln, z. B. `- Versionen: collectAtags v1.58, exportAtags v1.83, tagCleaner v1.42`
 
 Empfohlene Form:
 
 ```txt
-2026-04-22
-- collectAtags auf v1.22 angehoben
-- Fix: negative Zahlenformen werden wieder korrekt erkannt
-- Fix: colon-Werte wie tag: 5 werden im JScript-Host wieder korrekt als Wert gelesen
-- Test/Doku: `tests/test_collectAtags.js` ergänzt
+### 2026-04-22 - (0,4h)
+- Summary: Parser-Fixes und Tests für Zahlen- und Colon-Werte.
+- Fix: Parser erkennt negative Zahlenformen wieder korrekt; Details.
+- Fix: Parser erkennt Colon-Werte im JScript-Host wieder korrekt; `tag: 5`.
+- Test/Doku: `tests/test_collectAtags.js` ergänzt.
+- Versionen: collectAtags v1.22.
 ```
 
 ## Wann Changelog Pflicht Ist
@@ -180,19 +186,9 @@ Changelog pflegen bei:
 - neue unterstützte Formate oder Tag-Formen hinzukommen
 - Bugfixes das Ergebnis sichtbar verändern
 - Tests oder wichtige Doku für die Änderung ergänzt werden
+- Issue-bezogene Arbeit abgeschlossen oder dokumentiert wird
 
 Im Zweifel lieber dokumentieren.
-
-## Arbeitslog-Regeln
-
-`CHANGELOG.log` wird für jeden Arbeitsblock aktualisiert.
-
-Regeln:
-
-- Start- und Endzeit erfassen und die Dauer im Header als `## YYYY-MM-DD - (2,3h)` eintragen.
-- Normale Änderungen als kurze Stichpunkte schreiben, z. B. `- Cleaner erweitert/reduziert Aliase (#51): Details`.
-- Versionssprünge nicht einzeln als eigene Hauptpunkte aufführen.
-- Versionen nur bei Bedarf als letzten Stichpunkt kurz sammeln, z. B. `- Versionen: collectAtags v1.58, exportAtags v1.83, tagCleaner v1.42`.
 
 ## Test-Und Verifikations-Regeln
 
@@ -215,8 +211,7 @@ Vor Abschluss einer Änderung kurz prüfen:
 
 - betroffene Datei-Version erhöht
 - Kurzinfo im Dateikopf ergänzt oder angepasst
-- `CHANGELOG.md` ergänzt
-- `CHANGELOG.log` mit Dauer und Kurz-Zusammenfassung ergänzt
+- `CHANGELOG.md` mit Dauer und Kurz-Zusammenfassung ergänzt
 - Test oder Verifikationshinweis vorhanden
 - README angepasst, wenn sich Nutzung oder unterstützte Formen ändern
 - Usage-/Beispielblöcke in betroffenen Script-Dateien angepasst, wenn Konfigurationsoptionen, Signaturen oder typische Aufrufe geändert wurden

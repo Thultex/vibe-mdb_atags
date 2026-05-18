@@ -97,6 +97,26 @@ assertEquals(
 );
 
 assertEquals(
+  "alias-display-override-long-emoji-prefix",
+  makeTagCleanerTextWithOptions("emo2 Emotion3 feel4\n| emo2", {
+    aliasText: "@@Emotion (emo-, $): feel",
+    cleanerTagText: "long",
+    cleanerEmoji: "prefix"
+  }),
+  "$Emotion\u00B2 $Emotion\u00B3 $Emotion\u2074\n\n| $Emotion\u00B2"
+);
+
+assertEquals(
+  "alias-display-override-short-emoji-suffix",
+  makeTagCleanerTextWithOptions("$\u00B2 Emotion3", {
+    aliasText: "@@Emotion (emo+,$): feel",
+    cleanerTagText: "short",
+    cleanerEmoji: "suffix"
+  }),
+  "emo$\u00B2 emo$\u00B3"
+);
+
+assertEquals(
   "alias-display-default-keep",
   makeTagCleanerTextWithOptions("emo2 Emotion3 feel4", {
     aliasText: "@@Emotion (emo): feel"
@@ -164,6 +184,54 @@ assertEquals(
     aliasText: "@@Emotion (emo-, $): feel"
   }),
   "emo\u00B2 emo\u00B3 emo\u2074"
+);
+
+assertEquals(
+  "alias-display-issue54-default-emoji-only-without-short",
+  makeTagCleanerTextWithOptions("timer\u00B2", {
+    aliasText: "@@timer(,$): timerhilfe"
+  }),
+  "$\u00B2"
+);
+
+assertEquals(
+  "alias-display-issue54-plus-without-short-emoji-to-long",
+  makeTagCleanerTextWithOptions("$\u00B2 timer\u00B3", {
+    aliasText: "@@timer(+,$): timerhilfe"
+  }),
+  "timer\u00B2 timer\u00B3"
+);
+
+assertEquals(
+  "alias-display-issue54-minus-without-short-ignored",
+  makeTagCleanerTextWithOptions("$\u00B2 timer\u00B3", {
+    aliasText: "@@timer(-,$): timerhilfe"
+  }),
+  "$\u00B2 timer\u00B3"
+);
+
+assertEquals(
+  "alias-display-issue54-star-without-short-keeps-all",
+  makeTagCleanerTextWithOptions("$\u00B2 timer\u00B3", {
+    aliasText: "@@timer(*,$): timerhilfe"
+  }),
+  "$\u00B2 timer\u00B3"
+);
+
+assertEquals(
+  "alias-display-issue54-short-plus-emoji-to-long",
+  makeTagCleanerTextWithOptions("tim\u00B2 Timer\u00B3 $\u2074", {
+    aliasText: "@@Timer(tim+,$): timerhilfe"
+  }),
+  "Timer\u00B2 Timer\u00B3 Timer\u2074"
+);
+
+assertEquals(
+  "alias-display-issue54-short-minus-emoji-to-short",
+  makeTagCleanerTextWithOptions("tim\u00B2 Timer\u00B3 $\u2074", {
+    aliasText: "@@Timer(tim-,$): timerhilfe"
+  }),
+  "tim\u00B2 tim\u00B3 tim\u2074"
 );
 
 assertEquals(

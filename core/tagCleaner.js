@@ -1,6 +1,6 @@
 /*
 ========================================
-A4 Tag Cleaner v1.42 (sys 2.30)
+A4 Tag Cleaner v1.44 (sys 2.30)
 ========================================
 
 Notes
@@ -10,6 +10,8 @@ Notes
 - Exclusive tag bars keep body text unchanged.
 - Can display known aliases as long/short names with compact emoji suffixes.
 - Alias headers can control cleaner display with `*`, `-` and `+`.
+- Alias headers can convert emoji/symbol-only tokens back to long/short names.
+- Display options can override alias header defaults, including emoji prefix/suffix.
 - Reads the passive Alias field by default for alias display definitions.
 
 Example: clean the default note field "Notiz" and passively read "Alias"
@@ -30,7 +32,7 @@ applyCleanTags({
 function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
-    version: "1.42",
+    version: "1.44",
     sysVersion: "2.30",
     path: "core/tagCleaner.js"
   };
@@ -235,13 +237,17 @@ function parseTagCleanerAliasList(raw) {
 
 function parseTagCleanerAliasHeader(raw) {
   var parts = parseTagCleanerAliasList(raw || "");
-  var out = { shortName: "", emoji: "", marker: "" };
+  var out = { shortName: "", emoji: "", marker: "", hasShortName: false };
   var i;
   var part;
   var last;
 
   for (i = 0; i < parts.length; i++) {
     part = trimAtagLibString(parts[i]);
+    if (part === "+" || part === "-" || part === "*") {
+      out.marker = part;
+      continue;
+    }
     if (!part) continue;
     last = part.charAt(part.length - 1);
     if (part.length > 1 && (last === "*" || last === "-" || last === "+")) {
@@ -250,6 +256,7 @@ function parseTagCleanerAliasHeader(raw) {
     }
     if (isTagCleanerAliasNameToken(part) && !out.shortName) {
       out.shortName = part;
+      out.hasShortName = true;
     } else if (!out.emoji) {
       out.emoji = part;
     }
@@ -287,7 +294,8 @@ function buildTagCleanerAliasDisplayMap(text) {
       longName: name,
       shortName: header.shortName || name,
       emoji: header.emoji || "",
-      marker: header.marker || ""
+      marker: header.marker || "",
+      hasShortName: header.hasShortName === true
     };
     add(name, info);
     add(info.shortName, info);
@@ -334,7 +342,8 @@ function formatTagCleanerDisplayName(name, displayMap, cfg) {
   if (!info || !tagCleanerDisplayRequested(cfg, displayMap)) return base;
   if (cfg && cfg.cleanerTagText != null) textMode = String(cfg.cleanerTagText).toLowerCase();
   else if (cfg && cfg.tagText != null) textMode = String(cfg.tagText).toLowerCase();
-  else if (info.marker === "-") textMode = "short";
+  else if (info.marker === "-" && info.hasShortName) textMode = "short";
+  else if (info.marker === "-") textMode = "keep";
   else if (info.marker === "+") textMode = "long";
   else if (!info.marker && emoji) textMode = "none";
   else textMode = "keep";
@@ -349,6 +358,7 @@ function formatTagCleanerDisplayName(name, displayMap, cfg) {
   else base = info.longName || base;
 
   if (emojiMode === "only") return emoji || base;
+  if (emojiMode === "prefix" && emoji) return emoji + base;
   if (emojiMode === "suffix" && emoji) return base + emoji;
   return base;
 }
@@ -368,15 +378,42 @@ function applyTagCleanerDisplayToToken(token, displayMap, cfg) {
   return name + suffix;
 }
 
+function applyTagCleanerEmojiDisplayInLine(line, displayMap, cfg) {
+  var s = String(line || "");
+  var out = s;
+  var key;
+  var info;
+  var emoji;
+  var escaped;
+  var rx;
+
+  if (!displayMap || !tagCleanerDisplayRequested(cfg, displayMap)) return s;
+
+  for (key in displayMap) {
+    if (!displayMap.hasOwnProperty(key)) continue;
+    info = displayMap[key];
+    emoji = info && info.emoji ? String(info.emoji) : "";
+    if (!emoji || String(key) !== emoji.toLowerCase()) continue;
+    escaped = emoji.replace(/([\\^$.*+?()[\]{}|])/g, "\\$1");
+    rx = new RegExp("(^|[\\s,;.!(\\)\\[\\]{}])(" + escaped + ")([\\u2070\\u00B9\\u00B2\\u00B3\\u2074\\u2075\\u2076\\u2077\\u2078\\u2079\\u207A\\u207B\\u02E3]*)(?=$|[\\s,;.!(\\)\\[\\]{}])", "g");
+    out = out.replace(rx, function(all, prefix, emojiToken, suffix) {
+      return prefix + formatTagCleanerDisplayName(emojiToken, displayMap, cfg) + (suffix || "");
+    });
+  }
+
+  return out;
+}
+
 function applyTagCleanerDisplayInLine(line, displayMap, cfg) {
   var s = String(line || "");
   if (!displayMap || !tagCleanerDisplayRequested(cfg, displayMap)) return s;
-  return s.replace(
+  s = s.replace(
     /(^|[\s,;.!?()\[\]{}])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B\u02E3]+)(?=$|[\s,;.!?()\[\]{}])/g,
     function(all, prefix, name, suffix) {
       return prefix + formatTagCleanerDisplayName(name, displayMap, cfg) + suffix;
     }
   );
+  return applyTagCleanerEmojiDisplayInLine(s, displayMap, cfg);
 }
 
 function normalizeTagCleanerSuperscriptToken(s) {
