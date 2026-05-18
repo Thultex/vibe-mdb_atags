@@ -253,7 +253,13 @@ assertMissing("quoted-hash-value-inside-text", "10: MetricC1, MetricB1 geringer,
 assertMissing("quoted-colon-inside-text", "'tag: 5'", "tag");
 assertItem("quoted-text-outside-row", "10: MetricC1, MetricB1 geringer, MetricD1, ' das hier# sollte aber nicht#23 drin sein'", "MetricC", "+1", 1, 10, null);
 assertItem("alias-short", "@@SymptomA (sa): SymptomA, SymAlias\nsa2", "SymptomA", "+2", 2, null, null);
+assertItem("alias-short-display-marker-minus-is-not-part-of-name", "@@Emotion (emo-): feel\nemo2", "Emotion", "+2", 2, null, null);
+assertItem("alias-short-display-marker-plus-is-not-part-of-name", "@@Emotion (emo+): feel\nemo2", "Emotion", "+2", 2, null, null);
+assertItem("alias-short-display-marker-star-is-not-part-of-name", "@@Emotion (emo*): feel\nemo2", "Emotion", "+2", 2, null, null);
 assertDisplayName("alias-short-display", "@@SymptomA (sa): SymptomA, SymAlias\nSymptomA2", "SymptomA", "sa");
+assertItem("alias-emoji-superscript", "@@Emotion (emo, $): feel\n$\u00B2", "Emotion", "+2", 2, null, null);
+assertItem("alias-emoji-tagbar-superscript", "@@Emotion (emo, $): feel\n| $\u00B2", "Emotion", "+2", 2, null, null);
+assertItem("alias-short-emoji-suffix-superscript", "@@Emotion (emo, $): feel\nemo$\u00B2", "Emotion", "+2", 2, null, null);
 assertItemsWithOptions(
   "alias-duplicate-default-multi-targets",
   "@@Pos: x\n@@Neg: -x\nx2",

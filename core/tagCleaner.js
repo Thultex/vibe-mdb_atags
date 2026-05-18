@@ -1,6 +1,6 @@
 /*
 ========================================
-A4 Tag Cleaner v1.38 (sys 2.30)
+A4 Tag Cleaner v1.40 (sys 2.30)
 ========================================
 
 Notes
@@ -8,6 +8,8 @@ Notes
 - Details live in README.md and CHANGELOG.md.
 - Supports cumulative +/-, 00/null and zero-decimal tag forms.
 - Exclusive tag bars keep body text unchanged.
+- Can display known aliases as long/short names with compact emoji suffixes.
+- Alias headers can control cleaner display with `*`, `-` and `+`.
 
 Example: clean the default note field "Notiz"
 applyCleanTags();
@@ -26,7 +28,7 @@ applyCleanTags({
 function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
-    version: "1.38",
+    version: "1.40",
     sysVersion: "2.30",
     path: "core/tagCleaner.js"
   };
@@ -212,6 +214,167 @@ function tagCleanerTagSuffix() {
 
 function tagCleanerSuperscriptChars() {
   return "\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B" + tagCleanerTagSuffix();
+}
+
+function isTagCleanerAliasNameToken(raw) {
+  return /^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*$/.test(String(raw || ""));
+}
+
+function parseTagCleanerAliasList(raw) {
+  var s = String(raw || "");
+  if (
+    (s.charAt(0) === '"' && s.charAt(s.length - 1) === '"') ||
+    (s.charAt(0) === "'" && s.charAt(s.length - 1) === "'")
+  ) {
+    s = s.substring(1, s.length - 1);
+  }
+  return s.split(",");
+}
+
+function parseTagCleanerAliasHeader(raw) {
+  var parts = parseTagCleanerAliasList(raw || "");
+  var out = { shortName: "", emoji: "", marker: "" };
+  var i;
+  var part;
+  var last;
+
+  for (i = 0; i < parts.length; i++) {
+    part = trimAtagLibString(parts[i]);
+    if (!part) continue;
+    last = part.charAt(part.length - 1);
+    if (part.length > 1 && (last === "*" || last === "-" || last === "+")) {
+      out.marker = last;
+      part = part.substring(0, part.length - 1);
+    }
+    if (isTagCleanerAliasNameToken(part) && !out.shortName) {
+      out.shortName = part;
+    } else if (!out.emoji) {
+      out.emoji = part;
+    }
+  }
+
+  return out;
+}
+
+function buildTagCleanerAliasDisplayMap(text) {
+  var map = {};
+  var lines = splitTagCleanerLines(text);
+  var i;
+  var line;
+  var m;
+  var name;
+  var header;
+  var aliases;
+  var j;
+  var alias;
+
+  function add(token, info) {
+    var key = String(token || "").toLowerCase();
+    if (key) map[key] = info;
+  }
+
+  for (i = 0; i < lines.length; i++) {
+    line = trimAtagLibString(lines[i]);
+    if (/^@@@/.test(line)) continue;
+    m = line.match(/^@@\s*([^\[(:(]+?)(?:\s*\(\s*([^)]+)\s*\))?(?:\s*\[[^\]]+\])?(?::\s*(.*))?$/);
+    if (!m) continue;
+    name = trimAtagLibString(m[1]).replace(/\s+/g, "_").replace(/^_+|_+$/g, "");
+    if (!name) continue;
+    header = parseTagCleanerAliasHeader(m[2] || "");
+    var info = {
+      longName: name,
+      shortName: header.shortName || name,
+      emoji: header.emoji || "",
+      marker: header.marker || ""
+    };
+    add(name, info);
+    add(info.shortName, info);
+    if (info.emoji) add(info.emoji, info);
+    aliases = parseTagCleanerAliasList(m[3] || "");
+    for (j = 0; j < aliases.length; j++) {
+      alias = trimAtagLibString(aliases[j]);
+      if (!alias) continue;
+      if (alias.charAt(0) === "-") alias = alias.substring(1);
+      alias = alias.replace(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*?)([+\-]?\d+(?:[.,]\d+)?|\++|-+)$/, "$1");
+      if (isTagCleanerAliasNameToken(alias)) add(alias, info);
+    }
+  }
+
+  return map;
+}
+
+function tagCleanerDisplayRequested(cfg, displayMap) {
+  var key;
+  if (cfg && (
+    cfg.cleanerTagText != null ||
+    cfg.tagText != null ||
+    cfg.cleanerEmoji != null ||
+    cfg.tagEmoji != null
+  )) return true;
+
+  for (key in (displayMap || {})) {
+    if (!displayMap.hasOwnProperty(key)) continue;
+    if (displayMap[key] && displayMap[key].marker && displayMap[key].marker !== "*") return true;
+    if (displayMap[key] && displayMap[key].emoji && !displayMap[key].marker) return true;
+  }
+
+  return false;
+}
+
+function formatTagCleanerDisplayName(name, displayMap, cfg) {
+  var key = String(name || "").toLowerCase();
+  var info = displayMap ? displayMap[key] : null;
+  var textMode = "long";
+  var emojiMode = "none";
+  var base = String(name || "");
+  var emoji = info && info.emoji ? String(info.emoji) : "";
+
+  if (!info || !tagCleanerDisplayRequested(cfg, displayMap)) return base;
+  if (cfg && cfg.cleanerTagText != null) textMode = String(cfg.cleanerTagText).toLowerCase();
+  else if (cfg && cfg.tagText != null) textMode = String(cfg.tagText).toLowerCase();
+  else if (info.marker === "-") textMode = "short";
+  else if (info.marker === "+") textMode = "long";
+  else if (!info.marker && emoji) textMode = "none";
+  else textMode = "keep";
+
+  if (cfg && cfg.cleanerEmoji != null) emojiMode = String(cfg.cleanerEmoji).toLowerCase();
+  else if (cfg && cfg.tagEmoji != null) emojiMode = String(cfg.tagEmoji).toLowerCase();
+  else if (!info.marker && emoji) emojiMode = "only";
+
+  if (textMode === "keep") return base;
+  if (textMode === "short") base = info.shortName || info.longName || base;
+  else if (textMode === "none") base = "";
+  else base = info.longName || base;
+
+  if (emojiMode === "only") return emoji || base;
+  if (emojiMode === "suffix" && emoji) return base + emoji;
+  return base;
+}
+
+function applyTagCleanerDisplayToToken(token, displayMap, cfg) {
+  var s = String(token || "");
+  var m;
+  var name;
+  var suffix;
+
+  if (!displayMap || !tagCleanerDisplayRequested(cfg, displayMap)) return s;
+  m = s.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B\u02E3]*)$/);
+  if (!m) return s;
+  name = formatTagCleanerDisplayName(m[1], displayMap, cfg);
+  suffix = m[2] || "";
+  if (!name) return suffix;
+  return name + suffix;
+}
+
+function applyTagCleanerDisplayInLine(line, displayMap, cfg) {
+  var s = String(line || "");
+  if (!displayMap || !tagCleanerDisplayRequested(cfg, displayMap)) return s;
+  return s.replace(
+    /(^|[\s,;.!?()\[\]{}])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B\u02E3]+)(?=$|[\s,;.!?()\[\]{}])/g,
+    function(all, prefix, name, suffix) {
+      return prefix + formatTagCleanerDisplayName(name, displayMap, cfg) + suffix;
+    }
+  );
 }
 
 function normalizeTagCleanerSuperscriptToken(s) {
@@ -604,7 +767,7 @@ function normalizeTagCleanerDoubleColonSpacingInLine(line) {
   return out.join("");
 }
 
-function cleanTagCleanerInlineLine(line, positiveSignMode) {
+function cleanTagCleanerInlineLine(line, positiveSignMode, displayMap, cfg) {
   var s = String(line || "");
   s = normalizeTagCleanerIssue50SuffixesInLine(s, positiveSignMode);
   s = cleanTagCleanerSimpleHashTagsInLine(s);
@@ -665,7 +828,11 @@ function cleanTagCleanerInlineLine(line, positiveSignMode) {
   }
 
   out.push(s.substring(last));
-  return normalizeStandaloneTagCleanerSuperscriptsInLine(normalizeTagCleanerDoubleColonSpacingInLine(out.join("")));
+  return applyTagCleanerDisplayInLine(
+    normalizeStandaloneTagCleanerSuperscriptsInLine(normalizeTagCleanerDoubleColonSpacingInLine(out.join(""))),
+    displayMap,
+    cfg
+  );
 }
 
 function makeTagCleanerText(text) {
@@ -698,9 +865,11 @@ function makeTagCleanerTextWithOptions(sourceText, cfg) {
   var hasTagBarLine = false;
   var tagBar;
   var marked;
+  var displayMap = buildTagCleanerAliasDisplayMap(cfg.aliasText || "");
 
   function addBarToken(raw) {
     cleaned = cleanTagCleanerToken(raw, true, positiveSignMode);
+    cleaned = applyTagCleanerDisplayToToken(cleaned, displayMap, cfg);
     if (!cleaned) return;
     token = cleaned.toLowerCase();
     if (seen[token]) return;
@@ -752,7 +921,7 @@ function makeTagCleanerTextWithOptions(sourceText, cfg) {
     } else {
       marked = extractTagCleanerMarkedTagsFromLine(line);
       for (j = 0; j < marked.tags.length; j++) addBarToken(marked.tags[j]);
-      body.push(cleanTagCleanerInlineLine(marked.text, positiveSignMode));
+      body.push(cleanTagCleanerInlineLine(marked.text, positiveSignMode, displayMap, cfg));
     }
   }
 
@@ -790,8 +959,21 @@ function applyTagCleaner(cfg) {
   var targetField = cfg.targetTextField || sourceField;
   var sourceText;
   var out;
+  var aliasParts;
+  var aliasFields;
+  var i;
 
   if (!entryObj || !sourceField || !targetField) return "";
+
+  if (cfg.aliasText == null && cfg.aliasTextFields) {
+    aliasParts = [];
+    aliasFields = Object.prototype.toString.call(cfg.aliasTextFields) === "[object Array]" ? cfg.aliasTextFields : [cfg.aliasTextFields];
+    for (i = 0; i < aliasFields.length; i++) {
+      if (!aliasFields[i]) continue;
+      aliasParts.push(entryObj.field(aliasFields[i]) == null ? "" : String(entryObj.field(aliasFields[i])));
+    }
+    cfg.aliasText = aliasParts.join("\n");
+  }
 
   sourceText = entryObj.field(sourceField);
   out = makeTagCleanerTextWithOptions(sourceText == null ? "" : String(sourceText), cfg);

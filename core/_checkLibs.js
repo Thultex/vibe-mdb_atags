@@ -9,8 +9,8 @@ Notes
 - Each lib can still expose its own get...Version function.
 - Current libs:
   - helpers_lib v2.11 (sys 2.30)
-  - collectAtags_lib v1.55 (sys 2.30)
-  - exportAtags_lib v1.82 (sys 2.30)
+  - collectAtags_lib v1.58 (sys 2.30)
+  - exportAtags_lib v1.83 (sys 2.30)
 
 Example
 var libCheck = checkAtagLibVersions({
@@ -38,8 +38,8 @@ function getLibVersionsVersion() {
 
 var ATAG_EXPECTED_LIBS = [
   { name: "helpers_lib", version: "2.11", getter: "getHelpersLibVersion", path: "core_lib/helpers_lib.js" },
-  { name: "collectAtags_lib", version: "1.55", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
-  { name: "exportAtags_lib", version: "1.82", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" }
+  { name: "collectAtags_lib", version: "1.58", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
+  { name: "exportAtags_lib", version: "1.83", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" }
 ];
 
 function getExpectedAtagLibNames() {

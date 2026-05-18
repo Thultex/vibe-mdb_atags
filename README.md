@@ -343,6 +343,10 @@ Optionen:
 - `formatValues: "min"` lässt `+` bei positiven Zahlen weg
 - `formatValues: "max"` erzwingt `+` bei positiven Zahlen
 - `formatValues: "none"` lässt Werttags unverändert
+- `aliasText` oder `aliasTextFields` liefert Aliasdefinitionen fuer Anzeigenamen, z. B. `@@Emotion (emo, 😃): Gefuehl`
+- `cleanerTagText: "long" | "short" | "none"` waehlt Langname, Kurzname oder nur Symbol fuer bekannte Alias-Tags
+- `cleanerEmoji: "none" | "suffix" | "only"` haengt ein Emoji ohne Leerzeichen an oder nutzt es exklusiv, z. B. `emo😃²` oder `😃²`
+- Alias-Header koennen die Cleaner-Schreibweise selbst steuern: `emo*` bleibt wie eingegeben, `emo-` schreibt kurz, `emo+` schreibt lang; `emo` mit Emoji schreibt standardmaessig Emoji-only
 - `||`, `|"` und `|'` werden beim Cleanen als exklusive Tagleiste zu `"|` normalisiert
 - Eine einzelne leere `|`-Zeile wird standardmaessig ebenfalls zu `"|`; mit `singleBarExclusive: false` bleibt sie normale leere Tagleiste
 

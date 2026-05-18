@@ -1,6 +1,6 @@
 /*
 ========================================
-#1 collectAtags Lib v1.55 (sys 2.30)
+#1 collectAtags Lib v1.58 (sys 2.30)
 ========================================
 
 Changes
@@ -34,6 +34,9 @@ Changes
 - keep parser behavior close to the old version
 - explicit tags only for simple tag detection
 - alias replacement only in real tag contexts
+- category aliases can carry a trailing +/- sign, e.g. `@@@emo-: -aua`
+- alias headers can declare an emoji alias after the short name, e.g. `@@Emotion (emo, :)`
+- alias header display markers `*`, `-` and `+` are ignored for parsing short aliases
 - inverse aliases supported for numeric values
 - decimal values still supported
 - row system stays active
@@ -43,14 +46,14 @@ Changes
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.55",
+    version: "1.58",
     sysVersion: "2.30",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.55", "2.30", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.58", "2.30", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");
@@ -331,6 +334,47 @@ function collectAtags(cfg) {
     return out;
   }
 
+  function normalizeCategoryAliasName(rawName) {
+    var s = trimAtagString(rawName);
+    var sign = 1;
+
+    if (s.length > 1 && (s.charAt(s.length - 1) === "-" || s.charAt(s.length - 1) === "+")) {
+      sign = s.charAt(s.length - 1) === "-" ? -1 : 1;
+      s = s.substring(0, s.length - 1);
+    }
+
+    return {
+      name: normalizeTagName(s),
+      sign: sign
+    };
+  }
+
+  function isAtagAliasNameToken(raw) {
+    return /^[A-Za-zÃ„Ã–ÃœÃ¤Ã¶Ã¼ÃŸ_][A-Za-zÃ„Ã–ÃœÃ¤Ã¶Ã¼ÃŸ0-9_\-]*$/.test(String(raw || ""));
+  }
+
+  function parseAliasHeaderInfo(raw) {
+    var parts = splitAliasList(raw || "");
+    var out = { shortName: "", emoji: "" };
+    var i;
+    var part;
+
+    for (i = 0; i < parts.length; i++) {
+      part = trimAtagString(parts[i]);
+      if (!part) continue;
+      if (part.length > 1 && (part.charAt(part.length - 1) === "*" || part.charAt(part.length - 1) === "-" || part.charAt(part.length - 1) === "+")) {
+        part = part.substring(0, part.length - 1);
+      }
+      if (isAtagAliasNameToken(part) && !out.shortName) {
+        out.shortName = normalizeTagName(part);
+      } else if (!out.emoji) {
+        out.emoji = part;
+      }
+    }
+
+    return out;
+  }
+
   function buildAliasMapLegacy(text) {
     var map = {};
     var lines = String(text || "").split(/\r?\n/);
@@ -407,9 +451,11 @@ function collectAtags(cfg) {
 
       catAliasMatch = line.match(/^@@@\s*([^(:]+?)(?:\s*\(\s*([^)]+)\s*\))?(?:\s*:\s*(.*))?$/);
       if (catAliasMatch) {
+        var catAliasName = normalizeCategoryAliasName(catAliasMatch[1]);
         categoryAliasDefs.push({
-          name: normalizeTagName(catAliasMatch[1]),
-          shortName: normalizeTagName(catAliasMatch[2] || ""),
+          name: catAliasName.name,
+          sign: catAliasName.sign,
+          shortName: parseAliasHeaderInfo(catAliasMatch[2] || "").shortName,
           children: normalizeCategoryChildList(catAliasMatch[3] || "")
         });
         continue;
@@ -425,7 +471,9 @@ function collectAtags(cfg) {
       if (!m) continue;
 
       var baseName = normalizeTagName(m[1]);
-      var shortName = normalizeTagName(m[2] || "");
+      var aliasHeaderInfo = parseAliasHeaderInfo(m[2] || "");
+      var shortName = aliasHeaderInfo.shortName;
+      var emojiAlias = aliasHeaderInfo.emoji;
       var categories = normalizeCategoryList(m[3] || "");
       if (!baseName) continue;
       if (isExcluded(baseName)) continue;
@@ -434,6 +482,7 @@ function collectAtags(cfg) {
       registerAlias(baseName.toLowerCase(), {
         name: baseName,
         shortName: shortName || baseName,
+        emoji: emojiAlias,
         invert: false,
         fixedRaw: null,
         cats: categories
@@ -443,6 +492,18 @@ function collectAtags(cfg) {
         registerAlias(shortName.toLowerCase(), {
           name: baseName,
           shortName: shortName,
+          emoji: emojiAlias,
+          invert: false,
+          fixedRaw: null,
+          cats: categories
+        });
+      }
+
+      if (emojiAlias) {
+        registerAlias(emojiAlias.toLowerCase(), {
+          name: baseName,
+          shortName: shortName || baseName,
+          emoji: emojiAlias,
           invert: false,
           fixedRaw: null,
           cats: categories
@@ -477,6 +538,7 @@ function collectAtags(cfg) {
         registerAlias(alias.toLowerCase(), {
           name: baseName,
           shortName: shortName || baseName,
+          emoji: emojiAlias,
           invert: invert,
           fixedRaw: fixedRaw,
           cats: categories
@@ -488,6 +550,7 @@ function collectAtags(cfg) {
       addCategoryAlias(
         map,
         categoryAliasDefs[i].name,
+        categoryAliasDefs[i].sign,
         categoryAliasDefs[i].shortName,
         categoryAliasDefs[i].children
       );
@@ -529,7 +592,7 @@ function collectAtags(cfg) {
     }
   }
 
-  function addCategoryAlias(aliasMap, catName, shortName, children) {
+  function addCategoryAlias(aliasMap, catName, categorySign, shortName, children) {
     var key;
     var bucket;
     var i;
@@ -547,12 +610,14 @@ function collectAtags(cfg) {
       aliasMap._categories[key] = {
         name: catName,
         shortName: shortName || catName,
+        categorySign: categorySign === -1 ? -1 : 1,
         names: [],
         seen: {},
         childSigns: {}
       };
     } else {
       aliasMap._categories[key].shortName = shortName || aliasMap._categories[key].shortName || catName;
+      aliasMap._categories[key].categorySign = categorySign === -1 ? -1 : (aliasMap._categories[key].categorySign || 1);
       if (!aliasMap._categories[key].childSigns) aliasMap._categories[key].childSigns = {};
     }
 
@@ -683,6 +748,29 @@ function collectAtags(cfg) {
     addResolvedTagValue(cleanName, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw, true);
   }
 
+  function resolveAtagEmojiDisplayToken(token, aliasMap) {
+    var s = String(token || "");
+    var key;
+    var info;
+    var emoji;
+    var base;
+    var baseInfo;
+
+    for (key in aliasMap) {
+      if (!aliasMap.hasOwnProperty(key)) continue;
+      info = aliasMap[key];
+      emoji = info && info.emoji ? String(info.emoji) : "";
+      if (!emoji) continue;
+      if (s === emoji) return emoji;
+      if (s.length <= emoji.length || s.substring(s.length - emoji.length) !== emoji) continue;
+      base = s.substring(0, s.length - emoji.length);
+      baseInfo = aliasMap[String(base).toLowerCase()];
+      if (baseInfo && baseInfo.name === info.name) return base;
+    }
+
+    return null;
+  }
+
   function addReadableTagLineItems(tagText, items, seen, aliasMap, rowValue, rowUnit, rowRaw) {
     var s = String(tagText || "");
     var used = [];
@@ -704,12 +792,61 @@ function collectAtags(cfg) {
       return false;
     }
 
+    function normalizeEmojiDisplayTagName(rawName) {
+      var s = normalizeTagName(rawName);
+      var key;
+      var info;
+      var emoji;
+      var base;
+      var baseInfo;
+
+      for (key in aliasMap) {
+        if (!aliasMap.hasOwnProperty(key)) continue;
+        info = aliasMap[key];
+        emoji = info && info.emoji ? String(info.emoji) : "";
+        if (!emoji) continue;
+        if (s === emoji) return emoji;
+        if (s.length <= emoji.length || s.substring(s.length - emoji.length) !== emoji) continue;
+        base = s.substring(0, s.length - emoji.length);
+        baseInfo = aliasMap[String(base).toLowerCase()];
+        if (baseInfo && baseInfo.name === info.name) return base;
+      }
+
+      return s;
+    }
+
     while ((m = rxColon.exec(s)) !== null) {
-      name = normalizeTagName(m[2] || "");
+      name = normalizeEmojiDisplayTagName(m[2] || "");
       raw = m[3] != null && m[3] !== "" ? m[3] : (m[4] || "");
       addReadableTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw);
       mark(m.index, m.index + String(m[0]).length);
       if (m[0] === "") rxColon.lastIndex++;
+    }
+
+    var rxEmoji = /(^|[\s,;.!\(\)\[\]{}]+)([^\s,;.!\(\)\[\]{}]+)/g;
+    while ((m = rxEmoji.exec(s)) !== null) {
+      var token = m[2] || "";
+      var emojiKey;
+      var emojiInfo;
+      var emoji;
+      var suffix;
+      var start = m.index + String(m[1] || "").length;
+      if (isUsed(start)) {
+        if (m[0] === "") rxEmoji.lastIndex++;
+        continue;
+      }
+      for (emojiKey in aliasMap) {
+        if (!aliasMap.hasOwnProperty(emojiKey)) continue;
+        emojiInfo = aliasMap[emojiKey];
+        emoji = emojiInfo && emojiInfo.emoji ? String(emojiInfo.emoji) : "";
+        if (!emoji || token.indexOf(emoji) !== 0) continue;
+        suffix = token.substring(emoji.length);
+        if (suffix && !/^[\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B\u207F]+$/.test(suffix)) continue;
+        addReadableTagValue(emoji, suffix ? decodeReadableSuperscript(suffix) : "", items, seen, aliasMap, rowValue, rowUnit, rowRaw);
+        mark(start, start + token.length);
+        break;
+      }
+      if (m[0] === "") rxEmoji.lastIndex++;
     }
 
     while ((m = rxSuper.exec(s)) !== null) {
@@ -718,7 +855,7 @@ function collectAtags(cfg) {
         continue;
       }
 
-      name = normalizeTagName(m[1] || "");
+      name = normalizeEmojiDisplayTagName(m[1] || "");
       raw = decodeReadableSuperscript(m[2] || "");
       addReadableTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw);
       mark(m.index, m.index + String(m[0]).length);
@@ -732,10 +869,36 @@ function collectAtags(cfg) {
         continue;
       }
 
-      name = normalizeTagName(m[2] || "");
+      name = normalizeEmojiDisplayTagName(m[2] || "");
       addReadableTagValue(name, "", items, seen, aliasMap, rowValue, rowUnit, rowRaw);
       mark(m.index, m.index + String(m[0]).length);
       if (m[0] === "") rxCleanerSimple.lastIndex++;
+    }
+
+    rxEmoji = /(^|[\s,;.!\(\)\[\]{}]+)([^\s,;.!\(\)\[\]{}]+)/g;
+    while ((m = rxEmoji.exec(s)) !== null) {
+      var token = m[2] || "";
+      var emojiKey;
+      var emojiInfo;
+      var emoji;
+      var suffix;
+      var start = m.index + String(m[1] || "").length;
+      if (isUsed(start)) {
+        if (m[0] === "") rxEmoji.lastIndex++;
+        continue;
+      }
+      for (emojiKey in aliasMap) {
+        if (!aliasMap.hasOwnProperty(emojiKey)) continue;
+        emojiInfo = aliasMap[emojiKey];
+        emoji = emojiInfo && emojiInfo.emoji ? String(emojiInfo.emoji) : "";
+        if (!emoji || token.indexOf(emoji) !== 0) continue;
+        suffix = token.substring(emoji.length);
+        if (suffix && !/^[\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B\u207F]+$/.test(suffix)) continue;
+        addReadableTagValue(emoji, suffix ? decodeReadableSuperscript(suffix) : "", items, seen, aliasMap, rowValue, rowUnit, rowRaw);
+        mark(start, start + token.length);
+        break;
+      }
+      if (m[0] === "") rxEmoji.lastIndex++;
     }
 
     var rxBare = /(^|[\s,]+)([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)(?=$|[\s,]+)/g;
@@ -745,7 +908,7 @@ function collectAtags(cfg) {
         continue;
       }
 
-      name = normalizeTagName(m[2] || "");
+      name = normalizeEmojiDisplayTagName(m[2] || "");
       addReadableTagValue(name, "", items, seen, aliasMap, rowValue, rowUnit, rowRaw);
       if (m[0] === "") rxBare.lastIndex++;
     }
@@ -813,6 +976,7 @@ function collectAtags(cfg) {
       map[key] = {
         name: defined[key].name,
         shortName: defined[key].shortName || defined[key].name,
+        categorySign: defined[key].categorySign === -1 ? -1 : 1,
         names: [],
         seen: {},
         childSigns: {}
@@ -881,6 +1045,7 @@ function collectAtags(cfg) {
       false,
       map[key].childSigns
     );
+      if (items.length && map[key].categorySign === -1) items[items.length - 1].categorySign = -1;
   }
   }
 
@@ -1085,6 +1250,24 @@ function collectAtags(cfg) {
       }
 
       // name + superscript value: emo² / tag⁻⁰³ / stuff⁺⁺
+      var rxEmojiSupNum = /(^|[\s,;.!\(\)\[\]{}])([^\s,;.!\(\)\[\]{}]+?)([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B\u207F]+)(?=$|[\s,;.!\(\)\[\]{}])/g;
+      var mesup;
+      while ((mesup = rxEmojiSupNum.exec(parseLine)) !== null) {
+        var nameEmojiSup = resolveAtagEmojiDisplayToken(mesup[2] || "", aliasMap);
+        var rawEmojiSup = decodeReadableSuperscript(mesup[3] || "");
+
+        if (!nameEmojiSup) continue;
+        if (isInsideAtagQuoteState(quoteState, mesup.index)) continue;
+
+        addResolvedTagValue(
+          nameEmojiSup,
+          rawEmojiSup,
+          items, seen, aliasMap,
+          currentRowValue, currentRowUnit, currentRowRaw,
+          false
+        );
+      }
+
       var rxSupNum = /(^|[\s,;.!?()\[\]{}])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B\u207F]+)(?=$|[\s,;.!?()\[\]{}])/g;
       var msup;
       while ((msup = rxSupNum.exec(parseLine)) !== null) {

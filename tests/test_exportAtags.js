@@ -214,6 +214,21 @@ assertEqual(
   "\u2514\u2500\u2500 \u208BSymptomA -2"
 );
 
+entryObj = makeEntry({ Note: "@@@emo-: -aua\naua+2" });
+applyTags({
+  entryObj: entryObj,
+  textFields: ["Note"],
+  targetField: "Tree",
+  targetFieldType: "tree_md",
+  categoryAggregateMode: "max_abs"
+});
+assertEqual(
+  "tree-category-trailing-minus-flips-after-aggregate",
+  entryObj.field("Tree"),
+  "emo 2  \n" +
+  "\u2514\u2500\u2500 \u208Baua -2"
+);
+
 entryObj = makeEntry({ Note: "@@SymptomA (SA):  sa\n@@@Body: -SymptomA\nsa2" });
 applyTags({
   entryObj: entryObj,

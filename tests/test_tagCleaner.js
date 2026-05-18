@@ -77,6 +77,74 @@ assertEquals(
 );
 
 assertEquals(
+  "alias-display-short-emoji-suffix",
+  makeTagCleanerTextWithOptions("emo2 Emotion3 feel4\n| emo2", {
+    aliasText: "@@Emotion (emo, $): feel",
+    cleanerTagText: "short",
+    cleanerEmoji: "suffix"
+  }),
+  "emo$\u00B2 emo$\u00B3 emo$\u2074\n\n| emo$\u00B2"
+);
+
+assertEquals(
+  "alias-display-emoji-only",
+  makeTagCleanerTextWithOptions("emo2", {
+    aliasText: "@@Emotion (emo, $): feel",
+    cleanerTagText: "none",
+    cleanerEmoji: "only"
+  }),
+  "$\u00B2"
+);
+
+assertEquals(
+  "alias-display-default-keep",
+  makeTagCleanerTextWithOptions("emo2 Emotion3 feel4", {
+    aliasText: "@@Emotion (emo): feel"
+  }),
+  "emo\u00B2 Emotion\u00B3 feel\u2074"
+);
+
+assertEquals(
+  "alias-display-header-short",
+  makeTagCleanerTextWithOptions("emo2 Emotion3 feel4\n| Emotion3", {
+    aliasText: "@@Emotion (emo-): feel"
+  }),
+  "emo\u00B2 emo\u00B3 emo\u2074\n\n| emo\u00B3"
+);
+
+assertEquals(
+  "alias-display-header-long",
+  makeTagCleanerTextWithOptions("emo2 Emotion3 feel4", {
+    aliasText: "@@Emotion (emo+): feel"
+  }),
+  "Emotion\u00B2 Emotion\u00B3 Emotion\u2074"
+);
+
+assertEquals(
+  "alias-display-header-emoji-keep",
+  makeTagCleanerTextWithOptions("emo2 Emotion3 feel4", {
+    aliasText: "@@Emotion (emo*, $): feel"
+  }),
+  "emo\u00B2 Emotion\u00B3 feel\u2074"
+);
+
+assertEquals(
+  "alias-display-header-emoji-only",
+  makeTagCleanerTextWithOptions("emo2 Emotion3 feel4", {
+    aliasText: "@@Emotion (emo, $): feel"
+  }),
+  "$\u00B2 $\u00B3 $\u2074"
+);
+
+assertEquals(
+  "alias-display-header-short-with-emoji",
+  makeTagCleanerTextWithOptions("emo2 Emotion3 feel4", {
+    aliasText: "@@Emotion (emo-, $): feel"
+  }),
+  "emo\u00B2 emo\u00B3 emo\u2074"
+);
+
+assertEquals(
   "tagbar-merge",
   makeTagCleanerText("Text\n|| tag3 info#\"das ist info\"\n| info2\n| stress activityc emo3"),
   "Text\n\n\"| emo\u00B3 info\u00B2 tag\u00B3, info:\"das ist info\", activityc\u02E3 stress\u02E3"

@@ -1,6 +1,6 @@
 /*
 ========================================
-#2 exportAtags Lib v1.82 (sys 2.30)
+#2 exportAtags Lib v1.83 (sys 2.30)
 ========================================
 
 Notes:
@@ -25,6 +25,7 @@ Notes:
 - rows_md and rows_html share row table view construction
 - rows_html renders table rows through a shared helper
 - repeated string values aggregate with first, last, or join
+- category aliases with trailing +/- apply that sign after child aggregation
 - cumulative +/- values force sum aggregation in row exports
 - Keep this header ASCII-only for the Memento editor
 
@@ -73,14 +74,14 @@ applyTags({
 function getExportAtagsLibVersion() {
   return {
     name: "exportAtags_lib",
-    version: "1.82",
+    version: "1.83",
     sysVersion: "2.30",
     path: "core_lib/exportAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("exportAtags_lib", "1.82", "2.30", "core_lib/exportAtags_lib.js");
+  registerAtagLibVersion("exportAtags_lib", "1.83", "2.30", "core_lib/exportAtags_lib.js");
 }
 function atagCategoryAggregateMode(cfg, context) {
   if (cfg && cfg.categoryAggregateMode !== undefined) return cfg.categoryAggregateMode;
@@ -282,6 +283,7 @@ function formatAtagCategorySummary(item, items, cfg, context, valueIndex) {
   if (nums.length) {
     agg = computeAggregate(nums, mode);
     if (agg != null) {
+      if (item && item.categorySign === -1) agg = -agg;
       var text = formatTagNumberLocale(agg, decimals, forceDecimal);
       if (displayMode === "count") text += atagCategoryDetailPrefix(displayMode, context) + names.length + "]";
       else if (displayMode === "names") text += atagCategoryDetailPrefix(displayMode, context) + names.join(", ") + "]";
