@@ -1,11 +1,12 @@
 # Pflege Und Versionierung
 
-Dieses Repo nutzt zwei Ebenen von Versionsinfo:
+Dieses Repo nutzt drei Ebenen von Versionsinfo:
 
 - Dateiversion im Kopf einer Script-Datei
 - Verlaufseintrag in `CHANGELOG.md`
+- Arbeitslog-Eintrag in `CHANGELOG.log`
 
-Eine funktionale Änderung ist erst sauber dokumentiert, wenn beide Stellen gepflegt wurden.
+Eine funktionale Änderung ist erst sauber dokumentiert, wenn alle passenden Stellen gepflegt wurden.
 
 Die Repo-Struktur ist in Bereiche gegliedert:
 
@@ -151,6 +152,7 @@ Beispiele:
 ## Changelog-Regeln
 
 `CHANGELOG.md` ist der Repo-Verlauf.
+`CHANGELOG.log` ist das fortlaufende Arbeitslog und wird bei jeder Code-, Test-, Doku- oder Issue-bezogenen Änderung gepflegt.
 
 Für jede funktionale Änderung:
 
@@ -181,6 +183,17 @@ Changelog pflegen bei:
 
 Im Zweifel lieber dokumentieren.
 
+## Arbeitslog-Regeln
+
+`CHANGELOG.log` wird für jeden Arbeitsblock aktualisiert.
+
+Regeln:
+
+- Start- und Endzeit erfassen und die Dauer im Header als `## YYYY-MM-DD - (2,3h)` eintragen.
+- Normale Änderungen als kurze Stichpunkte schreiben, z. B. `- Cleaner erweitert/reduziert Aliase (#51): Details`.
+- Versionssprünge nicht einzeln als eigene Hauptpunkte aufführen.
+- Versionen nur bei Bedarf als letzten Stichpunkt kurz sammeln, z. B. `- Versionen: collectAtags v1.58, exportAtags v1.83, tagCleaner v1.42`.
+
 ## Test-Und Verifikations-Regeln
 
 Tests und Verifikation sollen zur Groesse und zum Risiko der Aenderung passen.
@@ -203,6 +216,7 @@ Vor Abschluss einer Änderung kurz prüfen:
 - betroffene Datei-Version erhöht
 - Kurzinfo im Dateikopf ergänzt oder angepasst
 - `CHANGELOG.md` ergänzt
+- `CHANGELOG.log` mit Dauer und Kurz-Zusammenfassung ergänzt
 - Test oder Verifikationshinweis vorhanden
 - README angepasst, wenn sich Nutzung oder unterstützte Formen ändern
 - Usage-/Beispielblöcke in betroffenen Script-Dateien angepasst, wenn Konfigurationsoptionen, Signaturen oder typische Aufrufe geändert wurden
