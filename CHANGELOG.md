@@ -21,11 +21,13 @@
 
 - `collectAtags` auf `v1.58` angehoben
 - `exportAtags` auf `v1.83` angehoben
-- `tagCleaner` auf `v1.40` angehoben
+- `tagCleaner` auf `v1.42` angehoben
 - Feature: Issue #52 - normale Aliase koennen ein Emoji nach dem Kurznamen deklarieren, z. B. `@@Emotion (emo, 😃): Gefuehl`
 - Feature: Der Parser erkennt Emoji-Aliase mit Superscript-Werten, z. B. `😃²`
 - Feature: Der Cleaner kann bekannte Alias-Tags kompakt als Kurz-/Langname plus Emoji-Suffix oder Emoji-only ausgeben, ohne Leerzeichen vor dem Emoji
 - Feature: Issue #51 - Alias-Header steuern die Cleaner-Schreibweise: `emo*` behaelt die Eingabe, `emo-` schreibt kurz, `emo+` schreibt lang; mit Emoji und ohne Marker wird Emoji-only verwendet
+- Fix: Der Cleaner nutzt Aliasdefinitionen aus `aliasText`/`aliasTextFields` fuer die Schreibweise und laesst Aliaszeilen selbst unveraendert
+- Aenderung: `applyCleanTags()` liest standardmaessig das passive Feld `Alias`; das zu cleanende Feld wird nur als Aliasquelle genutzt, wenn es explizit in `aliasTextFields` steht
 - Feature: Issue #53 - Kategorie-Aliase mit trailing `+`/`-` wenden dieses Vorzeichen nach der Child-Aggregation an, z. B. `@@@emo-: -aua` mit `aua+2` ergibt fuer `emo` wieder `2`
 - Test: Repro fuer `@@@emo-: -aua` mit `categoryAggregateMode: "max_abs"` ergaenzt
 

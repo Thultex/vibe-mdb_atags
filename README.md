@@ -110,7 +110,7 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
 - `A4` `core/tagCleaner.js` (reine Notiz-/Tagleisten-Normalisierung)
   - `makeTagCleanerText()`
   - `makeTagCleanerTextWithOptions()`
-  - `applyCleanTags()` als kurzer Memento-Wrapper; ohne Optionen nutzt er `Notiz`
+  - `applyCleanTags()` als kurzer Memento-Wrapper; ohne Optionen nutzt er `Notiz` und liest `Alias` passiv mit
   - `applyTagCleaner()` als optionaler Memento-Wrapper
 
 **Tagging Add-ons**
@@ -331,6 +331,30 @@ var cleaned = makeTagCleanerTextWithOptions(text, {
 });
 e.set("Notiz", cleaned);
 ```
+
+Kurzer Memento-Wrapper mit passivem Alias-Feld:
+
+```js
+applyCleanTags();
+```
+
+Dabei wird `Notiz` gecleant und `Alias` nur gelesen. Beispiel:
+
+```text
+Alias:
+@@Ablenkung (ab+): bei
+
+Notiz vorher:
+0: ab²
+
+ab²
+
+Notiz nachher:
+0: Ablenkung²
+
+Ablenkung²
+```
+
 Optionen:
 
 - `tagBarPosition: "bottom"` setzt die Tagleiste ans Ende (Standard)
@@ -343,7 +367,8 @@ Optionen:
 - `formatValues: "min"` lässt `+` bei positiven Zahlen weg
 - `formatValues: "max"` erzwingt `+` bei positiven Zahlen
 - `formatValues: "none"` lässt Werttags unverändert
-- `aliasText` oder `aliasTextFields` liefert Aliasdefinitionen fuer Anzeigenamen, z. B. `@@Emotion (emo, 😃): Gefuehl`
+- `aliasText` oder `aliasTextFields` liefert Aliasdefinitionen fuer Anzeigenamen, z. B. `@@Emotion (emo, 😃): Gefuehl`; `applyCleanTags()` liest ohne Angabe standardmaessig das passive Feld `Alias`
+- Das zu cleanende Feld wird nicht automatisch als Aliasquelle genutzt; dafuer muss es explizit in `aliasTextFields` stehen
 - `cleanerTagText: "long" | "short" | "none"` waehlt Langname, Kurzname oder nur Symbol fuer bekannte Alias-Tags
 - `cleanerEmoji: "none" | "suffix" | "only"` haengt ein Emoji ohne Leerzeichen an oder nutzt es exklusiv, z. B. `emo😃²` oder `😃²`
 - Alias-Header koennen die Cleaner-Schreibweise selbst steuern: `emo*` bleibt wie eingegeben, `emo-` schreibt kurz, `emo+` schreibt lang; `emo` mit Emoji schreibt standardmaessig Emoji-only

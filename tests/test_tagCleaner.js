@@ -121,6 +121,28 @@ assertEquals(
 );
 
 assertEquals(
+  "alias-display-header-long-not-read-from-clean-text-by-default",
+  makeTagCleanerTextWithOptions("@@Ablenkung (ab+): bei\nab\u00B2", {}),
+  "@@Ablenkung (ab+): bei\nab\u00B2"
+);
+
+assertEquals(
+  "alias-display-header-long-from-alias-text-row",
+  makeTagCleanerTextWithOptions("2: ab\u00B2", {
+    aliasText: "@@Ablenkung (ab+): bei"
+  }),
+  "2: Ablenkung\u00B2"
+);
+
+assertEquals(
+  "alias-display-header-long-from-alias-text-mixed-rows",
+  makeTagCleanerTextWithOptions("0: Kopfdruck\u00B9\n1: ab\u00B2, emo\u207A\n\nab\u00B2\n4: ", {
+    aliasText: "@@Abschweifen (ab+): Ablenkung, Abgelenkt"
+  }),
+  "0: Kopfdruck\u00B9\n1: Abschweifen\u00B2, emo\u207A\n\nAbschweifen\u00B2\n4:"
+);
+
+assertEquals(
   "alias-display-header-emoji-keep",
   makeTagCleanerTextWithOptions("emo2 Emotion3 feel4", {
     aliasText: "@@Emotion (emo*, $): feel"
@@ -412,5 +434,17 @@ applyCleanTags({
 });
 
 assertEquals("apply-clean-tags-default-field", defaultCleanEntryObj.field("Notiz"), "tag\u00B2\n\n| stress\u00B3");
+
+var defaultAliasEntryObj = makeEntry({
+  Alias: "@@Ablenkung (ab+): bei",
+  Notiz: "0: ab\u00B2\n\nab\u00B2"
+});
+
+applyCleanTags({
+  entryObj: defaultAliasEntryObj
+});
+
+assertEquals("apply-clean-tags-default-passive-alias-field", defaultAliasEntryObj.field("Notiz"), "0: Ablenkung\u00B2\n\nAblenkung\u00B2");
+assertEquals("apply-clean-tags-default-passive-alias-unchanged", defaultAliasEntryObj.field("Alias"), "@@Ablenkung (ab+): bei");
 
 WScript.Echo("OK");

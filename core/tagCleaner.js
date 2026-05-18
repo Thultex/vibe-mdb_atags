@@ -1,6 +1,6 @@
 /*
 ========================================
-A4 Tag Cleaner v1.40 (sys 2.30)
+A4 Tag Cleaner v1.42 (sys 2.30)
 ========================================
 
 Notes
@@ -10,13 +10,15 @@ Notes
 - Exclusive tag bars keep body text unchanged.
 - Can display known aliases as long/short names with compact emoji suffixes.
 - Alias headers can control cleaner display with `*`, `-` and `+`.
+- Reads the passive Alias field by default for alias display definitions.
 
-Example: clean the default note field "Notiz"
+Example: clean the default note field "Notiz" and passively read "Alias"
 applyCleanTags();
 
 Example: clean a custom field with options
 applyCleanTags({
   textField: "Notiz",
+  aliasTextFields: ["Alias"],
   tagBarPosition: "time_top",
   tagBarSpacing: "blank",
   formatValues: "keep"
@@ -28,7 +30,7 @@ applyCleanTags({
 function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
-    version: "1.40",
+    version: "1.42",
     sysVersion: "2.30",
     path: "core/tagCleaner.js"
   };
@@ -916,6 +918,11 @@ function makeTagCleanerTextWithOptions(sourceText, cfg) {
       continue;
     }
 
+    if (/^\s*@@/.test(line) || /^[^\[(:(]+?(?:\s*\(\s*([^)]+)\s*\))?\s*\[\s*[^\]]+\s*\]\s*:/.test(line)) {
+      body.push(line);
+      continue;
+    }
+
     if (exclusiveTagBar) {
       body.push(line);
     } else {
@@ -964,6 +971,8 @@ function applyTagCleaner(cfg) {
   var i;
 
   if (!entryObj || !sourceField || !targetField) return "";
+
+  if (cfg.aliasText == null && cfg.aliasTextFields == null) cfg.aliasTextFields = ["Alias"];
 
   if (cfg.aliasText == null && cfg.aliasTextFields) {
     aliasParts = [];
