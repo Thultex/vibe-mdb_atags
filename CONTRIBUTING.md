@@ -155,29 +155,36 @@ Beispiele:
 Für jeden funktionalen Eintrag:
 
 - Datum im Format `YYYY-MM-DD`
-- Dauer im Header als `### YYYY-MM-DD - (2,3h)` erfassen, wenn der Arbeitsblock im Chat nachvollziehbar ist; bei mehreren Sessions optional mit Anzahl, z. B. `(2,2h, 3x)`, sonst `(n/a)`
-- oben in `CHANGELOG.md` unter `Stats` kurze Zeilen für letzte Woche, letzten Monat, vorletzten Monat, Jahr und Insgesamt pflegen; keine Tabelle, Inhalte kurz halten
+- Dauer im Header als `### YYYY-MM-DD - (ca. 2,3h)` erfassen; geschätzte Tagesdauern immer mit `ca.` markieren
+- für neue Arbeit Dauer möglichst direkt messen; nachträglich nur schätzen, wenn keine Messung vorhanden ist
+- für Schätzungen aktive Arbeitszeit ansetzen; nachvollziehbare Aktivität zählt mit, auch ohne Commit. Leere Zeitlücken über 1 Stunde nur ausnehmen, wenn dort weder Commits noch andere nachvollziehbare Aktivität liegen
+- bei mehreren Sessions optional die Anzahl notieren, z. B. `(ca. 2,2h, 3x)`; wenn gar nichts nachvollziehbar ist, `(n/a)` verwenden
+- unter `Stats` zuerst `Ausgangsdatum: YYYY-MM-DD` notieren
+- danach feste Stats-Abschnitte nutzen: `Diese Woche`, `Letzte Woche`, `Dieser Monat`, `Letzter Monat`, `Jahr`, `Insgesamt`
+- Stats-Abschnitte im Format `*Abschnitt (Dauer, Tage, Inhalte):*` schreiben; dort muss `ca.` nicht wiederholt werden, auch wenn einzelne Tageswerte geschätzt sind. Darunter eine kurze spezifische Themenzeile, keine Tabelle
+- `Stats`-Inhalte nach Relevanz sortieren: große Umbauten und verhaltensrelevante Themen vor Doku/Formalia
 - Einträge stehen unter `## Log`; jeder Tagesblock ist ein `###`-Punkt
 - gleiche Tage in einem Eintrag zusammenziehen; die Dauer ist die Tagesgesamtzeit, optional mit Session-Anzahl
-- ab 7 Punkten im Tagesblock als ersten Punkt eine kurze Zeile `Summary: ...` ergänzen
+- ab 7 Punkten im Tagesblock als ersten Punkt eine kurze kursiv gesetzte Zeile `*Summary: ...*` ergänzen
+- `Summary:` von entscheidend zu weniger entscheidend schreiben: große Umbauten zuerst, danach Features/Fixes, Doku/Formalia zuletzt
 - normale Änderungen als kurze Stichpunkte mit Typ schreiben, z. B. `- Feature: Cleaner erweitert/reduziert Aliase (#51); Details`
 - Datei oder Modul nennen, wo es hilfreich ist
 - Wirkung der Änderung beschreiben
 - Test oder Doku kurz erwähnen, wenn ergänzt
 - Versionssprünge nicht einzeln als eigene Hauptpunkte aufführen
-- Versionen nur bei Bedarf immer als letzten Stichpunkt des Tages kurz sammeln, z. B. `- Versionen: collectAtags v1.58, exportAtags v1.83, tagCleaner v1.42`
+- Versionen nur bei Bedarf immer als kursiv gesetzten letzten Stichpunkt des Tages kurz sammeln, z. B. `- *Versionen: collectAtags v1.58, exportAtags v1.83, tagCleaner v1.42*`
+- bei `Versionen:` pro Datei nur den aktuellen/finalen Versionssprung des Tages nennen, keine Zwischenversionen
 
 Empfohlene Form:
 
 ```txt
-### 2026-04-22 - (0,4h)
-- Summary: Parser-Fixes und Tests für Zahlen- und Colon-Werte.
+### 2026-04-22 - (ca. 0,4h)
+- *Summary: Parser-Fixes und Tests für Zahlen- und Colon-Werte.*
 - Fix: Parser erkennt negative Zahlenformen wieder korrekt; Details.
 - Fix: Parser erkennt Colon-Werte im JScript-Host wieder korrekt; `tag: 5`.
 - Test/Doku: `tests/test_collectAtags.js` ergänzt.
-- Versionen: collectAtags v1.22.
+- *Versionen: collectAtags v1.22.*
 ```
-
 ## Wann Changelog Pflicht Ist
 
 Changelog pflegen bei:

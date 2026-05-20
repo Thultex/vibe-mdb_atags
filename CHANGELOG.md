@@ -2,18 +2,48 @@
 
 ## Stats
 
-- Letzte Woche (2026-05-12 bis 2026-05-18): 3 Tage, 87 Inhalte; Dauer: n/a; Inhalte: Tag-Cleaner, Obsidian-Linker, Changelog-Regeln.
-- Letzter Monat (2026-04-01 bis 2026-04-30): 3 Tage, 175 Inhalte; Dauer: n/a; Inhalte: Cleaner/Readable, Sync/Time-Marker, Repo-Struktur.
-- Vorletzter Monat (2026-03-01 bis 2026-03-31): 0 Tage, 0 Inhalte; Dauer: n/a; Inhalte: keine Einträge.
-- Jahr (2026-01-01 bis 2026-12-31): 8 Tage, 400 Inhalte; Dauer: n/a; Inhalte: Tag-Cleaner, Obsidian-Linker, Core-Umbau.
-- Insgesamt: 8 Tage, 400 Inhalte; Dauer: n/a; Inhalte: Tag-Cleaner, Obsidian-Linker, Core-Umbau.
+Ausgangsdatum: 2026-05-20
 
+*Diese Woche (3,0h, 3 Tage, 34 Inhalte):*
+Tag-Cleaner/Obsidian-Linker: Aliaslogik, Formatmodus; Changelog: Stats-/Versionen-Regeln.
+
+*Letzte Woche (3,7h, 2 Tage, 61 Inhalte):*
+Core-Umbau: Remote-Libs und Cleaner-Struktur; Parser/Export: Kategorie-Aggregation und Readable-Fixes.
+
+*Dieser Monat (15,2h, 7 Tage, 233 Inhalte):*
+Core/Export: Aggregationen und Tree-Ausgabe; Tag-Cleaner: Alias-/Symbolformen; Addons: Obsidian, Sync, Hour-Guide.
+
+*Letzter Monat (6,3h, 3 Tage, 175 Inhalte):*
+Cleaner/Readable: Tagleisten und Archivierung; Sync/TimeMarker: Addons und Workflows; Repo: Grundstruktur.
+
+*Jahr (21,5h, 10 Tage, 408 Inhalte):*
+Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisierung; Addons: Obsidian/Sync/TimeMarker.
+
+*Insgesamt (21,5h, 10 Tage, 408 Inhalte):*
+Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisierung; Addons: Obsidian/Sync/TimeMarker.
 
 ## Log
 
-### 2026-05-18 - (n/a)
+### 2026-05-20 - (ca. 0,5h)
 
-- Summary: Tag-Cleaner-Aliasanzeige, Emoji-/Symbolformen, Kategorie-Alias-Polung und Changelog-Regeln zusammengefasst.
+- Doku: Changelog-Zeiten geschätzt; Tagesdauern aus Git-/Commit-Spannen mit `ca.` ergänzt, Stats ohne wiederholtes `ca.` verdichtet.
+- Doku: Schätzregel präzisiert; leere Zeitlücken über 1 Stunde werden nur ausgenommen, wenn dort weder Commits noch andere nachvollziehbare Aktivität liegen.
+- Doku: Messregel ergänzt; neue Arbeitszeiten sollen künftig möglichst direkt gemessen statt nachträglich geschätzt werden.
+- Doku: Summary- und Versionen-Zeilen formatiert; beide werden kursiv geschrieben.
+- Doku: Versionen-Regel präzisiert; pro Datei steht unten nur der aktuelle Versionssprung des Tages.
+- *Versionen: keine.*
+
+### 2026-05-19 - (ca. 0,5h)
+
+- Doku: Changelog-Summaries priorisiert; große Umbauten und verhaltensrelevante Änderungen stehen vor Doku/Formalia.
+- Doku: Stats präzisiert; Inhaltsangaben nennen konkretere Themen und sind nach Relevanz sortiert.
+- Doku: Changelog-Vorgaben ergänzt; `Summary` und `Stats` sollen von entscheidend zu weniger entscheidend sortiert werden.
+- Doku: Stats-Abschnitte angepasst; Ausgangsdatum steht einmal oben, Abschnitte nutzen `Diese Woche`, `Letzte Woche`, `Dieser Monat`, `Letzter Monat`, `Jahr` und `Insgesamt`.
+- *Versionen: keine.*
+
+### 2026-05-18 - (ca. 2,0h, 4x)
+
+- *Summary: Tag-Cleaner-Aliaslogik, Obsidian-Linker-Formatmodus, Kategorie-Alias-Polung und Changelog-Struktur.*
 - Doku: Changelog-Struktur vereinfacht; separates Arbeitslog entfernt, `CHANGELOG.md` ist jetzt Repo-Verlauf und Arbeits-/Zeitprotokoll.
 - Doku: Regeln angepasst; `CONTRIBUTING.md` beschreibt nur noch Dateiversionen und `CHANGELOG.md`, inklusive Dauerformat, Tageszusammenfassung und gesammelt aufgeführter Versionen.
 - Doku: Changelog-Vorgaben verschoben; Format und Vorlage stehen unten unter `Vorgaben`, damit der Verlauf direkt oben beginnt.
@@ -40,11 +70,11 @@
 - Change: Passive Aliasquelle (#51); `applyCleanTags()` liest standardmaessig `Alias`, das Clean-Feld nur explizit per `aliasTextFields`.
 - Feature: Kategorie-Alias-Polung (#53); trailing `+`/`-` wird nach der Child-Aggregation angewendet, z. B. `@@@emo-: -aua` mit `aua+2` ergibt fuer `emo` wieder `2`.
 - Test: Kategorie-Alias-Polung (#53); Repro fuer `@@@emo-: -aua` mit `categoryAggregateMode: "max_abs"` ergaenzt.
-- Versionen: collectAtags v1.58, exportAtags v1.83, tagCleaner v1.44, Obsidian Linker v1.16.
+- *Versionen: collectAtags v1.58, exportAtags v1.83, tagCleaner v1.44, Obsidian Linker v1.16.*
 
-### 2026-05-16
+### 2026-05-16 - (ca. 3,2h, 4x)
 
-- Summary: Core-/Cleaner-Umstrukturierung, Parser-/Export-Fixes, Datenschutz und Kategorie-Aggregation zusammengefasst.
+- *Summary: Core-/Lib-Umbau, Kategorie-Aggregation, Cleaner-/Parser-Fixes und Datenschutz.*
 - Fix: In der eingebauten Hour-Guide-Vorgabe wurde ein zu stark anonymisierter Platzhalter wieder durch den vollstaendigen neutralen Inhalt `Spannung` ersetzt
 - Benennung: Header von `A4 Tag Cleaner Core` auf `A4 Tag Cleaner` vereinfacht
 - API: `applyCleanTags()` als kurzer Alias fuer `applyTagCleaner()` ergaenzt
@@ -100,22 +130,22 @@
 - Performance: `min`, `max`, `max_abs` und `min_abs` werden ohne Sortierung linear berechnet
 - Refactor: Mapped- und Auto-Restore schreiben Zielwerte ueber einen gemeinsamen Target-Write-Helfer
 - Test: Regressionen fuer negative Kategorie-Kinder, Alias-Aufloesung, Superscript-Werte und Tree-/Text-Ausgabe ergaenzt
-- Versionen: Hour Guide v1.30, helpers_lib v2.11, collectAtags v1.55, exportAtags v1.82, restoreAtags v2.04, tagCleaner v1.38, libVersions v1.08, helpers v1.02, sys 2.30, collectAtags v1.52, collectAtags v1.51, Tag Cleaner v1.25, collectAtags v1.50, Tag Cleaner v1.24, collectAtags v1.49, collectAtags v1.48, restoreAtags v2.03, Tag Cleaner v1.23, Obsidian Linker v1.15, Hour Guide v1.29, collectAtags v1.46, exportAtags v1.78, Atag Helpers v2.07, restoreAtags v2.02.
+- *Versionen: Hour Guide v1.30, helpers_lib v2.11, collectAtags v1.55, exportAtags v1.82, restoreAtags v2.04, tagCleaner v1.38, libVersions v1.08, helpers v1.02, sys 2.30, Obsidian Linker v1.15, Atag Helpers v2.07.*
 
-### 2026-05-13
+### 2026-05-13 - (ca. 0,5h)
 
-- Summary: Sync-Last-, Hour-Guide- und Entry-Auswahl-Verbesserungen zusammengefasst.
+- *Summary: Sync-Last-Entry-Auswahl, Hour-Guide-Entry-Eingaben und Newest-Entry-Helper.*
 - Change: `syncLastFromLatest()` nutzt ohne `fieldDate` direkt den neuesten erstellten Library-Eintrag
 - Change: Bei `fieldDate` scannt `syncLastFromLatest()` standardmaessig maximal 100 Library-Eintraege; `maxEntries: 0` nimmt direkt den neuesten erstellten Eintrag, `maxEntries: -1` scannt alle
 - Feature: `getNewestLibraryEntry()` nimmt fuer den neuesten erstellten Library-Eintrag direkt das erste Element aus `lib().entries()`
 - Feature: `findNewestEntry()` sowie `getNewestLibraryEntry({ mode: "modified" })` bleiben fuer den langsameren Scan nach `modifiedTime` mit ID-Fallback verfuegbar
 - Fix: `applyHourGuide()` akzeptiert konkrete `entryObj`-/`sourceEntry`-Eingaben und zeigt bei leerem, `null`- oder `0`-Stundenwert den ersten Planblock
 - Test/Doku: Regressionen fuer Newest-Entry-Suche, `maxEntries`, Modified-Mode, konkrete Hour-Guide-Entries und README-Beispiele ergaenzt
-- Versionen: Sync Last From Latest v1.03, Hour Guide v1.28.
+- *Versionen: Sync Last From Latest v1.03, Hour Guide v1.28.*
 
-### 2026-05-09
+### 2026-05-09 - (ca. 0,5h)
 
-- Summary: Tree-Export, Biased-Spree und Multi-Alias-Targets zusammengefasst.
+- *Summary: Tree-Export-Aggregation, Biased-Spree-Markierung und Multi-Alias-Targets.*
 - Fix: `tree_md` nutzt fuer wiederholte Kind-Row-Werte ohne explizites `rowAggregateMode` wieder `max`; explizites `rowAggregateMode: "avg"` bleibt unveraendert moeglich
 - Test: Regression fuer Tree-Default `max` bei Kindwerten und daraus berechneter Kategorie-Anzeige ergaenzt
 - Feature: `fieldBiasedSpree` und `biasedSpreeCount` markieren die ersten X Eintraege jeder Spree mit `true`; spaetere Eintraege werden mit `false` geschrieben
@@ -123,11 +153,11 @@
 - Test/Doku: Regression fuer Biased-Spree-Markierung, explizites Loeschen mit `0` und README-Beispiel ergaenzt
 - Feature: `multiAliasTargets: true` erlaubt, dass ein Alias-Token mehrere Ziel-Tags erzeugt, z. B. gleichzeitig positiv und negativ; ohne Option gewinnt weiter die letzte Aliasdefinition
 - Test/Doku: Regression fuer doppelte Aliasnamen mit und ohne `multiAliasTargets` sowie README-Hinweis ergaenzt
-- Versionen: exportAtags v1.71, Sequence Counter v1.04, collectAtags v1.43, Atag Helpers v2.04.
+- *Versionen: exportAtags v1.71, Sequence Counter v1.04, collectAtags v1.43, Atag Helpers v2.04.*
 
-### 2026-05-01
+### 2026-05-01 - (ca. 8,0h, 5x)
 
-- Summary: Aggregationen, Kategorie-Exports, Cleaner-Normalisierung, Add-ons und Systemversionen zusammengefasst.
+- *Summary: Aggregations-Engine, Kategorie-/Tree-Exports, Cleaner-Normalisierung und Add-on-Integration.*
 - Change: Header aller Module und `ATAG_SYS_VERSION` auf `2.21` aktualisiert
 - Feature: `computeAggregate` unterstuetzt `min`, `max`, `add`/`sum`, `avg`, `median`, `first`, `last` und `amount`
 - Feature: Kategorie-Parents zeigen in `text`, `md` und `tree_md` standardmaessig den Mittelwert numerischer Unterpunkte; zuvor wird je Unterpunkt per `categoryRowAggregateMode`/`categoryChildAggregateMode` aggregiert, Standard fuer Kategorien ist `max`
@@ -259,11 +289,11 @@
 - Fix: Sync Last From Latest liest ISO-artige Datumsstrings auch im Windows Script Host
 - Feature: Obsidian-Linker-Felder (#24); getrennte Felder fuer Overwrite-Link und Obsidian-Link unterstuetzt
 - Test/Doku: neue Addon-Tests, README-Eintraege und Versioning-Liste ergaenzt
-- Versionen: sys 2.21, exportAtags v1.70, Atag Helpers v2.03, Addon Tag Cleaner v1.21, collectAtags v1.42, exportAtags v1.64, collectAtags v1.41, Atag Helpers v2.02, exportAtags v1.62, restoreAtags v2.01, sys 2.20, Shared Script: Time Marker v1.31, Addon Multi Choice Helpers v1.01, Addon Obsidian Linker v1.01, Addon Obsidian Linker v1.02, Addon Obsidian Linker v1.03, Addon Obsidian Linker v1.04, Addon Obsidian Linker v1.05, Addon Obsidian Linker v1.06, Addon Obsidian Linker v1.07, Addon Obsidian Linker v1.08, Addon Obsidian Linker v1.09, Addon Obsidian Linker v1.10, Addon Obsidian Linker v1.11, Addon Obsidian Linker v1.12, Addon Obsidian Linker v1.13, Addon Obsidian Linker v1.14, Addon Typed Text Fields v1.00, exportAtags v1.54, Atag Helpers v1.17, Atag Helpers v2.00, collectAtags v1.37, restoreAtags v2.00, Addon Floating Average v1.00, exportAtags v1.42, Atag Helpers v1.14, Atag Helpers v1.13, Addon Sequence Counter v1.03, Addon Sequence Counter v1.02, Addon Sequence Counter v1.01, Addon Wiki Linker v1.00, Addon Sequence Counter v1.00, collectAtags v1.36, Addon Sync Last From Latest v1.01, Addon Hour Guide v1.00, Addon Obsidian Linker v1.00.
+- *Versionen: sys 2.21, exportAtags v1.70, Atag Helpers v2.03, Addon Tag Cleaner v1.21, collectAtags v1.42, restoreAtags v2.01, Shared Script: Time Marker v1.31, Addon Multi Choice Helpers v1.01, Addon Obsidian Linker v1.14, Addon Typed Text Fields v1.00, Addon Floating Average v1.00, Addon Sequence Counter v1.03, Addon Wiki Linker v1.00, Addon Sync Last From Latest v1.01, Addon Hour Guide v1.00.*
 
-### 2026-04-25
+### 2026-04-25 - (ca. 4,0h, 4x)
 
-- Summary: Cleaner-Tagleisten, Readable-Ausgabe, Parser-Regeln und Add-on-Pflege zusammengefasst.
+- *Summary: Tagleisten-Cleaner, Readable-Archivierung, Parser-Regeln und Add-on-Pflege.*
 - Doku: Pflegehinweis ergänzt, dass Modul-Kopfblöcke wegen des Memento-Java-Editors kurz bleiben und vorsichtig mit Quotes, Backticks, langen `Änderungen`-Listen und Sonderzeichen umgehen sollen
 - Change: Cleaner gibt Tagleisten mit einfachem `|` aus; vorhandene `||`-Leisten bleiben beim Einlesen kompatibel
 - Test/Doku: Cleaner-Erwartungen und Beispiele auf einfache `|`-Ausgabe umgestellt
@@ -411,11 +441,11 @@
 - Fix: Export-Helfer vermeiden `String.prototype.trim()` für WSH-Kompatibilität
 - Fix: JSON-Export nutzt einen lokalen Stringifier für ältere WSH-Hosts ohne `JSON.stringify`
 - Test: `tests/test_exportAtags.js` ergänzt für `tags`, `md`, `rows_md`, `text` und `json`
-- Versionen: Addon Tag Cleaner v1.20, Addon Tag Cleaner v1.19, Addon Tag Cleaner v1.18, sys 2.11, Addon Tag Cleaner v1.17, collectAtags v1.35, Atag Helpers v1.12, Atag Helpers v1.11, collectAtags v1.34, Addon Tag Cleaner v1.16, Addon Tag Cleaner v1.15, Addon Tag Cleaner v1.14, Addon Tag Cleaner v1.13, Addon Tag Cleaner v1.12, Addon Tag Cleaner v1.11, Addon Tag Cleaner v1.10, Addon Tag Cleaner v1.09, Addon Tag Cleaner v1.08, Shared Script: Time Marker v1.26, Addon Tag Cleaner v1.07, Addon Tag Cleaner v1.06, Shared Script: Time Marker v1.25, Addon Tag Cleaner v1.03, Shared Script: Time Marker v1.24, Addon Tag Cleaner v1.02, collectAtags v1.33, exportAtags v1.41, Addon Tag Cleaner v1.01, collectAtags v1.32, Addon Tag Cleaner v1.00, Shared Script: Time Marker v1.23, Addon Readable Atag Text v1.24, Addon Readable Atag Text v1.23, exportAtags v1.40, Addon Readable Atag Text v1.22, Atag Helpers v1.09, Addon Readable Atag Text v1.21, Addon Readable Atag Text v1.19, Addon Readable Atag Text v1.18, Addon Readable Atag Text v1.17, Addon Readable Atag Text v1.16, Addon Readable Atag Text v1.15, Addon Readable Atag Text v1.14, Addon Readable Atag Text v1.13, Addon Readable Atag Text v1.12, Addon Readable Atag Text v1.11, collectAtags v1.31, exportAtags v1.39, Atag Helpers v1.08, collectAtags v1.30, Addon Readable Atag Text v1.10, collectAtags v1.29, Addon Readable Atag Text v1.00, collectAtags v1.27, sys 2.10, collectAtags v1.28, exportAtags v1.38, Atag Helpers v1.07.
+- *Versionen: Addon Tag Cleaner v1.20, sys 2.11, collectAtags v1.35, Atag Helpers v1.12, Shared Script: Time Marker v1.26, exportAtags v1.41, Addon Readable Atag Text v1.24.*
 
-### 2026-04-23
+### 2026-04-23 - (ca. 1,2h, 2x)
 
-- Summary: Global-Field-Sync, Time-Marker und Stundenlimit zusammengefasst.
+- *Summary: Global-Field-Sync, Time-Marker-Wiederaufnahme und Stundenlimit.*
 - Fix: `syncFieldBack()` schreibt leere aktuelle Feldwerte nicht mehr in den ersten Eintrag zurück
 - Fix: `syncFieldTo()` und `syncFieldAll()` suchen bei leerem ersten Eintrag im selben Feld die ersten 20 Einträge nach einem gefüllten Wert ab
 - Test/Doku: `tests/test_globalFieldSync.js` ergänzt und Mojibake in `README.md` für den Time-Marker-Bereich korrigiert
@@ -431,11 +461,11 @@
 - Fix: reine Integer-Tags werden in `md`, `rows_md` und `rows_html` ohne `,0` ausgegeben
 - Fix: Dezimalstellen bleiben sichtbar, wenn echte Dezimalwerte vorkommen oder das Aggregat nicht ganzzahlig ist
 - Verifikation: Exportausgabe direkt im WSH-Host geprüft
-- Versionen: Addon Global Field Sync v1.01, Shared Script: Time Marker v1.22, exportAtags v1.37, Addon Global Field Sync v1.00, collectAtags v1.23, exportAtags v1.36, Atag Helpers v1.05.
+- *Versionen: Addon Global Field Sync v1.01, Shared Script: Time Marker v1.22, exportAtags v1.37, collectAtags v1.23, Atag Helpers v1.05.*
 
-### 2026-04-22
+### 2026-04-22 - (ca. 1,2h)
 
-- Summary: Repo-Struktur, Tag-Pair-Parser, Export-Formatierung und Parser-Fixes zusammengefasst.
+- *Summary: Repo-Struktur, Tag-Pair-Parser, Export-Formatierung und Parser-Fixes.*
 - Architektur: Tag-Pair-Logik als separates Add-on in `addons/tagPairParser.js`, ohne direkten Hook in `applyTags()` / `bulkApplyTags()`
 - Test/Doku: `tests/test_tagPairParser.js` und `README.md` für die Add-on-Nutzung ergänzt
 - Struktur: flache Ordnerstruktur mit `core/`, `addons/` und `tests/` eingeführt
@@ -449,33 +479,41 @@
 - Fix: negative Zahlenformen werden wieder korrekt erkannt: `tag-2`, `yay-2,3`, `emo-12,32`
 - Fix: `tag: 5` wird im JScript-Host wieder korrekt als Wert gelesen
 - Test/Doku: `test_collectAtags.js` ergänzt, um die dokumentierten Tag-Formen gesammelt zu prüfen
-- Versionen: Addon Tag Pair Parser v1.00, exportAtags v1.35, Atag Helpers v1.03, exportAtags v1.34, Atag Helpers v1.02, collectAtags v1.22.
+- *Versionen: Addon Tag Pair Parser v1.00, exportAtags v1.35, Atag Helpers v1.03, collectAtags v1.22.*
 
 
 ## Vorgaben
 
 ### Format
 
-- Datum und Dauer im Format `### YYYY-MM-DD - (2,3h)`; bei mehreren Sessions optional mit Anzahl, z. B. `(2,2h, 3x)`, sonst `(n/a)`
-- Oben unter `Stats` kurze Zeilen fuer letzte Woche, letzten Monat, vorletzten Monat, Jahr und Insgesamt pflegen; keine Tabelle, Inhalte kurz halten
-- Eintraege stehen unter `## Log`; jeder Tagesblock ist ein `###`-Punkt
+- Datum und Dauer im Format `### YYYY-MM-DD - (ca. 2,3h)`; geschätzte Tagesdauern immer mit `ca.` markieren.
+- Für neue Arbeit Dauer möglichst direkt messen; nachträglich nur schätzen, wenn keine Messung vorhanden ist.
+- Für Schätzungen aktive Arbeitszeit ansetzen; nachvollziehbare Aktivität zählt mit, auch ohne Commit. Leere Zeitlücken über 1 Stunde nur ausnehmen, wenn dort weder Commits noch andere nachvollziehbare Aktivität liegen.
+- Bei mehreren Sessions optional die Anzahl notieren, z. B. `(ca. 2,2h, 3x)`; wenn gar nichts nachvollziehbar ist, `(n/a)` verwenden.
+- Unter `Stats` zuerst `Ausgangsdatum: YYYY-MM-DD` notieren
+- Danach feste Stats-Abschnitte nutzen: `Diese Woche`, `Letzte Woche`, `Dieser Monat`, `Letzter Monat`, `Jahr`, `Insgesamt`
+- Stats-Abschnitte im Format `*Abschnitt (Dauer, Tage, Inhalte):*` schreiben; dort muss `ca.` nicht wiederholt werden, auch wenn einzelne Tageswerte geschätzt sind. Darunter eine kurze spezifische Themenzeile, keine Tabelle
+- `Stats`-Inhalte nach Relevanz sortieren: große Umbauten und verhaltensrelevante Themen vor Doku/Formalia
+- Einträge stehen unter `## Log`; jeder Tagesblock ist ein `###`-Punkt
 - Pro Arbeitsschritt kurze Stichpunkte
 - Datei/Modul nennen, wo es hilfreich ist
-- Normale Eintraege beginnen mit Typ, z. B. `Feature:`, `Fix:`, `Change:`, `Doku:`, `Test:` oder `Refactor:`
+- Normale Einträge beginnen mit Typ, z. B. `Feature:`, `Fix:`, `Change:`, `Doku:`, `Test:` oder `Refactor:`
 - Issue direkt hinter das Thema setzen, z. B. `- Feature: Emoji-/Symbol-Aliasheader ohne Kurznamen (#54); Details...`
 - Gleiche Tage werden in einem Eintrag zusammengezogen; die Dauer ist die Tagesgesamtzeit, optional mit Session-Anzahl
-- Ab 7 Punkten im Tagesblock als ersten Punkt eine kurze Zeile `Summary: ...` ergänzen
+- Ab 7 Punkten im Tagesblock als ersten Punkt eine kurze kursiv gesetzte Zeile `*Summary: ...*` ergänzen
+- `Summary:` von entscheidend zu weniger entscheidend schreiben: große Umbauten zuerst, danach Features/Fixes, Doku/Formalia zuletzt
 - Wirkung dokumentieren, nicht nur `Fix` oder `Update`
-- Versionsspruenge nicht als eigene Hauptpunkte fuehren
-- Versionen bei Bedarf immer als letzten Stichpunkt des Tages gesammelt nennen, z. B. `- Versionen: ...`
-- Test/Doku erwaehnen, wenn ergaenzt
+- Versionssprünge nicht als eigene Hauptpunkte führen
+- Versionen bei Bedarf immer als kursiv gesetzten letzten Stichpunkt des Tages gesammelt nennen, z. B. `- *Versionen: ...*`
+- Bei `Versionen:` pro Datei nur den aktuellen/finalen Versionssprung des Tages nennen, keine Zwischenversionen
+- Test/Doku erwähnen, wenn ergänzt
 
 ### Vorlage
 
 ```md
-### 2026-04-22 - (0,4h)
-- Summary: Parser-Fixes und Tests fuer Zahlen- und Colon-Werte.
+### 2026-04-22 - (ca. 0,4h)
+- *Summary: Parser-Fixes für Zahlen-/Colon-Werte und Regressionstests.*
 - Fix: Parser erkennt negative Zahlenformen wieder korrekt; Details.
 - Test/Doku: `tests/test_collectAtags.js` ergaenzt.
-- Versionen: collectAtags v1.22.
+- *Versionen: collectAtags v1.22.*
 ```
