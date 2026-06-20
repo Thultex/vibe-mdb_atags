@@ -1,10 +1,10 @@
 /*
 ========================================
-B10 Dusting Day Collector v0.11 (sys 2.30)
+B10 Dusting Day Collector v0.12 (sys 2.30)
 ========================================
 
 Änderungen
-- Debug-Funktion schreibt sichtbare Feld-/Link-Diagnose in OutNote
+- Debug-Funktion schreibt sichtbare Feld-/Link-Diagnose standardmäßig in Debug
 - erste OutNote-Erzeugung aus manuell gesetzten DustingDay.InLinks
 - liest verknüpfte DustingDayInput-Einträge
 - sortiert nach Date
@@ -319,7 +319,7 @@ function debugDustingDayCollector(cfg) {
 
   var currentEntry = cfg.entryObj || entry();
   var inLinksField = cfg.inLinksField || "InLinks";
-  var outputField = cfg.outputField || "OutNote";
+  var outputField = cfg.outputField || "Debug";
   var inputDateField = cfg.inputDateField || "Date";
   var inputNoteField = cfg.inputNoteField || "InNote";
   var inputTagField = cfg.inputTagField || "InTag";
@@ -330,7 +330,7 @@ function debugDustingDayCollector(cfg) {
   var e;
 
   lines.push("DEBUG DustingDayCollector");
-  lines.push("version: 0.11");
+  lines.push("version: 0.12");
   lines.push("inLinksField: " + inLinksField);
   lines.push("raw InLinks: " + ddDescribeValue(rawLinks));
   lines.push("resolved links: " + links.length);

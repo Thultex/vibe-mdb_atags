@@ -30,8 +30,9 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Projekt: `project/dustingday` mit README, persönlichem Plan, Codex-Plan, Strukturdatei und Memento-Konfiguration angelegt.
 - Feature: Dustingday-Collector-Add-on `addons/5_dusting-day/dustingDayCollector.js`; `updateDustingDayOutNote()` baut aus manuell gesetzten `DustingDay.InLinks` eine zeitlich sortierte `OutNote`.
 - Feature: Dustingday-Collector-Debug v0.11; `debugDustingDayCollector()` schreibt sichtbare Diagnose zu `InLinks`, verknüpften Entries und Feldwerten in `OutNote`.
+- Change: Dustingday-Collector-Debug v0.12; `debugDustingDayCollector()` schreibt standardmäßig in `Debug`, damit `OutNote` fachliche Ausgabe bleibt.
 - Test: `tests/test_dustingDayCollector.js` deckt Array-/Java-Listen-Relationen, Feldmapping, Row-Rundung und leere Links ab.
-- *Versionen: Dusting Day Collector v0.11.*
+- *Versionen: Dusting Day Collector v0.12.*
 
 ### 2026-05-20 - (ca. 0,5h)
 

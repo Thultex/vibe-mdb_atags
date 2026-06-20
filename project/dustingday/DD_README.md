@@ -105,14 +105,14 @@ Debug-Aufruf, wenn nichts sichtbar passiert:
 ```js
 debugDustingDayCollector({
   inLinksField: "InLinks",
-  outputField: "OutNote",
+  outputField: "Debug",
   inputDateField: "Date",
   inputNoteField: "InNote",
   inputTagField: "InTag"
 });
 ```
 
-Dieser Aufruf schreibt sichtbar in `OutNote`, wie `InLinks` im Script ankommt und welche Felder aus den verlinkten Inputs gelesen werden.
+Dieser Aufruf schreibt sichtbar in `Debug`, wie `InLinks` im Script ankommt und welche Felder aus den verlinkten Inputs gelesen werden. So bleibt `OutNote` frei für die eigentliche Tagesausgabe.
 
 Wichtig: Die URL funktioniert erst, wenn `addons/5_dusting-day/dustingDayCollector.js` nach GitHub `main` gepusht wurde.
 

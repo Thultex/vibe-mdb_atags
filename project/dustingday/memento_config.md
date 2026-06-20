@@ -37,6 +37,9 @@ Aktuelle Felder:
   - Typ: Library Links / Beziehung
   - Ziel: `DustingDayInput`
   - enthält die verknüpften Einzel-Einträge
+- `Debug`
+  - Typ: Text
+  - optionales Diagnosefeld für Script-Ausgaben
 
 ## Aktueller Feldvertrag
 
@@ -54,6 +57,7 @@ Für Tages-Einträge gilt:
 - Tagesdatum: `Datum`
 - Titel: `Titel`, optional
 - verknüpfte Einzel-Einträge: `InLinks`
+- Debug-Ausgabe: `Debug`
 
 ## Noch offen
 

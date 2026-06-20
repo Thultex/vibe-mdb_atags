@@ -126,18 +126,19 @@ function testDebugWritesVisibleDiagnostics() {
   });
   var day = makeEntry({
     InLinks: [one],
-    OutNote: ""
+    OutNote: "",
+    Debug: ""
   });
 
   debugDustingDayCollector({
     entryObj: day
   });
 
-  if (String(day.field("OutNote")).indexOf("DEBUG DustingDayCollector") !== 0) {
+  if (String(day.field("Debug")).indexOf("DEBUG DustingDayCollector") !== 0) {
     fail("debug-prefix missing");
   }
 
-  if (String(day.field("OutNote")).indexOf("resolved links: 1") < 0) {
+  if (String(day.field("Debug")).indexOf("resolved links: 1") < 0) {
     fail("debug-link-count missing");
   }
 }
