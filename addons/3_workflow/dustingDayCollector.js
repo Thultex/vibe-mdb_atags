@@ -1,9 +1,10 @@
 /*
 ========================================
-B10 Dusting Day Collector v0.10 (sys 2.30)
+B10 Dusting Day Collector v0.11 (sys 2.30)
 ========================================
 
 Änderungen
+- Debug-Funktion schreibt sichtbare Feld-/Link-Diagnose in OutNote
 - erste OutNote-Erzeugung aus manuell gesetzten DustingDay.InLinks
 - liest verknüpfte DustingDayInput-Einträge
 - sortiert nach Date
@@ -19,6 +20,8 @@ updateDustingDayOutNote({
   inputNoteField: "InNote",
   inputTagField: "InTag"
 });
+
+debugDustingDayCollector();
 */
 
 function ddTrim(s) {
@@ -87,6 +90,32 @@ function ddRelationToArray(val) {
 
   if (typeof list.field === "function") out.push(list);
   return out;
+}
+
+function ddDescribeValue(val) {
+  var len;
+
+  if (val == null) return "null";
+  if (val === "") return "empty string";
+  if (ddIsArray(val)) return "array length " + val.length;
+  if (typeof val === "string") return "string: " + val;
+  if (typeof val === "number") return "number: " + val;
+  if (typeof val === "boolean") return "boolean: " + val;
+
+  try {
+    len = ddListLength(val);
+    if (len != null) return "list-like length " + len;
+  } catch (e0) {}
+
+  try {
+    if (typeof val.field === "function") return "entry-like object";
+  } catch (e1) {}
+
+  try {
+    return "object " + Object.prototype.toString.call(val);
+  } catch (e2) {}
+
+  return "unknown object";
 }
 
 function ddSafeField(entryObj, fieldName) {
@@ -283,4 +312,51 @@ function updateDustingDayOutNote(cfg) {
   result.outputField = outputField;
 
   return result;
+}
+
+function debugDustingDayCollector(cfg) {
+  cfg = cfg || {};
+
+  var currentEntry = cfg.entryObj || entry();
+  var inLinksField = cfg.inLinksField || "InLinks";
+  var outputField = cfg.outputField || "OutNote";
+  var inputDateField = cfg.inputDateField || "Date";
+  var inputNoteField = cfg.inputNoteField || "InNote";
+  var inputTagField = cfg.inputTagField || "InTag";
+  var rawLinks = ddSafeField(currentEntry, inLinksField);
+  var links = ddRelationToArray(rawLinks);
+  var lines = [];
+  var i;
+  var e;
+
+  lines.push("DEBUG DustingDayCollector");
+  lines.push("version: 0.11");
+  lines.push("inLinksField: " + inLinksField);
+  lines.push("raw InLinks: " + ddDescribeValue(rawLinks));
+  lines.push("resolved links: " + links.length);
+  lines.push("");
+
+  for (i = 0; i < links.length; i++) {
+    e = links[i];
+    lines.push("link " + (i + 1) + ": " + ddDescribeValue(e));
+    lines.push("  " + inputDateField + ": " + ddTextValue(ddSafeField(e, inputDateField)));
+    lines.push("  " + inputNoteField + ": " + ddTextValue(ddSafeField(e, inputNoteField)));
+    lines.push("  " + inputTagField + ": " + ddTextValue(ddSafeField(e, inputTagField)));
+    lines.push("  line: " + ddBuildInputLine(e, {
+      inputDateField: inputDateField,
+      inputNoteField: inputNoteField,
+      inputTagField: inputTagField,
+      rowStepHours: cfg.rowStepHours,
+      roundMode: cfg.roundMode
+    }));
+    lines.push("");
+  }
+
+  ddSafeSet(currentEntry, outputField, lines.join("\n"));
+
+  return {
+    rawLinks: rawLinks,
+    links: links,
+    text: lines.join("\n")
+  };
 }

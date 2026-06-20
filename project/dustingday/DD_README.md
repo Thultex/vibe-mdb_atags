@@ -100,6 +100,20 @@ updateDustingDayOutNote({
 });
 ```
 
+Debug-Aufruf, wenn nichts sichtbar passiert:
+
+```js
+debugDustingDayCollector({
+  inLinksField: "InLinks",
+  outputField: "OutNote",
+  inputDateField: "Date",
+  inputNoteField: "InNote",
+  inputTagField: "InTag"
+});
+```
+
+Dieser Aufruf schreibt sichtbar in `OutNote`, wie `InLinks` im Script ankommt und welche Felder aus den verlinkten Inputs gelesen werden.
+
 Wichtig: Die URL funktioniert erst, wenn `addons/3_workflow/dustingDayCollector.js` nach GitHub `main` gepusht wurde.
 
 Der eigentliche Alltags-Anschluss gehört später in `DustingDayInput`, weil dort ein neuer Eintrag entsteht.

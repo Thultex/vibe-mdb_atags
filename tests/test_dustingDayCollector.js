@@ -118,9 +118,34 @@ function testEmptyLinksWritesEmptyOutNote() {
   assertEquals("empty-links-count", result.lines.length, 0);
 }
 
+function testDebugWritesVisibleDiagnostics() {
+  var one = makeEntry({
+    Date: "2020-02-02 08:15",
+    InNote: "debug note",
+    InTag: "debug tag"
+  });
+  var day = makeEntry({
+    InLinks: [one],
+    OutNote: ""
+  });
+
+  debugDustingDayCollector({
+    entryObj: day
+  });
+
+  if (String(day.field("OutNote")).indexOf("DEBUG DustingDayCollector") !== 0) {
+    fail("debug-prefix missing");
+  }
+
+  if (String(day.field("OutNote")).indexOf("resolved links: 1") < 0) {
+    fail("debug-link-count missing");
+  }
+}
+
 testBuildsOutNoteFromLinkedInputs();
 testAcceptsJavaStyleRelationList();
 testCustomFieldsAndQuarterStep();
 testEmptyLinksWritesEmptyOutNote();
+testDebugWritesVisibleDiagnostics();
 
 WScript.Echo("OK");
