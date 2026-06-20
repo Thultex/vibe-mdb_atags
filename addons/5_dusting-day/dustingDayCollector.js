@@ -1,9 +1,10 @@
 /*
 ========================================
-B10 Dusting Day Collector v0.12 (sys 2.30)
+B10 Dusting Day Collector v0.13 (sys 2.30)
 ========================================
 
 Änderungen
+- Input-Debug-Funktion für Trigger in DustingDayInput ergänzt
 - Debug-Funktion schreibt sichtbare Feld-/Link-Diagnose standardmäßig in Debug
 - erste OutNote-Erzeugung aus manuell gesetzten DustingDay.InLinks
 - liest verknüpfte DustingDayInput-Einträge
@@ -22,6 +23,7 @@ updateDustingDayOutNote({
 });
 
 debugDustingDayCollector();
+debugDustingDayInputCollector();
 */
 
 function ddTrim(s) {
@@ -330,7 +332,7 @@ function debugDustingDayCollector(cfg) {
   var e;
 
   lines.push("DEBUG DustingDayCollector");
-  lines.push("version: 0.12");
+  lines.push("version: 0.13");
   lines.push("inLinksField: " + inLinksField);
   lines.push("raw InLinks: " + ddDescribeValue(rawLinks));
   lines.push("resolved links: " + links.length);
@@ -357,6 +359,39 @@ function debugDustingDayCollector(cfg) {
   return {
     rawLinks: rawLinks,
     links: links,
+    text: lines.join("\n")
+  };
+}
+
+function debugDustingDayInputCollector(cfg) {
+  cfg = cfg || {};
+
+  var currentEntry = cfg.entryObj || entry();
+  var outputField = cfg.outputField || "Debug";
+  var inputDateField = cfg.inputDateField || "Date";
+  var inputNoteField = cfg.inputNoteField || "InNote";
+  var inputTagField = cfg.inputTagField || "InTag";
+  var lines = [];
+
+  lines.push("DEBUG DustingDayInput");
+  lines.push("version: 0.13");
+  lines.push("outputField: " + outputField);
+  lines.push(inputDateField + ": " + ddTextValue(ddSafeField(currentEntry, inputDateField)));
+  lines.push(inputNoteField + ": " + ddTextValue(ddSafeField(currentEntry, inputNoteField)));
+  lines.push(inputTagField + ": " + ddTextValue(ddSafeField(currentEntry, inputTagField)));
+  lines.push("");
+  lines.push("row: " + ddRowFromDate(ddSafeField(currentEntry, inputDateField), cfg));
+  lines.push("line: " + ddBuildInputLine(currentEntry, {
+    inputDateField: inputDateField,
+    inputNoteField: inputNoteField,
+    inputTagField: inputTagField,
+    rowStepHours: cfg.rowStepHours,
+    roundMode: cfg.roundMode
+  }));
+
+  ddSafeSet(currentEntry, outputField, lines.join("\n"));
+
+  return {
     text: lines.join("\n")
   };
 }

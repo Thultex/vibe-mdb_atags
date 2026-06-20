@@ -128,3 +128,16 @@ DustingDayInput speichern
 ```
 
 Der `DustingDay`-Trigger ist damit nur ein manueller Refresh/Testpfad. Der produktive Flow soll vom Input-Eintrag ausgehen.
+
+Debug-Aufruf im `DustingDayInput`-Trigger:
+
+```js
+debugDustingDayInputCollector({
+  outputField: "Debug",
+  inputDateField: "Date",
+  inputNoteField: "InNote",
+  inputTagField: "InTag"
+});
+```
+
+Dieser Test prüft nur den aktuellen Input-Eintrag und schreibt in `DustingDayInput.Debug`.

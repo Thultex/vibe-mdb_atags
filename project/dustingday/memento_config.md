@@ -17,6 +17,9 @@ Aktuelle Felder:
   - Typ: Tag
 - `Date`
   - Typ: Datum/Zeit
+- `Debug`
+  - Typ: Text
+  - optionales Diagnosefeld für Input-Trigger
 
 ## DustingDay
 
@@ -49,6 +52,7 @@ Für erste Dustingday-Module gilt bei Einzel-Einträgen:
 - Tagfeld: `InTag`
 - Zeitfeld: `Date`
 - Titel: `Titel`, optional
+- Debug-Ausgabe: `Debug`, optional
 
 Für Tages-Einträge gilt:
 

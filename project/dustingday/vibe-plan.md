@@ -254,6 +254,19 @@ Trigger: nach Möglichkeit After Save / After Entry
 Fallback-Test: Before Save, wenn Memento dort Relation/Entry-Updates stabil erlaubt
 ```
 
+Input-Trigger-Debug:
+
+```js
+debugDustingDayInputCollector({
+  outputField: "Debug",
+  inputDateField: "Date",
+  inputNoteField: "InNote",
+  inputTagField: "InTag"
+});
+```
+
+Dieser Debug gehört in `DustingDayInput` und schreibt in `DustingDayInput.Debug`.
+
 Warum nicht zuerst `DustingDay`:
 
 - Im Alltag wird der Input-Eintrag angelegt.

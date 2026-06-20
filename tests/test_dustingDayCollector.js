@@ -143,10 +143,32 @@ function testDebugWritesVisibleDiagnostics() {
   }
 }
 
+function testInputDebugWritesCurrentInputDiagnostics() {
+  var input = makeEntry({
+    Date: "2020-02-02 05:02",
+    InNote: "stress3",
+    InTag: "müde 3",
+    Debug: ""
+  });
+
+  debugDustingDayInputCollector({
+    entryObj: input
+  });
+
+  if (String(input.field("Debug")).indexOf("DEBUG DustingDayInput") !== 0) {
+    fail("input-debug-prefix missing");
+  }
+
+  if (String(input.field("Debug")).indexOf("line: 5: stress3, müde 3") < 0) {
+    fail("input-debug-line missing");
+  }
+}
+
 testBuildsOutNoteFromLinkedInputs();
 testAcceptsJavaStyleRelationList();
 testCustomFieldsAndQuarterStep();
 testEmptyLinksWritesEmptyOutNote();
 testDebugWritesVisibleDiagnostics();
+testInputDebugWritesCurrentInputDiagnostics();
 
 WScript.Echo("OK");
