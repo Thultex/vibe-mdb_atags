@@ -199,14 +199,14 @@ Warum zuerst:
 Geplanter/erster Modulname:
 
 ```text
-addons/3_workflow/dustingDayCollector.js
+addons/5_dusting-day/dustingDayCollector.js
 updateDustingDayOutNote()
 ```
 
 GitHub-Referenz nach Push auf `main`:
 
 ```text
-https://raw.githubusercontent.com/Thultex/vibe-mdb_atags/main/addons/3_workflow/dustingDayCollector.js
+https://raw.githubusercontent.com/Thultex/vibe-mdb_atags/main/addons/5_dusting-day/dustingDayCollector.js
 ```
 
 Memento-Anschluss für manuellen Refresh/Test:

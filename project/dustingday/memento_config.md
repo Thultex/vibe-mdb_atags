@@ -66,7 +66,7 @@ Für Tages-Einträge gilt:
 Nach Push auf `main`:
 
 ```text
-https://raw.githubusercontent.com/Thultex/vibe-mdb_atags/main/addons/3_workflow/dustingDayCollector.js
+https://raw.githubusercontent.com/Thultex/vibe-mdb_atags/main/addons/5_dusting-day/dustingDayCollector.js
 ```
 
 Der erste Test-Aufruf kann in der Library `DustingDay` laufen, z. B. im Trigger `Update Entry Before Save`, um manuell gesetzte `InLinks` in `OutNote` zu übertragen.

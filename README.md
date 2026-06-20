@@ -140,7 +140,8 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
 - `B7` `addons/3_workflow/timeMarker.js` (Zeitmarker fuer Textfelder)
   - `appendTimeMarker()`
   - optionales Stundenlimit ueber `maxHours` (Default: `30`)
-- `B10` `addons/3_workflow/dustingDayCollector.js` (Dustingday-Tagesnotiz aus verlinkten Inputs)
+**Dustingday Add-ons**
+- `B10` `addons/5_dusting-day/dustingDayCollector.js` (Dustingday-Tagesnotiz aus verlinkten Inputs)
   - `updateDustingDayOutNote()`
   - liest `DustingDay.InLinks`, sortiert nach `DustingDayInput.Date` und schreibt `OutNote`
 

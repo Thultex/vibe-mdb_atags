@@ -1,6 +1,6 @@
 var fso = new ActiveXObject("Scripting.FileSystemObject");
 var scriptDir = fso.GetParentFolderName(WScript.ScriptFullName);
-var addonPath = fso.BuildPath(scriptDir, "..\\addons\\3_workflow\\dustingDayCollector.js");
+var addonPath = fso.BuildPath(scriptDir, "..\\addons\\5_dusting-day\\dustingDayCollector.js");
 
 eval(fso.OpenTextFile(addonPath, 1).ReadAll());
 

@@ -68,7 +68,7 @@ Dosis: 40mg
 Erstes Add-on:
 
 ```text
-addons/3_workflow/dustingDayCollector.js
+addons/5_dusting-day/dustingDayCollector.js
 updateDustingDayOutNote()
 ```
 
@@ -79,7 +79,7 @@ Das Add-on soll wie die Core-Scripte als GitHub-Referenz geladen werden.
 GitHub Raw URL:
 
 ```text
-https://raw.githubusercontent.com/Thultex/vibe-mdb_atags/main/addons/3_workflow/dustingDayCollector.js
+https://raw.githubusercontent.com/Thultex/vibe-mdb_atags/main/addons/5_dusting-day/dustingDayCollector.js
 ```
 
 Manueller Test-Anschluss in der Library `DustingDay`:
@@ -114,7 +114,7 @@ debugDustingDayCollector({
 
 Dieser Aufruf schreibt sichtbar in `OutNote`, wie `InLinks` im Script ankommt und welche Felder aus den verlinkten Inputs gelesen werden.
 
-Wichtig: Die URL funktioniert erst, wenn `addons/3_workflow/dustingDayCollector.js` nach GitHub `main` gepusht wurde.
+Wichtig: Die URL funktioniert erst, wenn `addons/5_dusting-day/dustingDayCollector.js` nach GitHub `main` gepusht wurde.
 
 Der eigentliche Alltags-Anschluss gehört später in `DustingDayInput`, weil dort ein neuer Eintrag entsteht.
 

@@ -251,7 +251,7 @@ Funktion:
 Modul:
 
 ```text
-addons/3_workflow/dustingDayCollector.js
+addons/5_dusting-day/dustingDayCollector.js
 updateDustingDayOutNote()
 ```
 
