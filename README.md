@@ -23,7 +23,7 @@ Regeln:
 
 - Modulversion pro geänderter Datei anheben
 - Jede Datei hat eine stabile Kennung im Header: `#` fuer Remote-Libs, `A` fuer Core, `B` fuer Addons, `C` fuer geloeste eigenstaendige Module.
-- Die Nummer folgt der alphanumerischen Repo-Reihenfolge im jeweiligen Dateibereich. Remote-Libs: `#1` bis `#3`; Core: `A1` bis `A4`; Addons: `B1` bis `B9`; geloeste generelle Module: `C1` bis `C3`.
+- Die Nummer folgt der alphanumerischen Repo-Reihenfolge im jeweiligen Dateibereich. Remote-Libs: `#1` bis `#3`; Core: `A1` bis `A4`; Addons: `B1` bis `B10`; geloeste generelle Module: `C1` bis `C3`.
 - Kopfblöcke in Moduldateien sehr kurz halten; ausführliche Änderungen gehören in `CHANGELOG.md`
 - In Kopfblöcken vorsichtig mit Quotes, Backticks, langen `Änderungen`-Listen und Sonderzeichen umgehen, weil der Memento-Java-Editor daran hängen bleiben kann
 - Changelog mit Datum, Versionssprung und Wirkung ergänzen
@@ -140,6 +140,9 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
 - `B7` `addons/3_workflow/timeMarker.js` (Zeitmarker fuer Textfelder)
   - `appendTimeMarker()`
   - optionales Stundenlimit ueber `maxHours` (Default: `30`)
+- `B10` `addons/3_workflow/dustingDayCollector.js` (Dustingday-Tagesnotiz aus verlinkten Inputs)
+  - `updateDustingDayOutNote()`
+  - liest `DustingDay.InLinks`, sortiert nach `DustingDayInput.Date` und schreibt `OutNote`
 
 **Integration Add-ons**
 - `B8` `addons/6_integration/obsidianLinker.js` (Memento-zu-Obsidian Advanced URI)
@@ -170,6 +173,7 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
 - `tests/test_tagPairParser.js`
 - `tests/test_tagCleaner.js`
 - `tests/test_timeMarker.js`
+- `tests/test_dustingDayCollector.js`
 - `tests/test_syncLastFromLatest.js`
 - `tests/test_typedTextFields.js`
 - `tests/test_sequenceCounter.js`

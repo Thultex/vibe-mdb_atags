@@ -24,6 +24,14 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 
 ## Log
 
+### 2026-06-20 - (ca. 0,5h)
+
+- *Summary: Dustingday-Projektstart, Memento-Konfiguration und erstes OutNote-Add-on.*
+- Projekt: `project/dustingday` mit README, persönlichem Plan, Codex-Plan, Strukturdatei und Memento-Konfiguration angelegt.
+- Feature: Dustingday-Collector-Add-on `addons/3_workflow/dustingDayCollector.js`; `updateDustingDayOutNote()` baut aus manuell gesetzten `DustingDay.InLinks` eine zeitlich sortierte `OutNote`.
+- Test: `tests/test_dustingDayCollector.js` deckt Array-/Java-Listen-Relationen, Feldmapping, Row-Rundung und leere Links ab.
+- *Versionen: Dusting Day v0.10.*
+
 ### 2026-05-20 - (ca. 0,5h)
 
 - Doku: Changelog-Zeiten geschätzt; Tagesdauern aus Git-/Commit-Spannen mit `ca.` ergänzt, Stats ohne wiederholtes `ca.` verdichtet.
