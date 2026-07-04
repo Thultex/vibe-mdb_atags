@@ -17,6 +17,9 @@ Aktuelle Felder:
   - Typ: Tag
 - `Date`
   - Typ: Datum/Zeit
+- `Datum`
+  - Typ: Datum/Zeit
+  - aktueller Prototyp nutzt dieses Feld beim Zusammenführen mit der Eindosierungstabelle
 - `DayLinks`
   - Typ: Beziehung / Relation
   - Ziel: `DustingDay`
@@ -34,12 +37,31 @@ Aktuelle Felder:
 - `Titel`
   - Typ: Text
   - optional
-- `OutNote`
+- `Notiz`
   - Typ: Text
 - `Datum`
   - Typ: Datum/Zeit
-- `OutTags`
+- `Tags`
   - Typ: Tag
+- `Atags User`
+  - Typ: Tag
+  - User-/Fremdtags für ATAG-Auswertung
+- `tags`
+  - Typ: Tag
+  - Parser-/Export-Zielfeld der bestehenden ATAG-Pipeline
+- `Atag Aliases`
+  - Typ: Text
+  - Aliasdefinitionen für ATAG-Auswertung
+- `Atag MD`
+  - Typ: Text
+- `Atag Rows MD`
+  - Typ: Text
+- `Atag Rows Html`
+  - Typ: Text
+- `Atag Json`
+  - Typ: Text
+- `Atag Tree`
+  - Typ: Text
 - `Debug`
   - Typ: Text
   - optionales Diagnosefeld für Script-Ausgaben
@@ -50,31 +72,31 @@ Für erste Dustingday-Module gilt bei Einzel-Einträgen:
 
 - Notizfeld: `InNote`
 - Tagfeld: `InTag`
-- Zeitfeld: `Date`
+- Zeitfeld: `Datum` im aktuellen Eindosierungs-Prototyp, `Date` bleibt alter Teststand
 - Tagesrelation: `DayLinks`
 - Titel: `Titel`, optional
 - Debug-Ausgabe: `Debug`, optional
 
 Für Tages-Einträge gilt:
 
-- Notiz-Ausgabe: `OutNote`
-- Tag-Ausgabe: `OutTags`
+- Notiz-Ausgabe: `Notiz`
+- Tag-Ausgabe: `Tags`
 - Tagesdatum: `Datum`
 - Titel: `Titel`, optional
 - Debug-Ausgabe: `Debug`
 
 ## Noch offen
 
-- Ob `OutTags` später zusätzlich in ein ATAG-UserTags-Feld gespiegelt wird
+- Ob `Tags` und `Atags User` dauerhaft getrennt bleiben oder DustingDay eine eigene Parser-/UserTag-Struktur bekommt
 
 ## Script-Referenz
 
-`dd-linker.js` soll in Memento wie die Core-Scripte als GitHub-Referenz geladen werden.
+`inputLinker_lib.js` soll in Memento wie die Core-Libs als GitHub-Referenz geladen werden. Die Lib heißt `Input Linker`.
 
 Nach Push auf `main`:
 
 ```text
-https://raw.githubusercontent.com/Thultex/vibe-mdb_atags/main/addons/5_dusting-day/dd-linker.js
+https://raw.githubusercontent.com/Thultex/vibe-mdb_atags/main/core_lib/inputLinker_lib.js
 ```
 
 Der eigentliche Alltags-Trigger liegt in `DustingInput`:
@@ -83,5 +105,55 @@ Der eigentliche Alltags-Trigger liegt in `DustingInput`:
 DustingInput speichern
   -> passenden DustingDay finden oder erstellen
   -> DustingInput.DayLinks auf DustingDay setzen
-  -> DustingDay.OutNote aktualisieren
+  -> DustingDay.Notiz und Tags aktualisieren
 ```
+
+Aktueller Prototyp-Aufruf beim Zusammenführen mit der Eindosierungstabelle:
+
+```js
+linkInputEntryToTarget({
+  targetLib: "DustingDay",
+  sourceDateField: "Datum",
+  targetDateField: "Datum",
+  sourceDayLinkField: "DayLinks",
+  rowSourceMode: "realtime_since",
+  rowStepHours: 0.1,
+  rowRoundMode: "round",
+  recalcTarget: true,
+  recalcSource: true,
+  sourceDebugField: "Debug",
+  map: [
+    { from: "InNote", to: "Notiz", type: "string_rows" },
+    { from: "InTag", to: "Tags", type: "tag" }
+  ]
+});
+```
+
+Day-seitiger Refresh in `DustingDay`:
+
+```js
+refreshTargetFromInputEntries({
+  inputLib: "DustingInput",
+  sourceDateField: "Datum",
+  targetDateField: "Datum",
+  sourceDayLinkField: "DayLinks",
+  rowSourceMode: "realtime_since",
+  rowStepHours: 0.1,
+  rowRoundMode: "round",
+  findMatchingEntries: true,
+  linkNewEntries: true,
+  processAllEntries: true,
+  processMode: "append",
+  recalcTarget: true,
+  targetDebugField: "Debug",
+  processMap: [
+    { from: "InNote", to: "Notiz", type: "string_rows" },
+    { from: "InTag", to: "Tags", type: "tag" }
+  ]
+});
+```
+
+
+
+
+

@@ -141,7 +141,7 @@ Das bedeutet:
 - `core/_checkLibs.js` ist der Checker/Loader, keine Remote-Lib; `checkAtagLibVersions({ checkAccess: true })` prueft die erwarteten Remote-Libs und ihre aufrufbaren Versionsfunktionen.
 - `core/helpers.js` gehoert funktionell zur Lib-Nutzung, bleibt aber Memento-spezifisch, verweist auf `core_lib/helpers_lib.js` und wird nicht in `checkLibVersions()` registriert.
 - `core/tagCleaner.js` ist ein Core-Modul, keine Remote-Lib. Es hat eine eigene Versionsfunktion, steht aber nicht in der Remote-Lib-Registry.
-- Wenn eine Remote-Lib-Version steigt, `core/_checkLibs.js`, `core_lib/LIB_VERSIONS.md` und die Versionstests mitpruefen.
+- Wenn eine Remote-Lib-Version steigt, `core/_checkLibs.js`, `core_lib/Z_LIB_VERSIONS.md` und die Versionstests mitpruefen.
 
 Beispiele:
 
@@ -227,3 +227,5 @@ Optionaler Repo-Check:
 
 - `powershell -ExecutionPolicy Bypass -File .\check_versioning.ps1`
 - prüft bei geänderten Moduldateien, ob die Dateiversion erhöht wurde und ob `CHANGELOG.md` mit geändert ist
+
+

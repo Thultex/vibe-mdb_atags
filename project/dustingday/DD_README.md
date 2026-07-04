@@ -31,8 +31,8 @@ Damit kann ein Input-Eintrag dauerhaft seinen Tages-Eintrag halten. Da Memento-R
 
 ## Dateien
 
-- `plan.md`: persönliche Notiz und rohe Projektidee.
-- `vibe-plan.md`: Codex-Arbeitsplan mit technischen Annahmen, offenen Fragen und nächsten Schritten.
+- `DD_README.md`: Projektüberblick und Memento-Anschluss.
+- `memento_config.md`: aktuelle Memento-Konfiguration.
 - `stuct.md`: funktionelle Strukturüberlegung auf Modul- und Datenfluss-Ebene.
 
 ## Beispiel
@@ -60,64 +60,67 @@ Dosis: 40mg
 
 1. `DustingInput.DayLinks -> DustingDay` in Memento testen.
 2. Beim Speichern eines Inputs passenden `DustingDay` finden oder erstellen.
-3. Map-Felder übertragen, z. B. `InNote -> OutNote` und `InTag -> OutTags`.
+3. Map-Felder übertragen, z. B. im aktuellen Prototyp `InNote -> Notiz` und `InTag -> Tags`.
 4. Rows und Tags nur ergänzen, wenn sie noch fehlen.
 5. Danach eine Day-Funktion zur Zuordnung/Reparatur aller Inputs bauen.
 6. Später mentale Hilfen, hilfreiche Methoden und Lösungsansätze aus Mustern ableiten.
 
-Erstes Add-on:
+Core-Lib für die Verknüpfung:
 
 ```text
-addons/5_dusting-day/dd-linker.js
-appendToDayEntry()
+core_lib/inputLinker_lib.js
+linkInputEntryToTarget()
+Name: Input Linker
 ```
 
 ## Script-Anschluss in Memento
 
-Das Add-on soll wie die Core-Scripte als GitHub-Referenz geladen werden.
+Die Core-Lib soll wie die anderen Core-Libs als GitHub-Referenz geladen werden.
 
 GitHub Raw URL:
 
 ```text
-https://raw.githubusercontent.com/Thultex/vibe-mdb_atags/main/addons/5_dusting-day/dd-linker.js
+https://raw.githubusercontent.com/Thultex/vibe-mdb_atags/main/core_lib/inputLinker_lib.js
 ```
 
 Anschluss in der Library `DustingInput`:
 
-1. Script/Library-Referenz auf `dd-linker.js` laden.
+1. Script/Library-Referenz auf `inputLinker_lib.js` laden.
 2. Danach im `DustingInput`-Trigger den Aufruf setzen.
 3. Ideal: After Save / After Entry. Fallback: Before Save, wenn Cross-Library-Schreiben dort stabil läuft.
 
-Aufruf:
+Aufruf aktueller Prototyp beim Zusammenführen mit der Eindosierungstabelle:
 
 ```js
-appendToDayEntry({
+linkInputEntryToTarget({
   targetLib: "DustingDay",
-  sourceDateField: "Date",
-  targetDateField: "Date",
+  sourceDateField: "Datum",
+  targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
-  rowMode: "clock",
-  rowStepHours: 0.5,
+  rowSourceMode: "realtime_since",
+  rowStepHours: 0.1,
+  rowRoundMode: "round",
   recalcTarget: true,
   recalcSource: true,
+  sourceDebugField: "Debug",
   map: [
-    { from: "InNote", to: "OutNote", type: "string" },
-    { from: "InTag", to: "OutTags", type: "tag" }
+    { from: "InNote", to: "Notiz", type: "string_rows" },
+    { from: "InTag", to: "Tags", type: "tag" }
   ]
 });
 ```
 
-Wichtig: Die URL funktioniert erst, wenn `addons/5_dusting-day/dd-linker.js` nach GitHub `main` gepusht wurde.
+Wichtig: Die URL funktioniert erst, wenn `core_lib/inputLinker_lib.js` nach GitHub `main` gepusht wurde.
 
 Optionaler Schutzmodus: Mit `strictTargetValidation: true` bricht der Linker ab, wenn vorhandene `DustingDay`-Einträge das konfigurierte `targetDateField` oder Ziel-Mappingfelder nicht lesbar besitzen. Standardmäßig ist diese Prüfung aus, weil Memento-Feldzugriff je nach Kontext sonst fälschlich blockieren kann.
 
 Debug für Ziel-Library-Zugriff:
 
 ```js
-debugDayLinkerAccess({
+debugInputLinkerAccess({
   targetLib: "DustingDay",
-  sourceDateField: "Date",
-  targetDateField: "Date",
+  sourceDateField: "Datum",
+  targetDateField: "Datum",
   sourceDebugField: "Debug"
 });
 ```
@@ -131,8 +134,175 @@ Zielablauf:
 DustingInput speichern
   -> passenden DustingDay finden oder erstellen
   -> DustingInput.DayLinks auf DustingDay setzen
-  -> DustingDay.OutNote / OutTags über map ergänzen
+  -> DustingDay.Notiz / Tags über map ergänzen
 ```
 
 Der produktive Flow geht vom Input-Eintrag aus.
 `recalcTarget` und `recalcSource` rufen nach dem Schreiben defensiv `recalc()` auf, falls Memento diese Entry-Methode im jeweiligen Kontext anbietet.
+
+Hinweis zu Rows: `rowSourceMode: "realtime_since"` nutzt im `Input Linker` die absolute Tageszeit des Input-Eintrags, nicht die Differenz zum Tages-Eintrag. Der Name bleibt bewusst nah an TimeMarker-Konfigurationen, die Semantik für DustingDay ist aber die Tageszeit-Row.
+
+## Day-seitiger Refresh
+
+`refreshTargetFromInputEntries()` ist die DustingDay-Seite des `Input Linker`. Sie läuft auf einem Tages-Eintrag und kann:
+
+- passende `DustingInput`-Einträge suchen
+- unverbundene passende Inputs mit dem Day verlinken
+- bereits mit diesem Day verlinkte Inputs lesen
+- die `map` appendend anwenden
+- oder mit `processMode: "rebuild"` die gemappten Zielfelder zuerst leeren und danach aus den Inputs neu aufbauen
+- optional einen oder mehrere Inputs per `entries` verarbeiten
+
+Empfohlener Standard: passende Inputs suchen, neue Links setzen, danach alle mit diesem Day verlinkten Inputs ausführen. Inputs, die bereits mit einem anderen Day verlinkt sind, werden nicht übernommen.
+
+Day-Action / DustingDay-Trigger:
+
+```js
+refreshTargetFromInputEntries({
+  inputLib: "DustingInput",
+  sourceDateField: "Datum",
+  targetDateField: "Datum",
+  sourceDayLinkField: "DayLinks",
+  rowSourceMode: "realtime_since",
+  rowStepHours: 0.1,
+  rowRoundMode: "round",
+  findMatchingEntries: true,
+  linkNewEntries: true,
+  processAllEntries: true,
+  processMode: "append",
+  recalcTarget: true,
+  targetDebugField: "Debug",
+  processMap: [
+    { from: "InNote", to: "Notiz", type: "string_rows" },
+    { from: "InTag", to: "Tags", type: "tag" }
+  ]
+});
+```
+
+Rebuild:
+
+```js
+refreshTargetFromInputEntries({
+  inputLib: "DustingInput",
+  sourceDateField: "Datum",
+  targetDateField: "Datum",
+  sourceDayLinkField: "DayLinks",
+  processAllEntries: true,
+  processMode: "rebuild",
+  processMap: [
+    { from: "InNote", to: "Notiz", type: "string_rows" },
+    { from: "InTag", to: "Tags", type: "tag" }
+  ]
+});
+```
+
+Einzelnen Input auf einen Day anwenden:
+
+```js
+refreshTargetFromInputEntries({
+  entries: inputEntry,
+  targetEntry: dayEntry,
+  sourceDateField: "Datum",
+  targetDateField: "Datum",
+  sourceDayLinkField: "DayLinks",
+  linkNewEntries: true,
+  processMap: [
+    { from: "InNote", to: "Notiz", type: "string_rows" },
+    { from: "InTag", to: "Tags", type: "tag" }
+  ]
+});
+```
+
+Die allgemeine PostEntry-/ATAG-Vorlage steht zentral in `ENTRY_WORKFLOWS.md`. Für DustingDay ist dort besonders der optionale `PostEntry(e)`-Parameter relevant, damit ein `DustingDay`-Eintrag auch aus einem `DustingInput`-Trigger heraus gezielt ausgewertet werden kann.
+
+Aktuelle DustingDay-PostEntry-Variante:
+
+```js
+function PostEntry(e) {
+  e = e || entry();
+
+  applyTagCleaner({
+    entryObj: e,
+    textField: "Notiz",
+    tagBarPosition: "top",
+    tagBarSpacing: "blank",
+    aliasTextFields: ["Atag Aliases"],
+    tagFields: ["Tags", "Atags User"]
+  });
+
+  var result = applyTags({
+    entryObj: e,
+    textFields: ["Notiz", "Record", "Atag Aliases"],
+    targetField: "tags",
+    targetFieldType: "tags",
+    preserveForeignTagsField: "Tags User",
+    parserOwnedTagsField: "Tags Parser"
+  });
+
+  applyTags({
+    entryObj: e,
+    targetField: "Atag MD",
+    targetFieldType: "md",
+    result: result
+  });
+
+  applyTags({
+    entryObj: e,
+    enabled: false,
+    targetField: "Atag Rows MD",
+    targetFieldType: "rows_md",
+    result: result
+  });
+
+  applyTags({
+    entryObj: e,
+    enabled: false,
+    targetField: "Atag Rows Html",
+    targetFieldType: "rows_html",
+    shortenTableHeaders: 7,
+    result: result
+  });
+
+  applyTags({
+    entryObj: e,
+    enabled: true,
+    targetField: "Atag Json",
+    targetFieldType: "json",
+    result: result
+  });
+
+  applyTags({
+    entryObj: e,
+    enabled: true,
+    targetField: "Atag Tree",
+    targetFieldType: "tree_md",
+    includeEmptyCategories: false,
+    result: result
+  });
+
+  cleanupTimeMarker({
+    entryObj: e,
+    targetTextField: "Notiz",
+    sourceMode: "realtime_since",
+    startDatetimeField: "Datum",
+    stepHours: 0.5,
+    roundMode: "round",
+    maxHours: 15
+  });
+
+  syncFieldBack({
+    entryObj: e,
+    fields: ["Atag Aliases"],
+    overwrite: true
+  });
+
+  if (typeof e.recalc === "function") e.recalc();
+
+  return result;
+}
+```
+
+
+
+
+

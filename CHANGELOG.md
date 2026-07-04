@@ -32,13 +32,13 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Feature: Dustingday-Collector-Debug v0.11; `debugDustingDayCollector()` schreibt sichtbare Diagnose zu `InLinks`, verknüpften Entries und Feldwerten in `OutNote`.
 - Change: Dustingday-Collector-Debug v0.12; `debugDustingDayCollector()` schreibt standardmäßig in `Debug`, damit `OutNote` fachliche Ausgabe bleibt.
 - Feature: Dustingday-Input-Debug v0.13; `debugDustingInputCollector()` schreibt Diagnose für den aktuellen `DustingInput`-Eintrag in `Debug`; `debugDustingDayInputCollector()` bleibt als Alias erhalten.
-- Feature: `addons/5_dusting-day/dd-linker.js` v0.10; `appendToDayEntry()` adaptiert den funktionierenden Linker auf `DustingInput.DayLinks -> DustingDay`, Map-Felder, eindeutige Rows/Tags und Row-Modi `clock`/`sinceFirst`.
+- Feature: `addons/5_dusting-day/dd-linker.js` v0.10; `linkInputEntryToTarget()` adaptiert den funktionierenden Linker auf `DustingInput.DayLinks -> DustingDay`, Map-Felder, eindeutige Rows/Tags und Row-Modi `clock`/`sinceFirst`.
 - Fix: `dd-linker.js` v0.11 verhindert neue Tages-Einträge bei wahrscheinlich falschem `targetDateField` und gleicht fehlende Tags bei neuen Inputs erneut gegen den Tages-Eintrag ab.
 - Change: `dd-linker.js` v0.13 entfernt die Day-seitige Refresh-Doppellogik wieder und ergänzt stattdessen optionale `recalcTarget`-/`recalcSource`-Aufrufe nach dem Schreiben.
 - Fix: `dd-linker.js` v0.14 macht die Ziel-Feldvalidierung optional (`strictTargetValidation`) und nutzt vorhandene `DayLinks` vor der Datumssuche, damit Memento-Feldzugriff nicht fälschlich Tageserstellung blockiert.
-- Feature: `dd-linker.js` v0.15 ergänzt `debugDayLinkerAccess()` zur Diagnose von `libByName`, `entries()` und optionalem `create()` gegen die Ziel-Library.
+- Feature: `dd-linker.js` v0.15 ergänzt `debugInputLinkerAccess()` zur Diagnose von `libByName`, `entries()` und optionalem `create()` gegen die Ziel-Library.
 - Fix: `dd-linker.js` v0.16 unterstützt Iterator-Rückgaben von `entries()`; vorhandene Day-Einträge werden dadurch in Memento korrekt gefunden statt als einzelner Iterator behandelt zu werden.
-- Change: `dd-linker.js` v0.17 schreibt `debugDayLinkerAccess()` zusätzlich immer zeilenweise ins Memento-Log.
+- Change: `dd-linker.js` v0.17 schreibt `debugInputLinkerAccess()` zusätzlich immer zeilenweise ins Memento-Log.
 - Change: `dd-linker.js` v0.19 schreibt Debug-Ausgaben als einen zusammenhängenden Log-Block und ergänzt Version/Zeitpunkt im Debug-Header.
 - Fix: `dd-linker.js` v0.20 behandelt nicht lesbare Zielwerte beim Anhängen als leer, solange `set()` funktioniert; dadurch verschwinden falsche Fehler für `OutNote`/`OutTags`.
 - Fix: `dd-linker.js` v0.21 entpackt Rhino `NativeArray`-/Java-Listenwerte für Tags, statt Objektstrings wie `org.mozilla.javascript.NativeArray@...` in `OutTags` zu schreiben.
@@ -48,11 +48,17 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Fix: `dd-linker.js` v0.25 prüft zuerst gleiche Kalendertage in den letzten `daySearchLimit` Day-Einträgen und nutzt den Vortag nur als Frühzeit-Fallback bis `dayStartHour`.
 - Fix: `dd-linker.js` v0.26 lässt vorhandene `DayLinks` den Abgleich nicht mehr blockieren; die Datumssuche in `DustingDay` gewinnt, ein bestehender Link dient nur noch als Fallback.
 - Fix: `dd-linker.js` v0.27 lässt brauchbare vorhandene `DayLinks` wieder gewinnen, führt den Feldabgleich aber bei jedem Lauf erneut aus; kaputte Links fallen auf die Datumssuche zurück.
+- Change: `dd-linker.js` v0.28 benennt das Sync-Plugin als `Input Linker` und verwendet für Rows TimeMarker-nahe Optionen `rowSourceMode`, `rowStepHours` und `rowRoundMode`.
+- Fix: `Input Linker` v0.29 behandelt `rowSourceMode: "realtime_since"` als absolute Tageszeit-Row statt als Differenz zum Tages-Eintrag.
+- Feature: `Input Linker` v0.30 ergänzt `refreshTargetFromInputEntries()` für DustingDay-seitiges Suchen, Verlinken, Append und Rebuild aus `DustingInput`-Einträgen.
+- Change: `Input Linker` v0.31 lag als Zwischenstand unter `addons/2_syncing/libaryEntryLinker.js`, nutzte die vereinfachte Refresh-API mit `entries`, `findMatchingEntries`, `linkNewEntries`, `processAllEntries`, `processMode` und `processMap`, und trennte `string` von `string_rows`.
+- Change: `Input Linker` v0.32 ist feste optionale Core-Lib `inputLinker_lib`; alte Day-/Failsafe-Funktionsnamen wurden entfernt und durch `linkInputEntryToTarget()`, `refreshTargetFromInputEntries()` und `debugInputLinkerAccess()` ersetzt.
+- Change: `libVersions` v1.09 unterstützt optionale Libs und `verbose: true` für schnelle Version-/Zugriffsprüfung per Log-Ausgabe.
 - Change: `syncFieldBack()` nutzt bei übergebenem `entryObj` dessen Library für den Ziel-Eintrag, sofern Memento diese am Entry bereitstellt; `syncFieldTo()` und `syncFieldAll()` verwenden denselben Entry-Library-Fallback.
 - Change: `updateSequenceSpree()` akzeptiert zusätzlich `entryObj` als Alias für `currentEntry`; bestehende `currentEntry`-Aufrufe haben weiter Vorrang.
-- Test: `tests/test_dd_linker.js` deckt Tageserstellung, Source-Link, erste Notizzeile, Duplikatschutz und relative Row-Zeit ab.
+- Test: `tests/test_inputLinker.js` deckt Tageserstellung, Source-Link, erste Notizzeile, Duplikatschutz und relative Row-Zeit ab.
 - Test: `tests/test_dustingDayCollector.js` deckt Array-/Java-Listen-Relationen, Feldmapping, Row-Rundung und leere Links ab.
-- *Versionen: Dusting Day Collector v0.13, Dusting Day Linker v0.27, Global Field Sync v1.03, Sequence Counter v1.05.*
+- *Versionen: Dusting Day Collector v0.13, Input Linker v0.32, libVersions v1.09, Global Field Sync v1.03, Sequence Counter v1.05.*
 
 ### 2026-05-20 - (ca. 0,5h)
 
@@ -126,7 +132,7 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Refactor: String-/Quote-Basishelfer aus dem Cleaner in `helpers_lib` ausgelagert
 - Test/Doku: Pfade, Versionierungscheck und TagCleaner-Beispiele an die neue Struktur angepasst
 - Feature: `core/_checkLibs.js` mit `checkLibVersions()` und eigener Versionsfunktion pro Lib ergaenzt
-- Doku: `core_lib/LIB_VERSIONS.md` als statische Uebersicht der aktuellen Remote-Lib-Versionen ergaenzt
+- Doku: `core_lib/Z_LIB_VERSIONS.md` als statische Uebersicht der aktuellen Remote-Lib-Versionen ergaenzt
 - Struktur: `core/helpers.js` enthaelt gezielt Memento-Wrapper wie `applyTags`, verweist auf `core_lib/helpers_lib.js`; `helpers` und `tagCleaner` werden nicht als Remote-Libs registriert
 - Fix: Superscript-Werte in Readable-/Tagbar-Zeilen werden auch vor Satzzeichen erkannt, z. B. `testc⁴,`
 - Test: Regression fuer `"| testa² testb³ testc⁴, reˣ schreibenˣ` ergaenzt
@@ -547,3 +553,7 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Test/Doku: `tests/test_collectAtags.js` ergaenzt.
 - *Versionen: collectAtags v1.22.*
 ```
+
+
+
+

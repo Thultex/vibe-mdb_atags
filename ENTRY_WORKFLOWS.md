@@ -89,11 +89,34 @@ Ohne `core/helpers.js` sind `applyTags()`, `bulkApplyTags()` und `bulkExportAtag
    - `makeObsidianMementoUri()` laeuft spaet, damit der finale Notizinhalt verwendet wird.
    - `Hidden` wird am Ende gesetzt.
 
+## Entry-Argument
+
+Die Workflow-Funktion kann optional einen konkreten Eintrag annehmen:
+
+```js
+function AfterEntry(e) {
+  e = e || entry();
+  // alle entry-spezifischen Schritte bekommen entryObj: e
+}
+```
+
+Damit bleibt der normale Trigger-Aufruf `AfterEntry()` unverändert. Andere Scripts können dieselbe Logik aber gezielt auf einen fremden Eintrag anwenden, z. B. `AfterEntry(dayEntry)` nach einem Cross-Library-Update.
+
+Wichtig bei Cross-Library-Aufrufen:
+
+- `applyTagCleaner()`, `applyTags()`, `cleanupTimeMarker()` und `syncFieldBack()` bekommen `entryObj: e`.
+- `updateSequenceSpree()` akzeptiert `entryObj: e` als Alias für `currentEntry`.
+- `lib().entries()` bleibt immer der aktuelle Trigger-Kontext. Wenn `AfterEntry(dayEntry)` aus einer anderen Library heraus läuft, muss `entries` explizit aus der Ziel-Library kommen, z. B. `libByName("DustingDay").entries()`.
+- `syncFieldBack({ entryObj: e })` nutzt die Library des übergebenen Eintrags, falls Memento sie am Entry bereitstellt; sonst bleibt der bisherige `lib()`-Fallback.
+
 ## Before Save Code
 
 ```js
-function AfterEntry() {
+function AfterEntry(e) {
+  e = e || entry();
+
   markerFound = cleanupTimeMarker({
+    entryObj: e,
     targetTextField: "Notiz",
     sourceMode: "realtime",
     stepHours: 0.5,
@@ -117,6 +140,7 @@ function AfterEntry() {
   }
 
   applyTagCleaner({
+    entryObj: e,
     textField: "Notiz",
     tagBarPosition: "time_top",
     tagBarSpacing: "blank",
@@ -124,12 +148,14 @@ function AfterEntry() {
   });
 
   applyTagPairParser({
+    entryObj: e,
     tagField: "Tags",
     targetTextField: "Notiz",
     appendMode: "comma"
   });
 
   result = applyTags({
+    entryObj: e,
     textFields: ["Notiz", "Record", "Atag Aliases"],
     targetField: "tags",
     targetFieldType: "tags",
@@ -138,6 +164,7 @@ function AfterEntry() {
   });
 
   applyTags({
+    entryObj: e,
     textFields: ["Notiz", "Record"],
     targetField: "Atag MD",
     targetFieldType: "md",
@@ -147,6 +174,7 @@ function AfterEntry() {
   });
 
   applyTags({
+    entryObj: e,
     textFields: ["Notiz", "Record"],
     targetField: "Atag Rows MD",
     targetFieldType: "rows_md",
@@ -154,6 +182,7 @@ function AfterEntry() {
   });
 
   applyTags({
+    entryObj: e,
     textFields: ["Notiz", "Record"],
     targetField: "Atag Rows Html",
     targetFieldType: "rows_html",
@@ -161,6 +190,7 @@ function AfterEntry() {
   });
 
   applyTags({
+    entryObj: e,
     textFields: ["Notiz", "Record"],
     targetField: "Atag Json",
     targetFieldType: "json",
@@ -168,6 +198,7 @@ function AfterEntry() {
   });
 
   syncFieldBack({
+    entryObj: e,
     fields: ["Atag Aliases"],
     overwrite: true
   });
@@ -181,7 +212,107 @@ function AfterEntry() {
     open: true
   });
 
-  var e = entry();
   e.set("Hidden", true);
+}
+```
+
+## PostEntry-Variante
+
+Für PostEntry-Trigger kann dieselbe Form genutzt werden. Beispiel für die aktuell verwendete ATAG-Pipeline mit optionalem Entry-Argument:
+
+```js
+function PostEntry(e) {
+  e = e || entry();
+
+  applyTagCleaner({
+    entryObj: e,
+    textField: "Notiz",
+    tagBarPosition: "top",
+    tagBarSpacing: "blank",
+    aliasTextFields: ["Atag Aliases"],
+    tagFields: ["Tags", "Atags User"]
+  });
+
+  var result = applyTags({
+    entryObj: e,
+    textFields: ["Notiz", "Record", "Atag Aliases"],
+    targetField: "tags",
+    targetFieldType: "tags",
+    preserveForeignTagsField: "Tags User",
+    parserOwnedTagsField: "Tags Parser"
+  });
+
+  applyTags({
+    entryObj: e,
+    targetField: "Atag MD",
+    targetFieldType: "md",
+    result: result
+  });
+
+  applyTags({
+    entryObj: e,
+    enabled: false,
+    targetField: "Atag Rows MD",
+    targetFieldType: "rows_md",
+    result: result
+  });
+
+  applyTags({
+    entryObj: e,
+    enabled: false,
+    targetField: "Atag Rows Html",
+    targetFieldType: "rows_html",
+    shortenTableHeaders: 7,
+    result: result
+  });
+
+  applyTags({
+    entryObj: e,
+    enabled: true,
+    targetField: "Atag Json",
+    targetFieldType: "json",
+    result: result
+  });
+
+  applyTags({
+    entryObj: e,
+    enabled: true,
+    targetField: "Atag Tree",
+    targetFieldType: "tree_md",
+    includeEmptyCategories: false,
+    result: result
+  });
+
+  updateSequenceSpree({
+    entries: lib().entries(),
+    entryObj: e,
+    fieldDate: "Einnahmedatum",
+    groupFields: ["Dosis"],
+    fieldSequence: "Reihe",
+    fieldSpree: "Spree",
+    fieldSpreeMax: "Spree Max",
+    fieldBiasedSpree: "Biased Spree",
+    biasedSpreeCount: 1
+  });
+
+  cleanupTimeMarker({
+    entryObj: e,
+    targetTextField: "Notiz",
+    sourceMode: "realtime_since",
+    startDatetimeField: "Einnahmedatum",
+    stepHours: 0.5,
+    roundMode: "round",
+    maxHours: 15
+  });
+
+  syncFieldBack({
+    entryObj: e,
+    fields: ["Atag Aliases"],
+    overwrite: true
+  });
+
+  if (typeof e.recalc === "function") e.recalc();
+
+  return result;
 }
 ```

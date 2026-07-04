@@ -97,9 +97,13 @@ Ziel-Felder
 - `#1` `core_lib/collectAtags_lib.js`
 - `#2` `core_lib/exportAtags_lib.js`
 - `#3` `core_lib/helpers_lib.js`
+- `#4` `core_lib/inputLinker_lib.js` (optional; Input Linker)
+  - `linkInputEntryToTarget()`
+  - `refreshTargetFromInputEntries()`
+  - `debugInputLinkerAccess()`
 
-Empfohlene Lade-Reihenfolge: `helpers_lib`, dann `collectAtags_lib`, dann `exportAtags_lib`. `core/tagCleaner.js` nutzt ebenfalls `helpers_lib`.
-Optional vorher `core/_checkLibs.js` laden; dann koennen die erwarteten Remote-Libs ueber `checkAtagLibVersions({ checkAccess: true })` geprueft werden. Die aktuelle statische Uebersicht liegt in `core_lib/LIB_VERSIONS.md`.
+Empfohlene Lade-Reihenfolge: `helpers_lib`, dann `collectAtags_lib`, dann `exportAtags_lib`, optional `inputLinker_lib`. `core/tagCleaner.js` nutzt ebenfalls `helpers_lib`.
+Optional vorher `core/_checkLibs.js` laden; dann koennen die erwarteten Remote-Libs ueber `checkAtagLibVersions({ checkAccess: true, verbose: true })` geprueft werden. Die aktuelle statische Uebersicht liegt in `core_lib/Z_LIB_VERSIONS.md`.
 Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportAtags()` nutzt, muss danach zusaetzlich `core/helpers.js` geladen werden. Diese Datei nutzt `core_lib/helpers_lib.js`.
 
 **Core**
@@ -141,9 +145,6 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
   - `appendTimeMarker()`
   - optionales Stundenlimit ueber `maxHours` (Default: `30`)
 **Dustingday Add-ons**
-- `B11` `addons/5_dusting-day/dd-linker.js` (DustingInput mit DustingDay verbinden und Map-Felder übertragen)
-  - `appendToDayEntry()`
-  - sucht/erstellt den Tages-Eintrag, setzt `DustingInput.DayLinks`, hängt eindeutige Rows an und ergänzt Tags
 - `B10` `addons/5_dusting-day/dustingDayCollector.js` (Dustingday-Tagesnotiz aus verlinkten Inputs)
   - `updateDustingDayOutNote()`
   - alter Refresh-/Experimentpfad, liest verlinkte Inputs und schreibt `OutNote`
@@ -178,7 +179,7 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
 - `tests/test_tagCleaner.js`
 - `tests/test_timeMarker.js`
 - `tests/test_dustingDayCollector.js`
-- `tests/test_dd_linker.js`
+- `tests/test_inputLinker.js`
 - `tests/test_syncLastFromLatest.js`
 - `tests/test_typedTextFields.js`
 - `tests/test_sequenceCounter.js`
@@ -942,3 +943,7 @@ exportAtags({
   treeShowValues: false
 });
 ```
+
+
+
+

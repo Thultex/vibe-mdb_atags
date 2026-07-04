@@ -1,6 +1,6 @@
 var fso = new ActiveXObject("Scripting.FileSystemObject");
 var scriptDir = fso.GetParentFolderName(WScript.ScriptFullName);
-var addonPath = fso.BuildPath(scriptDir, "..\\addons\\5_dusting-day\\dd-linker.js");
+var addonPath = fso.BuildPath(scriptDir, "..\\core_lib\\inputLinker_lib.js");
 
 eval(fso.OpenTextFile(addonPath, 1).ReadAll());
 
@@ -162,13 +162,13 @@ function testCreatesDayLinksSourceAndAppendsMappedFields() {
 
   reset(input, []);
 
-  var result = appendToDayEntry({
+  var result = linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
     map: [
-      { from: "InNote", to: "OutNote", type: "string" },
+      { from: "InNote", to: "OutNote", type: "string_rows" },
       { from: "InTag", to: "OutTags", type: "tag" }
     ]
   });
@@ -195,19 +195,45 @@ function testDoesNotDuplicateSameLineOrTags() {
 
   reset(input, [day]);
 
-  appendToDayEntry({
+  linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
     map: [
-      { from: "InNote", to: "OutNote", type: "string" },
+      { from: "InNote", to: "OutNote", type: "string_rows" },
       { from: "InTag", to: "OutTags", type: "tag" }
     ]
   });
 
   assertEquals("no-duplicate-line", day.field("OutNote"), "14,5: erste Zeile");
   assertEquals("unique-tags", day.field("OutTags").join(","), "müde,stress");
+}
+
+function testStringTypeAppendsPlainTextWithoutRowPrefix() {
+  var day = makeEntry({
+    Datum: "2020-02-02 14:35",
+    PlainNote: ""
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 14:35",
+    InNote: "plain text",
+    DayLinks: null
+  });
+
+  reset(input, [day]);
+
+  linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Datum",
+    sourceDayLinkField: "DayLinks",
+    map: [
+      { from: "InNote", to: "PlainNote", type: "string" }
+    ]
+  });
+
+  assertEquals("plain-string-no-row", day.field("PlainNote"), "plain text");
 }
 
 function testSinceFirstUsesTargetDateAsZero() {
@@ -225,18 +251,49 @@ function testSinceFirstUsesTargetDateAsZero() {
 
   reset(input, [day]);
 
-  appendToDayEntry({
+  linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
     rowMode: "sinceFirst",
     map: [
-      { from: "InNote", to: "OutNote", type: "string" }
+      { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
   });
 
   assertEquals("relative-row", day.field("OutNote"), "1,5: später");
+}
+
+function testRowSourceModeRealtimeSinceUsesTimeMarkerNames() {
+  var day = makeEntry({
+    Datum: "2020-02-02 14:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 14:35",
+    InNote: "nach start",
+    InTag: [],
+    DayLinks: null
+  });
+
+  reset(input, [day]);
+
+  linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Datum",
+    sourceDayLinkField: "DayLinks",
+    rowSourceMode: "realtime_since",
+    rowStepHours: 0.1,
+    rowRoundMode: "round",
+    map: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertEquals("row-source-mode-realtime-since", day.field("OutNote"), "14,6: nach start");
 }
 
 function testWrongTargetDateFieldOnlyBlocksInStrictMode() {
@@ -255,7 +312,7 @@ function testWrongTargetDateFieldOnlyBlocksInStrictMode() {
 
   reset(input, [day]);
 
-  var result = appendToDayEntry({
+  var result = linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "WrongDate",
@@ -263,7 +320,7 @@ function testWrongTargetDateFieldOnlyBlocksInStrictMode() {
     sourceDebugField: "Debug",
     strictTargetValidation: true,
     map: [
-      { from: "InNote", to: "OutNote", type: "string" }
+      { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
   });
 
@@ -287,13 +344,13 @@ function testNonStrictTargetDateFieldAllowsCreate() {
 
   reset(input, [day]);
 
-  var result = appendToDayEntry({
+  var result = linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
     map: [
-      { from: "InNote", to: "OutNote", type: "string" }
+      { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
   });
 
@@ -316,7 +373,7 @@ function testNewInputAddsMissingTagsToExistingDay() {
 
   reset(input, [day]);
 
-  appendToDayEntry({
+  linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Datum",
@@ -349,13 +406,13 @@ function testExistingFunctionalSourceDayLinkWinsOverDateSearch() {
 
   reset(input, [linkedDay, otherDay]);
 
-  var result = appendToDayEntry({
+  var result = linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
     map: [
-      { from: "InNote", to: "OutNote", type: "string" }
+      { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
   });
 
@@ -382,13 +439,13 @@ function testBrokenSourceDayLinkFallsBackToDateSearch() {
 
   reset(input, [day]);
 
-  var result = appendToDayEntry({
+  var result = linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
     map: [
-      { from: "InNote", to: "OutNote", type: "string" }
+      { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
   });
 
@@ -413,13 +470,13 @@ function testAlreadyLinkedInputCanAddNewMappedValuesOnRerun() {
 
   reset(input, [day]);
 
-  var result = appendToDayEntry({
+  var result = linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
     map: [
-      { from: "InNote", to: "OutNote", type: "string" },
+      { from: "InNote", to: "OutNote", type: "string_rows" },
       { from: "InTag", to: "OutTags", type: "tag" }
     ]
   });
@@ -445,7 +502,7 @@ function testRecalcSourceAndTargetWhenConfigured() {
 
   reset(input, [day]);
 
-  var result = appendToDayEntry({
+  var result = linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Datum",
@@ -453,7 +510,7 @@ function testRecalcSourceAndTargetWhenConfigured() {
     recalcSource: true,
     recalcTarget: true,
     map: [
-      { from: "InNote", to: "OutNote", type: "string" }
+      { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
   });
 
@@ -475,18 +532,18 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
 
   reset(input, [day]);
 
-  debugDayLinkerAccess({
+  debugInputLinkerAccess({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDebugField: "Debug"
   });
 
-  if (String(input.field("Debug")).indexOf("file: dd-linker.js") !== 0) {
+  if (String(input.field("Debug")).indexOf("file: inputLinker_lib.js") !== 0) {
     fail("debug-linker-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("DEBUG Dusting Day Linker") < 0) {
+  if (String(input.field("Debug")).indexOf("DEBUG Input Linker") < 0) {
     fail("debug-linker-prefix missing");
   }
 
@@ -494,7 +551,11 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-entry-count missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.27") < 0) {
+  if (String(input.field("Debug")).indexOf("name: Input Linker") < 0) {
+    fail("debug-linker-name missing");
+  }
+
+  if (String(input.field("Debug")).indexOf("version: 0.32") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -502,11 +563,11 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-time missing");
   }
 
-  if (_logs.join("\n").indexOf("DEBUG Dusting Day Linker") < 0) {
+  if (_logs.join("\n").indexOf("DEBUG Input Linker") < 0) {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.27") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.32") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -520,6 +581,10 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
 
   if (String(input.field("Debug")).indexOf("daySearchLimit: 10") < 0) {
     fail("debug-linker-day-search-limit missing");
+  }
+
+  if (String(input.field("Debug")).indexOf("rowSourceMode: realtime") < 0) {
+    fail("debug-linker-row-source-mode missing");
   }
 }
 
@@ -541,13 +606,13 @@ function testWriteOnlyTargetFieldsDoNotProduceFalseReadErrors() {
 
   reset(input, [day]);
 
-  var result = appendToDayEntry({
+  var result = linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
     map: [
-      { from: "InNote", to: "OutNote", type: "string" },
+      { from: "InNote", to: "OutNote", type: "string_rows" },
       { from: "InTag", to: "OutTags", type: "tag" }
     ]
   });
@@ -572,7 +637,7 @@ function testNativeArrayLikeTagsAreUnpacked() {
 
   reset(input, [day]);
 
-  appendToDayEntry({
+  linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Date",
@@ -600,7 +665,7 @@ function testArrayLikeTagsDoNotUseEntriesPairs() {
 
   reset(input, [day]);
 
-  appendToDayEntry({
+  linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Date",
@@ -632,14 +697,14 @@ function testSetThrowAfterWriteDoesNotLogFalseTargetErrorsByDefault() {
 
   reset(input, [day]);
 
-  var result = appendToDayEntry({
+  var result = linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
     sourceDebugField: "Debug",
     map: [
-      { from: "InNote", to: "OutNote", type: "string" },
+      { from: "InNote", to: "OutNote", type: "string_rows" },
       { from: "InTag", to: "OutTags", type: "tag" }
     ]
   });
@@ -661,22 +726,22 @@ function testErrorDebugStartsWithFileVersionAndTime() {
 
   reset(input, []);
 
-  appendToDayEntry({
+  linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
     sourceDebugField: "Debug",
     map: [
-      { from: "InNote", to: "OutNote", type: "string" }
+      { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
   });
 
-  if (String(input.field("Debug")).indexOf("file: dd-linker.js") !== 0) {
+  if (String(input.field("Debug")).indexOf("file: inputLinker_lib.js") !== 0) {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.27") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.32") < 0) {
     fail("error-debug-version missing");
   }
 
@@ -706,13 +771,13 @@ function testFindsExistingDayFromIteratorEntries() {
     DustingDay: makeIteratorLib([day])
   });
 
-  var result = appendToDayEntry({
+  var result = linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
     map: [
-      { from: "InNote", to: "OutNote", type: "string" }
+      { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
   });
 
@@ -736,13 +801,13 @@ function testUsesPreviousDayBeforeFourOnlyWhenSameCalendarDayIsMissing() {
 
   reset(input, [day]);
 
-  var result = appendToDayEntry({
+  var result = linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
     map: [
-      { from: "InNote", to: "OutNote", type: "string" }
+      { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
   });
 
@@ -772,13 +837,13 @@ function testBeforeFourPrefersSameCalendarDayOverPreviousDay() {
 
   reset(input, [sameDay, previousDay]);
 
-  var result = appendToDayEntry({
+  var result = linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
     map: [
-      { from: "InNote", to: "OutNote", type: "string" }
+      { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
   });
 
@@ -803,13 +868,13 @@ function testAfterFourCreatesNextDustingDayWhenSameDayIsMissing() {
 
   reset(input, [day]);
 
-  var result = appendToDayEntry({
+  var result = linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
     map: [
-      { from: "InNote", to: "OutNote", type: "string" }
+      { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
   });
 
@@ -838,14 +903,14 @@ function testDaySearchLimitRestrictsDateReuse() {
 
   reset(input, [recentOther, oldMatch]);
 
-  var result = appendToDayEntry({
+  var result = linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
     daySearchLimit: 1,
     map: [
-      { from: "InNote", to: "OutNote", type: "string" }
+      { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
   });
 
@@ -854,9 +919,196 @@ function testDaySearchLimitRestrictsDateReuse() {
   assertEquals("day-search-limit-old-empty", oldMatch.field("OutNote"), "");
 }
 
+function testRefreshDayLinksMatchingInputsAndAppends() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "day refresh",
+    InTag: ["tag1"],
+    DayLinks: null
+  });
+
+  resetWithLibs(day, {
+    DustingInput: makeLib([input])
+  });
+
+  var result = refreshTargetFromInputEntries({
+    inputLib: "DustingInput",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    findMatchingEntries: true,
+    linkNewEntries: true,
+    processAllEntries: true,
+    processMode: "append",
+    processMap: [
+      { from: "InNote", to: "OutNote", type: "string_rows" },
+      { from: "InTag", to: "OutTags", type: "tag" }
+    ]
+  });
+
+  assertEquals("refresh-day-input-count", result.inputs, 1);
+  assertEquals("refresh-day-linked-count", result.linked, 1);
+  assertSame("refresh-day-link-set", input.field("DayLinks"), day);
+  assertEquals("refresh-day-outnote", day.field("OutNote"), "10: day refresh");
+  assertEquals("refresh-day-tags", day.field("OutTags").join(","), "tag1");
+}
+
+function testRefreshDayAppendAllAllowsDuplicateRowsAndTags() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "10: doppelt",
+    OutTags: ["tag1"]
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "doppelt",
+    InTag: ["tag1"],
+    DayLinks: day
+  });
+
+  resetWithLibs(day, {
+    DustingInput: makeLib([input])
+  });
+
+  var result = refreshTargetFromInputEntries({
+    inputLib: "DustingInput",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    processAllEntries: true,
+    processMode: "append all",
+    processMap: [
+      { from: "InNote", to: "OutNote", type: "string_rows" },
+      { from: "InTag", to: "OutTags", type: "tag" }
+    ]
+  });
+
+  assertEquals("refresh-append-all-mode", result.mode, "append_all");
+  assertEquals("refresh-append-all-note", day.field("OutNote"), "10: doppelt\n10: doppelt");
+  assertEquals("refresh-append-all-tags", day.field("OutTags").join(","), "tag1,tag1");
+}
+
+function testRefreshDaySkipsInputsLinkedToOtherDayByDefault() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var otherDay = makeEntry({
+    Date: "2020-02-02 08:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "nicht stehlen",
+    InTag: ["tag1"],
+    DayLinks: otherDay
+  });
+
+  resetWithLibs(day, {
+    DustingInput: makeLib([input])
+  });
+
+  var result = refreshTargetFromInputEntries({
+    inputLib: "DustingInput",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    findMatchingEntries: true,
+    linkNewEntries: true,
+    processAllEntries: true,
+    processMap: [
+      { from: "InNote", to: "OutNote", type: "string_rows" },
+      { from: "InTag", to: "OutTags", type: "tag" }
+    ]
+  });
+
+  assertEquals("refresh-skip-other-inputs", result.inputs, 0);
+  assertEquals("refresh-skip-other-count", result.skippedLinkedToOther, 1);
+  assertSame("refresh-skip-other-link-kept", input.field("DayLinks"), otherDay);
+  assertEquals("refresh-skip-other-note-empty", day.field("OutNote"), "");
+}
+
+function testRefreshDayRebuildClearsMappedTargetsBeforeApplyingLinkedInputs() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "stale",
+    OutTags: ["stale"]
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "fresh",
+    InTag: ["freshTag"],
+    DayLinks: day
+  });
+
+  resetWithLibs(day, {
+    DustingInput: makeLib([input])
+  });
+
+  var result = refreshTargetFromInputEntries({
+    inputLib: "DustingInput",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    processAllEntries: true,
+    processMode: "rebuild",
+    processMap: [
+      { from: "InNote", to: "OutNote", type: "string_rows" },
+      { from: "InTag", to: "OutTags", type: "tag" }
+    ]
+  });
+
+  assertEquals("refresh-rebuild-mode", result.mode, "rebuild");
+  assertEquals("refresh-rebuild-cleared", result.cleared.join(","), "OutNote,OutTags");
+  assertEquals("refresh-rebuild-note", day.field("OutNote"), "10: fresh");
+  assertEquals("refresh-rebuild-tags", day.field("OutTags").join(","), "freshTag");
+}
+
+function testRefreshDayCanProcessOneSourceEntry() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-03 10:00",
+    InNote: "direkt",
+    InTag: [],
+    DayLinks: null
+  });
+
+  resetWithLibs(day, {
+    DustingInput: makeLib([])
+  });
+
+  var result = refreshTargetFromInputEntries({
+    entries: input,
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    linkNewEntries: true,
+    processMap: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertEquals("refresh-one-input-count", result.inputs, 1);
+  assertSame("refresh-one-link", input.field("DayLinks"), day);
+  assertEquals("refresh-one-note", day.field("OutNote"), "10: direkt");
+}
+
 testCreatesDayLinksSourceAndAppendsMappedFields();
 testDoesNotDuplicateSameLineOrTags();
+testStringTypeAppendsPlainTextWithoutRowPrefix();
 testSinceFirstUsesTargetDateAsZero();
+testRowSourceModeRealtimeSinceUsesTimeMarkerNames();
 testWrongTargetDateFieldOnlyBlocksInStrictMode();
 testNonStrictTargetDateFieldAllowsCreate();
 testNewInputAddsMissingTagsToExistingDay();
@@ -875,5 +1127,15 @@ testUsesPreviousDayBeforeFourOnlyWhenSameCalendarDayIsMissing();
 testBeforeFourPrefersSameCalendarDayOverPreviousDay();
 testAfterFourCreatesNextDustingDayWhenSameDayIsMissing();
 testDaySearchLimitRestrictsDateReuse();
+testRefreshDayLinksMatchingInputsAndAppends();
+testRefreshDayAppendAllAllowsDuplicateRowsAndTags();
+testRefreshDaySkipsInputsLinkedToOtherDayByDefault();
+testRefreshDayRebuildClearsMappedTargetsBeforeApplyingLinkedInputs();
+testRefreshDayCanProcessOneSourceEntry();
 
 WScript.Echo("OK");
+
+
+
+
+

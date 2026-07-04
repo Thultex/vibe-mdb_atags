@@ -32,7 +32,7 @@ Tagesmodell
     |
     v
 Ausgabe-Schicht
-  schreibt outnote
+  schreibt Notiz
   optional Tags / JSON / weitere Felder
 ```
 
@@ -191,7 +191,7 @@ Dosis: 40mg
 
 Spätere Ausgaben:
 
-- `outnote`: lesbare Tagesnotiz
+- `Notiz`: lesbare Tagesnotiz
 - Tagfeld: aggregierte Tags
 - JSON: strukturierte Tagesdaten
 - Markdown: Export für andere Systeme
@@ -246,14 +246,15 @@ Funktion:
 - falls nötig `DustingDay` erstellen
 - `DustingInput.DayLinks` setzen
 - Map-Felder übertragen
-- `InNote` als eindeutige Row in `OutNote` ergänzen
-- `InTag` als fehlende Tags in `OutTags` ergänzen
+- `InNote` als eindeutige Row in `Notiz` ergänzen
+- `InTag` als fehlende Tags in `Tags` ergänzen
 
 Modul:
 
 ```text
-addons/5_dusting-day/dd-linker.js
-appendToDayEntry()
+core_lib/inputLinker_lib.js
+linkInputEntryToTarget()
+Lib-Name: Input Linker
 ```
 
 Warum zuerst:
@@ -263,16 +264,24 @@ Warum zuerst:
 - kleine Fehlerfläche
 - schnell in Memento prüfbar
 
-### 0.2 Day-Library-Rebuild
+### 0.2 Day-Library-Refresh
 
 Wenn 0.1 stabil ist:
 
 - Funktion im `DustingDay`-Kontext oder als Utility
 - alle `DustingInput`-Einträge des Tages finden
 - fehlende `DayLinks` setzen
-- `OutNote` und `OutTags` vollständig oder ergänzend neu aufbauen
+- bereits verlinkte Inputs erneut über die Map ausführen
+- `Notiz` und `Tags` appendend ergänzen oder mit `processMode: "rebuild"` neu aufbauen
+- einzelne oder mehrere Inputs können per `entries` gezielt auf einen Day angewendet werden
 
 Damit entsteht die Verbindung dort, wo Alltagseinträge wirklich angelegt werden.
+
+Funktion:
+
+```text
+refreshTargetFromInputEntries()
+```
 
 ### 0.3 Tags übertragen
 
@@ -289,3 +298,8 @@ Erst später:
 - `stress3`, `müde3`, `tätigkeit: laufen` sauber strukturieren
 - Symptome, Befinden, Erfolge und Methoden als Kategorien behandeln
 - mentale Hilfen ableiten
+
+
+
+
+
