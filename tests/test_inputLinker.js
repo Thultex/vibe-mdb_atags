@@ -1241,7 +1241,7 @@ function testRefreshDayRebuildClearsMappedTargetsBeforeApplyingLinkedInputs() {
 
   assertEquals("refresh-rebuild-mode", result.mode, "rebuild");
   assertEquals("refresh-rebuild-cleared", result.cleared.join(","), "OutNote,OutTags");
-  assertEquals("refresh-rebuild-note", day.field("OutNote"), "10: fresh");
+  assertEquals("refresh-rebuild-note", day.field("OutNote"), "stale\n10: fresh");
   assertEquals("refresh-rebuild-tags", day.field("OutTags").join(","), "freshTag");
 }
 
@@ -1274,7 +1274,7 @@ function testRefreshDayRebuildKeepsFreeTextInStringRowsTarget() {
     ]
   });
 
-  assertEquals("refresh-rebuild-keeps-free-text", day.field("OutNote"), "#tagbar\nfreier text\n11: fresh");
+  assertEquals("refresh-rebuild-keeps-free-text", day.field("OutNote"), "#tagbar\n\nfreier text\n11: fresh");
 }
 
 function testRefreshDayRebuildKeepsFreeTextWhenSameTargetHasMixedMapTypes() {

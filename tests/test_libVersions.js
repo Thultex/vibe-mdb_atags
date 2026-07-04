@@ -36,7 +36,7 @@ function log(msg) {
 assertEquals("libVersions-own-version", getLibVersionsVersion().version, "1.09");
 assertEquals("helpers-lib-own-version", getHelpersLibVersion().version, "2.11");
 assertEquals("helpers-lib-sys-version", getHelpersLibVersion().sysVersion, "2.30");
-assertEquals("collect-lib-own-version", getCollectAtagsLibVersion().version, "1.58");
+assertEquals("collect-lib-own-version", getCollectAtagsLibVersion().version, "1.59");
 assertEquals("export-lib-own-version", getExportAtagsLibVersion().version, "1.83");
 assertEquals("tag-cleaner-own-version", getTagCleanerVersion().version, "1.44");
 assertEquals("helpers-own-version", getHelpersVersion().version, "1.02");
