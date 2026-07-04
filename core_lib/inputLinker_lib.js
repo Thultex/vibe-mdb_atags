@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.64 (sys 2.30)
+#4 Input Linker Lib v0.65 (sys 2.30)
 ========================================
 
 Änderungen
+- `receiveExistingLink` loest den vorhandenen Relation-Wert bewusst gegen die Ziel-Library auf, bevor geschrieben wird
 - linkInputEntryToTarget() kann mit `receiveExistingLink: true` bestehende Links bewusst fuer Updates verarbeiten
 - linkInputEntryToTarget() kann nach frisch gesetztem Script-Link optional `receiveAfterLink: true` ausführen
 - recieveInputEntryFromSource()/receiveInputEntryFromSource() werden explizit global exportiert
@@ -88,7 +89,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.64";
+var DDL_VERSION = "0.65";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1812,12 +1813,39 @@ function linkInputEntryToTarget(cfg) {
   sourceHasDayLinks = sourceDayLinks.length > 0;
 
   if (sourceHasDayLinks) {
-    target = sourceDayLinks[0] || null;
-    result.targetEntry = target;
     result.linked = true;
     result.linkSkippedExisting = true;
 
-    if ((cfg.receiveExistingLink === true || cfg.updateExistingLink === true) && target) {
+    if (cfg.receiveExistingLink === true || cfg.updateExistingLink === true) {
+      sourceDate = ddlToDate(ddlSafeField(src, sourceDateField, errors, "Quell-Datumsfeld fehlt"));
+      if (!sourceDate) {
+        errors.push("Quell-Datum leer oder ungültig: " + sourceDateField);
+        ddlWriteErrors(errors, cfg);
+        return result;
+      }
+
+      try {
+        targetLib = libByName(cfg.targetLib || "DustingDay");
+      } catch (eExistingLib) {
+        targetLib = null;
+      }
+
+      if (!targetLib) {
+        errors.push("Bibliothek fehlt: " + (cfg.targetLib || "DustingDay"));
+        ddlWriteErrors(errors, cfg);
+        return result;
+      }
+
+      target = ddlResolveLinkedTargetFromLibrary(targetLib, sourceDayLinks[0], targetDateField, sourceDate, cfg);
+      if (!target) target = ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
+
+      if (!target) {
+        errors.push("Bestehender DayLink konnte nicht zu einem beschreibbaren Tages-Eintrag aufgeloest werden");
+        ddlWriteErrors(errors, cfg);
+        return result;
+      }
+
+      result.targetEntry = target;
       ddlReceiveAfterLink(src, target, cfg, result, errors);
       result.skipped = true;
       result.skipReason = "existing_daylink_receive";

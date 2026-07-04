@@ -148,6 +148,32 @@ linkInputEntryToTarget({
 });
 ```
 
+Input-Aufruf für Update-Test bei bereits vorhandenem `DayLinks`:
+
+```js
+linkInputEntryToTarget({
+  targetLib: "DustingDay",
+  sourceDateField: "Datum",
+  targetDateField: "Datum",
+  sourceDayLinkField: "DayLinks",
+  receiveExistingLink: true,
+  receiveConfig: {
+    rowSourceMode: "realtime",
+    rowStepHours: 0.1,
+    rowRoundMode: "round",
+    processMode: "append",
+    postEntry: true,
+    postEntryName: "PostEntry",
+    recalcTarget: true,
+    targetDebugField: "Debug",
+    processMap: [
+      { from: "InNote", to: "Notiz", type: "string_rows" },
+      { from: "InTag", to: "Tags", type: "tag" }
+    ]
+  }
+});
+```
+
 Day-seitiger Trigger `Linking an entry` in `DustingDay`:
 
 ```js
