@@ -1,9 +1,10 @@
 /*
 ========================================
-B11 Dusting Day Linker v0.19 (sys 2.30)
+B11 Dusting Day Linker v0.20 (sys 2.30)
 ========================================
 
 Änderungen
+- nicht lesbare Zielwerte werden beim Anhängen als leer behandelt, solange set() funktioniert
 - Debug-Log wird als ein zusammenhängender Block ausgegeben
 - Debug-Header enthält Version und Zeitpunkt
 - Debug-Ausgaben werden zusätzlich immer per log() ausgegeben
@@ -290,7 +291,8 @@ function ddlLineExists(text, line) {
 }
 
 function ddlAppendUniqueLine(target, targetField, line, errors) {
-  var oldText = ddlSafeField(target, targetField, errors, "Zielfeld fehlt");
+  var oldText = ddlSafeField(target, targetField, null, null);
+  var wrote;
 
   if (line == null || ddlTrim(line) === "") return false;
   if (oldText == null) oldText = "";
@@ -299,8 +301,8 @@ function ddlAppendUniqueLine(target, targetField, line, errors) {
   if (ddlLineExists(oldText, line)) return false;
 
   if (ddlTrim(oldText) !== "") oldText += "\n";
-  ddlSafeSet(target, targetField, oldText + line, errors, "Zielfeld konnte nicht geschrieben werden");
-  return true;
+  wrote = ddlSafeSet(target, targetField, oldText + line, errors, "Zielfeld konnte nicht geschrieben werden");
+  return wrote;
 }
 
 function ddlTagText(tag) {
@@ -336,8 +338,8 @@ function ddlAppendUniqueTags(target, targetField, value, errors) {
     }
   }
 
-  if (changed) ddlSafeSet(target, targetField, current, errors, "Tag-Zielfeld konnte nicht geschrieben werden");
-  return changed;
+  if (changed) return ddlSafeSet(target, targetField, current, errors, "Tag-Zielfeld konnte nicht geschrieben werden");
+  return false;
 }
 
 function ddlNormalizeMapItem(item) {

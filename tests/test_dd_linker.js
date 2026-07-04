@@ -39,6 +39,17 @@ function makeEntry(fields) {
   };
 }
 
+function makeWriteOnlyEntry(fields, unreadableFields) {
+  var e = makeEntry(fields);
+  var unreadable = unreadableFields || {};
+  e.field = function(name) {
+    if (unreadable[name]) throw new Error("unreadable field " + name);
+    if (!this._fields.hasOwnProperty(name)) throw new Error("missing field " + name);
+    return this._fields[name];
+  };
+  return e;
+}
+
 function makeLib(entries) {
   return {
     _entries: entries || [],
@@ -394,6 +405,40 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
   }
 }
 
+function testWriteOnlyTargetFieldsDoNotProduceFalseReadErrors() {
+  var day = makeWriteOnlyEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  }, {
+    OutNote: true,
+    OutTags: true
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "write only",
+    InTag: ["tagx"],
+    DayLinks: null
+  });
+
+  reset(input, [day]);
+
+  var result = appendToDayEntry({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    map: [
+      { from: "InNote", to: "OutNote", type: "string" },
+      { from: "InTag", to: "OutTags", type: "tag" }
+    ]
+  });
+
+  assertEquals("write-only-no-errors", result.errors.length, 0);
+  assertEquals("write-only-outnote", day._fields.OutNote, "10: write only");
+  assertEquals("write-only-outtags", day._fields.OutTags.join(","), "tagx");
+}
+
 function testFindsExistingDayFromIteratorEntries() {
   var day = makeEntry({
     Date: "2020-02-02 09:00",
@@ -435,6 +480,7 @@ testNewInputAddsMissingTagsToExistingDay();
 testReusesExistingSourceDayLinkBeforeDateSearch();
 testRecalcSourceAndTargetWhenConfigured();
 testDebugDayLinkerAccessWritesDiagnostics();
+testWriteOnlyTargetFieldsDoNotProduceFalseReadErrors();
 testFindsExistingDayFromIteratorEntries();
 
 WScript.Echo("OK");
