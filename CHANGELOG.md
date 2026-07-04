@@ -77,7 +77,9 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Change: `updateSequenceSpree()` akzeptiert zusätzlich `entryObj` als Alias für `currentEntry`; bestehende `currentEntry`-Aufrufe haben weiter Vorrang.
 - Test: `tests/test_inputLinker.js` deckt Tageserstellung, Source-Link, erste Notizzeile, Duplikatschutz und relative Row-Zeit ab.
 - Change: Alter DustingDay-Collector-Ordner und zugehöriger Test wurden entfernt; der aktive Weg läuft über `inputLinker_lib`.
-- *Versionen: collectAtags_lib v1.59, Input Linker v0.43, libVersions v1.15, Time Marker v1.32, Global Field Sync v1.03, Sequence Counter v1.05.*
+- Fix: `Input Linker` v0.45 ueberspringt standardmaessig Memento-Linking-Trigger-Kontexte, damit programmgesteuertes Verlinken keinen zweiten rekursiven Linker-Lauf ausloest.
+- Fix: `Input Linker` v0.44 verknüpft Relation-Felder über `entry.link(field, entry)` und vermeidet `set(field, entryObj)`, da Memento `set()` für Link-to-Entry-Felder mit Entry-Namen/Strings dokumentiert.
+- *Versionen: collectAtags_lib v1.59, Input Linker v0.45, libVersions v1.15, Time Marker v1.32, Global Field Sync v1.03, Sequence Counter v1.05.*
 
 ### 2026-05-20 - (ca. 0,5h)
 

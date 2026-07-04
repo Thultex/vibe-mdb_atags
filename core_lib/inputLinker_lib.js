@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.44 (sys 2.30)
+#4 Input Linker Lib v0.45 (sys 2.30)
 ========================================
 
 Änderungen
+- ueberspringt standardmaessig Memento-Linking-Trigger-Kontexte, um rekursive Neuverlinkung zu vermeiden
 - Relation-Felder werden ueber `entry.link(field, entry)` verknuepft; `set(field, entry)` wird vermieden
 - schreibt `sourceDayLinkField` nicht erneut, wenn der Input bereits mit dem Ziel-Day verlinkt ist
 - vorhandene DayLinks werden nur wiederverwendet, wenn ihr Zieldatum zum Input-Tag passt
@@ -94,7 +95,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.44";
+var DDL_VERSION = "0.45";
 
 function getInputLinkerLibVersion() {
   return {
@@ -317,6 +318,26 @@ function ddlLinkEntry(src, sourceDayLinkField, target, errors, cfg) {
   }
 
   if (errors) errors.push("DayLink-Feld kann nicht sicher geschrieben werden, entry.link() fehlt: " + sourceDayLinkField);
+  return false;
+}
+
+function ddlIsLinkingTriggerContext() {
+  var master;
+
+  try {
+    if (typeof masterEntry === "function" && typeof masterLib === "function") {
+      master = masterEntry();
+      if (master) return true;
+    }
+  } catch (e0) {}
+
+  try {
+    if (typeof attr === "function" && typeof setAttr === "function") {
+      attr("");
+      return true;
+    }
+  } catch (e1) {}
+
   return false;
 }
 
@@ -1557,6 +1578,8 @@ function linkInputEntryToTarget(cfg) {
     targetEntry: null,
     created: false,
     linked: false,
+    skipped: false,
+    skipReason: "",
     appended: [],
     tags: [],
     recalculated: [],
@@ -1568,6 +1591,12 @@ function linkInputEntryToTarget(cfg) {
   cfg.debugEntry = src;
   cfg.debugField = cfg.debugField || cfg.sourceDebugField || "Debug";
   ddlClearDebugFieldIfExists(cfg);
+
+  if (cfg.entryObj == null && cfg.skipLinkingTrigger !== false && ddlIsLinkingTriggerContext()) {
+    result.skipped = true;
+    result.skipReason = "linking_trigger_context";
+    return result;
+  }
 
   if (!sourceDate) {
     errors.push("Quell-Datum leer oder ungültig: " + sourceDateField);

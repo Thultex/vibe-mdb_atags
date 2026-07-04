@@ -8,6 +8,7 @@ var _currentEntry = null;
 var _libs = {};
 var _logs = [];
 var _postEntries = [];
+var _linkingTriggerContext = false;
 
 function fail(msg) {
   throw new Error(msg);
@@ -159,6 +160,14 @@ function log(msg) {
   _logs.push(String(msg));
 }
 
+function masterEntry() {
+  return _linkingTriggerContext ? makeEntry({}) : null;
+}
+
+function masterLib() {
+  return _linkingTriggerContext ? makeLib([]) : null;
+}
+
 function postEntry(e) {
   _postEntries.push(e);
 }
@@ -187,6 +196,7 @@ function reset(input, dayEntries) {
   _currentEntry = input;
   _logs = [];
   _postEntries = [];
+  _linkingTriggerContext = false;
   _libs = {
     DustingDay: makeLib(dayEntries || []),
     DustingInput: makeLib([])
@@ -197,6 +207,7 @@ function resetWithLibs(current, libs) {
   _currentEntry = current;
   _logs = [];
   _postEntries = [];
+  _linkingTriggerContext = false;
   _libs = libs;
 }
 
@@ -639,6 +650,40 @@ function testRelationWithoutLinkMethodDoesNotSetEntryObjectByDefault() {
   assertEquals("no-link-method-still-appends", day.field("OutNote"), "10: nicht per set");
 }
 
+function testInputLinkerSkipsMementoLinkingTriggerContextByDefault() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "nicht rekursiv",
+    InTag: [],
+    DayLinks: null,
+    Debug: ""
+  });
+
+  reset(input, [day]);
+  _linkingTriggerContext = true;
+
+  var result = linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    sourceDebugField: "Debug",
+    map: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertEquals("linking-trigger-skipped", result.skipped, true);
+  assertEquals("linking-trigger-skip-reason", result.skipReason, "linking_trigger_context");
+  assertEquals("linking-trigger-no-link", input.field("DayLinks"), null);
+  assertEquals("linking-trigger-no-append", day.field("OutNote"), "");
+}
+
 function testRecalcSourceAndTargetWhenConfigured() {
   var day = makeEntry({
     Datum: "2020-02-02 09:00",
@@ -896,7 +941,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-name missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.43") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.45") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -908,7 +953,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.43") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.45") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -1082,7 +1127,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.43") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.45") < 0) {
     fail("error-debug-version missing");
   }
 
@@ -1558,6 +1603,7 @@ testBrokenSourceDayLinkFallsBackToDateSearch();
 testAlreadyLinkedInputCanAddNewMappedValuesOnRerun();
 testAlreadyLinkedInputDoesNotRewriteRelationOnRerun();
 testRelationWithoutLinkMethodDoesNotSetEntryObjectByDefault();
+testInputLinkerSkipsMementoLinkingTriggerContextByDefault();
 testRecalcSourceAndTargetWhenConfigured();
 testRunsPostEntryOnTargetWhenConfigured();
 testSuccessfulRunClearsExistingSourceDebugField();
