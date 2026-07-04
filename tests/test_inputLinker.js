@@ -797,7 +797,8 @@ function testExistingDayLinkDoesNotProcessTargetByDefault() {
     Date: "2020-02-02 10:00",
     InNote: "neu",
     InTag: ["neu"],
-    DayLinks: day
+    DayLinks: day,
+    Debug: "alter debug"
   });
 
   reset(input, [day]);
@@ -827,6 +828,8 @@ function testExistingDayLinkDoesNotProcessTargetByDefault() {
   assertEquals("existing-link-default-no-open", result.openResult.attempted, false);
   assertEquals("existing-link-default-no-relation-set", input._setCounts.DayLinks || 0, 0);
   assertEquals("existing-link-default-no-relation-link", input._linkCounts.DayLinks || 0, 0);
+  assertEquals("existing-link-default-debug-untouched", input.field("Debug"), "alter debug");
+  assertEquals("existing-link-default-no-debug-set", input._setCounts.Debug || 0, 0);
 }
 
 function testAlreadyLinkedInputRecognizesRelationWrapperByDate() {
@@ -1241,7 +1244,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-name missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.58") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.59") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -1253,7 +1256,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.58") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.59") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -1456,7 +1459,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.58") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.59") < 0) {
     fail("error-debug-version missing");
   }
 

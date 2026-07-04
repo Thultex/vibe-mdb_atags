@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.58 (sys 2.30)
+#4 Input Linker Lib v0.59 (sys 2.30)
 ========================================
 
 Änderungen
+- bestehende gültige DayLinks verlassen den Input-Linker ohne Debug-Clear, damit "nichts tun" wirklich keine Feldänderung auslöst
 - geloeschte vorhandene DayLinks blockieren die Neuzuordnung nicht mehr; Link-only darf einen neuen Ziel-Day suchen oder erstellen
 - refreshCurrentTargetFromLinkedInputEntry() verarbeitet Day-seitig genau einen verlinkten Input gegen den aktuellen Day
 - refreshCurrentTargetFromInputEntries() ergänzt als Day-seitiger Wrapper für Linking-an-entry-Trigger mit aktuellem entry()
@@ -108,7 +109,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.58";
+var DDL_VERSION = "0.59";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1791,7 +1792,6 @@ function linkInputEntryToTarget(cfg) {
 
   cfg.debugEntry = src;
   cfg.debugField = cfg.debugField || cfg.sourceDebugField || "Debug";
-  ddlClearDebugFieldIfExists(cfg);
 
   if (cfg.entryObj == null && cfg.skipLinkingTrigger !== false && ddlIsLinkingTriggerContext()) {
     result.skipped = true;
@@ -1882,7 +1882,6 @@ function linkInputEntryToTarget(cfg) {
     } else {
       result.linkSkippedExisting = true;
     }
-    ddlClearDebugFieldIfExists(cfg);
     return result;
   }
 
