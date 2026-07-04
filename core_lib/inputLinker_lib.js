@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.67 (sys 2.30)
+#4 Input Linker Lib v0.68 (sys 2.30)
 ========================================
 
 Änderungen
+- Map-Lesung bevorzugt beim aktuellen Input-Entry den Triggerwert `field(...)`, damit Updates nicht am alten Entry-Snapshot haengen
 - explizit uebergebene `entries` werden beim Receive nicht mehr durch Link-Wrapper-Vergleich ausgeskippt
 - leere/null Relation-Listen zaehlen nicht mehr als vorhandener DayLink
 - `receiveExistingLink` loest den vorhandenen Relation-Wert bewusst gegen die Ziel-Library auf, bevor geschrieben wird
@@ -91,7 +92,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.67";
+var DDL_VERSION = "0.68";
 
 function getInputLinkerLibVersion() {
   return {
@@ -259,6 +260,29 @@ function ddlSafeField(entryObj, fieldName, errors, label) {
     if (errors) errors.push((label || "Feld fehlt") + ": " + fieldName);
     return null;
   }
+}
+
+function ddlIsCurrentEntry(entryObj) {
+  try {
+    return typeof entry === "function" && entry() === entryObj;
+  } catch (e) {
+    return false;
+  }
+}
+
+function ddlSafeSourceField(entryObj, fieldName, errors, label, cfg) {
+  var value;
+
+  if (cfg && cfg.preferTriggerFields !== false && ddlIsCurrentEntry(entryObj)) {
+    try {
+      if (typeof field === "function") {
+        value = field(fieldName);
+        if (value != null) return value;
+      }
+    } catch (e0) {}
+  }
+
+  return ddlSafeField(entryObj, fieldName, errors, label);
 }
 
 function ddlSafeValuesField(entryObj, fieldName) {
@@ -1333,7 +1357,7 @@ function ddlApplyMapFromSourceToDay(src, target, sourceDate, targetDate, cfg, re
       continue;
     }
 
-    value = ddlSafeField(src, item.from, errors, "Quellfeld fehlt");
+    value = ddlSafeSourceField(src, item.from, errors, "Quellfeld fehlt", cfg);
     if (value == null || value === "") continue;
 
     type = item.type || ddlInferType(value);
