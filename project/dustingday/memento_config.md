@@ -120,6 +120,34 @@ linkInputEntryToTarget({
 });
 ```
 
+Input-Aufruf mit direktem Receive-Nachlauf, falls `DustingDay` bei scriptgesetztem Link keinen `Linking an entry`-Trigger ausführt:
+
+```js
+linkInputEntryToTarget({
+  targetLib: "DustingDay",
+  sourceDateField: "Datum",
+  targetDateField: "Datum",
+  sourceDayLinkField: "DayLinks",
+  dayStartHour: 4,
+  daySearchLimit: 10,
+  receiveAfterLink: true,
+  receiveConfig: {
+    rowSourceMode: "realtime",
+    rowStepHours: 0.1,
+    rowRoundMode: "round",
+    processMode: "append",
+    postEntry: true,
+    postEntryName: "PostEntry",
+    recalcTarget: true,
+    targetDebugField: "Debug",
+    processMap: [
+      { from: "InNote", to: "Notiz", type: "string_rows" },
+      { from: "InTag", to: "Tags", type: "tag" }
+    ]
+  }
+});
+```
+
 Day-seitiger Trigger `Linking an entry` in `DustingDay`:
 
 ```js

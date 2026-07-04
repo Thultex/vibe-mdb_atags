@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.62 (sys 2.30)
+#4 Input Linker Lib v0.63 (sys 2.30)
 ========================================
 
 Änderungen
+- linkInputEntryToTarget() kann nach frisch gesetztem Script-Link optional `receiveAfterLink: true` ausführen
 - recieveInputEntryFromSource()/receiveInputEntryFromSource() werden explizit global exportiert
 - vorhandene DayLinks werden im Input-Linker nicht mehr als Entry-Objekt aufgeloest; schon ein Relation-Wert fuehrt zum No-op
 - linkInputEntryToTarget() ist strikt Link-only: vorhandener DayLink = sofort raus; sonst Day suchen/erstellen und genau einmal verlinken
@@ -76,7 +77,21 @@ linkInputEntryToTarget({
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
   dayStartHour: 4,
-  daySearchLimit: 10
+  daySearchLimit: 10,
+  receiveAfterLink: true,
+  receiveConfig: {
+    rowSourceMode: "realtime",
+    rowStepHours: 0.1,
+    rowRoundMode: "round",
+    processMode: "append",
+    postEntry: true,
+    postEntryName: "PostEntry",
+    recalcTarget: true,
+    processMap: [
+      { from: "InNote", to: "Notiz", type: "string_rows" },
+      { from: "InTag", to: "Tags", type: "tag" }
+    ]
+  }
 });
 
 // DustingDay: Linking an entry
@@ -124,7 +139,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.62";
+var DDL_VERSION = "0.63";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1538,6 +1553,38 @@ function ddlOpenConfiguredTarget(target, cfg, result) {
   }
 }
 
+function ddlReceiveAfterLink(src, target, cfg, result, errors) {
+  var receiveCfg;
+  var receiveResult;
+
+  if (!src || !target || !cfg) return null;
+  if (cfg.receiveAfterLink !== true && cfg.processAfterLink !== true) return null;
+
+  receiveCfg = cfg.receiveConfig || {};
+  receiveCfg.inputEntry = src;
+  receiveCfg.targetEntry = target;
+  receiveCfg.sourceDateField = receiveCfg.sourceDateField || cfg.sourceDateField;
+  receiveCfg.targetDateField = receiveCfg.targetDateField || cfg.targetDateField;
+  receiveCfg.sourceDayLinkField = receiveCfg.sourceDayLinkField || cfg.sourceDayLinkField;
+  receiveCfg.rowSourceMode = receiveCfg.rowSourceMode || cfg.rowSourceMode;
+  receiveCfg.rowStepHours = receiveCfg.rowStepHours || cfg.rowStepHours;
+  receiveCfg.rowRoundMode = receiveCfg.rowRoundMode || cfg.rowRoundMode;
+  receiveCfg.processMode = receiveCfg.processMode || cfg.processMode || "append";
+  receiveCfg.processMap = receiveCfg.processMap || cfg.processMap || cfg.map;
+  receiveCfg.postEntry = receiveCfg.postEntry === true || cfg.postEntry === true;
+  receiveCfg.postEntryName = receiveCfg.postEntryName || cfg.postEntryName || cfg.postEntryFunctionName;
+  receiveCfg.postEntryFn = receiveCfg.postEntryFn || cfg.postEntryFn;
+  receiveCfg.recalcTarget = receiveCfg.recalcTarget === true || cfg.recalcTarget === true;
+  receiveCfg.targetDebugField = receiveCfg.targetDebugField || cfg.targetDebugField;
+
+  receiveResult = recieveInputEntryFromSource(receiveCfg);
+  if (result) result.receiveResult = receiveResult;
+  if (receiveResult && receiveResult.errors && receiveResult.errors.length && errors) {
+    errors.push("ReceiveAfterLink meldet Fehler: " + receiveResult.errors.join("; "));
+  }
+  return receiveResult;
+}
+
 function ddlWriteErrors(errors, cfg) {
   var debugEntry;
   var debugField;
@@ -1798,6 +1845,7 @@ function linkInputEntryToTarget(cfg) {
     tags: [],
     recalculated: [],
     postEntries: [],
+    receiveResult: null,
     openResult: { attempted: false, ok: false, target: "", method: "", error: "" },
     errors: errors
   };
@@ -1865,6 +1913,10 @@ function linkInputEntryToTarget(cfg) {
 
   if (sourceDayLinkField) {
     result.linked = ddlLinkEntry(src, sourceDayLinkField, target, errors, cfg);
+  }
+
+  if (result.linked) {
+    ddlReceiveAfterLink(src, target, cfg, result, errors);
   }
 
   result.skipped = true;
