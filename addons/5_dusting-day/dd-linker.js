@@ -1,9 +1,13 @@
 /*
 ========================================
-B11 Dusting Day Linker v0.10 (sys 2.30)
+B11 Dusting Day Linker v0.12 (sys 2.30)
 ========================================
 
 Änderungen
+- Day-seitige Refresh-Funktion für aus dem Day heraus erstellte Inputs ergänzt
+- verhindert Zieleintrag-Erstellung bei wahrscheinlich falschem targetDateField
+- prüft Ziel-Zuordnungsfelder gegen vorhandene Tages-Einträge
+- Tags werden bei jedem Lauf gegen bestehende Tags abgeglichen und fehlende ergänzt
 - erster Linker nach DustingInput.DayLinks -> DustingDay
 - sucht oder erstellt Tages-Eintrag über Kalendertag
 - verarbeitet map-Einträge mit Typisierung
@@ -16,6 +20,19 @@ Usage
 
 appendToDayEntry({
   targetLib: "DustingDay",
+  sourceDateField: "Date",
+  targetDateField: "Date",
+  sourceDayLinkField: "DayLinks",
+  rowMode: "clock",
+  rowStepHours: 0.5,
+  map: [
+    { from: "InNote", to: "OutNote", type: "string" },
+    { from: "InTag", to: "OutTags", type: "tag" }
+  ]
+});
+
+refreshDayEntryFromInputs({
+  sourceLib: "DustingInput",
   sourceDateField: "Date",
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
@@ -333,6 +350,61 @@ function ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg) {
   return null;
 }
 
+function ddlTargetEntries(targetLib) {
+  try {
+    return ddlToArray(targetLib.entries ? targetLib.entries() : []);
+  } catch (e) {
+    return [];
+  }
+}
+
+function ddlEntryHasField(entryObj, fieldName) {
+  if (!entryObj || !fieldName) return false;
+
+  try {
+    entryObj.field(fieldName);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function ddlAnyEntryHasField(entries, fieldName) {
+  var i;
+
+  if (!entries || !entries.length) return true;
+
+  for (i = 0; i < entries.length; i++) {
+    if (ddlEntryHasField(entries[i], fieldName)) return true;
+  }
+
+  return false;
+}
+
+function ddlValidateTargetConfig(targetLib, targetDateField, map, cfg, errors) {
+  var entries = ddlTargetEntries(targetLib);
+  var i;
+  var item;
+  var ok = true;
+
+  if (entries.length > 0 && !ddlAnyEntryHasField(entries, targetDateField)) {
+    errors.push("Ziel-Datumsfeld fehlt in vorhandenen Tages-Einträgen: " + targetDateField);
+    ok = false;
+  }
+
+  if (entries.length > 0 && map) {
+    for (i = 0; i < map.length; i++) {
+      item = ddlNormalizeMapItem(map[i]);
+      if (item.to && !ddlAnyEntryHasField(entries, item.to)) {
+        errors.push("Ziel-Mappingfeld fehlt in vorhandenen Tages-Einträgen: " + item.to);
+        ok = false;
+      }
+    }
+  }
+
+  return ok;
+}
+
 function ddlCreateDayEntry(targetLib, sourceDate, targetDateField, cfg, errors) {
   var values = {};
   var target;
@@ -349,6 +421,85 @@ function ddlCreateDayEntry(targetLib, sourceDate, targetDateField, cfg, errors) 
   } catch (e) {
     errors.push("Zieleintrag konnte nicht erstellt werden");
     return null;
+  }
+}
+
+function ddlEntryContainsLink(entryObj, linkField, targetEntry) {
+  var val;
+  var links;
+  var i;
+
+  if (!entryObj || !linkField || !targetEntry) return false;
+
+  val = ddlSafeField(entryObj, linkField, null, null);
+  links = ddlToArray(val);
+
+  for (i = 0; i < links.length; i++) {
+    if (links[i] === targetEntry) return true;
+  }
+
+  return false;
+}
+
+function ddlFindInputsForDay(sourceLib, dayEntry, dayDate, cfg) {
+  var entries = ddlTargetEntries(sourceLib);
+  var out = [];
+  var sourceDateField = cfg.sourceDateField || "Date";
+  var sourceDayLinkField = cfg.sourceDayLinkField || "DayLinks";
+  var includeSameDate = cfg.includeSameDate !== false;
+  var i;
+  var src;
+  var srcDate;
+
+  for (i = 0; i < entries.length; i++) {
+    src = entries[i];
+
+    if (ddlEntryContainsLink(src, sourceDayLinkField, dayEntry)) {
+      out.push(src);
+      continue;
+    }
+
+    if (includeSameDate) {
+      srcDate = ddlToDate(ddlSafeField(src, sourceDateField, null, null));
+      if (ddlSameCalendarDay(srcDate, dayDate)) out.push(src);
+    }
+  }
+
+  return out;
+}
+
+function ddlApplyMapFromSourceToDay(src, target, sourceDate, targetDate, cfg, result, errors) {
+  var map = cfg.map || [];
+  var row = ddlRowLabel(sourceDate, targetDate, cfg);
+  var i;
+  var item;
+  var value;
+  var type;
+  var text;
+  var line;
+
+  for (i = 0; i < map.length; i++) {
+    item = ddlNormalizeMapItem(map[i]);
+    if (!item.from || !item.to) {
+      errors.push("Map-Eintrag unvollständig");
+      continue;
+    }
+
+    value = ddlSafeField(src, item.from, errors, "Quellfeld fehlt");
+    if (value == null || value === "") continue;
+
+    type = item.type || ddlInferType(value);
+
+    if (type === "tag") {
+      if (ddlAppendUniqueTags(target, item.to, value, errors)) result.tags.push(item.to);
+      continue;
+    }
+
+    text = ddlValueToText(value, type);
+    if (!text) continue;
+
+    line = (row ? row : "?") + ": " + text;
+    if (ddlAppendUniqueLine(target, item.to, line, errors)) result.appended.push(item.to);
   }
 }
 
@@ -385,14 +536,6 @@ function appendToDayEntry(cfg) {
   var targetLib;
   var target;
   var targetDate;
-  var map;
-  var i;
-  var item;
-  var value;
-  var type;
-  var text;
-  var row;
-  var line;
   var result = {
     targetEntry: null,
     created: false,
@@ -428,6 +571,11 @@ function appendToDayEntry(cfg) {
     return result;
   }
 
+  if (!ddlValidateTargetConfig(targetLib, targetDateField, cfg.map, cfg, errors)) {
+    ddlWriteErrors(errors, cfg);
+    return result;
+  }
+
   target = ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
 
   if (!target) {
@@ -447,31 +595,74 @@ function appendToDayEntry(cfg) {
     result.linked = ddlSafeSet(src, sourceDayLinkField, target, errors, "DayLink-Feld fehlt oder ungültig");
   }
 
-  row = ddlRowLabel(sourceDate, targetDate, cfg);
-  map = cfg.map;
+  ddlApplyMapFromSourceToDay(src, target, sourceDate, targetDate, cfg, result, errors);
 
-  for (i = 0; i < map.length; i++) {
-    item = ddlNormalizeMapItem(map[i]);
-    if (!item.from || !item.to) {
-      errors.push("Map-Eintrag unvollständig");
-      continue;
+  ddlWriteErrors(errors, cfg);
+  return result;
+}
+
+function refreshDayEntryFromInputs(cfg) {
+  cfg = cfg || {};
+
+  var errors = [];
+  var target = cfg.entryObj || entry();
+  var sourceLib;
+  var targetDateField = cfg.targetDateField || "Datum";
+  var targetDate = ddlToDate(ddlSafeField(target, targetDateField, errors, "Tages-Datumsfeld fehlt"));
+  var inputs;
+  var i;
+  var src;
+  var srcDate;
+  var result = {
+    targetEntry: target,
+    inputs: [],
+    linked: [],
+    appended: [],
+    tags: [],
+    errors: errors
+  };
+
+  cfg.debugEntry = target;
+  cfg.debugField = cfg.debugField || cfg.targetDebugField;
+
+  if (!targetDate) {
+    errors.push("Tages-Datum leer oder ungültig: " + targetDateField);
+    ddlWriteErrors(errors, cfg);
+    return result;
+  }
+
+  if (!cfg.map || !ddlIsArray(cfg.map)) {
+    errors.push("Config fehlt oder falsch: map");
+    cfg.map = [];
+  }
+
+  try {
+    sourceLib = libByName(cfg.sourceLib || "DustingInput");
+  } catch (e0) {
+    sourceLib = null;
+  }
+
+  if (!sourceLib) {
+    errors.push("Quellbibliothek fehlt: " + (cfg.sourceLib || "DustingInput"));
+    ddlWriteErrors(errors, cfg);
+    return result;
+  }
+
+  inputs = ddlFindInputsForDay(sourceLib, target, targetDate, cfg);
+  result.inputs = inputs;
+
+  for (i = 0; i < inputs.length; i++) {
+    src = inputs[i];
+    srcDate = ddlToDate(ddlSafeField(src, cfg.sourceDateField || "Date", errors, "Quell-Datumsfeld fehlt"));
+    if (!srcDate) continue;
+
+    if (cfg.sourceDayLinkField && !ddlEntryContainsLink(src, cfg.sourceDayLinkField, target)) {
+      if (ddlSafeSet(src, cfg.sourceDayLinkField, target, errors, "DayLink-Feld fehlt oder ungültig")) {
+        result.linked.push(src);
+      }
     }
 
-    value = ddlSafeField(src, item.from, errors, "Quellfeld fehlt");
-    if (value == null || value === "") continue;
-
-    type = item.type || ddlInferType(value);
-
-    if (type === "tag") {
-      if (ddlAppendUniqueTags(target, item.to, value, errors)) result.tags.push(item.to);
-      continue;
-    }
-
-    text = ddlValueToText(value, type);
-    if (!text) continue;
-
-    line = (row ? row : "?") + ": " + text;
-    if (ddlAppendUniqueLine(target, item.to, line, errors)) result.appended.push(item.to);
+    ddlApplyMapFromSourceToDay(src, target, srcDate, targetDate, cfg, result, errors);
   }
 
   ddlWriteErrors(errors, cfg);

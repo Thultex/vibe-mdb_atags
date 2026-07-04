@@ -288,6 +288,25 @@ DustingInput.Date lesen
 
 Offen: Ob Memento das Erstellen neuer `DustingDay`-Einträge und das Schreiben in einen anderen Eintrag im gewählten Trigger sauber erlaubt. Das muss lokal und danach online/sync getestet werden.
 
+Zusatz für aus dem offenen Day heraus erstellte Inputs:
+
+```js
+refreshDayEntryFromInputs({
+  sourceLib: "DustingInput",
+  sourceDateField: "Date",
+  targetDateField: "Datum",
+  sourceDayLinkField: "DayLinks",
+  rowMode: "clock",
+  rowStepHours: 0.5,
+  map: [
+    { from: "InNote", to: "OutNote", type: "string" },
+    { from: "InTag", to: "OutTags", type: "tag" }
+  ]
+});
+```
+
+Diese Funktion gehört in den `DustingDay`-Kontext und dient als Refresh/Reparatur, wenn die UI den offenen Day nicht sofort nach Input-Erstellung aktualisiert.
+
 ## Umsetzungsschnitt 0.3
 
 Dann Tags.
