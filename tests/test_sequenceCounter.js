@@ -229,6 +229,30 @@ function testCurrentEntryReplacesStaleEntryFromLibEntries() {
   assertEquals("stale-entry-not-written", stale.field("Reihe"), undefined);
 }
 
+function testEntryObjAliasForCurrentEntry() {
+  var current = makeFunctionIdEntry("2", {
+    Date: "2026-04-02",
+    Dose: "10"
+  });
+  var entries = [
+    makeFunctionIdEntry("1", { Date: "2026-04-01", Dose: "10" }),
+    current
+  ];
+
+  updateSequenceSpree({
+    entries: entries,
+    entryObj: current,
+    fieldDate: "Date",
+    groupFields: ["Dose"],
+    fieldSequence: "Seq",
+    fieldSpree: "Spree"
+  });
+
+  assertEquals("entry-obj-alias-seq", current.field("Seq"), 1);
+  assertEquals("entry-obj-alias-spree", current.field("Spree"), 2);
+  assertEquals("entry-obj-alias-other-skipped", entries[0].field("Seq"), undefined);
+}
+
 testBulkSequenceAndSpree();
 testBiasedSpreeMarksFirstEntries();
 testExplicitZeroRefreshesSkippedBiasedSpreeFlags();
@@ -236,5 +260,6 @@ testCurrentEntryOnlyAndEmptyClear();
 testIssue25SingleCurrentEntryWithoutSequenceMax();
 testCurrentEntryContinuesLatestSequenceWhenMissingFromEntries();
 testCurrentEntryReplacesStaleEntryFromLibEntries();
+testEntryObjAliasForCurrentEntry();
 
 WScript.Echo("OK");

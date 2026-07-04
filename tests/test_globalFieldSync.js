@@ -16,14 +16,32 @@ function fail(msg) {
   throw new Error(msg);
 }
 
-function makeEntry(fields) {
+function makeEntry(fields, libraryObj) {
   return {
     _fields: fields,
+    library: libraryObj || null,
     field: function(name) {
       return this._fields[name];
     },
     set: function(name, value) {
       this._fields[name] = value;
+    }
+  };
+}
+
+function makeEntryWithLibFunction(fields, libraryObj) {
+  var e = makeEntry(fields);
+  e.library = function() {
+    return libraryObj;
+  };
+  return e;
+}
+
+function makeLibrary(entries) {
+  return {
+    _entries: entries || [],
+    entries: function() {
+      return this._entries;
     }
   };
 }
@@ -114,6 +132,46 @@ function testSyncFieldBackSkipsEmptyCurrentValue() {
   assertArrayEquals("back-sync-empty-skipped", result.skipped, ["Note"]);
 }
 
+function testSyncFieldBackUsesPassedEntryLibrary() {
+  var wrongFirst = makeEntry({ Note: "wrong" });
+  var rightFirst = makeEntry({ Note: "right" });
+  var current;
+  var foreignLib;
+
+  current = makeEntry({ Note: "from current" });
+  foreignLib = makeLibrary([rightFirst, current]);
+  current.library = foreignLib;
+  _entries = [wrongFirst];
+
+  var result = syncFieldBack({
+    entryObj: current,
+    fields: ["Note"],
+    overwrite: true
+  });
+
+  assertEquals("back-sync-entry-lib-target", rightFirst.field("Note"), "from current");
+  assertEquals("back-sync-entry-lib-wrong-unchanged", wrongFirst.field("Note"), "wrong");
+  assertArrayEquals("back-sync-entry-lib-updated", result.updated, ["Note"]);
+}
+
+function testSyncFieldBackUsesPassedEntryLibraryFunction() {
+  var wrongFirst = makeEntry({ Note: "wrong" });
+  var rightFirst = makeEntry({ Note: "right" });
+  var foreignLib = makeLibrary([rightFirst]);
+  var current = makeEntryWithLibFunction({ Note: "from function" }, foreignLib);
+  foreignLib._entries.push(current);
+  _entries = [wrongFirst];
+
+  syncFieldBack({
+    entryObj: current,
+    fields: ["Note"],
+    overwrite: true
+  });
+
+  assertEquals("back-sync-entry-lib-function-target", rightFirst.field("Note"), "from function");
+  assertEquals("back-sync-entry-lib-function-wrong-unchanged", wrongFirst.field("Note"), "wrong");
+}
+
 function testSyncFieldToSkipsWhenEntryNotReady() {
   _entryThrows = true;
   _entries = [makeEntry({ Note: "source" })];
@@ -148,6 +206,8 @@ function testSyncFieldToSkipsWhenLibNotReady() {
 testSyncFieldToFallsBackToNextFilledEntry();
 testSyncFieldToStopsAfterFirstTwentyEntries();
 testSyncFieldBackSkipsEmptyCurrentValue();
+testSyncFieldBackUsesPassedEntryLibrary();
+testSyncFieldBackUsesPassedEntryLibraryFunction();
 testSyncFieldToSkipsWhenEntryNotReady();
 testSyncFieldToSkipsWhenLibNotReady();
 

@@ -1,9 +1,10 @@
 /*
 ========================================
-B3 Global Field Sync v1.02 (sys 2.30)
+B3 Global Field Sync v1.03 (sys 2.30)
 ========================================
 
 Changes
+- use the passed entry object's library for syncFieldBack/syncFieldTo/syncFieldAll when available
 - guard entry/lib/field access for early open triggers
 - skip back-sync for empty current values
 - fallback to first non-empty source value within first 20 entries
@@ -72,17 +73,58 @@ function safeSyncEntry() {
   }
 }
 
-function safeSyncLibEntries() {
+function safeSyncEntriesFromLibrary(libraryObj) {
   var all;
 
+  if (!libraryObj) return [];
+
   try {
-    all = lib().entries();
+    all = libraryObj.entries();
   } catch (e) {
     return [];
   }
 
   if (!all || !all.length) return [];
   return all;
+}
+
+function syncEntryLibrary(entryObj) {
+  if (!entryObj) return null;
+
+  try {
+    if (typeof entryObj.lib === "function") return entryObj.lib();
+  } catch (e0) {}
+
+  try {
+    if (entryObj.lib) return entryObj.lib;
+  } catch (e1) {}
+
+  try {
+    if (typeof entryObj.library === "function") return entryObj.library();
+  } catch (e2) {}
+
+  try {
+    if (entryObj.library) return entryObj.library;
+  } catch (e3) {}
+
+  return null;
+}
+
+function safeSyncLibEntries(cfg, entryObj) {
+  var libraryObj;
+
+  cfg = cfg || {};
+
+  if (cfg.entries && cfg.entries.length) return cfg.entries;
+
+  libraryObj = cfg.library || cfg.lib || syncEntryLibrary(entryObj);
+  if (libraryObj) return safeSyncEntriesFromLibrary(libraryObj);
+
+  try {
+    return safeSyncEntriesFromLibrary(lib());
+  } catch (e) {
+    return [];
+  }
 }
 
 function safeSyncField(entryObj, fieldName) {
@@ -124,14 +166,14 @@ function syncValuesEqual(a, b) {
   return String(a) === String(b);
 }
 
-function getFirstSyncEntry() {
-  var all = safeSyncLibEntries();
+function getFirstSyncEntry(cfg, entryObj) {
+  var all = safeSyncLibEntries(cfg, entryObj);
   if (!all || !all.length) return null;
   return all[0];
 }
 
-function getSyncEntries() {
-  var all = safeSyncLibEntries();
+function getSyncEntries(cfg, entryObj) {
+  var all = safeSyncLibEntries(cfg, entryObj);
   if (!all || !all.length) return [];
   return all;
 }
@@ -227,8 +269,8 @@ function syncFieldTo(cfg) {
   cfg = cfg || {};
 
   var currentEntry = cfg.entryObj || safeSyncEntry();
-  var firstEntry = getFirstSyncEntry();
-  var all = getSyncEntries();
+  var firstEntry = getFirstSyncEntry(cfg, currentEntry);
+  var all = getSyncEntries(cfg, currentEntry);
 
   return syncFieldsBetweenEntries({
     sourceEntry: firstEntry,
@@ -244,7 +286,7 @@ function syncFieldBack(cfg) {
   cfg = cfg || {};
 
   var currentEntry = cfg.entryObj || safeSyncEntry();
-  var firstEntry = getFirstSyncEntry();
+  var firstEntry = getFirstSyncEntry(cfg, currentEntry);
 
   return syncFieldsBetweenEntries({
     sourceEntry: currentEntry,
@@ -258,8 +300,8 @@ function syncFieldBack(cfg) {
 function syncFieldAll(cfg) {
   cfg = cfg || {};
 
-  var firstEntry = getFirstSyncEntry();
-  var all = getSyncEntries();
+  var firstEntry = getFirstSyncEntry(cfg, cfg.entryObj || null);
+  var all = getSyncEntries(cfg, cfg.entryObj || null);
   var fields = normalizeSyncFields(cfg.fields);
   var overwrite = cfg.overwrite === true;
   var out = [];

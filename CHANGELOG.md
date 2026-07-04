@@ -48,9 +48,11 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Fix: `dd-linker.js` v0.25 prüft zuerst gleiche Kalendertage in den letzten `daySearchLimit` Day-Einträgen und nutzt den Vortag nur als Frühzeit-Fallback bis `dayStartHour`.
 - Fix: `dd-linker.js` v0.26 lässt vorhandene `DayLinks` den Abgleich nicht mehr blockieren; die Datumssuche in `DustingDay` gewinnt, ein bestehender Link dient nur noch als Fallback.
 - Fix: `dd-linker.js` v0.27 lässt brauchbare vorhandene `DayLinks` wieder gewinnen, führt den Feldabgleich aber bei jedem Lauf erneut aus; kaputte Links fallen auf die Datumssuche zurück.
+- Change: `syncFieldBack()` nutzt bei übergebenem `entryObj` dessen Library für den Ziel-Eintrag, sofern Memento diese am Entry bereitstellt; `syncFieldTo()` und `syncFieldAll()` verwenden denselben Entry-Library-Fallback.
+- Change: `updateSequenceSpree()` akzeptiert zusätzlich `entryObj` als Alias für `currentEntry`; bestehende `currentEntry`-Aufrufe haben weiter Vorrang.
 - Test: `tests/test_dd_linker.js` deckt Tageserstellung, Source-Link, erste Notizzeile, Duplikatschutz und relative Row-Zeit ab.
 - Test: `tests/test_dustingDayCollector.js` deckt Array-/Java-Listen-Relationen, Feldmapping, Row-Rundung und leere Links ab.
-- *Versionen: Dusting Day Collector v0.13, Dusting Day Linker v0.27.*
+- *Versionen: Dusting Day Collector v0.13, Dusting Day Linker v0.27, Global Field Sync v1.03, Sequence Counter v1.05.*
 
 ### 2026-05-20 - (ca. 0,5h)
 

@@ -1,9 +1,10 @@
 /*
 ========================================
-B6 Sequence Counter v1.04 (sys 2.30)
+B6 Sequence Counter v1.05 (sys 2.30)
 ========================================
 
 Changes
+- accept entryObj as alias for currentEntry
 - refresh biased spree flags across calculated entries when biasedSpreeCount is explicit
 - mark the first biasedSpreeCount entries of each spree via fieldBiasedSpree
 - replace stale entries item with currentEntry for calculation
@@ -256,7 +257,7 @@ function updateSequenceSpree(cfg) {
   cfg = cfg || {};
 
   var entries = cfg.entries || [];
-  var currentEntry = cfg.currentEntry || null;
+  var currentEntry = cfg.currentEntry || cfg.entryObj || null;
   var fieldDate = cfg.fieldDate;
   var groupFields = cfg.groupFields || [];
   var fieldSequence = cfg.fieldSequence || "";
