@@ -605,7 +605,40 @@ function testBrokenSourceDayLinkFallsBackToDateSearch() {
   assertSame("broken-link-date-target", result.targetEntry, day);
   assertEquals("broken-link-date-no-create", result.created, false);
   assertEquals("broken-link-date-outnote", day.field("OutNote"), "10: datum fallback");
-  assertSame("broken-link-date-relinked", input.field("DayLinks"), day);
+  assertSame("broken-link-date-link-kept", input.field("DayLinks"), brokenLink);
+  assertEquals("broken-link-date-link-skipped", result.linkSkippedExisting, true);
+}
+
+function testExistingSourceDayLinkPreventsNewDayCreationWhenTargetMissing() {
+  var brokenLink = {};
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "nicht neu erstellen",
+    InTag: [],
+    DayLinks: brokenLink,
+    Debug: ""
+  });
+
+  reset(input, []);
+
+  var result = linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    map: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertEquals("existing-link-no-target-skipped", result.skipped, true);
+  assertEquals("existing-link-no-target-reason", result.skipReason, "existing_daylink_no_create");
+  assertEquals("existing-link-no-target-create-skipped", result.createSkippedExistingLink, true);
+  assertEquals("existing-link-no-target-not-created", result.created, false);
+  assertEquals("existing-link-no-target-entry-null", result.targetEntry, null);
+  assertEquals("existing-link-no-target-lib-count", _libs.DustingDay.entries().length, 0);
+  assertSame("existing-link-no-target-link-kept", input.field("DayLinks"), brokenLink);
+  assertEquals("existing-link-no-target-debug", input.field("Debug").indexOf("neuer Tages-Eintrag wird nicht erstellt") >= 0, true);
 }
 
 function testAlreadyLinkedInputCanAddNewMappedValuesOnRerun() {
@@ -1031,7 +1064,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-name missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.47") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.50") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -1043,7 +1076,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.47") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.50") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -1217,7 +1250,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.47") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.50") < 0) {
     fail("error-debug-version missing");
   }
 
@@ -1691,6 +1724,7 @@ testExistingFunctionalSourceDayLinkWinsOverDateSearch();
 testMismatchingSourceDayLinkFallsBackToMatchingDateByDefault();
 testMismatchingSourceDayLinkDoesNotRewriteExistingRelationByDefault();
 testBrokenSourceDayLinkFallsBackToDateSearch();
+testExistingSourceDayLinkPreventsNewDayCreationWhenTargetMissing();
 testAlreadyLinkedInputCanAddNewMappedValuesOnRerun();
 testAlreadyLinkedInputDoesNotRewriteRelationOnRerun();
 testAlreadyLinkedInputRecognizesRelationWrapperByDate();

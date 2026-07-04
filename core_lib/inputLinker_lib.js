@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.49 (sys 2.30)
+#4 Input Linker Lib v0.50 (sys 2.30)
 ========================================
 
 Änderungen
+- erstellt keinen neuen Tages-Eintrag mehr, wenn am Input bereits ein DayLink existiert, aber kein brauchbarer Ziel-Day gefunden wird
 - schreibt Relation-Felder standardmaessig nur, wenn sie leer sind; bestehende Links werden beim Input-Update nicht automatisch ersetzt
 - optional kann `cleanupStaleDayLinks: true` stale DayLinks per `entry.unlink(field, oldEntry)` entfernen
 - erkennt bereits bestehende Relationslinks robuster ueber ID, Name/Titel und Zieldatum
@@ -98,7 +99,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.49";
+var DDL_VERSION = "0.50";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1652,6 +1653,7 @@ function linkInputEntryToTarget(cfg) {
     created: false,
     linked: false,
     linkSkippedExisting: false,
+    createSkippedExistingLink: false,
     unlinked: 0,
     skipped: false,
     skipReason: "",
@@ -1709,6 +1711,15 @@ function linkInputEntryToTarget(cfg) {
     result.skippedBrokenLinkCleanup = true;
   }
   target = ddlCanUseLinkedDay(linkedTarget, sourceDate, targetDateField, cfg) ? linkedTarget : ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
+
+  if (!target && sourceHasDayLinks && cfg.createWhenSourceHasLink !== true) {
+    result.skipped = true;
+    result.skipReason = "existing_daylink_no_create";
+    result.createSkippedExistingLink = true;
+    errors.push("Bestehender DayLink vorhanden; neuer Tages-Eintrag wird nicht erstellt");
+    ddlWriteErrors(errors, cfg);
+    return result;
+  }
 
   if (!target) {
     target = ddlCreateDayEntry(targetLib, sourceDate, targetDateField, cfg, errors);

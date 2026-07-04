@@ -48,8 +48,8 @@ var result = checkAtagLibVersions({
 
 assertTrue("all-loaded", result.ok);
 assertEquals("export-lib-map-version", result.map.exportAtags_lib.version, "1.83");
-assertEquals("linker-lib-own-version", getInputLinkerLibVersion().version, "0.47");
-assertEquals("linker-lib-map-version", result.map.inputLinker_lib.version, "0.47");
+assertEquals("linker-lib-own-version", getInputLinkerLibVersion().version, "0.50");
+assertEquals("linker-lib-map-version", result.map.inputLinker_lib.version, "0.50");
 assertEquals("access-count", result.access.length, 4);
 
 var nonLib = checkLibVersions({ names: ["libVersions", "tagCleaner", "helpers"], requireAll: false });
@@ -57,7 +57,7 @@ assertEquals("non-lib-not-listed", nonLib.libs.length, 0);
 
 var textResult = checkAtagLibVersions({ checkAccess: true, asText: true });
 assertTrue("text-result-has-export", textResult.indexOf("exportAtags_lib v1.83") !== -1);
-assertTrue("text-result-has-linker", textResult.indexOf("inputLinker_lib v0.47") !== -1);
+assertTrue("text-result-has-linker", textResult.indexOf("inputLinker_lib v0.50") !== -1);
 
 var missing = checkLibVersions({ names: ["missing_lib"] });
 assertEquals("missing-detected", missing.missing[0], "missing_lib");
@@ -87,7 +87,7 @@ getInputLinkerLibVersion = function() {
 var getterOnlyOldOptional = checkAtagLibVersions({ names: ["inputLinker_lib"], checkAccess: true, requireAll: false, asText: false });
 assertEquals("getter-only-old-optional-no-optional-missing", getterOnlyOldOptional.optionalMissing.length, 0);
 assertEquals("getter-only-old-optional-map-version", getterOnlyOldOptional.map.inputLinker_lib.version, "0.39");
-assertEquals("getter-only-old-optional-mismatch", getterOnlyOldOptional.versionMismatch[0], "inputLinker_lib expected 0.47 got 0.39");
+assertEquals("getter-only-old-optional-mismatch", getterOnlyOldOptional.versionMismatch[0], "inputLinker_lib expected 0.50 got 0.39");
 getInputLinkerLibVersion = savedGetInputLinkerLibVersion;
 ATAG_LIB_VERSIONS = savedRegistry;
 
@@ -120,10 +120,10 @@ ATAG_LIB_VERSIONS = savedRegistry;
 
 var allVersionsText = checkAtagLibVersions({ checkAccess: true, requireAll: false, allVersions: true, asText: true });
 assertTrue("all-versions-text-has-helpers", allVersionsText.indexOf("helpers_lib v2.11") !== -1);
-assertTrue("all-versions-text-has-linker", allVersionsText.indexOf("inputLinker_lib v0.47") !== -1);
+assertTrue("all-versions-text-has-linker", allVersionsText.indexOf("inputLinker_lib v0.50") !== -1);
 
 checkAtagLibVersions({ checkAccess: true, verbose: true });
-assertTrue("verbose-log-written", _logs.join("\n").indexOf("inputLinker_lib v0.47") !== -1);
+assertTrue("verbose-log-written", _logs.join("\n").indexOf("inputLinker_lib v0.50") !== -1);
 
 var savedExpectedLibs = ATAG_EXPECTED_LIBS;
 ATAG_EXPECTED_LIBS = undefined;
