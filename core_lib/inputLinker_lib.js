@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.39 (sys 2.30)
+#4 Input Linker Lib v0.40 (sys 2.30)
 ========================================
 
 Änderungen
+- Rebuild-Clearing entscheidet pro Zielfeld; jedes `string_rows`-Mapping schuetzt freien Text/Tagbar vor Voll-Leerung
 - optionale Zielöffnung nach Input-Linking ergänzt: `openTargetEntry: true`
 - geloeschte/Trash-Links in Input-Relationen werden ignoriert und vor neuer Zuordnung entfernt
 - Rebuild von `string_rows` leert nur Row-Zeilen und erhaelt freien Text/Tagbar im Zielfeld
@@ -89,7 +90,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.39";
+var DDL_VERSION = "0.40";
 
 function getInputLinkerLibVersion() {
   return {
@@ -556,6 +557,29 @@ function ddlNormalizeMapItem(item) {
   };
 }
 
+function ddlClearValueForTarget(target, map, targetField, cfg) {
+  var hasTag = false;
+  var hasStringRows = false;
+  var hasString = false;
+  var i;
+  var item;
+  var type;
+
+  for (i = 0; i < map.length; i++) {
+    item = ddlNormalizeMapItem(map[i]);
+    if (item.to !== targetField) continue;
+
+    type = item.type || "string";
+    if (type === "string_rows") hasStringRows = true;
+    else if (type === "tag") hasTag = true;
+    else hasString = true;
+  }
+
+  if (hasStringRows) return ddlRemoveRowLines(ddlSafeField(target, targetField, null, null));
+  if (hasTag && !hasString) return [];
+  return "";
+}
+
 function ddlInferType(value) {
   if (ddlListLength(value) != null && typeof value !== "string") return "tag";
   if (typeof value === "number") return Math.floor(value) === value ? "int" : "real";
@@ -863,7 +887,6 @@ function ddlClearMappedTargets(target, map, cfg, result, errors, forceAll) {
   var i;
   var item;
   var value;
-  var type;
   var itemMode;
 
   for (i = 0; i < map.length; i++) {
@@ -873,8 +896,7 @@ function ddlClearMappedTargets(target, map, cfg, result, errors, forceAll) {
     itemMode = ddlNormalizeProcessMode(item.mode || cfg.processMode || cfg.mode);
     if (forceAll !== true && itemMode !== "rebuild") continue;
 
-    type = item.type || "string";
-    value = type === "tag" ? [] : (type === "string_rows" ? ddlRemoveRowLines(ddlSafeField(target, item.to, null, null)) : "");
+    value = ddlClearValueForTarget(target, map, item.to, cfg);
 
     ddlSafeSet(target, item.to, value, errors, "Zielfeld konnte nicht geleert werden", cfg && cfg.strictWriteErrors === true);
     cleared[item.to] = true;

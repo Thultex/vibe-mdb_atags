@@ -27,6 +27,7 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 ### 2026-06-20 - (ca. 0,5h)
 
 - *Summary: Dustingday-Projektstart, Memento-Konfiguration und erstes OutNote-Add-on.*
+- Phasenmarke: Vor DustingDay lag der Schwerpunkt auf Dosis-/Eindosierungslogging; mit DustingDay verschiebt sich das Repo-Ziel überwiegend zu Alltagstracking mit Tages-Inputs für Befinden, Symptome, Tätigkeiten, Erfolge und hilfreiche Methoden.
 - Projekt: `project/dustingday` mit README, persönlichem Plan, Codex-Plan, Strukturdatei und Memento-Konfiguration angelegt.
 - Feature: Dustingday-Collector-Add-on `addons/5_dusting-day/dustingDayCollector.js`; `updateDustingDayOutNote()` baut aus manuell gesetzten `DustingDay.InLinks` eine zeitlich sortierte `OutNote`.
 - Feature: Dustingday-Collector-Debug v0.11; `debugDustingDayCollector()` schreibt sichtbare Diagnose zu `InLinks`, verknüpften Entries und Feldwerten in `OutNote`.

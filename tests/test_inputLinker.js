@@ -729,7 +729,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-name missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.34") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.40") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -741,7 +741,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.34") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.40") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -915,7 +915,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.34") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.40") < 0) {
     fail("error-debug-version missing");
   }
 
@@ -1277,6 +1277,40 @@ function testRefreshDayRebuildKeepsFreeTextInStringRowsTarget() {
   assertEquals("refresh-rebuild-keeps-free-text", day.field("OutNote"), "#tagbar\nfreier text\n11: fresh");
 }
 
+function testRefreshDayRebuildKeepsFreeTextWhenSameTargetHasMixedMapTypes() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "#tagbar\nfreier text\n9: stale",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 11:00",
+    InNote: "fresh row",
+    ExtraNote: "fresh plain",
+    InTag: [],
+    DayLinks: day
+  });
+
+  resetWithLibs(day, {
+    DustingInput: makeLib([input])
+  });
+
+  refreshTargetFromInputEntries({
+    inputLib: "DustingInput",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    processAllEntries: true,
+    processMode: "rebuild",
+    processMap: [
+      { from: "ExtraNote", to: "OutNote", type: "string" },
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertEquals("refresh-rebuild-mixed-map-keeps-free-text", day.field("OutNote"), "#tagbar\nfreier text\nfresh plain\n11: fresh row");
+}
+
 function testRefreshDayCanProcessOneSourceEntry() {
   var day = makeEntry({
     Date: "2020-02-02 09:00",
@@ -1376,6 +1410,7 @@ testRefreshDayAppendAllAllowsDuplicateRowsAndTags();
 testRefreshDaySkipsInputsLinkedToOtherDayByDefault();
 testRefreshDayRebuildClearsMappedTargetsBeforeApplyingLinkedInputs();
 testRefreshDayRebuildKeepsFreeTextInStringRowsTarget();
+testRefreshDayRebuildKeepsFreeTextWhenSameTargetHasMixedMapTypes();
 testRefreshDayCanProcessOneSourceEntry();
 testSuccessfulRefreshClearsExistingTargetDebugField();
 

@@ -36,6 +36,12 @@ Die aktuellen Memento-Entry-Trigger und die parse-relevante Reihenfolge stehen i
 
 Freitext → strukturierte Daten → flexible Exporte.
 
+## Entwicklungsphasen
+
+Bis vor der DustingDay-Phase lag der Schwerpunkt des Repos auf Dosis-/Eindosierungslogging: Einnahme, Dosis, Reihen/Spree, Stundenbezug und daraus abgeleitete ATAG-Auswertung.
+
+Mit `DustingDay` verschiebt sich das Hauptziel überwiegend zum Alltagstracking: kurze Inputs zu Befinden, Symptomen, Tätigkeiten, Erfolgen und hilfreichen Methoden werden über Tages-Einträge gesammelt. Dosis bleibt als Nebenfaktor möglich, ist aber nicht mehr der zentrale Taktgeber.
+
 - Tags + Werte extrahieren
 - Links / Mail / Tel erkennen
 - Row-Kontext (z. B. `5h: emo3`) verarbeiten
