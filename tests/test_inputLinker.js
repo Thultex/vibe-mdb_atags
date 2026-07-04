@@ -494,6 +494,7 @@ function testExistingFunctionalSourceDayLinkWinsOverDateSearch() {
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
     trustExistingLink: true,
+    processExistingLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
@@ -531,6 +532,7 @@ function testMismatchingSourceDayLinkFallsBackToMatchingDateByDefault() {
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
+    processExistingLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
@@ -569,6 +571,7 @@ function testMismatchingSourceDayLinkDoesNotRewriteExistingRelationByDefault() {
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
+    processExistingLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
@@ -605,6 +608,7 @@ function testBrokenSourceDayLinkFallsBackToDateSearch() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processExistingLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
@@ -634,6 +638,7 @@ function testExistingSourceDayLinkPreventsNewDayCreationWhenTargetMissing() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processExistingLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
@@ -669,6 +674,7 @@ function testAlreadyLinkedInputCanAddNewMappedValuesOnRerun() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processExistingLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" },
       { from: "InTag", to: "OutTags", type: "tag" }
@@ -711,6 +717,48 @@ function testAlreadyLinkedInputDoesNotRewriteRelationOnRerun() {
   assertEquals("already-linked-no-rewrite-daylinks-set-count", input._setCounts.DayLinks || 0, 0);
   assertEquals("already-linked-no-rewrite-daylinks-link-count", input._linkCounts.DayLinks || 0, 0);
   assertEquals("already-linked-no-rewrite-note", day.field("OutNote"), "10: neu");
+}
+
+function testExistingDayLinkDoesNotProcessTargetByDefault() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "10: alt",
+    OutTags: ["alt"]
+  });
+  var input = makeCountingSetEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "neu",
+    InTag: ["neu"],
+    DayLinks: day
+  });
+
+  reset(input, [day]);
+
+  var result = linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    recalcTarget: true,
+    postEntry: true,
+    openTargetEntry: true,
+    map: [
+      { from: "InNote", to: "OutNote", type: "string_rows" },
+      { from: "InTag", to: "OutTags", type: "tag" }
+    ]
+  });
+
+  assertSame("existing-link-default-target", result.targetEntry, day);
+  assertEquals("existing-link-default-skipped", result.skipped, true);
+  assertEquals("existing-link-default-reason", result.skipReason, "existing_daylink_process_disabled");
+  assertEquals("existing-link-default-process-skipped", result.processSkippedExistingLink, true);
+  assertEquals("existing-link-default-note-untouched", day.field("OutNote"), "10: alt");
+  assertEquals("existing-link-default-tags-untouched", day.field("OutTags").join(","), "alt");
+  assertEquals("existing-link-default-no-recalc", day._recalcCount, 0);
+  assertEquals("existing-link-default-no-post-entry", _postEntries.length, 0);
+  assertEquals("existing-link-default-no-open", result.openResult.attempted, false);
+  assertEquals("existing-link-default-no-relation-set", input._setCounts.DayLinks || 0, 0);
+  assertEquals("existing-link-default-no-relation-link", input._linkCounts.DayLinks || 0, 0);
 }
 
 function testAlreadyLinkedInputRecognizesRelationWrapperByDate() {
@@ -913,6 +961,7 @@ function testRunsPostEntryOnTargetWhenConfigured() {
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
+    processExistingLink: true,
     postEntry: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
@@ -1781,6 +1830,7 @@ testBrokenSourceDayLinkFallsBackToDateSearch();
 testExistingSourceDayLinkPreventsNewDayCreationWhenTargetMissing();
 testAlreadyLinkedInputCanAddNewMappedValuesOnRerun();
 testAlreadyLinkedInputDoesNotRewriteRelationOnRerun();
+testExistingDayLinkDoesNotProcessTargetByDefault();
 testAlreadyLinkedInputRecognizesRelationWrapperByDate();
 testLinkedDeletedDayDoesNotFallBackToDateMatchById();
 testRelationWithoutLinkMethodDoesNotSetEntryObjectByDefault();

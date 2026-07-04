@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.52 (sys 2.30)
+#4 Input Linker Lib v0.53 (sys 2.30)
 ========================================
 
 Änderungen
+- verarbeitet vorhandene DayLinks im Input-Trigger nicht mehr automatisch; Updates bestehender Inputs werden mit `processExistingLink: true` explizit freigeschaltet
 - loest vorhandene DayLinks bevorzugt per targetLib.findById(linked.id) auf und behandelt entry.deleted als primaeren Papierkorb-Indikator
 - schreibt standardmaessig nicht mehr direkt in Entry-Objekte aus Relation-Feldern; verlinkte Days werden zuerst gegen targetLib.entries() aufgeloest
 - erstellt keinen neuen Tages-Eintrag mehr, wenn am Input bereits ein DayLink existiert, aber kein brauchbarer Ziel-Day gefunden wird
@@ -101,7 +102,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.52";
+var DDL_VERSION = "0.53";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1707,6 +1708,7 @@ function linkInputEntryToTarget(cfg) {
     linkSkippedExisting: false,
     createSkippedExistingLink: false,
     directLinkedTargetWriteSkipped: false,
+    processSkippedExistingLink: false,
     unlinked: 0,
     skipped: false,
     skipReason: "",
@@ -1808,6 +1810,19 @@ function linkInputEntryToTarget(cfg) {
 
   result.targetEntry = target;
   targetDate = ddlToDate(ddlSafeField(target, targetDateField, null, null)) || sourceDate;
+
+  if (sourceHasDayLinks && result.created !== true && cfg.processExistingLink !== true) {
+    result.skipped = true;
+    result.skipReason = "existing_daylink_process_disabled";
+    result.processSkippedExistingLink = true;
+    if (sourceDayLinkField && ddlEntryLinksToDay(src, sourceDayLinkField, target, targetDateField)) {
+      result.linked = true;
+    } else {
+      result.linkSkippedExisting = true;
+    }
+    ddlClearDebugFieldIfExists(cfg);
+    return result;
+  }
 
   if (sourceDayLinkField && ddlEntryLinksToDay(src, sourceDayLinkField, target, targetDateField)) {
     result.linked = true;
