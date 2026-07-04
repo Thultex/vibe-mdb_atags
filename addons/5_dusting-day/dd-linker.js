@@ -1,9 +1,10 @@
 /*
 ========================================
-B11 Dusting Day Linker v0.20 (sys 2.30)
+B11 Dusting Day Linker v0.21 (sys 2.30)
 ========================================
 
 Änderungen
+- Rhino NativeArray / Java-Listen werden für Tags zuverlässig in Einzelwerte entpackt
 - nicht lesbare Zielwerte werden beim Anhängen als leer behandelt, solange set() funktioniert
 - Debug-Log wird als ein zusammenhängender Block ausgegeben
 - Debug-Header enthält Version und Zeitpunkt
@@ -56,10 +57,14 @@ function ddlIsArray(val) {
   return Object.prototype.toString.call(val) === "[object Array]";
 }
 
+function ddlIsString(val) {
+  return typeof val === "string" || Object.prototype.toString.call(val) === "[object String]";
+}
+
 function ddlListLength(val) {
   var n;
 
-  if (val == null || typeof val === "string") return null;
+  if (val == null || ddlIsString(val)) return null;
   if (ddlIsArray(val)) return val.length;
 
   try {
@@ -132,6 +137,25 @@ function ddlToArray(val) {
     for (i = 0; i < len; i++) out.push(ddlListItem(list, i));
     return out;
   }
+
+  try {
+    if (typeof list.toArray === "function") {
+      list = list.toArray();
+      len = ddlListLength(list);
+      if (len != null) {
+        for (i = 0; i < len; i++) out.push(ddlListItem(list, i));
+        return out;
+      }
+    }
+  } catch (e4) {}
+
+  try {
+    if (typeof list.toString === "function" && String(list).indexOf(",") >= 0 && String(list).indexOf("@") < 0) {
+      var parts = String(list).split(",");
+      for (i = 0; i < parts.length; i++) out.push(ddlTrim(parts[i]));
+      return out;
+    }
+  } catch (e5) {}
 
   out.push(list);
   return out;
@@ -331,7 +355,7 @@ function ddlAppendUniqueTags(target, targetField, value, errors) {
   var tag;
 
   for (i = 0; i < incoming.length; i++) {
-    tag = incoming[i];
+    tag = ddlTagText(incoming[i]);
     if (!ddlTagExists(current, tag)) {
       current.push(tag);
       changed = true;

@@ -40,9 +40,10 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Fix: `dd-linker.js` v0.16 unterstützt Iterator-Rückgaben von `entries()`; vorhandene Day-Einträge werden dadurch in Memento korrekt gefunden statt als einzelner Iterator behandelt zu werden.
 - Change: `dd-linker.js` v0.17 schreibt `debugDayLinkerAccess()` zusätzlich immer zeilenweise ins Memento-Log.
 - Change: `dd-linker.js` v0.19 schreibt Debug-Ausgaben als einen zusammenhängenden Log-Block und ergänzt Version/Zeitpunkt im Debug-Header.
+- Fix: `dd-linker.js` v0.20 behandelt nicht lesbare Zielwerte beim Anhängen als leer, solange `set()` funktioniert; dadurch verschwinden falsche Fehler für `OutNote`/`OutTags`.
 - Test: `tests/test_dd_linker.js` deckt Tageserstellung, Source-Link, erste Notizzeile, Duplikatschutz und relative Row-Zeit ab.
 - Test: `tests/test_dustingDayCollector.js` deckt Array-/Java-Listen-Relationen, Feldmapping, Row-Rundung und leere Links ab.
-- *Versionen: Dusting Day Collector v0.13, Dusting Day Linker v0.19.*
+- *Versionen: Dusting Day Collector v0.13, Dusting Day Linker v0.20.*
 
 ### 2026-05-20 - (ca. 0,5h)
 

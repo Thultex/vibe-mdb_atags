@@ -85,6 +85,18 @@ function makeIteratorLib(entries) {
   };
 }
 
+function makeNativeArrayLike(items) {
+  return {
+    length: items.length,
+    get: function(index) {
+      return items[index];
+    },
+    toString: function() {
+      return "org.mozilla.javascript.NativeArray@abc";
+    }
+  };
+}
+
 function entry() {
   return _currentEntry;
 }
@@ -439,6 +451,34 @@ function testWriteOnlyTargetFieldsDoNotProduceFalseReadErrors() {
   assertEquals("write-only-outtags", day._fields.OutTags.join(","), "tagx");
 }
 
+function testNativeArrayLikeTagsAreUnpacked() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "",
+    InTag: makeNativeArrayLike(["alpha", "beta"]),
+    DayLinks: null
+  });
+
+  reset(input, [day]);
+
+  appendToDayEntry({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    map: [
+      { from: "InTag", to: "OutTags", type: "tag" }
+    ]
+  });
+
+  assertEquals("native-array-tags", day.field("OutTags").join(","), "alpha,beta");
+}
+
 function testFindsExistingDayFromIteratorEntries() {
   var day = makeEntry({
     Date: "2020-02-02 09:00",
@@ -481,6 +521,7 @@ testReusesExistingSourceDayLinkBeforeDateSearch();
 testRecalcSourceAndTargetWhenConfigured();
 testDebugDayLinkerAccessWritesDiagnostics();
 testWriteOnlyTargetFieldsDoNotProduceFalseReadErrors();
+testNativeArrayLikeTagsAreUnpacked();
 testFindsExistingDayFromIteratorEntries();
 
 WScript.Echo("OK");
