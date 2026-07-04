@@ -146,6 +146,10 @@ function customInputLinkerPostEntry(e) {
   _postEntries.push(e);
 }
 
+function throwingInputLinkerPostEntry(e) {
+  throw new Error("custom failure");
+}
+
 function reset(input, dayEntries) {
   _currentEntry = input;
   _logs = [];
@@ -623,6 +627,40 @@ function testRunsNamedPostEntryFunctionWhenConfigured() {
   assertEquals("post-entry-named-count", _postEntries.length, 1);
   assertSame("post-entry-named-entry", _postEntries[0], day);
   assertEquals("post-entry-named-result", result.postEntries.join(","), "target");
+}
+
+function testPostEntryErrorIncludesFunctionAndMessage() {
+  var day = makeEntry({
+    Datum: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "post fail",
+    InTag: [],
+    DayLinks: null,
+    Debug: ""
+  });
+
+  reset(input, [day]);
+
+  var result = linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Datum",
+    sourceDayLinkField: "DayLinks",
+    sourceDebugField: "Debug",
+    postEntry: true,
+    postEntryName: "throwingInputLinkerPostEntry",
+    map: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertEquals("post-entry-fail-result-empty", result.postEntries.length, 0);
+  assertEquals("post-entry-fail-error-detail", result.errors[0].indexOf("PostEntry fehlgeschlagen: target via throwingInputLinkerPostEntry - custom failure") >= 0, true);
+  assertEquals("post-entry-fail-debug-detail", input.field("Debug").indexOf("custom failure") >= 0, true);
 }
 
 function testDebugDayLinkerAccessWritesDiagnostics() {
@@ -1225,6 +1263,7 @@ testRecalcSourceAndTargetWhenConfigured();
 testRunsPostEntryOnTargetWhenConfigured();
 testRunsPostEntryOnSourceWhenConfigured();
 testRunsNamedPostEntryFunctionWhenConfigured();
+testPostEntryErrorIncludesFunctionAndMessage();
 testDebugDayLinkerAccessWritesDiagnostics();
 testWriteOnlyTargetFieldsDoNotProduceFalseReadErrors();
 testNativeArrayLikeTagsAreUnpacked();

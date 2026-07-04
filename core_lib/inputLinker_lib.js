@@ -1,9 +1,11 @@
 /*
 ========================================
-#4 Input Linker Lib v0.34 (sys 2.30)
+#4 Input Linker Lib v0.36 (sys 2.30)
 ========================================
 
 Änderungen
+- vorhandenes Debug-Feld wird zu Beginn und bei erfolgreicher Durchführung geleert
+- PostEntry-Fehlerdebug gibt Funktionsname/Ziel und Fehlermeldung aus
 - PostEntry-Funktion kann per `postEntryName`/`postEntryFunctionName` oder String in `postEntryFunction` benannt werden
 - optionale PostEntry-Ausführung nach dem Input-Linking ergänzt: `postEntry: true` ruft `postEntry(targetEntry)`/`PostEntry(targetEntry)` auf
 - feste Core-Lib als inputLinker_lib; alte Day-/Failsafe-Funktionsnamen entfernt
@@ -84,7 +86,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.34";
+var DDL_VERSION = "0.36";
 
 function getInputLinkerLibVersion() {
   return {
@@ -953,6 +955,17 @@ function ddlResolvePostEntryFunction(cfg) {
   return null;
 }
 
+function ddlPostEntryFunctionName(cfg) {
+  var fn = cfg && (cfg.postEntryFn || cfg.postEntryFunction);
+  var name = cfg && (cfg.postEntryName || cfg.postEntryFunctionName);
+
+  if (typeof fn === "string") return fn;
+  if (typeof name === "string") return name;
+  if (typeof fn === "function" && fn.name) return fn.name;
+
+  return "postEntry/PostEntry";
+}
+
 function ddlRunPostEntry(entryObj, cfg, result, errors, label) {
   var fn;
 
@@ -969,7 +982,16 @@ function ddlRunPostEntry(entryObj, cfg, result, errors, label) {
     result.postEntries.push(label || "entry");
     return true;
   } catch (e) {
-    if (errors) errors.push("PostEntry fehlgeschlagen: " + (label || "entry"));
+    if (errors) {
+      errors.push(
+        "PostEntry fehlgeschlagen: " +
+        (label || "entry") +
+        " via " +
+        ddlPostEntryFunctionName(cfg) +
+        " - " +
+        (e && e.message ? e.message : String(e))
+      );
+    }
     return false;
   }
 }
@@ -1010,6 +1032,16 @@ function ddlWriteErrors(errors, cfg) {
   if (debugEntry && debugField) {
     ddlSafeSet(debugEntry, debugField, lines.join("\n"), null, null);
   }
+}
+
+function ddlClearDebugFieldIfExists(cfg) {
+  var debugEntry = cfg && cfg.debugEntry;
+  var debugField = cfg && cfg.debugField;
+
+  if (!debugEntry || !debugField) return false;
+  if (!ddlEntryHasField(debugEntry, debugField)) return false;
+
+  return ddlSafeSet(debugEntry, debugField, "", null, null, false);
 }
 
 function ddlLogLine(line) {
@@ -1199,7 +1231,8 @@ function linkInputEntryToTarget(cfg) {
   };
 
   cfg.debugEntry = src;
-  cfg.debugField = cfg.debugField || cfg.sourceDebugField;
+  cfg.debugField = cfg.debugField || cfg.sourceDebugField || "Debug";
+  ddlClearDebugFieldIfExists(cfg);
 
   if (!sourceDate) {
     errors.push("Quell-Datum leer oder ungültig: " + sourceDateField);
@@ -1260,7 +1293,8 @@ function linkInputEntryToTarget(cfg) {
     result.recalculated.push("source");
   }
 
-  ddlWriteErrors(errors, cfg);
+  if (errors.length) ddlWriteErrors(errors, cfg);
+  else ddlClearDebugFieldIfExists(cfg);
   return result;
 }
 
@@ -1289,7 +1323,8 @@ function refreshTargetFromInputEntries(cfg) {
   };
 
   cfg.debugEntry = target;
-  cfg.debugField = cfg.debugField || cfg.targetDebugField || cfg.sourceDebugField;
+  cfg.debugField = cfg.debugField || cfg.targetDebugField || cfg.sourceDebugField || "Debug";
+  ddlClearDebugFieldIfExists(cfg);
 
   if (!target) {
     errors.push("Ziel-Eintrag fehlt");
@@ -1329,8 +1364,7 @@ function refreshTargetFromInputEntries(cfg) {
     result.recalculated.push("target");
   }
 
-  ddlWriteErrors(errors, cfg);
+  if (errors.length) ddlWriteErrors(errors, cfg);
+  else ddlClearDebugFieldIfExists(cfg);
   return result;
 }
-
-

@@ -55,13 +55,14 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Change: `Input Linker` v0.32 ist feste optionale Core-Lib `inputLinker_lib`; alte Day-/Failsafe-Funktionsnamen wurden entfernt und durch `linkInputEntryToTarget()`, `refreshTargetFromInputEntries()` und `debugInputLinkerAccess()` ersetzt.
 - Feature: `Input Linker` v0.33 ergänzt `postEntry: true`, um nach dem Input-Linking `postEntry(entry)`/`PostEntry(entry)` mit dem konkreten Ziel- oder Source-Eintrag aufzurufen.
 - Feature: `Input Linker` v0.34 erlaubt freie PostEntry-Funktionsnamen per `postEntryName`/`postEntryFunctionName` oder Funktionsobjekt per `postEntryFn`.
+- Fix: `Input Linker` v0.35 schreibt bei PostEntry-Fehlern Funktionsname, Ziel (`target`/`source`) und die eigentliche Fehlermeldung ins Debug.
 - Change: `libVersions` v1.09 unterstützt optionale Libs und `verbose: true` für schnelle Version-/Zugriffsprüfung per Log-Ausgabe.
 - Feature: Time Marker v1.32 ergänzt `cleanupTimeMarker({ mergeSameRows: true })`, um gleiche Row-Marker zu einer Zeile mit `; ` zusammenzuführen.
 - Change: `syncFieldBack()` nutzt bei übergebenem `entryObj` dessen Library für den Ziel-Eintrag, sofern Memento diese am Entry bereitstellt; `syncFieldTo()` und `syncFieldAll()` verwenden denselben Entry-Library-Fallback.
 - Change: `updateSequenceSpree()` akzeptiert zusätzlich `entryObj` als Alias für `currentEntry`; bestehende `currentEntry`-Aufrufe haben weiter Vorrang.
 - Test: `tests/test_inputLinker.js` deckt Tageserstellung, Source-Link, erste Notizzeile, Duplikatschutz und relative Row-Zeit ab.
 - Change: Alter DustingDay-Collector-Ordner und zugehöriger Test wurden entfernt; der aktive Weg läuft über `inputLinker_lib`.
-- *Versionen: Input Linker v0.34, libVersions v1.09, Time Marker v1.32, Global Field Sync v1.03, Sequence Counter v1.05.*
+- *Versionen: Input Linker v0.35, libVersions v1.09, Time Marker v1.32, Global Field Sync v1.03, Sequence Counter v1.05.*
 
 ### 2026-05-20 - (ca. 0,5h)
 
@@ -556,6 +557,7 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Test/Doku: `tests/test_collectAtags.js` ergaenzt.
 - *Versionen: collectAtags v1.22.*
 ```
+
 
 
 

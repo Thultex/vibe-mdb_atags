@@ -11,7 +11,7 @@ Notes
   - helpers_lib v2.11 (sys 2.30)
   - collectAtags_lib v1.58 (sys 2.30)
   - exportAtags_lib v1.83 (sys 2.30)
-  - inputLinker_lib v0.34 (sys 2.30, optional)
+  - inputLinker_lib v0.35 (sys 2.30, optional)
 
 Example
 var libCheck = checkAtagLibVersions({
@@ -41,7 +41,7 @@ var ATAG_EXPECTED_LIBS = [
   { name: "helpers_lib", version: "2.11", getter: "getHelpersLibVersion", path: "core_lib/helpers_lib.js" },
   { name: "collectAtags_lib", version: "1.58", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
   { name: "exportAtags_lib", version: "1.83", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" },
-  { name: "inputLinker_lib", version: "0.34", getter: "getInputLinkerLibVersion", path: "core_lib/inputLinker_lib.js", optional: true }
+  { name: "inputLinker_lib", version: "0.35", getter: "getInputLinkerLibVersion", path: "core_lib/inputLinker_lib.js", optional: true }
 ];
 
 function getExpectedAtagLibNames() {
@@ -237,6 +237,7 @@ function checkAtagLibVersions(cfg) {
 
   return result;
 }
+
 
 
 
