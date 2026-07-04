@@ -53,6 +53,27 @@ function makeLib(entries) {
   };
 }
 
+function makeIteratorLib(entries) {
+  return {
+    _entries: entries || [],
+    entries: function() {
+      var i = 0;
+      var items = this._entries;
+      return {
+        next: function() {
+          if (i >= items.length) return { done: true };
+          return { done: false, value: items[i++] };
+        }
+      };
+    },
+    create: function(values) {
+      var e = makeEntry(values);
+      this._entries.push(e);
+      return e;
+    }
+  };
+}
+
 function entry() {
   return _currentEntry;
 }
@@ -353,6 +374,38 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
   }
 }
 
+function testFindsExistingDayFromIteratorEntries() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "iterator day",
+    InTag: [],
+    DayLinks: null
+  });
+
+  resetWithLibs(input, {
+    DustingDay: makeIteratorLib([day])
+  });
+
+  var result = appendToDayEntry({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    map: [
+      { from: "InNote", to: "OutNote", type: "string" }
+    ]
+  });
+
+  assertSame("iterator-existing-target", result.targetEntry, day);
+  assertEquals("iterator-no-create", result.created, false);
+  assertEquals("iterator-outnote", day.field("OutNote"), "10: iterator day");
+}
+
 testCreatesDayLinksSourceAndAppendsMappedFields();
 testDoesNotDuplicateSameLineOrTags();
 testSinceFirstUsesTargetDateAsZero();
@@ -362,5 +415,6 @@ testNewInputAddsMissingTagsToExistingDay();
 testReusesExistingSourceDayLinkBeforeDateSearch();
 testRecalcSourceAndTargetWhenConfigured();
 testDebugDayLinkerAccessWritesDiagnostics();
+testFindsExistingDayFromIteratorEntries();
 
 WScript.Echo("OK");

@@ -1,9 +1,10 @@
 /*
 ========================================
-B11 Dusting Day Linker v0.15 (sys 2.30)
+B11 Dusting Day Linker v0.16 (sys 2.30)
 ========================================
 
 Änderungen
+- unterstützt Iterator-Rückgaben von entries()
 - Debug-Funktion für Ziel-Library-Zugriff ergänzt
 - Ziel-Feldvalidierung blockiert nicht mehr standardmäßig, weil Memento Feldzugriff je nach Kontext unzuverlässig sein kann
 - vorhandener Source-DayLink wird als erstes wiederverwendet
@@ -92,12 +93,35 @@ function ddlToArray(val) {
   var list = val;
   var len;
   var i;
+  var next;
 
   if (val == null || val === "") return out;
 
   try {
     if (val && typeof val.entries === "function") list = val.entries();
   } catch (e0) {}
+
+  try {
+    if (list && typeof list.iterator === "function") list = list.iterator();
+  } catch (e1) {}
+
+  try {
+    if (list && typeof list.hasNext === "function" && typeof list.next === "function") {
+      while (list.hasNext()) out.push(list.next());
+      return out;
+    }
+  } catch (e2) {}
+
+  try {
+    if (list && typeof list.next === "function") {
+      while (true) {
+        next = list.next();
+        if (!next || next.done === true) break;
+        out.push(next.value);
+      }
+      return out;
+    }
+  } catch (e3) {}
 
   len = ddlListLength(list);
   if (len != null) {
