@@ -1136,12 +1136,14 @@ function testPostEntryErrorIncludesFunctionAndMessage() {
 
 function testDebugDayLinkerAccessWritesDiagnostics() {
   var day = makeEntry({
+    id: "debug-day",
     Date: "2020-02-02 09:00",
     OutNote: "",
     OutTags: []
   });
   var input = makeEntry({
     Date: "2020-02-02 10:00",
+    DayLinks: day,
     Debug: ""
   });
 
@@ -1170,7 +1172,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-name missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.53") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.54") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -1182,7 +1184,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.53") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.54") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -1200,6 +1202,30 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
 
   if (String(input.field("Debug")).indexOf("rowSourceMode: realtime") < 0) {
     fail("debug-linker-row-source-mode missing");
+  }
+
+  if (String(input.field("Debug")).indexOf("source entry id:") < 0) {
+    fail("debug-linker-source-id missing");
+  }
+
+  if (String(input.field("Debug")).indexOf("source date values raw:") < 0) {
+    fail("debug-linker-values-date missing");
+  }
+
+  if (String(input.field("Debug")).indexOf("trigger field() raw:") < 0) {
+    fail("debug-linker-trigger-field missing");
+  }
+
+  if (String(input.field("Debug")).indexOf("source DayLinks length: 1") < 0) {
+    fail("debug-linker-daylinks-length missing");
+  }
+
+  if (String(input.field("Debug")).indexOf("source DayLink[0] id: debug-day") < 0) {
+    fail("debug-linker-daylink-id missing");
+  }
+
+  if (String(input.field("Debug")).indexOf("target findById DayLink[0]: entry-like object") < 0) {
+    fail("debug-linker-findbyid missing");
   }
 }
 
@@ -1356,7 +1382,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.53") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.54") < 0) {
     fail("error-debug-version missing");
   }
 

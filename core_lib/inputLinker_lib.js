@@ -1686,6 +1686,24 @@ function debugInputLinkerAccess(cfg) {
     };
   }
 
+  if (firstLinkId) {
+    try {
+      if (typeof targetLib.findById === "function") {
+        firstLinkFound = targetLib.findById(firstLinkId);
+        lines.push("target findById DayLink[0]: " + ddlDescribeValue(firstLinkFound));
+        lines.push("target findById DayLink[0] id: " + ddlEntryId(firstLinkFound));
+        lines.push("target findById DayLink[0] deleted: " + ddlIsDeletedEntry(firstLinkFound));
+        lines.push("target findById DayLink[0] date raw: " + ddlDescribeValue(ddlSafeField(firstLinkFound, targetDateField, null, null)));
+      } else {
+        lines.push("target findById available: false");
+      }
+    } catch (eFind) {
+      lines.push("target findById error: " + eFind);
+    }
+  } else {
+    lines.push("target findById DayLink[0]: skipped");
+  }
+
   try {
     entries = ddlTargetEntries(targetLib);
     lines.push("target entries: " + entries.length);
