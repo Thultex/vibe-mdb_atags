@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.61 (sys 2.30)
+#4 Input Linker Lib v0.62 (sys 2.30)
 ========================================
 
 Änderungen
+- recieveInputEntryFromSource()/receiveInputEntryFromSource() werden explizit global exportiert
 - vorhandene DayLinks werden im Input-Linker nicht mehr als Entry-Objekt aufgeloest; schon ein Relation-Wert fuehrt zum No-op
 - linkInputEntryToTarget() ist strikt Link-only: vorhandener DayLink = sofort raus; sonst Day suchen/erstellen und genau einmal verlinken
 - bestehende gültige DayLinks verlassen den Input-Linker ohne Debug-Clear, damit "nichts tun" wirklich keine Feldänderung auslöst
@@ -123,7 +124,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.61";
+var DDL_VERSION = "0.62";
 
 function getInputLinkerLibVersion() {
   return {
@@ -2006,3 +2007,9 @@ function receiveInputEntryFromSource(cfg) {
 function refreshCurrentTargetFromLinkedInputEntry(cfg) {
   return recieveInputEntryFromSource(cfg);
 }
+
+try {
+  this.recieveInputEntryFromSource = recieveInputEntryFromSource;
+  this.receiveInputEntryFromSource = receiveInputEntryFromSource;
+  this.refreshCurrentTargetFromLinkedInputEntry = refreshCurrentTargetFromLinkedInputEntry;
+} catch (eGlobalInputLinker) {}
