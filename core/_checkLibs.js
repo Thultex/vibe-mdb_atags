@@ -1,6 +1,6 @@
 /*
 ========================================
-A1 Lib Versions v1.12 (sys 2.30)
+A1 Lib Versions v1.14 (sys 2.30)
 ========================================
 
 Notes
@@ -11,18 +11,22 @@ Notes
   - helpers_lib v2.11 (sys 2.30)
   - collectAtags_lib v1.59 (sys 2.30)
   - exportAtags_lib v1.83 (sys 2.30)
-  - inputLinker_lib v0.40 (sys 2.30, optional)
-
-Example
-var libCheck = checkAtagLibVersions({
-  checkAccess: true,
-  requireAll: false,
-  allVersions: true,
-  verbose: true
-});
+  - inputLinker_lib v0.42 (sys 2.30, optional)
 
 ========================================
 */
+
+
+var RUN_LIB_CHECK = false;
+
+if (RUN_LIB_CHECK) {
+  var libCheck = checkAtagLibVersions({
+    checkAccess: true,
+    requireAll: false,
+    allVersions: true,
+    verbose: true
+  });
+}
 
 var ATAG_SYS_VERSION = typeof ATAG_SYS_VERSION !== "undefined" ? ATAG_SYS_VERSION : "2.30";
 var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERSIONS : {};
@@ -30,7 +34,7 @@ var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERS
 function getLibVersionsVersion() {
   return {
     name: "libVersions",
-    version: "1.12",
+    version: "1.14",
     sysVersion: "2.30",
     path: "core/_checkLibs.js"
   };
@@ -40,7 +44,7 @@ var ATAG_EXPECTED_LIBS = [
   { name: "helpers_lib", version: "2.11", getter: "getHelpersLibVersion", path: "core_lib/helpers_lib.js" },
   { name: "collectAtags_lib", version: "1.59", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
   { name: "exportAtags_lib", version: "1.83", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" },
-  { name: "inputLinker_lib", version: "0.40", getter: "getInputLinkerLibVersion", path: "core_lib/inputLinker_lib.js", optional: true }
+  { name: "inputLinker_lib", version: "0.42", getter: "getInputLinkerLibVersion", path: "core_lib/inputLinker_lib.js", optional: true }
 ];
 
 function getExpectedAtagLibs() {
@@ -290,13 +294,3 @@ function checkAtagLibVersions(cfg) {
 
   return result;
 }
-
-
-
-
-
-
-
-
-
-

@@ -1,9 +1,11 @@
 /*
 ========================================
-#4 Input Linker Lib v0.40 (sys 2.30)
+#4 Input Linker Lib v0.42 (sys 2.30)
 ========================================
 
 Änderungen
+- vorhandene DayLinks werden nur wiederverwendet, wenn ihr Zieldatum zum Input-Tag passt
+- schützt Nicht-Row-Bereich von `string_rows`-Zielfeldern vor PostEntry-/Cleaner-Seiteneffekten
 - Rebuild-Clearing entscheidet pro Zielfeld; jedes `string_rows`-Mapping schuetzt freien Text/Tagbar vor Voll-Leerung
 - optionale Zielöffnung nach Input-Linking ergänzt: `openTargetEntry: true`
 - geloeschte/Trash-Links in Input-Relationen werden ignoriert und vor neuer Zuordnung entfernt
@@ -90,7 +92,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.40";
+var DDL_VERSION = "0.42";
 
 function getInputLinkerLibVersion() {
   return {
@@ -437,6 +439,99 @@ function ddlRemoveRowLines(text) {
   return out.join("\n");
 }
 
+function ddlExtractNonRowLines(text) {
+  var lines = ddlSplitLines(text);
+  var out = [];
+  var i;
+
+  for (i = 0; i < lines.length; i++) {
+    if (!ddlIsRowLine(lines[i])) out.push(lines[i]);
+  }
+
+  while (out.length && ddlTrim(out[0]) === "") out.shift();
+  while (out.length && ddlTrim(out[out.length - 1]) === "") out.pop();
+
+  return out;
+}
+
+function ddlNormalizeTextBlock(linesOrText) {
+  var lines = ddlIsArray(linesOrText) ? linesOrText : ddlSplitLines(linesOrText);
+  var out = [];
+  var i;
+
+  for (i = 0; i < lines.length; i++) out.push(String(lines[i] || ""));
+
+  while (out.length && ddlTrim(out[0]) === "") out.shift();
+  while (out.length && ddlTrim(out[out.length - 1]) === "") out.pop();
+
+  return out.join("\n");
+}
+
+function ddlStringRowsTargetFields(map) {
+  var out = [];
+  var seen = {};
+  var i;
+  var item;
+
+  for (i = 0; i < map.length; i++) {
+    item = ddlNormalizeMapItem(map[i]);
+    if (!item.to || item.type !== "string_rows" || seen[item.to]) continue;
+    seen[item.to] = true;
+    out.push(item.to);
+  }
+
+  return out;
+}
+
+function ddlSnapshotStringRowsFreeText(target, map) {
+  var fields = ddlStringRowsTargetFields(map || []);
+  var snapshots = [];
+  var i;
+  var field;
+  var text;
+  var freeText;
+
+  for (i = 0; i < fields.length; i++) {
+    field = fields[i];
+    text = ddlSafeField(target, field, null, null);
+    freeText = ddlNormalizeTextBlock(ddlExtractNonRowLines(text));
+    if (!freeText) continue;
+    snapshots.push({
+      field: field,
+      freeText: freeText
+    });
+  }
+
+  return snapshots;
+}
+
+function ddlRestoreStringRowsFreeText(target, snapshots, cfg, errors) {
+  var i;
+  var field;
+  var current;
+  var currentFree;
+  var restored;
+  var changed = false;
+
+  if (!snapshots || !snapshots.length) return false;
+
+  for (i = 0; i < snapshots.length; i++) {
+    field = snapshots[i].field;
+    current = ddlSafeField(target, field, null, null);
+    current = current == null ? "" : String(current);
+    currentFree = ddlNormalizeTextBlock(ddlExtractNonRowLines(current));
+
+    if (!snapshots[i].freeText || currentFree) continue;
+
+    restored = ddlTrim(current) ? current + "\n\n" + snapshots[i].freeText : snapshots[i].freeText;
+    if (ddlSafeSet(target, field, restored, errors, "Zielfeld-Freitext konnte nicht wiederhergestellt werden", cfg && cfg.strictWriteErrors === true)) {
+      changed = true;
+    }
+  }
+
+  return changed;
+}
+
 function ddlAppendLine(target, targetField, line, errors, cfg, unique) {
   var oldText = ddlSafeField(target, targetField, null, null);
   var wrote;
@@ -769,15 +864,28 @@ function ddlEntryLinksToDay(src, sourceDayLinkField, target) {
   return false;
 }
 
-function ddlCanUseLinkedDay(target) {
+function ddlCanUseLinkedDay(target, sourceDate, targetDateField, cfg) {
+  var targetDate;
+
   if (!target) return false;
   if (ddlIsDeletedEntry(target)) return false;
 
   try {
-    if (typeof target.field === "function" && typeof target.set === "function") return true;
+    if (!(typeof target.field === "function" && typeof target.set === "function")) return false;
   } catch (e0) {}
 
-  return false;
+  if (cfg && cfg.trustExistingLink === true) return true;
+
+  if (sourceDate && targetDateField) {
+    targetDate = ddlToDate(ddlSafeField(target, targetDateField, null, null));
+    if (!targetDate) return false;
+    if (!ddlSameCalendarDay(targetDate, sourceDate)) {
+      if (!ddlIsBeforeDayStartLimit(sourceDate, cfg)) return false;
+      if (!ddlSameCalendarDay(targetDate, ddlPreviousCalendarDay(sourceDate))) return false;
+    }
+  }
+
+  return true;
 }
 
 function ddlCreateDayEntry(targetLib, sourceDate, targetDateField, cfg, errors) {
@@ -1094,6 +1202,7 @@ function ddlRunPostEntry(entryObj, cfg, result, errors, label) {
 
 function ddlRunConfiguredPostEntry(src, target, cfg, result, errors) {
   var mode = cfg.postEntryTarget || cfg.postEntryMode || "target";
+  var targetFreeTextSnapshot = ddlSnapshotStringRowsFreeText(target, cfg.map || []);
 
   if (cfg.postEntry !== true && cfg.runPostEntry !== true) return;
 
@@ -1104,11 +1213,13 @@ function ddlRunConfiguredPostEntry(src, target, cfg, result, errors) {
 
   if (mode === "both") {
     ddlRunPostEntry(target, cfg, result, errors, "target");
+    ddlRestoreStringRowsFreeText(target, targetFreeTextSnapshot, cfg, errors);
     ddlRunPostEntry(src, cfg, result, errors, "source");
     return;
   }
 
   ddlRunPostEntry(target, cfg, result, errors, "target");
+  ddlRestoreStringRowsFreeText(target, targetFreeTextSnapshot, cfg, errors);
 }
 
 function ddlOpenEntry(entryObj, cfg, result, label) {
@@ -1431,7 +1542,7 @@ function linkInputEntryToTarget(cfg) {
   if (sourceDayLinkField && linkedTarget == null && ddlToArray(ddlSafeField(src, sourceDayLinkField, null, null)).length > 0) {
     ddlSafeSet(src, sourceDayLinkField, null, errors, "DayLink-Feld konnte nicht bereinigt werden", cfg.strictWriteErrors === true);
   }
-  target = ddlCanUseLinkedDay(linkedTarget) ? linkedTarget : ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
+  target = ddlCanUseLinkedDay(linkedTarget, sourceDate, targetDateField, cfg) ? linkedTarget : ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
 
   if (!target) {
     target = ddlCreateDayEntry(targetLib, sourceDate, targetDateField, cfg, errors);

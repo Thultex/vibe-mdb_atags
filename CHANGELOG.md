@@ -60,6 +60,8 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Change: `Input Linker` v0.36 leert ein vorhandenes Debug-Feld zu Beginn und lässt es bei erfolgreichem Lauf leer.
 - Fix: `Input Linker` v0.37 erhaelt beim Rebuild von `string_rows` freien Text und Tagbar im Zielfeld; geloescht werden nur vorhandene Row-Zeilen.
 - Fix: `Input Linker` v0.40 schützt beim Rebuild von `string_rows` den freien Text-/Tagbar-Bereich auch dann, wenn mehrere Map-Einträge auf dasselbe Zielfeld zeigen.
+- Fix: `libVersions` v1.14 verschiebt den deaktivierten `RUN_LIB_CHECK`-Block hinter die Funktionsdefinitionen, damit er bei Aktivierung echte Versionen sieht.
+- Change: `libVersions` v1.13 dokumentiert einen deaktivierten `RUN_LIB_CHECK`-Block als schnellen manuellen Memento-Test.
 - Change: `libVersions` v1.12 ergänzt `allVersions: true` und bereinigt Missing-Meldungen, wenn eine Lib per Getter erreichbar ist.
 - Change: `libVersions` v1.11 macht den Beispielaufruf run-button-sicher und behandelt fehlende Access-Getter bei `requireAll: false` als weiche Diagnose.
 - Fix: `libVersions` v1.10 crasht nicht mehr, wenn `ATAG_EXPECTED_LIBS` in Memento nicht gesetzt ist.
@@ -71,7 +73,7 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Change: `updateSequenceSpree()` akzeptiert zusätzlich `entryObj` als Alias für `currentEntry`; bestehende `currentEntry`-Aufrufe haben weiter Vorrang.
 - Test: `tests/test_inputLinker.js` deckt Tageserstellung, Source-Link, erste Notizzeile, Duplikatschutz und relative Row-Zeit ab.
 - Change: Alter DustingDay-Collector-Ordner und zugehöriger Test wurden entfernt; der aktive Weg läuft über `inputLinker_lib`.
-- *Versionen: collectAtags_lib v1.59, Input Linker v0.40, libVersions v1.12, Time Marker v1.32, Global Field Sync v1.03, Sequence Counter v1.05.*
+- *Versionen: collectAtags_lib v1.59, Input Linker v0.40, libVersions v1.14, Time Marker v1.32, Global Field Sync v1.03, Sequence Counter v1.05.*
 
 ### 2026-05-20 - (ca. 0,5h)
 
