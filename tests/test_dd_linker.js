@@ -324,6 +324,35 @@ function testRecalcSourceAndTargetWhenConfigured() {
   assertEquals("recalc-result", result.recalculated.join(","), "target,source");
 }
 
+function testDebugDayLinkerAccessWritesDiagnostics() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    Debug: ""
+  });
+
+  reset(input, [day]);
+
+  debugDayLinkerAccess({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDebugField: "Debug"
+  });
+
+  if (String(input.field("Debug")).indexOf("DEBUG Dusting Day Linker") !== 0) {
+    fail("debug-linker-prefix missing");
+  }
+
+  if (String(input.field("Debug")).indexOf("target entries: 1") < 0) {
+    fail("debug-linker-entry-count missing");
+  }
+}
+
 testCreatesDayLinksSourceAndAppendsMappedFields();
 testDoesNotDuplicateSameLineOrTags();
 testSinceFirstUsesTargetDateAsZero();
@@ -332,5 +361,6 @@ testNonStrictTargetDateFieldAllowsCreate();
 testNewInputAddsMissingTagsToExistingDay();
 testReusesExistingSourceDayLinkBeforeDateSearch();
 testRecalcSourceAndTargetWhenConfigured();
+testDebugDayLinkerAccessWritesDiagnostics();
 
 WScript.Echo("OK");

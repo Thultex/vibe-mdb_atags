@@ -1,9 +1,10 @@
 /*
 ========================================
-B11 Dusting Day Linker v0.14 (sys 2.30)
+B11 Dusting Day Linker v0.15 (sys 2.30)
 ========================================
 
 Änderungen
+- Debug-Funktion für Ziel-Library-Zugriff ergänzt
 - Ziel-Feldvalidierung blockiert nicht mehr standardmäßig, weil Memento Feldzugriff je nach Kontext unzuverlässig sein kann
 - vorhandener Source-DayLink wird als erstes wiederverwendet
 - Day-seitige Refresh-Doppellogik entfernt
@@ -32,6 +33,13 @@ appendToDayEntry({
     { from: "InNote", to: "OutNote", type: "string" },
     { from: "InTag", to: "OutTags", type: "tag" }
   ]
+});
+
+debugDayLinkerAccess({
+  targetLib: "DustingDay",
+  sourceDateField: "Date",
+  targetDateField: "Date",
+  sourceDebugField: "Debug"
 });
 */
 
@@ -496,6 +504,125 @@ function ddlWriteErrors(errors, cfg) {
   if (debugEntry && debugField) {
     ddlSafeSet(debugEntry, debugField, errors.join("\n"), null, null);
   }
+}
+
+function ddlDescribeValue(val) {
+  var len;
+
+  if (val == null) return "null";
+  if (val === "") return "empty string";
+  if (ddlIsArray(val)) return "array length " + val.length;
+  if (typeof val === "string") return "string: " + val;
+  if (typeof val === "number") return "number: " + val;
+  if (typeof val === "boolean") return "boolean: " + val;
+
+  try {
+    len = ddlListLength(val);
+    if (len != null) return "list-like length " + len;
+  } catch (e0) {}
+
+  try {
+    if (typeof val.field === "function") return "entry-like object";
+  } catch (e1) {}
+
+  try {
+    return "object " + Object.prototype.toString.call(val);
+  } catch (e2) {}
+
+  return "unknown object";
+}
+
+function debugDayLinkerAccess(cfg) {
+  cfg = cfg || {};
+
+  var src = cfg.entryObj || entry();
+  var debugField = cfg.sourceDebugField || cfg.debugField || "Debug";
+  var targetLibName = cfg.targetLib || "DustingDay";
+  var sourceDateField = cfg.sourceDateField || "Date";
+  var targetDateField = cfg.targetDateField || "Date";
+  var lines = [];
+  var sourceDateRaw;
+  var sourceDate;
+  var targetLib;
+  var entries;
+  var first;
+  var firstDateRaw;
+  var created;
+  var canCreate = cfg.testCreate === true;
+
+  lines.push("DEBUG Dusting Day Linker");
+  lines.push("version: 0.15");
+  lines.push("targetLib: " + targetLibName);
+  lines.push("sourceDateField: " + sourceDateField);
+  lines.push("targetDateField: " + targetDateField);
+
+  sourceDateRaw = ddlSafeField(src, sourceDateField, null, null);
+  sourceDate = ddlToDate(sourceDateRaw);
+  lines.push("source date raw: " + ddlDescribeValue(sourceDateRaw));
+  lines.push("source date parsed: " + (sourceDate ? sourceDate.toString() : "null"));
+
+  try {
+    targetLib = libByName(targetLibName);
+    lines.push("libByName: " + ddlDescribeValue(targetLib));
+  } catch (e0) {
+    lines.push("libByName error: " + e0);
+    ddlSafeSet(src, debugField, lines.join("\n"), null, null);
+    return {
+      ok: false,
+      text: lines.join("\n")
+    };
+  }
+
+  if (!targetLib) {
+    lines.push("target lib missing");
+    ddlSafeSet(src, debugField, lines.join("\n"), null, null);
+    return {
+      ok: false,
+      text: lines.join("\n")
+    };
+  }
+
+  try {
+    entries = ddlTargetEntries(targetLib);
+    lines.push("target entries: " + entries.length);
+  } catch (e1) {
+    lines.push("entries error: " + e1);
+  }
+
+  if (entries && entries.length > 0) {
+    first = entries[0];
+    lines.push("first entry: " + ddlDescribeValue(first));
+    firstDateRaw = ddlSafeField(first, targetDateField, null, null);
+    lines.push("first target date raw: " + ddlDescribeValue(firstDateRaw));
+    lines.push("first target date parsed: " + (ddlToDate(firstDateRaw) ? ddlToDate(firstDateRaw).toString() : "null"));
+  }
+
+  lines.push("targetLib.create available: " + (targetLib && typeof targetLib.create === "function"));
+
+  if (canCreate && sourceDate) {
+    try {
+      created = targetLib.create((function() {
+        var values = {};
+        values[targetDateField] = sourceDate.getTime();
+        return values;
+      })());
+      lines.push("test create: ok");
+      lines.push("created: " + ddlDescribeValue(created));
+    } catch (e2) {
+      lines.push("test create error: " + e2);
+    }
+  } else {
+    lines.push("test create: skipped");
+  }
+
+  ddlSafeSet(src, debugField, lines.join("\n"), null, null);
+
+  return {
+    ok: true,
+    targetLib: targetLib,
+    entries: entries,
+    text: lines.join("\n")
+  };
 }
 
 function appendToDayEntry(cfg) {
