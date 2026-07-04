@@ -1,6 +1,6 @@
 /*
 ========================================
-A1 Lib Versions v1.09 (sys 2.30)
+A1 Lib Versions v1.12 (sys 2.30)
 ========================================
 
 Notes
@@ -15,12 +15,11 @@ Notes
 
 Example
 var libCheck = checkAtagLibVersions({
-  checkAccess: true
+  checkAccess: true,
+  requireAll: false,
+  allVersions: true,
+  verbose: true
 });
-
-if (!libCheck.ok) {
-  throw "Missing atag libs: " + libCheck.missing.join(", ");
-}
 
 ========================================
 */
@@ -31,7 +30,7 @@ var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERS
 function getLibVersionsVersion() {
   return {
     name: "libVersions",
-    version: "1.09",
+    version: "1.12",
     sysVersion: "2.30",
     path: "core/_checkLibs.js"
   };
@@ -44,18 +43,26 @@ var ATAG_EXPECTED_LIBS = [
   { name: "inputLinker_lib", version: "0.40", getter: "getInputLinkerLibVersion", path: "core_lib/inputLinker_lib.js", optional: true }
 ];
 
+function getExpectedAtagLibs() {
+  if (typeof ATAG_EXPECTED_LIBS === "undefined" || !ATAG_EXPECTED_LIBS) return [];
+  if (Object.prototype.toString.call(ATAG_EXPECTED_LIBS) !== "[object Array]") return [];
+  return ATAG_EXPECTED_LIBS;
+}
+
 function getExpectedAtagLibNames() {
   var out = [];
   var i;
-  for (i = 0; i < ATAG_EXPECTED_LIBS.length; i++) out.push(ATAG_EXPECTED_LIBS[i].name);
+  var expected = getExpectedAtagLibs();
+  for (i = 0; i < expected.length; i++) out.push(expected[i].name);
   return out;
 }
 
 function getExpectedAtagLibInfo(name) {
   var key = String(name || "");
   var i;
-  for (i = 0; i < ATAG_EXPECTED_LIBS.length; i++) {
-    if (ATAG_EXPECTED_LIBS[i].name === key) return ATAG_EXPECTED_LIBS[i];
+  var expected = getExpectedAtagLibs();
+  for (i = 0; i < expected.length; i++) {
+    if (expected[i].name === key) return expected[i];
   }
   return null;
 }
@@ -94,6 +101,37 @@ function registerAtagLibVersion(name, version, sysVersion, path, optional) {
   };
 
   return ATAG_LIB_VERSIONS[key];
+}
+
+function removeAtagListValue(list, value) {
+  var out = [];
+  var wanted = String(value || "");
+  var i;
+
+  for (i = 0; i < list.length; i++) {
+    if (String(list[i] || "") !== wanted) out.push(list[i]);
+  }
+
+  return out;
+}
+
+function addAtagResultLib(result, info) {
+  var key;
+  var i;
+
+  if (!result || !info || !info.name) return;
+
+  key = String(info.name || "");
+  result.map[key] = info;
+
+  for (i = 0; i < result.libs.length; i++) {
+    if (String(result.libs[i].name || "") === key) {
+      result.libs[i] = info;
+      return;
+    }
+  }
+
+  result.libs.push(info);
 }
 
 function checkLibVersions(cfg) {
@@ -168,6 +206,8 @@ function checkAtagLibVersions(cfg) {
   var names = cfg.names || cfg.libs || getExpectedAtagLibNames();
   var accessCheck = cfg.checkAccess === true || cfg.checkCallable === true || cfg.checkParse === true;
   var asText = cfg.asText === true || cfg.format === "text";
+  var allVersions = cfg.allVersions === true || cfg.all === true || cfg.versions === true;
+  var requireAll = cfg.requireAll !== false;
   var verbose = cfg.verbose === true;
   var optionalNames = [];
   var result;
@@ -180,14 +220,16 @@ function checkAtagLibVersions(cfg) {
   var i;
   var name;
   var text;
+  var expected = getExpectedAtagLibs();
 
+  if (allVersions) names = getExpectedAtagLibNames();
   if (Object.prototype.toString.call(names) !== "[object Array]") names = [names];
-  for (i = 0; i < ATAG_EXPECTED_LIBS.length; i++) {
-    if (ATAG_EXPECTED_LIBS[i].optional === true) optionalNames.push(ATAG_EXPECTED_LIBS[i].name);
+  for (i = 0; i < expected.length; i++) {
+    if (expected[i].optional === true) optionalNames.push(expected[i].name);
   }
   result = checkLibVersions({
     names: names,
-    requireAll: cfg.requireAll,
+    requireAll: requireAll,
     optionalNames: optionalNames,
     asText: false
   });
@@ -203,10 +245,14 @@ function checkAtagLibVersions(cfg) {
           optionalAccessMissing.push(name);
           continue;
         }
-        accessMissing.push(name);
+        if (requireAll) accessMissing.push(name);
+        else optionalAccessMissing.push(name);
         continue;
       }
       access.push(got);
+      addAtagResultLib(result, got);
+      result.missing = removeAtagListValue(result.missing, name);
+      result.optionalMissing = removeAtagListValue(result.optionalMissing, name);
       if (String(got.version || "") !== String(info.version || "")) {
         versionMismatch.push(name + " expected " + info.version + " got " + got.version);
       }
@@ -218,6 +264,13 @@ function checkAtagLibVersions(cfg) {
   result.optionalAccessMissing = optionalAccessMissing;
   result.versionMismatch = versionMismatch;
   result.ok = result.ok && accessMissing.length === 0 && versionMismatch.length === 0;
+  result.libs.sort(function(a, b) {
+    var aa = String(a.name || "").toLowerCase();
+    var bb = String(b.name || "").toLowerCase();
+    if (aa < bb) return -1;
+    if (aa > bb) return 1;
+    return 0;
+  });
 
   if (asText || verbose) {
     var lines = [];

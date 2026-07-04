@@ -15,7 +15,7 @@ Aktuelle Library-Dateien und Versionen:
 
 | Name | Version | Sys | Pfad |
 | --- | ---: | ---: | --- |
-| A1 libVersions | 1.09 | 2.30 | `core/_checkLibs.js` |
+| A1 libVersions | 1.12 | 2.30 | `core/_checkLibs.js` |
 
 ## Zugehoerige Memento-Dateien
 
