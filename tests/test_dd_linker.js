@@ -25,12 +25,16 @@ function assertSame(label, actual, expected) {
 function makeEntry(fields) {
   return {
     _fields: fields || {},
+    _recalcCount: 0,
     field: function(name) {
       if (!this._fields.hasOwnProperty(name)) throw new Error("missing field " + name);
       return this._fields[name];
     },
     set: function(name, value) {
       this._fields[name] = value;
+    },
+    recalc: function() {
+      this._recalcCount++;
     }
   };
 }
@@ -223,40 +227,7 @@ function testNewInputAddsMissingTagsToExistingDay() {
   assertEquals("new-input-tags-merged", day.field("OutTags").join(","), "müde,erfolg");
 }
 
-function testRefreshDayEntryFromLinkedInputs() {
-  var day = makeEntry({
-    Datum: "2020-02-02 09:00",
-    OutNote: "",
-    OutTags: []
-  });
-  var input = makeEntry({
-    Date: "2020-02-02 10:00",
-    InNote: "aus day erstellt",
-    InTag: ["methode"],
-    DayLinks: day
-  });
-
-  resetWithLibs(day, {
-    DustingInput: makeLib([input])
-  });
-
-  var result = refreshDayEntryFromInputs({
-    sourceLib: "DustingInput",
-    sourceDateField: "Date",
-    targetDateField: "Datum",
-    sourceDayLinkField: "DayLinks",
-    map: [
-      { from: "InNote", to: "OutNote", type: "string" },
-      { from: "InTag", to: "OutTags", type: "tag" }
-    ]
-  });
-
-  assertEquals("refresh-input-count", result.inputs.length, 1);
-  assertEquals("refresh-outnote", day.field("OutNote"), "10: aus day erstellt");
-  assertEquals("refresh-tags", day.field("OutTags").join(","), "methode");
-}
-
-function testRefreshDayEntryLinksSameDateInput() {
+function testRecalcSourceAndTargetWhenConfigured() {
   var day = makeEntry({
     Datum: "2020-02-02 09:00",
     OutNote: "",
@@ -269,22 +240,23 @@ function testRefreshDayEntryLinksSameDateInput() {
     DayLinks: null
   });
 
-  resetWithLibs(day, {
-    DustingInput: makeLib([input])
-  });
+  reset(input, [day]);
 
-  refreshDayEntryFromInputs({
-    sourceLib: "DustingInput",
+  var result = appendToDayEntry({
+    targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
+    recalcSource: true,
+    recalcTarget: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string" }
     ]
   });
 
-  assertSame("refresh-links-input", input.field("DayLinks"), day);
-  assertEquals("refresh-same-date-outnote", day.field("OutNote"), "10: gleiches datum");
+  assertEquals("recalc-target", day._recalcCount, 1);
+  assertEquals("recalc-source", input._recalcCount, 1);
+  assertEquals("recalc-result", result.recalculated.join(","), "target,source");
 }
 
 testCreatesDayLinksSourceAndAppendsMappedFields();
@@ -292,7 +264,6 @@ testDoesNotDuplicateSameLineOrTags();
 testSinceFirstUsesTargetDateAsZero();
 testWrongTargetDateFieldDoesNotCreateDuplicateDay();
 testNewInputAddsMissingTagsToExistingDay();
-testRefreshDayEntryFromLinkedInputs();
-testRefreshDayEntryLinksSameDateInput();
+testRecalcSourceAndTargetWhenConfigured();
 
 WScript.Echo("OK");

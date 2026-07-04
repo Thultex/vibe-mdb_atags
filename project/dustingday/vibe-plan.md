@@ -223,6 +223,8 @@ appendToDayEntry({
   sourceDayLinkField: "DayLinks",
   rowMode: "clock",
   rowStepHours: 0.5,
+  recalcTarget: true,
+  recalcSource: true,
   map: [
     { from: "InNote", to: "OutNote", type: "string" },
     { from: "InTag", to: "OutTags", type: "tag" }
@@ -276,7 +278,7 @@ Die bestehende Funktion `updateDustingDayOutNote()` bleibt nur als alter Refresh
 
 ## Umsetzungsschnitt 0.2
 
-Danach automatische Verknüpfung aus `DustingInput`.
+Danach Rebuild/Reparatur als eigener Schritt, falls nötig.
 
 ```text
 DustingInput.Date lesen
@@ -286,26 +288,7 @@ DustingInput.Date lesen
   -> OutNote / OutTags nach Map-Regeln ergänzen oder später komplett neu aufbauen
 ```
 
-Offen: Ob Memento das Erstellen neuer `DustingDay`-Einträge und das Schreiben in einen anderen Eintrag im gewählten Trigger sauber erlaubt. Das muss lokal und danach online/sync getestet werden.
-
-Zusatz für aus dem offenen Day heraus erstellte Inputs:
-
-```js
-refreshDayEntryFromInputs({
-  sourceLib: "DustingInput",
-  sourceDateField: "Date",
-  targetDateField: "Datum",
-  sourceDayLinkField: "DayLinks",
-  rowMode: "clock",
-  rowStepHours: 0.5,
-  map: [
-    { from: "InNote", to: "OutNote", type: "string" },
-    { from: "InTag", to: "OutTags", type: "tag" }
-  ]
-});
-```
-
-Diese Funktion gehört in den `DustingDay`-Kontext und dient als Refresh/Reparatur, wenn die UI den offenen Day nicht sofort nach Input-Erstellung aktualisiert.
+Offen: Ob Memento das Erstellen neuer `DustingDay`-Einträge, das Schreiben in einen anderen Eintrag und `recalc()` im gewählten Trigger sauber erlaubt. Das muss lokal und danach online/sync getestet werden.
 
 ## Umsetzungsschnitt 0.3
 

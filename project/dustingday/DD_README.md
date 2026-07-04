@@ -98,6 +98,8 @@ appendToDayEntry({
   sourceDayLinkField: "DayLinks",
   rowMode: "clock",
   rowStepHours: 0.5,
+  recalcTarget: true,
+  recalcSource: true,
   map: [
     { from: "InNote", to: "OutNote", type: "string" },
     { from: "InTag", to: "OutTags", type: "tag" }
@@ -119,22 +121,4 @@ DustingInput speichern
 ```
 
 Der produktive Flow geht vom Input-Eintrag aus.
-
-Wenn Inputs aus einem offenen `DustingDay` heraus erstellt werden und der Day nicht sofort sichtbar aktualisiert, kann im `DustingDay`-Eintrag zusätzlich ein Refresh-Aufruf genutzt werden:
-
-```js
-refreshDayEntryFromInputs({
-  sourceLib: "DustingInput",
-  sourceDateField: "Date",
-  targetDateField: "Datum",
-  sourceDayLinkField: "DayLinks",
-  rowMode: "clock",
-  rowStepHours: 0.5,
-  map: [
-    { from: "InNote", to: "OutNote", type: "string" },
-    { from: "InTag", to: "OutTags", type: "tag" }
-  ]
-});
-```
-
-Diese Funktion läuft im `DustingDay`-Kontext, findet verlinkte oder datumsgleiche `DustingInput`-Einträge, setzt fehlende `DayLinks` und ergänzt `OutNote` / `OutTags`.
+`recalcTarget` und `recalcSource` rufen nach dem Schreiben defensiv `recalc()` auf, falls Memento diese Entry-Methode im jeweiligen Kontext anbietet.
