@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.63 (sys 2.30)
+#4 Input Linker Lib v0.64 (sys 2.30)
 ========================================
 
 Änderungen
+- linkInputEntryToTarget() kann mit `receiveExistingLink: true` bestehende Links bewusst fuer Updates verarbeiten
 - linkInputEntryToTarget() kann nach frisch gesetztem Script-Link optional `receiveAfterLink: true` ausführen
 - recieveInputEntryFromSource()/receiveInputEntryFromSource() werden explizit global exportiert
 - vorhandene DayLinks werden im Input-Linker nicht mehr als Entry-Objekt aufgeloest; schon ein Relation-Wert fuehrt zum No-op
@@ -87,7 +88,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.63";
+var DDL_VERSION = "0.64";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1506,7 +1507,7 @@ function ddlReceiveAfterLink(src, target, cfg, result, errors) {
   var receiveResult;
 
   if (!src || !target || !cfg) return null;
-  if (cfg.receiveAfterLink !== true && cfg.processAfterLink !== true) return null;
+  if (cfg.receiveAfterLink !== true && cfg.receiveExistingLink !== true && cfg.updateExistingLink !== true && cfg.processAfterLink !== true) return null;
 
   receiveCfg = cfg.receiveConfig || {};
   receiveCfg.inputEntry = src;
@@ -1811,8 +1812,19 @@ function linkInputEntryToTarget(cfg) {
   sourceHasDayLinks = sourceDayLinks.length > 0;
 
   if (sourceHasDayLinks) {
+    target = sourceDayLinks[0] || null;
+    result.targetEntry = target;
     result.linked = true;
     result.linkSkippedExisting = true;
+
+    if ((cfg.receiveExistingLink === true || cfg.updateExistingLink === true) && target) {
+      ddlReceiveAfterLink(src, target, cfg, result, errors);
+      result.skipped = true;
+      result.skipReason = "existing_daylink_receive";
+      if (errors.length) ddlWriteErrors(errors, cfg);
+      return result;
+    }
+
     result.skipped = true;
     result.skipReason = "existing_daylink_noop";
     return result;

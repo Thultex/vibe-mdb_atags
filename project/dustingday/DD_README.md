@@ -130,6 +130,32 @@ linkInputEntryToTarget({
 });
 ```
 
+Update-Test für bereits verlinkte Inputs: Mit `receiveExistingLink: true` wird ein vorhandener `DayLinks` bewusst verarbeitet. Das ist absichtlich Opt-in, weil der sichere Standard bei vorhandenen Links sofort aussteigt.
+
+```js
+linkInputEntryToTarget({
+  targetLib: "DustingDay",
+  sourceDateField: "Datum",
+  targetDateField: "Datum",
+  sourceDayLinkField: "DayLinks",
+  receiveExistingLink: true,
+  receiveConfig: {
+    rowSourceMode: "realtime",
+    rowStepHours: 0.1,
+    rowRoundMode: "round",
+    processMode: "append",
+    postEntry: true,
+    postEntryName: "PostEntry",
+    recalcTarget: true,
+    targetDebugField: "Debug",
+    processMap: [
+      { from: "InNote", to: "Notiz", type: "string_rows" },
+      { from: "InTag", to: "Tags", type: "tag" }
+    ]
+  }
+});
+```
+
 Wichtig: Die URL funktioniert erst, wenn `core_lib/inputLinker_lib.js` nach GitHub `main` gepusht wurde.
 
 Optionaler Schutzmodus: Mit `strictTargetValidation: true` bricht der Linker ab, wenn vorhandene `DustingDay`-Einträge das konfigurierte `targetDateField` oder Ziel-Mappingfelder nicht lesbar besitzen. Standardmäßig ist diese Prüfung aus, weil Memento-Feldzugriff je nach Kontext sonst fälschlich blockieren kann.
