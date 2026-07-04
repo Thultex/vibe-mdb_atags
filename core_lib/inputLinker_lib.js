@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.59 (sys 2.30)
+#4 Input Linker Lib v0.60 (sys 2.30)
 ========================================
 
 Änderungen
+- linkInputEntryToTarget() ist strikt Link-only: vorhandener DayLink = sofort raus; sonst Day suchen/erstellen und genau einmal verlinken
 - bestehende gültige DayLinks verlassen den Input-Linker ohne Debug-Clear, damit "nichts tun" wirklich keine Feldänderung auslöst
 - geloeschte vorhandene DayLinks blockieren die Neuzuordnung nicht mehr; Link-only darf einen neuen Ziel-Day suchen oder erstellen
 - refreshCurrentTargetFromLinkedInputEntry() verarbeitet Day-seitig genau einen verlinkten Input gegen den aktuellen Day
@@ -109,7 +110,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.59";
+var DDL_VERSION = "0.60";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1762,14 +1763,12 @@ function linkInputEntryToTarget(cfg) {
   var sourceDateField = cfg.sourceDateField || "Date";
   var targetDateField = cfg.targetDateField || "Date";
   var sourceDayLinkField = cfg.sourceDayLinkField || "DayLinks";
-  var sourceDate = ddlToDate(ddlSafeField(src, sourceDateField, errors, "Quell-Datumsfeld fehlt"));
+  var sourceDate;
   var targetLib;
   var linkedTarget;
   var sourceDayLinks;
   var sourceHasDayLinks;
-  var sourceHasDeletedDayLink;
   var target;
-  var targetDate;
   var result = {
     targetEntry: null,
     created: false,
@@ -1799,18 +1798,29 @@ function linkInputEntryToTarget(cfg) {
     return result;
   }
 
+  sourceDayLinks = sourceDayLinkField ? ddlToArray(ddlSafeField(src, sourceDayLinkField, null, null)) : [];
+  sourceHasDayLinks = sourceDayLinks.length > 0;
+
+  if (sourceHasDayLinks) {
+    linkedTarget = ddlFirstLinkedDay(src, sourceDayLinkField);
+    result.targetEntry = linkedTarget;
+    result.linked = !!linkedTarget;
+    result.linkSkippedExisting = true;
+    result.skipped = true;
+    result.skipReason = "existing_daylink_noop";
+    if (linkedTarget == null) result.skippedBrokenLinkCleanup = true;
+    return result;
+  }
+
+  sourceDate = ddlToDate(ddlSafeField(src, sourceDateField, errors, "Quell-Datumsfeld fehlt"));
+
   if (!sourceDate) {
     errors.push("Quell-Datum leer oder ungültig: " + sourceDateField);
     ddlWriteErrors(errors, cfg);
     return result;
   }
 
-  if (!cfg.map || !ddlIsArray(cfg.map)) {
-    if (cfg.processAfterLink === true || cfg.processExistingLink === true) {
-      errors.push("Config fehlt oder falsch: map");
-    }
-    cfg.map = [];
-  }
+  cfg.map = [];
 
   try {
     targetLib = libByName(cfg.targetLib || "DustingDay");
@@ -1829,36 +1839,7 @@ function linkInputEntryToTarget(cfg) {
     return result;
   }
 
-  sourceDayLinks = sourceDayLinkField ? ddlToArray(ddlSafeField(src, sourceDayLinkField, null, null)) : [];
-  sourceHasDayLinks = sourceDayLinks.length > 0;
-  sourceHasDeletedDayLink = ddlHasDeletedLinkedDay(sourceDayLinks);
-
-  linkedTarget = cfg.reuseExistingLink === false ? null : ddlFirstLinkedDay(src, sourceDayLinkField);
-  if (sourceDayLinkField && linkedTarget == null && sourceHasDayLinks) {
-    result.skippedBrokenLinkCleanup = true;
-  }
-
-  if (ddlCanUseLinkedDay(linkedTarget, sourceDate, targetDateField, cfg)) {
-    target = ddlResolveLinkedTargetFromLibrary(targetLib, linkedTarget, targetDateField, sourceDate, cfg);
-    if (!target && cfg.allowDirectLinkedTargetWrite === true) {
-      target = linkedTarget;
-    } else if (!target) {
-      result.directLinkedTargetWriteSkipped = true;
-    }
-  }
-
-  if (!target) {
-    target = ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
-  }
-
-  if (!target && sourceHasDayLinks && !sourceHasDeletedDayLink && cfg.createWhenSourceHasLink !== true) {
-    result.skipped = true;
-    result.skipReason = "existing_daylink_no_create";
-    result.createSkippedExistingLink = true;
-    errors.push("Bestehender DayLink vorhanden; neuer Tages-Eintrag wird nicht erstellt");
-    ddlWriteErrors(errors, cfg);
-    return result;
-  }
+  target = ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
 
   if (!target) {
     target = ddlCreateDayEntry(targetLib, sourceDate, targetDateField, cfg, errors);
@@ -1871,54 +1852,15 @@ function linkInputEntryToTarget(cfg) {
   }
 
   result.targetEntry = target;
-  targetDate = ddlToDate(ddlSafeField(target, targetDateField, null, null)) || sourceDate;
 
-  if (sourceHasDayLinks && result.created !== true && cfg.processExistingLink !== true) {
-    result.skipped = true;
-    result.skipReason = "existing_daylink_process_disabled";
-    result.processSkippedExistingLink = true;
-    if (sourceDayLinkField && ddlEntryLinksToDay(src, sourceDayLinkField, target, targetDateField)) {
-      result.linked = true;
-    } else {
-      result.linkSkippedExisting = true;
-    }
-    return result;
-  }
-
-  if (sourceDayLinkField && ddlEntryLinksToDay(src, sourceDayLinkField, target, targetDateField)) {
-    result.linked = true;
-  } else if (sourceDayLinkField && sourceHasDayLinks && !sourceHasDeletedDayLink && cfg.replaceExistingLink !== true) {
-    result.linkSkippedExisting = true;
-  } else if (sourceDayLinkField) {
+  if (sourceDayLinkField) {
     result.linked = ddlLinkEntry(src, sourceDayLinkField, target, errors, cfg);
   }
 
-  ddlCleanupStaleDayLinks(src, sourceDayLinkField, target, targetDateField, cfg, result, errors);
-
-  if (cfg.processAfterLink !== true && cfg.processExistingLink !== true) {
-    result.skipped = true;
-    result.skipReason = result.skipReason || "link_only";
-    result.processSkippedLinkOnly = true;
-    if (errors.length) ddlWriteErrors(errors, cfg);
-    else ddlClearDebugFieldIfExists(cfg);
-    return result;
-  }
-
-  ddlApplyMapFromSourceToDay(src, target, sourceDate, targetDate, cfg, result, errors);
-  ddlRunConfiguredPostEntry(src, target, cfg, result, errors);
-
-  if (cfg.recalcTarget === true && ddlRecalcEntry(target, errors, "Target recalc fehlgeschlagen")) {
-    result.recalculated.push("target");
-  }
-
-  if (cfg.recalcSource === true && ddlRecalcEntry(src, errors, "Source recalc fehlgeschlagen")) {
-    result.recalculated.push("source");
-  }
-
-  ddlOpenConfiguredTarget(target, cfg, result);
-
+  result.skipped = true;
+  result.skipReason = "link_only";
+  result.processSkippedLinkOnly = true;
   if (errors.length) ddlWriteErrors(errors, cfg);
-  else ddlClearDebugFieldIfExists(cfg);
   return result;
 }
 
