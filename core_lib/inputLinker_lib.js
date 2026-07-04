@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.65 (sys 2.30)
+#4 Input Linker Lib v0.66 (sys 2.30)
 ========================================
 
 Änderungen
+- leere/null Relation-Listen zaehlen nicht mehr als vorhandener DayLink
 - `receiveExistingLink` loest den vorhandenen Relation-Wert bewusst gegen die Ziel-Library auf, bevor geschrieben wird
 - linkInputEntryToTarget() kann mit `receiveExistingLink: true` bestehende Links bewusst fuer Updates verarbeiten
 - linkInputEntryToTarget() kann nach frisch gesetztem Script-Link optional `receiveAfterLink: true` ausführen
@@ -89,7 +90,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.65";
+var DDL_VERSION = "0.66";
 
 function getInputLinkerLibVersion() {
   return {
@@ -233,6 +234,19 @@ function ddlToArray(val) {
 
   out.push(list);
   return out;
+}
+
+function ddlFirstRelationValue(values) {
+  var links = ddlToArray(values);
+  var i;
+
+  for (i = 0; i < links.length; i++) {
+    if (links[i] == null) continue;
+    if (links[i] === "") continue;
+    return links[i];
+  }
+
+  return null;
 }
 
 function ddlSafeField(entryObj, fieldName, errors, label) {
@@ -1777,6 +1791,7 @@ function linkInputEntryToTarget(cfg) {
   var sourceDate;
   var targetLib;
   var sourceDayLinks;
+  var sourceDayLinkValue;
   var sourceHasDayLinks;
   var target;
   var result = {
@@ -1810,7 +1825,8 @@ function linkInputEntryToTarget(cfg) {
   }
 
   sourceDayLinks = sourceDayLinkField ? ddlToArray(ddlSafeField(src, sourceDayLinkField, null, null)) : [];
-  sourceHasDayLinks = sourceDayLinks.length > 0;
+  sourceDayLinkValue = ddlFirstRelationValue(sourceDayLinks);
+  sourceHasDayLinks = sourceDayLinkValue != null;
 
   if (sourceHasDayLinks) {
     result.linked = true;
@@ -1836,7 +1852,7 @@ function linkInputEntryToTarget(cfg) {
         return result;
       }
 
-      target = ddlResolveLinkedTargetFromLibrary(targetLib, sourceDayLinks[0], targetDateField, sourceDate, cfg);
+      target = ddlResolveLinkedTargetFromLibrary(targetLib, sourceDayLinkValue, targetDateField, sourceDate, cfg);
       if (!target) target = ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
 
       if (!target) {

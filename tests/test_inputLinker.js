@@ -297,6 +297,50 @@ function testNewInputLinksOnlyByDefault() {
   assertEquals("link-only-no-tags", result.tags.length, 0);
 }
 
+function testEmptyRelationListDoesNotBlockNewLink() {
+  var input = makeEntry({
+    Date: "2020-02-02 14:35",
+    InNote: "leer relation",
+    InTag: [],
+    DayLinks: [null]
+  });
+
+  reset(input, []);
+
+  var result = linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Datum",
+    sourceDayLinkField: "DayLinks"
+  });
+
+  assertEquals("empty-relation-created", result.created, true);
+  assertEquals("empty-relation-linked", result.linked, true);
+  assertSame("empty-relation-source-linked", input.field("DayLinks"), result.targetEntry);
+}
+
+function testEmptyStringRelationListDoesNotBlockNewLink() {
+  var input = makeEntry({
+    Date: "2020-02-02 14:35",
+    InNote: "leer string relation",
+    InTag: [],
+    DayLinks: [""]
+  });
+
+  reset(input, []);
+
+  var result = linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Datum",
+    sourceDayLinkField: "DayLinks"
+  });
+
+  assertEquals("empty-string-relation-created", result.created, true);
+  assertEquals("empty-string-relation-linked", result.linked, true);
+  assertSame("empty-string-relation-source-linked", input.field("DayLinks"), result.targetEntry);
+}
+
 function testLinkOnlyDoesNotRequireMap() {
   var input = makeEntry({
     Date: "2020-02-02 14:35",
@@ -1244,7 +1288,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-name missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.64") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.66") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -1256,7 +1300,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.64") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.66") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -1459,7 +1503,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.64") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.66") < 0) {
     fail("error-debug-version missing");
   }
 
@@ -2044,6 +2088,8 @@ function testSuccessfulRefreshClearsExistingTargetDebugField() {
 
 testCreatesDayLinksSourceAndAppendsMappedFields();
 testNewInputLinksOnlyByDefault();
+testEmptyRelationListDoesNotBlockNewLink();
+testEmptyStringRelationListDoesNotBlockNewLink();
 testLinkOnlyDoesNotRequireMap();
 testDoesNotDuplicateSameLineOrTags();
 testStringTypeAppendsPlainTextWithoutRowPrefix();
