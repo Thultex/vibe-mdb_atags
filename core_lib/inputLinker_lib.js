@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.57 (sys 2.30)
+#4 Input Linker Lib v0.58 (sys 2.30)
 ========================================
 
 Änderungen
+- geloeschte vorhandene DayLinks blockieren die Neuzuordnung nicht mehr; Link-only darf einen neuen Ziel-Day suchen oder erstellen
 - refreshCurrentTargetFromLinkedInputEntry() verarbeitet Day-seitig genau einen verlinkten Input gegen den aktuellen Day
 - refreshCurrentTargetFromInputEntries() ergänzt als Day-seitiger Wrapper für Linking-an-entry-Trigger mit aktuellem entry()
 - linkInputEntryToTarget() ist standardmaessig Link-only; Map/PostEntry/Recalc/Open laufen nur noch mit `processAfterLink: true`
@@ -107,7 +108,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.57";
+var DDL_VERSION = "0.58";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1837,15 +1838,6 @@ function linkInputEntryToTarget(cfg) {
     result.skippedBrokenLinkCleanup = true;
   }
 
-  if (!linkedTarget && sourceHasDeletedDayLink && cfg.fallbackFromDeletedDayLink !== true) {
-    result.skipped = true;
-    result.skipReason = "existing_deleted_daylink_no_fallback";
-    result.createSkippedExistingLink = true;
-    errors.push("Bestehender geloeschter DayLink vorhanden; Datum-Fallback und neuer Tages-Eintrag werden nicht ausgeführt");
-    ddlWriteErrors(errors, cfg);
-    return result;
-  }
-
   if (ddlCanUseLinkedDay(linkedTarget, sourceDate, targetDateField, cfg)) {
     target = ddlResolveLinkedTargetFromLibrary(targetLib, linkedTarget, targetDateField, sourceDate, cfg);
     if (!target && cfg.allowDirectLinkedTargetWrite === true) {
@@ -1859,7 +1851,7 @@ function linkInputEntryToTarget(cfg) {
     target = ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
   }
 
-  if (!target && sourceHasDayLinks && cfg.createWhenSourceHasLink !== true) {
+  if (!target && sourceHasDayLinks && !sourceHasDeletedDayLink && cfg.createWhenSourceHasLink !== true) {
     result.skipped = true;
     result.skipReason = "existing_daylink_no_create";
     result.createSkippedExistingLink = true;
