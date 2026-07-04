@@ -9,10 +9,9 @@
 - geloeschte vorhandene DayLinks blockieren die Neuzuordnung nicht mehr; Link-only darf einen neuen Ziel-Day suchen oder erstellen
 - refreshCurrentTargetFromLinkedInputEntry() verarbeitet Day-seitig genau einen verlinkten Input gegen den aktuellen Day
 - refreshCurrentTargetFromInputEntries() ergänzt als Day-seitiger Wrapper für Linking-an-entry-Trigger mit aktuellem entry()
-- linkInputEntryToTarget() ist standardmaessig Link-only; Map/PostEntry/Recalc/Open laufen nur noch mit `processAfterLink: true`
 - refreshTargetFromInputEntries() kann Day-seitig `postEntry: true` auf dem Ziel-Day ausführen
 - erweitert debugInputLinkerAccess() um entry()/values()/field()-Kontext, DayLink-ID und findById-Auflösung
-- verarbeitet vorhandene DayLinks im Input-Trigger nicht mehr automatisch; Updates bestehender Inputs werden mit `processExistingLink: true` explizit freigeschaltet
+- verarbeitet vorhandene DayLinks im Input-Trigger nicht mehr automatisch; Updates bestehender Inputs laufen über Day-seitigen Refresh
 - loest vorhandene DayLinks bevorzugt per targetLib.findById(linked.id) auf und behandelt entry.deleted als primaeren Papierkorb-Indikator
 - schreibt standardmaessig nicht mehr direkt in Entry-Objekte aus Relation-Feldern; verlinkte Days werden zuerst gegen targetLib.entries() aufgeloest
 - erstellt keinen neuen Tages-Eintrag mehr, wenn am Input bereits ein DayLink existiert, aber kein brauchbarer Ziel-Day gefunden wird
