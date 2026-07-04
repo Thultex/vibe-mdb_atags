@@ -103,6 +103,14 @@ function makeLib(entries) {
     entries: function() {
       return this._entries;
     },
+    findById: function(id) {
+      var wanted = String(id || "");
+      var i;
+      for (i = 0; i < this._entries.length; i++) {
+        if (String(this._entries[i].id || "") === wanted) return this._entries[i];
+      }
+      return null;
+    },
     create: function(values) {
       var e = makeEntry(values);
       this._entries.push(e);
@@ -708,10 +716,12 @@ function testAlreadyLinkedInputDoesNotRewriteRelationOnRerun() {
 function testAlreadyLinkedInputRecognizesRelationWrapperByDate() {
   var day = makeEntry({
     Date: "2020-02-02 09:00",
+    id: "day-1",
     OutNote: "",
     OutTags: []
   });
   var dayWrapper = makeEntry({
+    id: "day-1",
     Date: "2020-02-02 18:00",
     OutNote: "anderer wrapper"
   });
@@ -739,6 +749,49 @@ function testAlreadyLinkedInputRecognizesRelationWrapperByDate() {
   assertEquals("already-linked-wrapper-no-link", input._linkCounts.DayLinks || 0, 0);
   assertEquals("already-linked-wrapper-day-note", day.field("OutNote"), "10: wrapper link");
   assertEquals("already-linked-wrapper-untouched", dayWrapper.field("OutNote"), "anderer wrapper");
+}
+
+function testLinkedDeletedDayDoesNotFallBackToDateMatchById() {
+  var deletedDay = makeEntry({
+    id: "day-deleted",
+    Date: "2020-02-02 09:00",
+    deleted: true,
+    OutNote: "",
+    OutTags: []
+  });
+  var sameDateDay = makeEntry({
+    id: "day-other",
+    Date: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "nicht auf anderen tag ausweichen",
+    InTag: [],
+    DayLinks: deletedDay,
+    Debug: ""
+  });
+
+  reset(input, [deletedDay, sameDateDay]);
+
+  var result = linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    map: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertEquals("deleted-link-id-skipped", result.skipped, true);
+  assertEquals("deleted-link-id-reason", result.skipReason, "existing_deleted_daylink_no_fallback");
+  assertEquals("deleted-link-id-no-create", result.created, false);
+  assertEquals("deleted-link-id-no-target", result.targetEntry, null);
+  assertEquals("deleted-link-id-deleted-empty", deletedDay.field("OutNote"), "");
+  assertEquals("deleted-link-id-other-empty", sameDateDay.field("OutNote"), "");
+  assertEquals("deleted-link-id-debug", input.field("Debug").indexOf("geloeschter DayLink") >= 0, true);
 }
 
 function testRelationWithoutLinkMethodDoesNotSetEntryObjectByDefault() {
@@ -1065,7 +1118,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-name missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.51") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.52") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -1077,7 +1130,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.51") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.52") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -1251,7 +1304,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.51") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.52") < 0) {
     fail("error-debug-version missing");
   }
 
@@ -1729,6 +1782,7 @@ testExistingSourceDayLinkPreventsNewDayCreationWhenTargetMissing();
 testAlreadyLinkedInputCanAddNewMappedValuesOnRerun();
 testAlreadyLinkedInputDoesNotRewriteRelationOnRerun();
 testAlreadyLinkedInputRecognizesRelationWrapperByDate();
+testLinkedDeletedDayDoesNotFallBackToDateMatchById();
 testRelationWithoutLinkMethodDoesNotSetEntryObjectByDefault();
 testInputLinkerSkipsMementoLinkingTriggerContextByDefault();
 testRecalcSourceAndTargetWhenConfigured();

@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.51 (sys 2.30)
+#4 Input Linker Lib v0.52 (sys 2.30)
 ========================================
 
 Änderungen
+- loest vorhandene DayLinks bevorzugt per targetLib.findById(linked.id) auf und behandelt entry.deleted als primaeren Papierkorb-Indikator
 - schreibt standardmaessig nicht mehr direkt in Entry-Objekte aus Relation-Feldern; verlinkte Days werden zuerst gegen targetLib.entries() aufgeloest
 - erstellt keinen neuen Tages-Eintrag mehr, wenn am Input bereits ein DayLink existiert, aber kein brauchbarer Ziel-Day gefunden wird
 - schreibt Relation-Felder standardmaessig nur, wenn sie leer sind; bestehende Links werden beim Input-Update nicht automatisch ersetzt
@@ -100,7 +101,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.51";
+var DDL_VERSION = "0.52";
 
 function getInputLinkerLibVersion() {
   return {
@@ -921,6 +922,16 @@ function ddlFirstLinkedDay(src, sourceDayLinkField) {
   return null;
 }
 
+function ddlHasDeletedLinkedDay(links) {
+  var i;
+
+  for (i = 0; i < links.length; i++) {
+    if (ddlIsDeletedEntry(links[i])) return true;
+  }
+
+  return false;
+}
+
 function ddlEntryFlag(entryObj, names) {
   var i;
   var name;
@@ -955,6 +966,10 @@ function ddlEntryFlag(entryObj, names) {
 }
 
 function ddlIsDeletedEntry(entryObj) {
+  try {
+    if (entryObj && entryObj.deleted === true) return true;
+  } catch (e0) {}
+
   return ddlEntryFlag(entryObj, [
     "deleted",
     "isDeleted",
@@ -1043,13 +1058,28 @@ function ddlCanUseLinkedDay(target, sourceDate, targetDateField, cfg) {
 
 function ddlResolveLinkedTargetFromLibrary(targetLib, linkedTarget, targetDateField, sourceDate, cfg) {
   var entries;
+  var id;
+  var found;
   var i;
 
   if (!targetLib || !linkedTarget) return null;
 
+  id = ddlEntryId(linkedTarget);
+  if (id) {
+    try {
+      if (typeof targetLib.findById === "function") {
+        found = targetLib.findById(id);
+        if (ddlCanUseLinkedDay(found, sourceDate, targetDateField, cfg)) return found;
+        return null;
+      }
+    } catch (e0) {
+      return null;
+    }
+  }
+
   try {
     entries = ddlToArray(targetLib.entries ? targetLib.entries() : []);
-  } catch (e0) {
+  } catch (e1) {
     entries = [];
   }
 
@@ -1667,6 +1697,7 @@ function linkInputEntryToTarget(cfg) {
   var linkedTarget;
   var sourceDayLinks;
   var sourceHasDayLinks;
+  var sourceHasDeletedDayLink;
   var target;
   var targetDate;
   var result = {
@@ -1727,11 +1758,22 @@ function linkInputEntryToTarget(cfg) {
 
   sourceDayLinks = sourceDayLinkField ? ddlToArray(ddlSafeField(src, sourceDayLinkField, null, null)) : [];
   sourceHasDayLinks = sourceDayLinks.length > 0;
+  sourceHasDeletedDayLink = ddlHasDeletedLinkedDay(sourceDayLinks);
 
   linkedTarget = cfg.reuseExistingLink === false ? null : ddlFirstLinkedDay(src, sourceDayLinkField);
   if (sourceDayLinkField && linkedTarget == null && sourceHasDayLinks) {
     result.skippedBrokenLinkCleanup = true;
   }
+
+  if (!linkedTarget && sourceHasDeletedDayLink && cfg.fallbackFromDeletedDayLink !== true) {
+    result.skipped = true;
+    result.skipReason = "existing_deleted_daylink_no_fallback";
+    result.createSkippedExistingLink = true;
+    errors.push("Bestehender geloeschter DayLink vorhanden; Datum-Fallback und neuer Tages-Eintrag werden nicht ausgeführt");
+    ddlWriteErrors(errors, cfg);
+    return result;
+  }
+
   if (ddlCanUseLinkedDay(linkedTarget, sourceDate, targetDateField, cfg)) {
     target = ddlResolveLinkedTargetFromLibrary(targetLib, linkedTarget, targetDateField, sourceDate, cfg);
     if (!target && cfg.allowDirectLinkedTargetWrite === true) {
