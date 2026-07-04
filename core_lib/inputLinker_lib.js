@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.42 (sys 2.30)
+#4 Input Linker Lib v0.43 (sys 2.30)
 ========================================
 
 Änderungen
+- schreibt `sourceDayLinkField` nicht erneut, wenn der Input bereits mit dem Ziel-Day verlinkt ist
 - vorhandene DayLinks werden nur wiederverwendet, wenn ihr Zieldatum zum Input-Tag passt
 - schützt Nicht-Row-Bereich von `string_rows`-Zielfeldern vor PostEntry-/Cleaner-Seiteneffekten
 - Rebuild-Clearing entscheidet pro Zielfeld; jedes `string_rows`-Mapping schuetzt freien Text/Tagbar vor Voll-Leerung
@@ -92,7 +93,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.42";
+var DDL_VERSION = "0.43";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1557,7 +1558,9 @@ function linkInputEntryToTarget(cfg) {
   result.targetEntry = target;
   targetDate = ddlToDate(ddlSafeField(target, targetDateField, null, null)) || sourceDate;
 
-  if (sourceDayLinkField) {
+  if (sourceDayLinkField && ddlEntryLinksToDay(src, sourceDayLinkField, target)) {
+    result.linked = true;
+  } else if (sourceDayLinkField) {
     result.linked = ddlSafeSet(src, sourceDayLinkField, target, errors, "DayLink-Feld fehlt oder ungültig", cfg.strictWriteErrors === true);
   }
 

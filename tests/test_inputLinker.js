@@ -61,6 +61,16 @@ function makeThrowAfterSetEntry(fields, throwFields) {
   return e;
 }
 
+function makeCountingSetEntry(fields) {
+  var e = makeEntry(fields);
+  e._setCounts = {};
+  e.set = function(name, value) {
+    this._fields[name] = value;
+    this._setCounts[name] = (this._setCounts[name] || 0) + 1;
+  };
+  return e;
+}
+
 function makeLib(entries) {
   return {
     _entries: entries || [],
@@ -552,6 +562,37 @@ function testAlreadyLinkedInputCanAddNewMappedValuesOnRerun() {
   assertEquals("rerun-linked-outtags", day.field("OutTags").join(","), "alt,neu");
 }
 
+function testAlreadyLinkedInputDoesNotRewriteRelationOnRerun() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeCountingSetEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "neu",
+    InTag: [],
+    DayLinks: day
+  });
+
+  reset(input, [day]);
+
+  var result = linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    map: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertSame("already-linked-no-rewrite-target", result.targetEntry, day);
+  assertEquals("already-linked-no-rewrite-result-linked", result.linked, true);
+  assertEquals("already-linked-no-rewrite-daylinks-set-count", input._setCounts.DayLinks || 0, 0);
+  assertEquals("already-linked-no-rewrite-note", day.field("OutNote"), "10: neu");
+}
+
 function testRecalcSourceAndTargetWhenConfigured() {
   var day = makeEntry({
     Datum: "2020-02-02 09:00",
@@ -809,7 +850,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-name missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.42") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.43") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -821,7 +862,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.42") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.43") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -995,7 +1036,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.42") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.43") < 0) {
     fail("error-debug-version missing");
   }
 
@@ -1469,6 +1510,7 @@ testExistingFunctionalSourceDayLinkWinsOverDateSearch();
 testMismatchingSourceDayLinkFallsBackToMatchingDateByDefault();
 testBrokenSourceDayLinkFallsBackToDateSearch();
 testAlreadyLinkedInputCanAddNewMappedValuesOnRerun();
+testAlreadyLinkedInputDoesNotRewriteRelationOnRerun();
 testRecalcSourceAndTargetWhenConfigured();
 testRunsPostEntryOnTargetWhenConfigured();
 testSuccessfulRunClearsExistingSourceDebugField();
