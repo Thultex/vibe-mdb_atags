@@ -36,9 +36,10 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Fix: `dd-linker.js` v0.11 verhindert neue Tages-Einträge bei wahrscheinlich falschem `targetDateField` und gleicht fehlende Tags bei neuen Inputs erneut gegen den Tages-Eintrag ab.
 - Change: `dd-linker.js` v0.13 entfernt die Day-seitige Refresh-Doppellogik wieder und ergänzt stattdessen optionale `recalcTarget`-/`recalcSource`-Aufrufe nach dem Schreiben.
 - Fix: `dd-linker.js` v0.14 macht die Ziel-Feldvalidierung optional (`strictTargetValidation`) und nutzt vorhandene `DayLinks` vor der Datumssuche, damit Memento-Feldzugriff nicht fälschlich Tageserstellung blockiert.
+- Feature: `dd-linker.js` v0.15 ergänzt `debugDayLinkerAccess()` zur Diagnose von `libByName`, `entries()` und optionalem `create()` gegen die Ziel-Library.
 - Test: `tests/test_dd_linker.js` deckt Tageserstellung, Source-Link, erste Notizzeile, Duplikatschutz und relative Row-Zeit ab.
 - Test: `tests/test_dustingDayCollector.js` deckt Array-/Java-Listen-Relationen, Feldmapping, Row-Rundung und leere Links ab.
-- *Versionen: Dusting Day Collector v0.13, Dusting Day Linker v0.14.*
+- *Versionen: Dusting Day Collector v0.13, Dusting Day Linker v0.15.*
 
 ### 2026-05-20 - (ca. 0,5h)
 

@@ -111,6 +111,19 @@ Wichtig: Die URL funktioniert erst, wenn `addons/5_dusting-day/dd-linker.js` nac
 
 Optionaler Schutzmodus: Mit `strictTargetValidation: true` bricht der Linker ab, wenn vorhandene `DustingDay`-Einträge das konfigurierte `targetDateField` oder Ziel-Mappingfelder nicht lesbar besitzen. Standardmäßig ist diese Prüfung aus, weil Memento-Feldzugriff je nach Kontext sonst fälschlich blockieren kann.
 
+Debug für Ziel-Library-Zugriff:
+
+```js
+debugDayLinkerAccess({
+  targetLib: "DustingDay",
+  sourceDateField: "Date",
+  targetDateField: "Date",
+  sourceDebugField: "Debug"
+});
+```
+
+Damit wird in `DustingInput.Debug` sichtbar, ob `libByName("DustingDay")`, `entries()` und optional `create()` erreichbar sind. Einen Test-Create nur bewusst mit `testCreate: true` aktivieren.
+
 Zielablauf:
 
 ```text
