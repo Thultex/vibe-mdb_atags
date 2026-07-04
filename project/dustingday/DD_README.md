@@ -60,8 +60,8 @@ Dosis: 40mg
 
 1. `DustingInput.DayLinks -> DustingDay` in Memento testen.
 2. Beim Speichern eines Inputs passenden `DustingDay` finden oder erstellen.
-3. Map-Felder übertragen, z. B. im aktuellen Prototyp `InNote -> Notiz` und `InTag -> Tags`.
-4. Rows und Tags nur ergänzen, wenn sie noch fehlen.
+3. Nur `DustingInput.DayLinks` setzen; bestehende Links im Input-Trigger nicht als Entry-Objekt auflösen.
+4. Im `DustingDay`-Trigger `Linking an entry` den neu verlinkten Input lesen und per Map in den Day schreiben.
 5. Danach eine Day-Funktion zur Zuordnung/Reparatur aller Inputs bauen.
 6. Später mentale Hilfen, hilfreiche Methoden und Lösungsansätze aus Mustern ableiten.
 
@@ -89,7 +89,7 @@ Anschluss in der Library `DustingInput`:
 2. Danach im `DustingInput`-Trigger den Aufruf setzen.
 3. Ideal: After Save / After Entry. Fallback: Before Save, wenn Cross-Library-Schreiben dort stabil läuft.
 
-Aufruf aktueller Prototyp beim Zusammenführen mit der Eindosierungstabelle:
+Aufruf im `DustingInput`-Trigger. Dieser Pfad ist bewusst nur Link-only:
 
 ```js
 linkInputEntryToTarget({
@@ -97,19 +97,8 @@ linkInputEntryToTarget({
   sourceDateField: "Datum",
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
-  rowSourceMode: "realtime_since",
-  rowStepHours: 0.1,
-  rowRoundMode: "round",
-  recalcTarget: true,
-  recalcSource: true,
-  postEntry: true,
-  postEntryName: "PostEntry",
-  openTargetEntry: true,
-  sourceDebugField: "Debug",
-  map: [
-    { from: "InNote", to: "Notiz", type: "string_rows" },
-    { from: "InTag", to: "Tags", type: "tag" }
-  ]
+  dayStartHour: 4,
+  daySearchLimit: 10
 });
 ```
 
@@ -137,15 +126,42 @@ Zielablauf:
 DustingInput speichern
   -> passenden DustingDay finden oder erstellen
   -> DustingInput.DayLinks auf DustingDay setzen
-  -> DustingDay.Notiz / Tags über map ergänzen
+
+DustingDay Linking an entry
+  -> gerade verlinkten DustingInput lesen
+  -> DustingDay.Notiz / Tags über processMap ergänzen
+  -> optional PostEntry/Recalc auf dem DustingDay ausführen
 ```
 
-Der produktive Flow geht vom Input-Eintrag aus.
-`recalcTarget` und `recalcSource` rufen nach dem Schreiben defensiv `recalc()` auf, falls Memento diese Entry-Methode im jeweiligen Kontext anbietet.
-`postEntry: true` ruft nach dem Mappen `postEntry(dayEntry)` bzw. `PostEntry(dayEntry)` auf, damit die ATAG-/Cleaner-Pipeline des Tages sofort mit dem konkreten `DustingDay`-Eintrag laufen kann. Mit `postEntryName: "PostEntryDustingDay"` kann der Funktionsname frei gesetzt werden; alternativ geht `postEntryFn: meineFunktion`.
-`openTargetEntry: true` versucht nach erfolgreichem Schreiben den gefundenen oder neu erstellten `DustingDay`-Eintrag zu öffnen, falls Memento im aktuellen Kontext eine passende Open-Methode anbietet.
+Der produktive Flow ist zweigeteilt: `DustingInput` stellt nur die Relation her, `DustingDay` verarbeitet den Input im eigenen Kontext. Dadurch wird vermieden, dass ein bestehender Relationseintrag im Input-Save-Trigger als Day-Entry-Objekt aufgelöst wird.
 
-Hinweis zu Rows: `rowSourceMode: "realtime_since"` nutzt im `Input Linker` die absolute Tageszeit des Input-Eintrags, nicht die Differenz zum Tages-Eintrag. Der Name bleibt bewusst nah an TimeMarker-Konfigurationen, die Semantik für DustingDay ist aber die Tageszeit-Row.
+Day-seitiger Test im Trigger `Linking an entry` der Library `DustingDay`:
+
+```js
+recieveInputEntryFromSource({
+  inputLib: "DustingInput",
+  sourceDateField: "Datum",
+  targetDateField: "Datum",
+  sourceDayLinkField: "DayLinks",
+  rowSourceMode: "realtime",
+  rowStepHours: 0.1,
+  rowRoundMode: "round",
+  processMode: "append",
+  postEntry: true,
+  postEntryName: "PostEntry",
+  recalcTarget: true,
+  targetDebugField: "Debug",
+  processMap: [
+    { from: "InNote", to: "Notiz", type: "string_rows" },
+    { from: "InTag", to: "Tags", type: "tag" }
+  ]
+});
+```
+
+`recalcTarget` ruft nach dem Schreiben defensiv `recalc()` auf dem Day auf, falls Memento diese Entry-Methode im jeweiligen Kontext anbietet.
+`postEntry: true` ruft nach dem Mappen `postEntry(dayEntry)` bzw. `PostEntry(dayEntry)` auf, damit die ATAG-/Cleaner-Pipeline des Tages sofort mit dem konkreten `DustingDay`-Eintrag laufen kann. Mit `postEntryName: "PostEntryDustingDay"` kann der Funktionsname frei gesetzt werden; alternativ geht `postEntryFn: meineFunktion`.
+
+Hinweis zu Rows: Für DustingDay ist `rowSourceMode: "realtime"` der einfache absolute Tageszeit-Modus. Die Row kommt aus der Uhrzeit des Input-Eintrags.
 
 ## Day-seitiger Refresh
 
@@ -160,7 +176,7 @@ Hinweis zu Rows: `rowSourceMode: "realtime_since"` nutzt im `Input Linker` die a
 
 Empfohlener Standard: passende Inputs suchen, neue Links setzen, danach alle mit diesem Day verlinkten Inputs ausführen. Inputs, die bereits mit einem anderen Day verlinkt sind, werden nicht übernommen.
 
-Day-Action / DustingDay-Trigger:
+Day-Action / DustingDay-Trigger zur manuellen Reparatur oder vollständigen Auffrischung:
 
 ```js
 refreshTargetFromInputEntries({

@@ -245,9 +245,8 @@ Funktion:
 - passenden `DustingDay` über `Date` / `Datum` finden
 - falls nötig `DustingDay` erstellen
 - `DustingInput.DayLinks` setzen
-- Map-Felder übertragen
-- `InNote` als eindeutige Row in `Notiz` ergänzen
-- `InTag` als fehlende Tags in `Tags` ergänzen
+- bei vorhandenem `DayLinks` sofort aussteigen
+- vorhandene Relation nicht als Day-Entry-Objekt auflösen
 
 Modul:
 
@@ -268,18 +267,20 @@ Warum zuerst:
 
 Wenn 0.1 stabil ist:
 
-- Funktion im `DustingDay`-Kontext oder als Utility
+- Funktion im `DustingDay`-Kontext
+- Trigger `Linking an entry` verarbeitet den gerade verlinkten Input
 - alle `DustingInput`-Einträge des Tages finden
 - fehlende `DayLinks` setzen
 - bereits verlinkte Inputs erneut über die Map ausführen
 - `Notiz` und `Tags` appendend ergänzen oder mit `processMode: "rebuild"` neu aufbauen
 - einzelne oder mehrere Inputs können per `entries` gezielt auf einen Day angewendet werden
 
-Damit entsteht die Verbindung dort, wo Alltagseinträge wirklich angelegt werden.
+Damit entsteht die Verbindung dort, wo Alltagseinträge angelegt werden, aber die eigentliche Aggregation läuft im Day-Kontext.
 
 Funktion:
 
 ```text
+recieveInputEntryFromSource()
 refreshTargetFromInputEntries()
 ```
 

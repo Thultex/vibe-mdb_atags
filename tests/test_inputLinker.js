@@ -1989,7 +1989,7 @@ function testRefreshCurrentTargetFromLinkedInputProcessesOnlyThatEntry() {
     DustingInput: makeLib([linkedInput, otherInput])
   });
 
-  var result = refreshCurrentTargetFromLinkedInputEntry({
+  var result = recieveInputEntryFromSource({
     inputEntry: linkedInput,
     inputLib: "DustingInput",
     sourceDateField: "Date",

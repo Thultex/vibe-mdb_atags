@@ -8,8 +8,8 @@
 - linkInputEntryToTarget() ist strikt Link-only: vorhandener DayLink = sofort raus; sonst Day suchen/erstellen und genau einmal verlinken
 - bestehende gültige DayLinks verlassen den Input-Linker ohne Debug-Clear, damit "nichts tun" wirklich keine Feldänderung auslöst
 - geloeschte vorhandene DayLinks blockieren die Neuzuordnung nicht mehr; Link-only darf einen neuen Ziel-Day suchen oder erstellen
-- refreshCurrentTargetFromLinkedInputEntry() verarbeitet Day-seitig genau einen verlinkten Input gegen den aktuellen Day
-- refreshCurrentTargetFromInputEntries() ergänzt als Day-seitiger Wrapper für Linking-an-entry-Trigger mit aktuellem entry()
+- recieveInputEntryFromSource() verarbeitet Day-seitig genau einen verlinkten Input gegen den aktuellen Day
+- refreshCurrentTargetFromInputEntries() bleibt als Day-seitiger Wrapper mit aktuellem entry()
 - refreshTargetFromInputEntries() kann Day-seitig `postEntry: true` auf dem Ziel-Day ausführen
 - erweitert debugInputLinkerAccess() um entry()/values()/field()-Kontext, DayLink-ID und findById-Auflösung
 - verarbeitet vorhandene DayLinks im Input-Trigger nicht mehr automatisch; Updates bestehender Inputs laufen über Day-seitigen Refresh
@@ -75,16 +75,29 @@ linkInputEntryToTarget({
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
   dayStartHour: 4,
-  daySearchLimit: 10,
+  daySearchLimit: 10
+});
+
+// DustingDay: Linking an entry
+recieveInputEntryFromSource({
+  inputLib: "DustingInput",
+  sourceDateField: "Datum",
+  targetDateField: "Datum",
+  sourceDayLinkField: "DayLinks",
   rowSourceMode: "realtime",
   rowStepHours: 0.1,
   rowRoundMode: "round",
-  map: [
-    { from: "InNote", to: "OutNote", type: "string_rows" },
-    { from: "InTag", to: "OutTags", type: "tag" }
+  processMode: "append",
+  postEntry: true,
+  postEntryName: "PostEntry",
+  recalcTarget: true,
+  processMap: [
+    { from: "InNote", to: "Notiz", type: "string_rows" },
+    { from: "InTag", to: "Tags", type: "tag" }
   ]
 });
 
+// DustingDay: manuelle Reparatur/Auffrischung fuer den aktuellen Day
 refreshTargetFromInputEntries({
   inputLib: "DustingInput",
   sourceDateField: "Datum",
@@ -1971,7 +1984,7 @@ function ddlResolveLinkedInputEntry(cfg, target) {
   return null;
 }
 
-function refreshCurrentTargetFromLinkedInputEntry(cfg) {
+function recieveInputEntryFromSource(cfg) {
   cfg = cfg || {};
 
   var target = cfg.targetEntry || cfg.entryObj || entry();
@@ -1984,4 +1997,12 @@ function refreshCurrentTargetFromLinkedInputEntry(cfg) {
   cfg.processAllEntries = false;
 
   return refreshTargetFromInputEntries(cfg);
+}
+
+function receiveInputEntryFromSource(cfg) {
+  return recieveInputEntryFromSource(cfg);
+}
+
+function refreshCurrentTargetFromLinkedInputEntry(cfg) {
+  return recieveInputEntryFromSource(cfg);
 }
