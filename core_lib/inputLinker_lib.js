@@ -1888,7 +1888,7 @@ function linkInputEntryToTarget(cfg) {
 
   if (sourceDayLinkField && ddlEntryLinksToDay(src, sourceDayLinkField, target, targetDateField)) {
     result.linked = true;
-  } else if (sourceDayLinkField && sourceHasDayLinks && cfg.replaceExistingLink !== true) {
+  } else if (sourceDayLinkField && sourceHasDayLinks && !sourceHasDeletedDayLink && cfg.replaceExistingLink !== true) {
     result.linkSkippedExisting = true;
   } else if (sourceDayLinkField) {
     result.linked = ddlLinkEntry(src, sourceDayLinkField, target, errors, cfg);

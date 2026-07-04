@@ -868,48 +868,42 @@ function testAlreadyLinkedInputRecognizesRelationWrapperByDate() {
   assertEquals("already-linked-wrapper-untouched", dayWrapper.field("OutNote"), "anderer wrapper");
 }
 
-function testLinkedDeletedDayDoesNotFallBackToDateMatchById() {
+function testLinkedDeletedDayAllowsNewTargetCreation() {
   var deletedDay = makeEntry({
     id: "day-deleted",
-    Date: "2020-02-02 09:00",
+    Date: "2020-02-01 09:00",
     deleted: true,
-    OutNote: "",
-    OutTags: []
-  });
-  var sameDateDay = makeEntry({
-    id: "day-other",
-    Date: "2020-02-02 09:00",
     OutNote: "",
     OutTags: []
   });
   var input = makeEntry({
     Date: "2020-02-02 10:00",
-    InNote: "nicht auf anderen tag ausweichen",
+    InNote: "neu zuordnen",
     InTag: [],
     DayLinks: deletedDay,
     Debug: ""
   });
 
-  reset(input, [deletedDay, sameDateDay]);
+  reset(input, [deletedDay]);
 
   var result = linkInputEntryToTarget({
     targetLib: "DustingDay",
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
-    processAfterLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
   });
 
-  assertEquals("deleted-link-id-skipped", result.skipped, true);
-  assertEquals("deleted-link-id-reason", result.skipReason, "existing_deleted_daylink_no_fallback");
-  assertEquals("deleted-link-id-no-create", result.created, false);
-  assertEquals("deleted-link-id-no-target", result.targetEntry, null);
+  assertEquals("deleted-link-id-created", result.created, true);
+  assertEquals("deleted-link-id-linked", result.linked, true);
+  assertSame("deleted-link-id-new-link", input.field("DayLinks"), result.targetEntry);
+  assertEquals("deleted-link-id-link-only", result.skipReason, "link_only");
+  assertEquals("deleted-link-id-target-count", _libs.DustingDay.entries().length, 2);
   assertEquals("deleted-link-id-deleted-empty", deletedDay.field("OutNote"), "");
-  assertEquals("deleted-link-id-other-empty", sameDateDay.field("OutNote"), "");
-  assertEquals("deleted-link-id-debug", input.field("Debug").indexOf("geloeschter DayLink") >= 0, true);
+  assertEquals("deleted-link-id-new-empty", ddlSafeField(result.targetEntry, "OutNote", null, null), null);
+  assertEquals("deleted-link-id-debug-clear", input.field("Debug"), "");
 }
 
 function testRelationWithoutLinkMethodDoesNotSetEntryObjectByDefault() {
@@ -1247,7 +1241,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-name missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.57") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.58") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -1259,7 +1253,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.57") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.58") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -1462,7 +1456,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.57") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.58") < 0) {
     fail("error-debug-version missing");
   }
 
@@ -2064,7 +2058,7 @@ testAlreadyLinkedInputCanAddNewMappedValuesOnRerun();
 testAlreadyLinkedInputDoesNotRewriteRelationOnRerun();
 testExistingDayLinkDoesNotProcessTargetByDefault();
 testAlreadyLinkedInputRecognizesRelationWrapperByDate();
-testLinkedDeletedDayDoesNotFallBackToDateMatchById();
+testLinkedDeletedDayAllowsNewTargetCreation();
 testRelationWithoutLinkMethodDoesNotSetEntryObjectByDefault();
 testInputLinkerSkipsMementoLinkingTriggerContextByDefault();
 testRecalcSourceAndTargetWhenConfigured();
