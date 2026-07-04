@@ -2,7 +2,7 @@
 
 Diese Datei hält die aktuelle Memento-Konfiguration für Dustingday fest. Sie dient als Referenz für spätere Add-ons, Parser und Tests.
 
-## DustingDayInput
+## DustingInput
 
 Library für kurze Einzel-Einträge im Alltag.
 
@@ -17,6 +17,10 @@ Aktuelle Felder:
   - Typ: Tag
 - `Date`
   - Typ: Datum/Zeit
+- `DayLinks`
+  - Typ: Beziehung / Relation
+  - Ziel: `DustingDay`
+  - verbindet den Input-Eintrag mit seinem Tages-Eintrag
 - `Debug`
   - Typ: Text
   - optionales Diagnosefeld für Input-Trigger
@@ -34,12 +38,8 @@ Aktuelle Felder:
   - Typ: Text
 - `Datum`
   - Typ: Datum/Zeit
-- `Tags`
+- `OutTags`
   - Typ: Tag
-- `InLinks`
-  - Typ: Library Links / Beziehung
-  - Ziel: `DustingDayInput`
-  - enthält die verknüpften Einzel-Einträge
 - `Debug`
   - Typ: Text
   - optionales Diagnosefeld für Script-Ausgaben
@@ -51,39 +51,37 @@ Für erste Dustingday-Module gilt bei Einzel-Einträgen:
 - Notizfeld: `InNote`
 - Tagfeld: `InTag`
 - Zeitfeld: `Date`
+- Tagesrelation: `DayLinks`
 - Titel: `Titel`, optional
 - Debug-Ausgabe: `Debug`, optional
 
 Für Tages-Einträge gilt:
 
 - Notiz-Ausgabe: `OutNote`
-- Tag-Ausgabe: `Tags`
+- Tag-Ausgabe: `OutTags`
 - Tagesdatum: `Datum`
 - Titel: `Titel`, optional
-- verknüpfte Einzel-Einträge: `InLinks`
 - Debug-Ausgabe: `Debug`
 
 ## Noch offen
 
-- Welche Tags in `DustingDay.Tags` geschrieben werden sollen
+- Ob `OutTags` später zusätzlich in ein ATAG-UserTags-Feld gespiegelt wird
 
 ## Script-Referenz
 
-`dustingDayCollector.js` soll in Memento wie die Core-Scripte als GitHub-Referenz geladen werden.
+`dd-linker.js` soll in Memento wie die Core-Scripte als GitHub-Referenz geladen werden.
 
 Nach Push auf `main`:
 
 ```text
-https://raw.githubusercontent.com/Thultex/vibe-mdb_atags/main/addons/5_dusting-day/dustingDayCollector.js
+https://raw.githubusercontent.com/Thultex/vibe-mdb_atags/main/addons/5_dusting-day/dd-linker.js
 ```
 
-Der erste Test-Aufruf kann in der Library `DustingDay` laufen, z. B. im Trigger `Update Entry Before Save`, um manuell gesetzte `InLinks` in `OutNote` zu übertragen.
-
-Der eigentliche Alltags-Trigger soll später in `DustingDayInput` liegen:
+Der eigentliche Alltags-Trigger liegt in `DustingInput`:
 
 ```text
-DustingDayInput speichern
+DustingInput speichern
   -> passenden DustingDay finden oder erstellen
-  -> Input in DustingDay.InLinks sammeln
+  -> DustingInput.DayLinks auf DustingDay setzen
   -> DustingDay.OutNote aktualisieren
 ```

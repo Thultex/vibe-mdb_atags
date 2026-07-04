@@ -24,10 +24,10 @@ Aus der Uhrzeit entsteht die Row. Aus `innote` und `intag` entstehen Tags, Werte
 Erster technischer Schritt ist ein Relation-Feld:
 
 ```text
-DustingDay.InLinks -> DustingDayInput
+DustingInput.DayLinks -> DustingDay
 ```
 
-Damit kann ein Tages-Eintrag dauerhaft seine Einzel-Einträge halten. Da Memento-Relationen beidseitig abrufbar sind, braucht der Input-Eintrag kein eigenes Gegenfeld. Das Datum dient zum Finden oder Erstellen des passenden Tages, `InLinks` hält danach die Verbindung stabil.
+Damit kann ein Input-Eintrag dauerhaft seinen Tages-Eintrag halten. Da Memento-Relationen beidseitig abrufbar sind, kann der Tages-Eintrag seine Inputs trotzdem erreichen. Das Datum dient zum Finden oder Erstellen des passenden Tages, `DayLinks` hält danach die Verbindung stabil.
 
 ## Dateien
 
@@ -58,18 +58,18 @@ Dosis: 40mg
 
 ## Erste Entwicklungsrichtung
 
-1. `DustingDay.InLinks -> DustingDayInput` in Memento testen.
-2. Aus manuell verlinkten Inputs eine `OutNote` bauen.
-3. Danach passende Inputs anhand von `Datum` / `Date` automatisch finden.
-4. Danach `InLinks` automatisch pflegen.
-5. Danach Tags aus `InTag` nach `DustingDay.Tags` übertragen.
+1. `DustingInput.DayLinks -> DustingDay` in Memento testen.
+2. Beim Speichern eines Inputs passenden `DustingDay` finden oder erstellen.
+3. Map-Felder übertragen, z. B. `InNote -> OutNote` und `InTag -> OutTags`.
+4. Rows und Tags nur ergänzen, wenn sie noch fehlen.
+5. Danach eine Day-Funktion zur Zuordnung/Reparatur aller Inputs bauen.
 6. Später mentale Hilfen, hilfreiche Methoden und Lösungsansätze aus Mustern ableiten.
 
 Erstes Add-on:
 
 ```text
-addons/5_dusting-day/dustingDayCollector.js
-updateDustingDayOutNote()
+addons/5_dusting-day/dd-linker.js
+appendToDayEntry()
 ```
 
 ## Script-Anschluss in Memento
@@ -79,65 +79,41 @@ Das Add-on soll wie die Core-Scripte als GitHub-Referenz geladen werden.
 GitHub Raw URL:
 
 ```text
-https://raw.githubusercontent.com/Thultex/vibe-mdb_atags/main/addons/5_dusting-day/dustingDayCollector.js
+https://raw.githubusercontent.com/Thultex/vibe-mdb_atags/main/addons/5_dusting-day/dd-linker.js
 ```
 
-Manueller Test-Anschluss in der Library `DustingDay`:
+Anschluss in der Library `DustingInput`:
 
-1. Script/Library-Referenz auf `dustingDayCollector.js` laden.
-2. Danach im `DustingDay`-Trigger den Aufruf setzen.
-3. Für den ersten Test `Update Entry Before Save` verwenden.
+1. Script/Library-Referenz auf `dd-linker.js` laden.
+2. Danach im `DustingInput`-Trigger den Aufruf setzen.
+3. Ideal: After Save / After Entry. Fallback: Before Save, wenn Cross-Library-Schreiben dort stabil läuft.
 
 Aufruf:
 
 ```js
-updateDustingDayOutNote({
-  inLinksField: "InLinks",
-  outputField: "OutNote",
-  inputDateField: "Date",
-  inputNoteField: "InNote",
-  inputTagField: "InTag"
+appendToDayEntry({
+  targetLib: "DustingDay",
+  sourceDateField: "Date",
+  targetDateField: "Datum",
+  sourceDayLinkField: "DayLinks",
+  rowMode: "clock",
+  rowStepHours: 0.5,
+  map: [
+    { from: "InNote", to: "OutNote", type: "string" },
+    { from: "InTag", to: "OutTags", type: "tag" }
+  ]
 });
 ```
 
-Debug-Aufruf, wenn nichts sichtbar passiert:
-
-```js
-debugDustingDayCollector({
-  inLinksField: "InLinks",
-  outputField: "Debug",
-  inputDateField: "Date",
-  inputNoteField: "InNote",
-  inputTagField: "InTag"
-});
-```
-
-Dieser Aufruf schreibt sichtbar in `Debug`, wie `InLinks` im Script ankommt und welche Felder aus den verlinkten Inputs gelesen werden. So bleibt `OutNote` frei für die eigentliche Tagesausgabe.
-
-Wichtig: Die URL funktioniert erst, wenn `addons/5_dusting-day/dustingDayCollector.js` nach GitHub `main` gepusht wurde.
-
-Der eigentliche Alltags-Anschluss gehört später in `DustingDayInput`, weil dort ein neuer Eintrag entsteht.
+Wichtig: Die URL funktioniert erst, wenn `addons/5_dusting-day/dd-linker.js` nach GitHub `main` gepusht wurde.
 
 Zielablauf:
 
 ```text
-DustingDayInput speichern
+DustingInput speichern
   -> passenden DustingDay finden oder erstellen
-  -> Input in DustingDay.InLinks sammeln
-  -> DustingDay.OutNote neu bauen
+  -> DustingInput.DayLinks auf DustingDay setzen
+  -> DustingDay.OutNote / OutTags über map ergänzen
 ```
 
-Der `DustingDay`-Trigger ist damit nur ein manueller Refresh/Testpfad. Der produktive Flow soll vom Input-Eintrag ausgehen.
-
-Debug-Aufruf im `DustingDayInput`-Trigger:
-
-```js
-debugDustingDayInputCollector({
-  outputField: "Debug",
-  inputDateField: "Date",
-  inputNoteField: "InNote",
-  inputTagField: "InTag"
-});
-```
-
-Dieser Test prüft nur den aktuellen Input-Eintrag und schreibt in `DustingDayInput.Debug`.
+Der produktive Flow geht vom Input-Eintrag aus.

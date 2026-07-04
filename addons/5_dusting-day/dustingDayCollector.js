@@ -4,10 +4,10 @@ B10 Dusting Day Collector v0.13 (sys 2.30)
 ========================================
 
 Änderungen
-- Input-Debug-Funktion für Trigger in DustingDayInput ergänzt
+- Input-Debug-Funktion für Trigger in DustingInput ergänzt
 - Debug-Funktion schreibt sichtbare Feld-/Link-Diagnose standardmäßig in Debug
 - erste OutNote-Erzeugung aus manuell gesetzten DustingDay.InLinks
-- liest verknüpfte DustingDayInput-Einträge
+- liest verknüpfte DustingInput-Einträge
 - sortiert nach Date
 - leitet Rows aus der Uhrzeit ab
 - verbindet InNote und InTag zu Tageszeilen
@@ -24,6 +24,7 @@ updateDustingDayOutNote({
 
 debugDustingDayCollector();
 debugDustingDayInputCollector();
+debugDustingInputCollector();
 */
 
 function ddTrim(s) {
@@ -373,7 +374,7 @@ function debugDustingDayInputCollector(cfg) {
   var inputTagField = cfg.inputTagField || "InTag";
   var lines = [];
 
-  lines.push("DEBUG DustingDayInput");
+  lines.push("DEBUG DustingInput");
   lines.push("version: 0.13");
   lines.push("outputField: " + outputField);
   lines.push(inputDateField + ": " + ddTextValue(ddSafeField(currentEntry, inputDateField)));
@@ -395,3 +396,5 @@ function debugDustingDayInputCollector(cfg) {
     text: lines.join("\n")
   };
 }
+
+var debugDustingInputCollector = debugDustingDayInputCollector;

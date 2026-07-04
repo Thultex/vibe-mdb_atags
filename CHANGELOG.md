@@ -31,9 +31,11 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Feature: Dustingday-Collector-Add-on `addons/5_dusting-day/dustingDayCollector.js`; `updateDustingDayOutNote()` baut aus manuell gesetzten `DustingDay.InLinks` eine zeitlich sortierte `OutNote`.
 - Feature: Dustingday-Collector-Debug v0.11; `debugDustingDayCollector()` schreibt sichtbare Diagnose zu `InLinks`, verknüpften Entries und Feldwerten in `OutNote`.
 - Change: Dustingday-Collector-Debug v0.12; `debugDustingDayCollector()` schreibt standardmäßig in `Debug`, damit `OutNote` fachliche Ausgabe bleibt.
-- Feature: Dustingday-Input-Debug v0.13; `debugDustingDayInputCollector()` schreibt Diagnose für den aktuellen `DustingDayInput`-Eintrag in `Debug`.
+- Feature: Dustingday-Input-Debug v0.13; `debugDustingInputCollector()` schreibt Diagnose für den aktuellen `DustingInput`-Eintrag in `Debug`; `debugDustingDayInputCollector()` bleibt als Alias erhalten.
+- Feature: `addons/5_dusting-day/dd-linker.js` v0.10; `appendToDayEntry()` adaptiert den funktionierenden Linker auf `DustingInput.DayLinks -> DustingDay`, Map-Felder, eindeutige Rows/Tags und Row-Modi `clock`/`sinceFirst`.
+- Test: `tests/test_dd_linker.js` deckt Tageserstellung, Source-Link, erste Notizzeile, Duplikatschutz und relative Row-Zeit ab.
 - Test: `tests/test_dustingDayCollector.js` deckt Array-/Java-Listen-Relationen, Feldmapping, Row-Rundung und leere Links ab.
-- *Versionen: Dusting Day Collector v0.13.*
+- *Versionen: Dusting Day Collector v0.13, Dusting Day Linker v0.10.*
 
 ### 2026-05-20 - (ca. 0,5h)
 

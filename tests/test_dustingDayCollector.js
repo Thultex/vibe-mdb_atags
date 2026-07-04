@@ -151,11 +151,11 @@ function testInputDebugWritesCurrentInputDiagnostics() {
     Debug: ""
   });
 
-  debugDustingDayInputCollector({
+  debugDustingInputCollector({
     entryObj: input
   });
 
-  if (String(input.field("Debug")).indexOf("DEBUG DustingDayInput") !== 0) {
+  if (String(input.field("Debug")).indexOf("DEBUG DustingInput") !== 0) {
     fail("input-debug-prefix missing");
   }
 

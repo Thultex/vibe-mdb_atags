@@ -74,7 +74,7 @@ Offen:
 
 - Kalendertag oder eigenes Tagesfenster?
 - Welche Library enthält die Einzeleinträge?
-- Soll das Datum nur Fallback sein oder bei jedem Lauf `InLinks` automatisch ergänzt werden?
+- Soll das Datum nur Fallback sein oder bei jedem Lauf `DayLinks` automatisch repariert werden?
 
 ## 2a. Relation Field
 
@@ -83,14 +83,14 @@ Das Relation-Feld ist die erste Grundlage der Verbildung.
 Vorschlag:
 
 ```text
-DustingDay.InLinks -> DustingDayInput
+DustingInput.DayLinks -> DustingDay
 ```
 
 Funktion:
 
-- Der Tages-Eintrag enthält über `InLinks` die zugehörigen Eingabe-Einträge.
-- Eine Relation ist beidseitig abrufbar, deshalb braucht `DustingDayInput` kein eigenes Gegenfeld.
-- Wenn ein passender Tages-Eintrag gefunden oder erstellt wurde, werden passende `DustingDayInput`-Einträge in `DustingDay.InLinks` gesammelt.
+- Der Input-Eintrag enthält über `DayLinks` seinen Tages-Eintrag.
+- Eine Relation ist beidseitig abrufbar, dadurch kann `DustingDay` die verknüpften Inputs ebenfalls erreichen.
+- Wenn ein passender Tages-Eintrag gefunden oder erstellt wurde, wird er in `DustingInput.DayLinks` gesetzt.
 
 Damit wird die Verbindung nicht nur über Datum geraten, sondern dauerhaft gespeichert.
 
@@ -235,24 +235,25 @@ Erst sammeln, dann verstehen.
 
 ## Modul-Reihenfolge
 
-### 0.1 OutNote aus InLinks
+### 0.1 Input über DayLinks sammeln
 
-Start mit manuell gepflegten Links. Das ist ein Test- und Refresh-Schritt auf `DustingDay`, noch nicht der eigentliche Alltagstrigger.
+Start im `DustingInput`-Trigger.
 
 Funktion:
 
-- aktueller `DustingDay`-Eintrag
-- `InLinks` lesen
-- verknüpfte `DustingDayInput`-Einträge nach `Date` sortieren
-- aus `Date` Row ableiten
-- `InNote` und `InTag` in eine Zeile bringen
-- `OutNote` schreiben
+- aktueller `DustingInput`-Eintrag
+- passenden `DustingDay` über `Date` / `Datum` finden
+- falls nötig `DustingDay` erstellen
+- `DustingInput.DayLinks` setzen
+- Map-Felder übertragen
+- `InNote` als eindeutige Row in `OutNote` ergänzen
+- `InTag` als fehlende Tags in `OutTags` ergänzen
 
 Modul:
 
 ```text
-addons/5_dusting-day/dustingDayCollector.js
-updateDustingDayOutNote()
+addons/5_dusting-day/dd-linker.js
+appendToDayEntry()
 ```
 
 Warum zuerst:
@@ -262,16 +263,14 @@ Warum zuerst:
 - kleine Fehlerfläche
 - schnell in Memento prüfbar
 
-### 0.2 InLinks automatisch füllen
+### 0.2 Day-Library-Rebuild
 
 Wenn 0.1 stabil ist:
 
-- Trigger in `DustingDayInput`
-- `DustingDayInput.Date` lesen
-- passenden `DustingDay.Datum` finden
-- falls nötig `DustingDay` erstellen
-- aktuellen Input in `DustingDay.InLinks` ergänzen
-- danach `OutNote` neu bauen
+- Funktion im `DustingDay`-Kontext oder als Utility
+- alle `DustingInput`-Einträge des Tages finden
+- fehlende `DayLinks` setzen
+- `OutNote` und `OutTags` vollständig oder ergänzend neu aufbauen
 
 Damit entsteht die Verbindung dort, wo Alltagseinträge wirklich angelegt werden.
 

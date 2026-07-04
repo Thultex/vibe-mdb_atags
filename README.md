@@ -141,9 +141,12 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
   - `appendTimeMarker()`
   - optionales Stundenlimit ueber `maxHours` (Default: `30`)
 **Dustingday Add-ons**
+- `B11` `addons/5_dusting-day/dd-linker.js` (DustingInput mit DustingDay verbinden und Map-Felder übertragen)
+  - `appendToDayEntry()`
+  - sucht/erstellt den Tages-Eintrag, setzt `DustingInput.DayLinks`, hängt eindeutige Rows an und ergänzt Tags
 - `B10` `addons/5_dusting-day/dustingDayCollector.js` (Dustingday-Tagesnotiz aus verlinkten Inputs)
   - `updateDustingDayOutNote()`
-  - liest `DustingDay.InLinks`, sortiert nach `DustingDayInput.Date` und schreibt `OutNote`
+  - alter Refresh-/Experimentpfad, liest verlinkte Inputs und schreibt `OutNote`
 
 **Integration Add-ons**
 - `B8` `addons/6_integration/obsidianLinker.js` (Memento-zu-Obsidian Advanced URI)
@@ -175,6 +178,7 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
 - `tests/test_tagCleaner.js`
 - `tests/test_timeMarker.js`
 - `tests/test_dustingDayCollector.js`
+- `tests/test_dd_linker.js`
 - `tests/test_syncLastFromLatest.js`
 - `tests/test_typedTextFields.js`
 - `tests/test_sequenceCounter.js`

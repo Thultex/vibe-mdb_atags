@@ -32,10 +32,10 @@ Das erste Modul sammelt einzelne Memento-Einträge eines Tages in einem Tages-Ei
 Erster Strukturbaustein ist ein Relation-Feld:
 
 ```text
-DustingDay.InLinks -> DustingDayInput
+DustingInput.DayLinks -> DustingDay
 ```
 
-Damit wird die Verbindung zwischen Tages- und Einzeleinträgen dauerhaft gespeichert. Eine Relation ist in Memento beidseitig abrufbar, deshalb reicht die Relation auf der Tagesseite. Datum/Zeit bleibt wichtig für Suche, Tageserstellung und Row-Inferenz.
+Damit wird die Verbindung zwischen Input- und Tageseintrag dauerhaft gespeichert. Diese Richtung ist in Memento praktisch üblicher: der Input-Eintrag zeigt per `DayLinks` auf seinen Tages-Eintrag. Datum/Zeit bleibt wichtig für Suche, Tageserstellung und Row-Inferenz.
 
 ### Datenfluss
 
@@ -46,8 +46,8 @@ Einzeleintrag
   intag
     |
     v
-Day Collector
-  pflegt DustingDay.InLinks
+Day Linker
+  pflegt DustingInput.DayLinks
   liest alle Einträge des Tages
   inferiert Rows aus Datum/Zeit
   parst Tags aus innote und intag
@@ -153,7 +153,7 @@ Wichtig: Der Day Collector arbeitet nicht nur im aktuellen Eintrag, sondern lies
 
 - Wie erkennt das Modul den Tages-Eintrag? Über `Typ = Tag`, ein eigenes Feld oder eine separate Library?
 - Aus welcher Memento-Library werden die Einzeleinträge gelesen?
-- Soll `DustingDay.InLinks` automatisch alle passenden `DustingDayInput`-Einträge des Tages aufnehmen?
+- Soll `DustingInput.DayLinks` beim Speichern immer gesetzt oder nur bei leerem Feld gesetzt werden?
 - Sollen Einträge nach Kalendertag oder nach Tagesfenster gesammelt werden, z. B. 04:00 bis 03:59?
 - Welche Felder sind minimal fest: `innote`, `intag`, `outnote`, `Datum/Zeit`?
 - Soll `Dosis` als eigener Abschnitt erkannt werden oder nur als normaler Tag mit besonderem Export?
@@ -161,32 +161,28 @@ Wichtig: Der Day Collector arbeitet nicht nur im aktuellen Eintrag, sondern lies
 
 ## Nächste Schritte
 
-1. Relation in Memento testen: `DustingDay.InLinks -> DustingDayInput`.
-2. Prüfen, wie Memento `InLinks` im Script liefert:
-   - Array
-   - Java-Liste
-   - einzelner Entry
-   - leeres Feld
+1. Relation in Memento testen: `DustingInput.DayLinks -> DustingDay`.
+2. `dd-linker.js` im `DustingInput`-Trigger testen.
 3. Minimalen Testdatensatz anlegen:
-   - mehrere `DustingDayInput`-Einträge an einem Tag
-   - ein `DustingDay`-Eintrag mit `Datum`
-   - `InLinks` zunächst manuell gefüllt
-4. Umsetzungsschnitt 0.1 bauen: `InLinks` lesen und `OutNote` erzeugen.
-5. Umsetzungsschnitt 0.2 bauen: passende Inputs anhand von `Datum` / `Date` finden und `InLinks` automatisch ergänzen.
+   - mehrere `DustingInput`-Einträge an einem Tag
+   - optional kein `DustingDay`-Eintrag, damit Erstellung getestet wird
+4. Umsetzungsschnitt 0.1 bauen: aktuellen Input mit Day verlinken und Map-Felder übertragen.
+5. Umsetzungsschnitt 0.2 bauen: Day-Library-Funktion zur Zuordnung aller DustingInput-Einträge eines Tages.
 6. Umsetzungsschnitt 0.3 bauen: `InTag` nach `DustingDay.Tags` übertragen.
 7. Danach Parser- und Hilfsebene ausbauen.
 
 ## Umsetzungsschnitt 0.1
 
-Zuerst kein automatisches Suchen und kein automatisches Erstellen. Start mit manuell gesetzten `InLinks`.
+Start im `DustingInput`-Trigger mit `appendToDayEntry()`.
 
 ```text
-DustingDay öffnen oder speichern
-  -> InLinks lesen
-  -> verknüpfte DustingDayInput-Einträge sortieren
-  -> Rows aus Date ableiten
-  -> InNote + InTag zu Tageszeilen verbinden
-  -> OutNote schreiben
+DustingInput speichern
+  -> passenden DustingDay über Date/Datum finden
+  -> falls nötig DustingDay erstellen
+  -> DustingInput.DayLinks setzen
+  -> Map-Felder übertragen
+  -> OutNote-Rows eindeutig ergänzen
+  -> OutTags eindeutig ergänzen
 ```
 
 Warum zuerst:
@@ -199,57 +195,60 @@ Warum zuerst:
 Geplanter/erster Modulname:
 
 ```text
-addons/5_dusting-day/dustingDayCollector.js
-updateDustingDayOutNote()
+addons/5_dusting-day/dd-linker.js
+appendToDayEntry()
 ```
 
 GitHub-Referenz nach Push auf `main`:
 
 ```text
-https://raw.githubusercontent.com/Thultex/vibe-mdb_atags/main/addons/5_dusting-day/dustingDayCollector.js
+https://raw.githubusercontent.com/Thultex/vibe-mdb_atags/main/addons/5_dusting-day/dd-linker.js
 ```
 
-Memento-Anschluss für manuellen Refresh/Test:
+Memento-Anschluss:
 
 ```text
-Library: DustingDay
-Script-Referenz: dustingDayCollector.js via GitHub Raw URL
-Trigger: Update Entry Before Save
+Library: DustingInput
+Script-Referenz: dd-linker.js via GitHub Raw URL
+Trigger: After Save / After Entry, Fallback Before Save
 ```
 
 Trigger-Aufruf:
 
 ```js
-updateDustingDayOutNote({
-  inLinksField: "InLinks",
-  outputField: "OutNote",
-  inputDateField: "Date",
-  inputNoteField: "InNote",
-  inputTagField: "InTag"
+appendToDayEntry({
+  targetLib: "DustingDay",
+  sourceDateField: "Date",
+  targetDateField: "Datum",
+  sourceDayLinkField: "DayLinks",
+  rowMode: "clock",
+  rowStepHours: 0.5,
+  map: [
+    { from: "InNote", to: "OutNote", type: "string" },
+    { from: "InTag", to: "OutTags", type: "tag" }
+  ]
 });
 ```
 
-Das ist nicht der eigentliche Alltags-Trigger, sondern ein kontrollierter Testpfad: vorhandene `InLinks` lesen und `OutNote` bauen.
-
 ## Eigentliche Trigger-Idee
 
-Der Alltagsfluss startet in `DustingDayInput`, weil dort ein neuer Eintrag entsteht.
+Der Alltagsfluss startet in `DustingInput`, weil dort ein neuer Eintrag entsteht.
 
 Gewünschter Ablauf:
 
 ```text
-DustingDayInput speichern
+DustingInput speichern
   -> Date lesen
   -> passenden DustingDay über Datum finden
   -> falls keiner existiert: DustingDay erstellen
-  -> aktuellen Input in DustingDay.InLinks aufnehmen
-  -> DustingDay.OutNote aus InLinks neu bauen
+  -> DustingInput.DayLinks auf DustingDay setzen
+  -> DustingDay.OutNote / OutTags über map aktualisieren
 ```
 
 Primärer Anschluss:
 
 ```text
-Library: DustingDayInput
+Library: DustingInput
 Trigger: nach Möglichkeit After Save / After Entry
 Fallback-Test: Before Save, wenn Memento dort Relation/Entry-Updates stabil erlaubt
 ```
@@ -257,7 +256,7 @@ Fallback-Test: Before Save, wenn Memento dort Relation/Entry-Updates stabil erla
 Input-Trigger-Debug:
 
 ```js
-debugDustingDayInputCollector({
+debugDustingInputCollector({
   outputField: "Debug",
   inputDateField: "Date",
   inputNoteField: "InNote",
@@ -265,7 +264,7 @@ debugDustingDayInputCollector({
 });
 ```
 
-Dieser Debug gehört in `DustingDayInput` und schreibt in `DustingDayInput.Debug`.
+Dieser Debug gehört in `DustingInput` und schreibt in `DustingInput.Debug`.
 
 Warum nicht zuerst `DustingDay`:
 
@@ -273,18 +272,18 @@ Warum nicht zuerst `DustingDay`:
 - Der Nutzer soll nicht danach manuell den Tages-Eintrag öffnen müssen.
 - `DustingDay` ist der Sammelpunkt, nicht der Auslöser.
 
-Die bestehende Funktion `updateDustingDayOutNote()` bleibt trotzdem sinnvoll als Baustein: Sobald ein `DustingDay` und seine `InLinks` feststehen, kann dieselbe Ausgabe-Funktion verwendet werden.
+Die bestehende Funktion `updateDustingDayOutNote()` bleibt nur als alter Refresh-/Experimentpfad. Der neue Hauptpfad ist `appendToDayEntry()`.
 
 ## Umsetzungsschnitt 0.2
 
-Danach automatische Verknüpfung aus `DustingDayInput`.
+Danach automatische Verknüpfung aus `DustingInput`.
 
 ```text
-DustingDayInput.Date lesen
+DustingInput.Date lesen
   -> passenden DustingDay.Datum finden
   -> falls nötig DustingDay erstellen
-  -> aktuellen Input in DustingDay.InLinks ergänzen
-  -> OutNote neu bauen
+  -> fehlende `DustingInput.DayLinks` setzen
+  -> OutNote / OutTags nach Map-Regeln ergänzen oder später komplett neu aufbauen
 ```
 
 Offen: Ob Memento das Erstellen neuer `DustingDay`-Einträge und das Schreiben in einen anderen Eintrag im gewählten Trigger sauber erlaubt. Das muss lokal und danach online/sync getestet werden.
@@ -294,7 +293,7 @@ Offen: Ob Memento das Erstellen neuer `DustingDay`-Einträge und das Schreiben i
 Dann Tags.
 
 ```text
-InTag aus allen InLinks sammeln
+InTag aus allen verknüpften Inputs sammeln
   -> Duplikate reduzieren
   -> DustingDay.Tags setzen
 ```
@@ -315,14 +314,14 @@ Risiken:
 Konsequenz:
 
 - 0.1 nur auf aktuellem `DustingDay`-Eintrag arbeiten.
-- 0.1 nur vorhandene `InLinks` lesen und `OutNote` schreiben.
-- Kein automatisches Erstellen anderer Einträge in der ersten Version.
-- Automatisches Füllen von `InLinks` erst nach lokalem Test.
+- 0.1 läuft auf dem aktuellen `DustingInput`-Eintrag.
+- 0.1 schreibt `DustingInput.DayLinks` und den gefundenen/erstellten `DustingDay`.
+- Cross-Library-Schreiben und Entry-Erstellung lokal testen.
 - Online-/Sync-Test als eigener Schritt, bevor das Modul im Alltag dauerhaft läuft.
 
 Online-Testplan:
 
-1. Einen `DustingDay` mit manuell gesetzten `InLinks` lokal ausführen.
-2. Prüfen, ob `OutNote` nach Sync auf anderem Gerät identisch bleibt.
-3. Einen verlinkten `DustingDayInput` ändern und erneut synchronisieren.
-4. Erst danach automatische Link-Pflege testen.
+1. Einen `DustingInput` speichern und prüfen, ob `DayLinks` gesetzt wird.
+2. Prüfen, ob `DustingDay` erstellt oder gefunden wird.
+3. Prüfen, ob `OutNote` und `OutTags` nach Sync auf anderem Gerät identisch bleiben.
+4. Erst danach Day-Library-Rebuild testen.
