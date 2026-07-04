@@ -102,6 +102,8 @@ linkInputEntryToTarget({
   rowRoundMode: "round",
   recalcTarget: true,
   recalcSource: true,
+  postEntry: true,
+  postEntryName: "PostEntry",
   sourceDebugField: "Debug",
   map: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
@@ -139,6 +141,7 @@ DustingInput speichern
 
 Der produktive Flow geht vom Input-Eintrag aus.
 `recalcTarget` und `recalcSource` rufen nach dem Schreiben defensiv `recalc()` auf, falls Memento diese Entry-Methode im jeweiligen Kontext anbietet.
+`postEntry: true` ruft nach dem Mappen `postEntry(dayEntry)` bzw. `PostEntry(dayEntry)` auf, damit die ATAG-/Cleaner-Pipeline des Tages sofort mit dem konkreten `DustingDay`-Eintrag laufen kann. Mit `postEntryName: "PostEntryDustingDay"` kann der Funktionsname frei gesetzt werden; alternativ geht `postEntryFn: meineFunktion`.
 
 Hinweis zu Rows: `rowSourceMode: "realtime_since"` nutzt im `Input Linker` die absolute Tageszeit des Input-Eintrags, nicht die Differenz zum Tages-Eintrag. Der Name bleibt bewusst nah an TimeMarker-Konfigurationen, die Semantik für DustingDay ist aber die Tageszeit-Row.
 
@@ -301,6 +304,8 @@ function PostEntry(e) {
   return result;
 }
 ```
+
+
 
 
 

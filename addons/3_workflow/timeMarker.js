@@ -1,9 +1,10 @@
 /*
 ========================================
-B7 Time Marker v1.31 (sys 2.30)
+B7 Time Marker v1.32 (sys 2.30)
 ========================================
 
 Änderungen
+- `cleanupTimeMarker({ mergeSameRows: true })` fuehrt gleiche Row-Marker zusammen, z. B. `19: hallo` + `19: spannend` zu `19: hallo; spannend`
 - Cleanup gibt `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
 - `appendTimeMarker()` gibt ebenfalls `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
 - `cleanupTimeMarker()` ersetzt `: Text` wie `appendTimeMarker()`, haengt aber keinen leeren neuen Marker an
@@ -310,6 +311,70 @@ function splitTextBlocks(text) {
   };
 }
 
+function parseTimestampParts(line) {
+  var m = String(line || "").match(/^(\s*)(\d+(?:[.,]\d+)?)(\s*:\s*)(.*)$/);
+  if (!m) return null;
+
+  return {
+    indent: m[1] || "",
+    label: m[2] || "",
+    separator: m[3] || ": ",
+    text: m[4] || ""
+  };
+}
+
+function normalizeTimeMarkerRowKey(label) {
+  var n = parseFloat(String(label || "").replace(",", "."));
+  if (isNaN(n)) return String(label || "");
+  return String(Math.round(n * 1000000) / 1000000);
+}
+
+function mergeSameTimeMarkerRows(timeLines, cfg) {
+  if (!cfg || cfg.mergeSameRows !== true) return timeLines;
+
+  var separator = cfg.mergeSameRowsSeparator || cfg.sameRowSeparator || "; ";
+  var out = [];
+  var indexByKey = {};
+  var partsByKey = {};
+  var i;
+  var line;
+  var parts;
+  var key;
+  var text;
+  var current;
+
+  for (i = 0; i < timeLines.length; i++) {
+    line = String(timeLines[i]);
+    parts = parseTimestampParts(line);
+
+    if (!parts) {
+      out.push(line);
+      continue;
+    }
+
+    key = normalizeTimeMarkerRowKey(parts.label);
+    text = String(parts.text || "").replace(/^\s+|\s+$/g, "");
+
+    if (indexByKey.hasOwnProperty(key)) {
+      if (!isBlankTimeMarkerText(text)) {
+        current = partsByKey[key];
+        current.text = isBlankTimeMarkerText(current.text)
+          ? text
+          : current.text + separator + text;
+        out[indexByKey[key]] = current.indent + current.label + current.separator + current.text;
+      }
+      continue;
+    }
+
+    indexByKey[key] = out.length;
+    parts.text = text;
+    partsByKey[key] = parts;
+    out.push(parts.indent + parts.label + parts.separator + parts.text);
+  }
+
+  return out;
+}
+
 function buildTimeBlockText(timeLines, otherLines) {
   if (!timeLines.length && !otherLines.length) return "";
   if (!timeLines.length) return otherLines.join("\n");
@@ -318,8 +383,9 @@ function buildTimeBlockText(timeLines, otherLines) {
   return timeLines.join("\n") + "\n\n" + otherLines.join("\n");
 }
 
-function arrangeTimeMarkerRows(text) {
+function arrangeTimeMarkerRows(text, cfg) {
   var blocks = splitTextBlocks(text);
+  blocks.timeLines = mergeSameTimeMarkerRows(blocks.timeLines, cfg || {});
   return buildTimeBlockText(blocks.timeLines, blocks.otherLines);
 }
 
@@ -417,7 +483,7 @@ function appendTimeMarker(cfg) {
 
   var hasFillablePlaceholder = hasFillableColonPlaceholderLine(text);
   text = replaceColonPlaceholderLines(text, formatHourLabel(stepped));
-  text = arrangeTimeMarkerRows(normalizeTimeMarkerText(removeEmptyTimestampLines(text)));
+  text = arrangeTimeMarkerRows(normalizeTimeMarkerText(removeEmptyTimestampLines(text)), cfg);
 
   if (hasFillablePlaceholder) {
     e.set(targetTextField, text);
@@ -469,7 +535,7 @@ function cleanupTimeMarker(cfg) {
     );
 
   var newText = replaceColonPlaceholderLines(text, formatHourLabel(stepped));
-  newText = arrangeTimeMarkerRows(normalizeTimeMarkerText(removeEmptyTimestampLines(newText)));
+  newText = arrangeTimeMarkerRows(normalizeTimeMarkerText(removeEmptyTimestampLines(newText)), cfg);
 
   if (newText !== text) e.set(targetTextField, newText);
   return hasTimestampLines(newText);

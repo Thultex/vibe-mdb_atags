@@ -121,6 +121,8 @@ linkInputEntryToTarget({
   rowRoundMode: "round",
   recalcTarget: true,
   recalcSource: true,
+  postEntry: true,
+  postEntryName: "PostEntry",
   sourceDebugField: "Debug",
   map: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
@@ -152,6 +154,7 @@ refreshTargetFromInputEntries({
   ]
 });
 ```
+
 
 
 

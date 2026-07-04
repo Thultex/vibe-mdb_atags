@@ -7,6 +7,7 @@ eval(fso.OpenTextFile(addonPath, 1).ReadAll());
 var _currentEntry = null;
 var _libs = {};
 var _logs = [];
+var _postEntries = [];
 
 function fail(msg) {
   throw new Error(msg);
@@ -137,9 +138,18 @@ function log(msg) {
   _logs.push(String(msg));
 }
 
+function postEntry(e) {
+  _postEntries.push(e);
+}
+
+function customInputLinkerPostEntry(e) {
+  _postEntries.push(e);
+}
+
 function reset(input, dayEntries) {
   _currentEntry = input;
   _logs = [];
+  _postEntries = [];
   _libs = {
     DustingDay: makeLib(dayEntries || []),
     DustingInput: makeLib([])
@@ -149,6 +159,7 @@ function reset(input, dayEntries) {
 function resetWithLibs(current, libs) {
   _currentEntry = current;
   _logs = [];
+  _postEntries = [];
   _libs = libs;
 }
 
@@ -519,6 +530,101 @@ function testRecalcSourceAndTargetWhenConfigured() {
   assertEquals("recalc-result", result.recalculated.join(","), "target,source");
 }
 
+function testRunsPostEntryOnTargetWhenConfigured() {
+  var day = makeEntry({
+    Datum: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "post target",
+    InTag: [],
+    DayLinks: null
+  });
+
+  reset(input, [day]);
+
+  var result = linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Datum",
+    sourceDayLinkField: "DayLinks",
+    postEntry: true,
+    map: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertEquals("post-entry-target-count", _postEntries.length, 1);
+  assertSame("post-entry-target-entry", _postEntries[0], day);
+  assertEquals("post-entry-target-result", result.postEntries.join(","), "target");
+}
+
+function testRunsPostEntryOnSourceWhenConfigured() {
+  var day = makeEntry({
+    Datum: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "post source",
+    InTag: [],
+    DayLinks: null
+  });
+
+  reset(input, [day]);
+
+  var result = linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Datum",
+    sourceDayLinkField: "DayLinks",
+    postEntry: true,
+    postEntryTarget: "source",
+    map: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertEquals("post-entry-source-count", _postEntries.length, 1);
+  assertSame("post-entry-source-entry", _postEntries[0], input);
+  assertEquals("post-entry-source-result", result.postEntries.join(","), "source");
+}
+
+function testRunsNamedPostEntryFunctionWhenConfigured() {
+  var day = makeEntry({
+    Datum: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "post named",
+    InTag: [],
+    DayLinks: null
+  });
+
+  reset(input, [day]);
+
+  var result = linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Datum",
+    sourceDayLinkField: "DayLinks",
+    postEntry: true,
+    postEntryName: "customInputLinkerPostEntry",
+    map: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertEquals("post-entry-named-count", _postEntries.length, 1);
+  assertSame("post-entry-named-entry", _postEntries[0], day);
+  assertEquals("post-entry-named-result", result.postEntries.join(","), "target");
+}
+
 function testDebugDayLinkerAccessWritesDiagnostics() {
   var day = makeEntry({
     Date: "2020-02-02 09:00",
@@ -555,7 +661,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-name missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.32") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.34") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -567,7 +673,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.32") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.34") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -741,7 +847,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.32") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.34") < 0) {
     fail("error-debug-version missing");
   }
 
@@ -1116,6 +1222,9 @@ testExistingFunctionalSourceDayLinkWinsOverDateSearch();
 testBrokenSourceDayLinkFallsBackToDateSearch();
 testAlreadyLinkedInputCanAddNewMappedValuesOnRerun();
 testRecalcSourceAndTargetWhenConfigured();
+testRunsPostEntryOnTargetWhenConfigured();
+testRunsPostEntryOnSourceWhenConfigured();
+testRunsNamedPostEntryFunctionWhenConfigured();
 testDebugDayLinkerAccessWritesDiagnostics();
 testWriteOnlyTargetFieldsDoNotProduceFalseReadErrors();
 testNativeArrayLikeTagsAreUnpacked();
@@ -1134,6 +1243,7 @@ testRefreshDayRebuildClearsMappedTargetsBeforeApplyingLinkedInputs();
 testRefreshDayCanProcessOneSourceEntry();
 
 WScript.Echo("OK");
+
 
 
 

@@ -475,6 +475,20 @@ function testCleanupAcceptsTextFieldAlias() {
   assertEquals("cleanup-accepts-text-field-alias", entryObj.field("Note"), "0: StatusA, sa\u00B2");
 }
 
+function testCleanupMergesSameRowsWhenConfigured() {
+  var entryObj = makeEntry({
+    Note: "19: hallo\n19: das ist spannend\n20: weiter"
+  });
+
+  cleanupTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    mergeSameRows: true
+  });
+
+  assertEquals("cleanup-merges-same-rows", entryObj.field("Note"), "19: hallo; das ist spannend\n20: weiter");
+}
+
 function testCleanupReturnsFalseWhenNoMarkersRemain() {
   var entryObj = makeEntry({
     Note: "3: "
@@ -515,6 +529,7 @@ testCleanupRemovesTrailingEmptyTimestamp();
 testCleanupRemovesTrailingEmptyTimestampWithCarriageReturn();
 testCleanupRemovesNonBreakingSpaceTimestamp();
 testCleanupAcceptsTextFieldAlias();
+testCleanupMergesSameRowsWhenConfigured();
 testCleanupReturnsFalseWhenNoMarkersRemain();
 
 print("OK");

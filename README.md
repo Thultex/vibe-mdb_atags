@@ -144,11 +144,6 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
 - `B7` `addons/3_workflow/timeMarker.js` (Zeitmarker fuer Textfelder)
   - `appendTimeMarker()`
   - optionales Stundenlimit ueber `maxHours` (Default: `30`)
-**Dustingday Add-ons**
-- `B10` `addons/5_dusting-day/dustingDayCollector.js` (Dustingday-Tagesnotiz aus verlinkten Inputs)
-  - `updateDustingDayOutNote()`
-  - alter Refresh-/Experimentpfad, liest verlinkte Inputs und schreibt `OutNote`
-
 **Integration Add-ons**
 - `B8` `addons/6_integration/obsidianLinker.js` (Memento-zu-Obsidian Advanced URI)
   - `makeObsidianMementoUri()`
@@ -178,7 +173,6 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
 - `tests/test_tagPairParser.js`
 - `tests/test_tagCleaner.js`
 - `tests/test_timeMarker.js`
-- `tests/test_dustingDayCollector.js`
 - `tests/test_inputLinker.js`
 - `tests/test_syncLastFromLatest.js`
 - `tests/test_typedTextFields.js`
@@ -487,6 +481,7 @@ Fügt Zeitmarker wie `2:` oder `30,5:` in ein Textfeld ein und gruppiert sie bei
 - `appendTimeMarker()` gibt `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
 - `cleanupTimeMarker()` ist fuer `AfterEntry()` gedacht, ersetzt `: Text` wie `appendTimeMarker()`, erzeugt aber keinen neuen leeren Marker
 - `cleanupTimeMarker()` entfernt leere Marker wie `:` oder `3: ` und gibt `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
+- `cleanupTimeMarker({ mergeSameRows: true })` fuehrt gleiche Row-Marker zusammen, z. B. `19: hallo` + `19: das ist spannend` zu `19: hallo; das ist spannend`
 - `targetTextField` ist der normale Feldparameter; `textField` bleibt nur als Alias kompatibel
 
 Kurzbeispiele:
@@ -520,7 +515,8 @@ Anwendung in `AfterEntry()` zum Bereinigen ohne neuen leeren Marker:
 
 ```js
 cleanupTimeMarker({
-  targetTextField: "Notiz"
+  targetTextField: "Notiz",
+  mergeSameRows: true
 });
 ```
 
@@ -943,6 +939,7 @@ exportAtags({
   treeShowValues: false
 });
 ```
+
 
 
 

@@ -1,9 +1,11 @@
 /*
 ========================================
-#4 Input Linker Lib v0.32 (sys 2.30)
+#4 Input Linker Lib v0.34 (sys 2.30)
 ========================================
 
 Änderungen
+- PostEntry-Funktion kann per `postEntryName`/`postEntryFunctionName` oder String in `postEntryFunction` benannt werden
+- optionale PostEntry-Ausführung nach dem Input-Linking ergänzt: `postEntry: true` ruft `postEntry(targetEntry)`/`PostEntry(targetEntry)` auf
 - feste Core-Lib als inputLinker_lib; alte Day-/Failsafe-Funktionsnamen entfernt
 - Datei nach core_lib/inputLinker_lib.js verschoben und Day-Refresh-API vereinfacht
 - processMap, processMode, entries, findMatchingEntries, linkNewEntries und processAllEntries ergänzt
@@ -43,12 +45,12 @@ Usage
 
 linkInputEntryToTarget({
   targetLib: "DustingDay",
-  sourceDateField: "Date",
-  targetDateField: "Date",
+  sourceDateField: "Datum",
+  targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
   dayStartHour: 4,
   daySearchLimit: 10,
-  rowSourceMode: "realtime_since",
+  rowSourceMode: "realtime",
   rowStepHours: 0.1,
   rowRoundMode: "round",
   map: [
@@ -74,15 +76,15 @@ refreshTargetFromInputEntries({
 
 debugInputLinkerAccess({
   targetLib: "DustingDay",
-  sourceDateField: "Date",
-  targetDateField: "Date",
+  sourceDateField: "Datum",
+  targetDateField: "Datum",
   sourceDebugField: "Debug"
 });
 */
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.32";
+var DDL_VERSION = "0.34";
 
 function getInputLinkerLibVersion() {
   return {
@@ -925,6 +927,72 @@ function ddlRecalcEntry(entryObj, errors, label) {
   return false;
 }
 
+function ddlResolvePostEntryFunction(cfg) {
+  var fn = cfg && (cfg.postEntryFn || cfg.postEntryFunction);
+  var name = cfg && (cfg.postEntryName || cfg.postEntryFunctionName);
+
+  if (typeof fn === "function") return fn;
+  if (typeof fn === "string" && !name) name = fn;
+
+  if (typeof name === "string") {
+    if (name === "postEntry" && typeof postEntry === "function") return postEntry;
+    if (name === "PostEntry" && typeof PostEntry === "function") return PostEntry;
+
+    try {
+      if (typeof globalThis !== "undefined" && typeof globalThis[name] === "function") return globalThis[name];
+    } catch (e0) {}
+
+    try {
+      if (typeof this !== "undefined" && typeof this[name] === "function") return this[name];
+    } catch (e1) {}
+  }
+
+  if (typeof postEntry === "function") return postEntry;
+  if (typeof PostEntry === "function") return PostEntry;
+
+  return null;
+}
+
+function ddlRunPostEntry(entryObj, cfg, result, errors, label) {
+  var fn;
+
+  if (!entryObj) return false;
+
+  fn = ddlResolvePostEntryFunction(cfg);
+  if (!fn) {
+    if (errors) errors.push("PostEntry-Funktion fehlt");
+    return false;
+  }
+
+  try {
+    fn(entryObj);
+    result.postEntries.push(label || "entry");
+    return true;
+  } catch (e) {
+    if (errors) errors.push("PostEntry fehlgeschlagen: " + (label || "entry"));
+    return false;
+  }
+}
+
+function ddlRunConfiguredPostEntry(src, target, cfg, result, errors) {
+  var mode = cfg.postEntryTarget || cfg.postEntryMode || "target";
+
+  if (cfg.postEntry !== true && cfg.runPostEntry !== true) return;
+
+  if (mode === "source" || mode === "input") {
+    ddlRunPostEntry(src, cfg, result, errors, "source");
+    return;
+  }
+
+  if (mode === "both") {
+    ddlRunPostEntry(target, cfg, result, errors, "target");
+    ddlRunPostEntry(src, cfg, result, errors, "source");
+    return;
+  }
+
+  ddlRunPostEntry(target, cfg, result, errors, "target");
+}
+
 function ddlWriteErrors(errors, cfg) {
   var debugEntry;
   var debugField;
@@ -1126,6 +1194,7 @@ function linkInputEntryToTarget(cfg) {
     appended: [],
     tags: [],
     recalculated: [],
+    postEntries: [],
     errors: errors
   };
 
@@ -1181,6 +1250,7 @@ function linkInputEntryToTarget(cfg) {
   }
 
   ddlApplyMapFromSourceToDay(src, target, sourceDate, targetDate, cfg, result, errors);
+  ddlRunConfiguredPostEntry(src, target, cfg, result, errors);
 
   if (cfg.recalcTarget === true && ddlRecalcEntry(target, errors, "Target recalc fehlgeschlagen")) {
     result.recalculated.push("target");
@@ -1262,7 +1332,5 @@ function refreshTargetFromInputEntries(cfg) {
   ddlWriteErrors(errors, cfg);
   return result;
 }
-
-
 
 
