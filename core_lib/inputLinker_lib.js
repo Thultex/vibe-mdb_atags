@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.66 (sys 2.30)
+#4 Input Linker Lib v0.67 (sys 2.30)
 ========================================
 
 Änderungen
+- explizit uebergebene `entries` werden beim Receive nicht mehr durch Link-Wrapper-Vergleich ausgeskippt
 - leere/null Relation-Listen zaehlen nicht mehr als vorhandener DayLink
 - `receiveExistingLink` loest den vorhandenen Relation-Wert bewusst gegen die Ziel-Library auf, bevor geschrieben wird
 - linkInputEntryToTarget() kann mit `receiveExistingLink: true` bestehende Links bewusst fuer Updates verarbeiten
@@ -90,7 +91,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.66";
+var DDL_VERSION = "0.67";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1247,6 +1248,7 @@ function ddlSelectInputsForDay(target, targetDate, cfg, result, errors) {
   var processAllEntries = cfg.processAllEntries === true;
   var skipLinkedToOther = cfg.skipLinkedToOther !== false;
   var explicitEntries = cfg.entries || null;
+  var forceExplicitEntries = explicitEntries && cfg.forceExplicitEntries !== false;
   var entries = [];
   var selected = [];
   var i;
@@ -1266,6 +1268,12 @@ function ddlSelectInputsForDay(target, targetDate, cfg, result, errors) {
 
   for (i = 0; i < entries.length; i++) {
     src = entries[i];
+
+    if (forceExplicitEntries && !processAllEntries) {
+      ddlPushUniqueEntry(selected, src);
+      continue;
+    }
+
     linkedToTarget = ddlEntryLinksToDay(src, sourceDayLinkField, target, cfg.targetDateField || "Date");
     linkedToOther = !linkedToTarget && ddlInputLinkedToOtherDay(src, sourceDayLinkField, target);
 
