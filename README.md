@@ -659,6 +659,8 @@ tag:: _
 inhalt(:tag)
 "das ist ein Satz"(:Aussage)
 'tag name'#
+frage#'wer ist der coolste im land'
+frage#"wer ist der coolste im land"
 
 alias:
 @@emo: Emotion
@@ -939,6 +941,7 @@ exportAtags({
   treeShowValues: false
 });
 ```
+
 
 
 

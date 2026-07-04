@@ -240,6 +240,8 @@ assertItem("quoted-hash-decimal", "\"test das hier\"#4,1,", "test_das_hier", "4,
 assertItem("quoted-hash-int", "'und das'#7", "und_das", "+7", 7, null, null);
 assertItem("quoted-hash-single-text", "'und das'#'das das'", "und_das", "das das", "das das", null, null);
 assertItem("quoted-hash-double-text", "'und das'#\"das hier\"", "und_das", "das hier", "das hier", null, null);
+assertItem("hash-single-quoted-text", "die frage#'wer ist der coolste im land'", "frage", "wer ist der coolste im land", "wer ist der coolste im land", null, null);
+assertItem("hash-double-quoted-text", "die frage#\"wer ist der coolste im land\"", "frage", "wer ist der coolste im land", "wer ist der coolste im land", null, null);
 assertItem("hash-number", "test#5,", "test", "+5", 5, null, null);
 assertItem("hash-text", "test#string", "test", "string", "string", null, null);
 assertItem("row-plus", "5h: emo3", "emo", "+3", 3, 5, "h");

@@ -1,9 +1,12 @@
 /*
 ========================================
-#4 Input Linker Lib v0.36 (sys 2.30)
+#4 Input Linker Lib v0.39 (sys 2.30)
 ========================================
 
 Änderungen
+- optionale Zielöffnung nach Input-Linking ergänzt: `openTargetEntry: true`
+- geloeschte/Trash-Links in Input-Relationen werden ignoriert und vor neuer Zuordnung entfernt
+- Rebuild von `string_rows` leert nur Row-Zeilen und erhaelt freien Text/Tagbar im Zielfeld
 - vorhandenes Debug-Feld wird zu Beginn und bei erfolgreicher Durchführung geleert
 - PostEntry-Fehlerdebug gibt Funktionsname/Ziel und Fehlermeldung aus
 - PostEntry-Funktion kann per `postEntryName`/`postEntryFunctionName` oder String in `postEntryFunction` benannt werden
@@ -86,7 +89,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.36";
+var DDL_VERSION = "0.39";
 
 function getInputLinkerLibVersion() {
   return {
@@ -414,6 +417,25 @@ function ddlLineExists(text, line) {
   return false;
 }
 
+function ddlIsRowLine(line) {
+  return /^\s*\d+(?:[.,]\d+)?\s*:/.test(String(line || ""));
+}
+
+function ddlRemoveRowLines(text) {
+  var lines = ddlSplitLines(text);
+  var out = [];
+  var i;
+
+  for (i = 0; i < lines.length; i++) {
+    if (!ddlIsRowLine(lines[i])) out.push(lines[i]);
+  }
+
+  while (out.length && ddlTrim(out[0]) === "") out.shift();
+  while (out.length && ddlTrim(out[out.length - 1]) === "") out.pop();
+
+  return out.join("\n");
+}
+
 function ddlAppendLine(target, targetField, line, errors, cfg, unique) {
   var oldText = ddlSafeField(target, targetField, null, null);
   var wrote;
@@ -623,13 +645,63 @@ function ddlValidateTargetConfig(targetLib, targetDateField, map, cfg, errors) {
 
 function ddlFirstLinkedDay(src, sourceDayLinkField) {
   var links;
+  var i;
 
   if (!src || !sourceDayLinkField) return null;
 
   links = ddlToArray(ddlSafeField(src, sourceDayLinkField, null, null));
-  if (links.length > 0) return links[0];
+  for (i = 0; i < links.length; i++) {
+    if (!ddlIsDeletedEntry(links[i])) return links[i];
+  }
 
   return null;
+}
+
+function ddlEntryFlag(entryObj, names) {
+  var i;
+  var name;
+  var value;
+
+  if (!entryObj) return false;
+
+  for (i = 0; i < names.length; i++) {
+    name = names[i];
+
+    try {
+      if (typeof entryObj[name] === "function") {
+        value = entryObj[name]();
+        if (value === true || String(value).toLowerCase() === "true") return true;
+      }
+    } catch (e0) {}
+
+    try {
+      value = entryObj[name];
+      if (value === true || String(value).toLowerCase() === "true") return true;
+    } catch (e1) {}
+
+    try {
+      if (typeof entryObj.field === "function") {
+        value = entryObj.field(name);
+        if (value === true || String(value).toLowerCase() === "true") return true;
+      }
+    } catch (e2) {}
+  }
+
+  return false;
+}
+
+function ddlIsDeletedEntry(entryObj) {
+  return ddlEntryFlag(entryObj, [
+    "deleted",
+    "isDeleted",
+    "removed",
+    "isRemoved",
+    "trashed",
+    "isTrashed",
+    "trash",
+    "inTrash",
+    "isInTrash"
+  ]);
 }
 
 function ddlEntryId(entryObj) {
@@ -675,6 +747,7 @@ function ddlEntryLinksToDay(src, sourceDayLinkField, target) {
 
 function ddlCanUseLinkedDay(target) {
   if (!target) return false;
+  if (ddlIsDeletedEntry(target)) return false;
 
   try {
     if (typeof target.field === "function" && typeof target.set === "function") return true;
@@ -751,6 +824,7 @@ function ddlInputLinkedToOtherDay(src, sourceDayLinkField, target) {
 
   links = ddlToArray(ddlSafeField(src, sourceDayLinkField, null, null));
   for (i = 0; i < links.length; i++) {
+    if (ddlIsDeletedEntry(links[i])) continue;
     if (links[i] && !ddlSameEntry(links[i], target)) return true;
   }
 
@@ -800,7 +874,7 @@ function ddlClearMappedTargets(target, map, cfg, result, errors, forceAll) {
     if (forceAll !== true && itemMode !== "rebuild") continue;
 
     type = item.type || "string";
-    value = type === "tag" ? [] : "";
+    value = type === "tag" ? [] : (type === "string_rows" ? ddlRemoveRowLines(ddlSafeField(target, item.to, null, null)) : "");
 
     ddlSafeSet(target, item.to, value, errors, "Zielfeld konnte nicht geleert werden", cfg && cfg.strictWriteErrors === true);
     cleared[item.to] = true;
@@ -1015,6 +1089,74 @@ function ddlRunConfiguredPostEntry(src, target, cfg, result, errors) {
   ddlRunPostEntry(target, cfg, result, errors, "target");
 }
 
+function ddlOpenEntry(entryObj, cfg, result, label) {
+  var fn = cfg && (cfg.openEntryFn || cfg.openTargetFn || cfg.openFunction);
+  var methodNames = ["open", "show", "view", "edit", "openEntry", "showEntry", "viewEntry"];
+  var i;
+  var method;
+
+  result.openResult = {
+    attempted: true,
+    ok: false,
+    target: label || "entry",
+    method: "",
+    error: ""
+  };
+
+  if (!entryObj) {
+    result.openResult.error = "entry missing";
+    return false;
+  }
+
+  if (typeof fn === "function") {
+    try {
+      fn(entryObj);
+      result.openResult.ok = true;
+      result.openResult.method = "openFunction";
+      return true;
+    } catch (e0) {
+      result.openResult.error = e0 && e0.message ? e0.message : String(e0);
+      return false;
+    }
+  }
+
+  for (i = 0; i < methodNames.length; i++) {
+    method = methodNames[i];
+    try {
+      if (typeof entryObj[method] === "function") {
+        entryObj[method]();
+        result.openResult.ok = true;
+        result.openResult.method = method;
+        return true;
+      }
+    } catch (e1) {
+      result.openResult.error = e1 && e1.message ? e1.message : String(e1);
+      return false;
+    }
+  }
+
+  try {
+    if (typeof openEntry === "function") {
+      openEntry(entryObj);
+      result.openResult.ok = true;
+      result.openResult.method = "openEntry";
+      return true;
+    }
+  } catch (e2) {
+    result.openResult.error = e2 && e2.message ? e2.message : String(e2);
+    return false;
+  }
+
+  result.openResult.error = "no open method";
+  return false;
+}
+
+function ddlOpenConfiguredTarget(target, cfg, result) {
+  if (cfg.openTargetEntry === true || cfg.openTarget === true || cfg.openDayEntry === true) {
+    ddlOpenEntry(target, cfg, result, "target");
+  }
+}
+
 function ddlWriteErrors(errors, cfg) {
   var debugEntry;
   var debugField;
@@ -1227,6 +1369,7 @@ function linkInputEntryToTarget(cfg) {
     tags: [],
     recalculated: [],
     postEntries: [],
+    openResult: { attempted: false, ok: false, target: "", method: "", error: "" },
     errors: errors
   };
 
@@ -1263,6 +1406,9 @@ function linkInputEntryToTarget(cfg) {
   }
 
   linkedTarget = cfg.reuseExistingLink === false ? null : ddlFirstLinkedDay(src, sourceDayLinkField);
+  if (sourceDayLinkField && linkedTarget == null && ddlToArray(ddlSafeField(src, sourceDayLinkField, null, null)).length > 0) {
+    ddlSafeSet(src, sourceDayLinkField, null, errors, "DayLink-Feld konnte nicht bereinigt werden", cfg.strictWriteErrors === true);
+  }
   target = ddlCanUseLinkedDay(linkedTarget) ? linkedTarget : ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
 
   if (!target) {
@@ -1292,6 +1438,8 @@ function linkInputEntryToTarget(cfg) {
   if (cfg.recalcSource === true && ddlRecalcEntry(src, errors, "Source recalc fehlgeschlagen")) {
     result.recalculated.push("source");
   }
+
+  ddlOpenConfiguredTarget(target, cfg, result);
 
   if (errors.length) ddlWriteErrors(errors, cfg);
   else ddlClearDebugFieldIfExists(cfg);

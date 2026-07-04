@@ -123,6 +123,7 @@ linkInputEntryToTarget({
   recalcSource: true,
   postEntry: true,
   postEntryName: "PostEntry",
+  openTargetEntry: true,
   sourceDebugField: "Debug",
   map: [
     { from: "InNote", to: "Notiz", type: "string_rows" },

@@ -565,6 +565,36 @@ function testRunsPostEntryOnTargetWhenConfigured() {
   assertEquals("post-entry-target-result", result.postEntries.join(","), "target");
 }
 
+function testSuccessfulRunClearsExistingSourceDebugField() {
+  var day = makeEntry({
+    Datum: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "debug clear",
+    InTag: [],
+    DayLinks: null,
+    Debug: "alter fehler"
+  });
+
+  reset(input, [day]);
+
+  linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Datum",
+    sourceDayLinkField: "DayLinks",
+    sourceDebugField: "Debug",
+    map: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertEquals("successful-run-clears-source-debug", input.field("Debug"), "");
+}
+
 function testRunsPostEntryOnSourceWhenConfigured() {
   var day = makeEntry({
     Datum: "2020-02-02 09:00",
@@ -1215,6 +1245,38 @@ function testRefreshDayRebuildClearsMappedTargetsBeforeApplyingLinkedInputs() {
   assertEquals("refresh-rebuild-tags", day.field("OutTags").join(","), "freshTag");
 }
 
+function testRefreshDayRebuildKeepsFreeTextInStringRowsTarget() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "#tagbar\n\n9: stale\nfreier text\n10: alt",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 11:00",
+    InNote: "fresh",
+    InTag: [],
+    DayLinks: day
+  });
+
+  resetWithLibs(day, {
+    DustingInput: makeLib([input])
+  });
+
+  refreshTargetFromInputEntries({
+    inputLib: "DustingInput",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    processAllEntries: true,
+    processMode: "rebuild",
+    processMap: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertEquals("refresh-rebuild-keeps-free-text", day.field("OutNote"), "#tagbar\nfreier text\n11: fresh");
+}
+
 function testRefreshDayCanProcessOneSourceEntry() {
   var day = makeEntry({
     Date: "2020-02-02 09:00",
@@ -1248,6 +1310,39 @@ function testRefreshDayCanProcessOneSourceEntry() {
   assertEquals("refresh-one-note", day.field("OutNote"), "10: direkt");
 }
 
+function testSuccessfulRefreshClearsExistingTargetDebugField() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: [],
+    Debug: "alter fehler"
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "refresh debug",
+    InTag: [],
+    DayLinks: day
+  });
+
+  resetWithLibs(day, {
+    DustingInput: makeLib([input])
+  });
+
+  refreshTargetFromInputEntries({
+    inputLib: "DustingInput",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    processAllEntries: true,
+    targetDebugField: "Debug",
+    processMap: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertEquals("successful-refresh-clears-target-debug", day.field("Debug"), "");
+}
+
 testCreatesDayLinksSourceAndAppendsMappedFields();
 testDoesNotDuplicateSameLineOrTags();
 testStringTypeAppendsPlainTextWithoutRowPrefix();
@@ -1261,6 +1356,7 @@ testBrokenSourceDayLinkFallsBackToDateSearch();
 testAlreadyLinkedInputCanAddNewMappedValuesOnRerun();
 testRecalcSourceAndTargetWhenConfigured();
 testRunsPostEntryOnTargetWhenConfigured();
+testSuccessfulRunClearsExistingSourceDebugField();
 testRunsPostEntryOnSourceWhenConfigured();
 testRunsNamedPostEntryFunctionWhenConfigured();
 testPostEntryErrorIncludesFunctionAndMessage();
@@ -1279,9 +1375,15 @@ testRefreshDayLinksMatchingInputsAndAppends();
 testRefreshDayAppendAllAllowsDuplicateRowsAndTags();
 testRefreshDaySkipsInputsLinkedToOtherDayByDefault();
 testRefreshDayRebuildClearsMappedTargetsBeforeApplyingLinkedInputs();
+testRefreshDayRebuildKeepsFreeTextInStringRowsTarget();
 testRefreshDayCanProcessOneSourceEntry();
+testSuccessfulRefreshClearsExistingTargetDebugField();
 
 WScript.Echo("OK");
+
+
+
+
 
 
 

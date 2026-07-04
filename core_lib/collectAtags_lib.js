@@ -1,9 +1,10 @@
 /*
 ========================================
-#1 collectAtags Lib v1.58 (sys 2.30)
+#1 collectAtags Lib v1.59 (sys 2.30)
 ========================================
 
 Changes
+- parse quoted hash values after normal tag names, e.g. frage#"wer ist der coolste"
 - multiAliasTargets defaults to true for one alias token mapping to multiple tags
 - parse cumulative +/-, explicit null 00 and zero-decimal forms from issue #38
 - ignore template tag values `_` in `tag:_` and `tag:: _`
@@ -46,14 +47,14 @@ Changes
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.58",
+    version: "1.59",
     sysVersion: "2.30",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.58", "2.30", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.59", "2.30", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");
@@ -1178,6 +1179,25 @@ function collectAtags(cfg) {
         addParsedTagValue(m1[2] || "", raw1, items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw);
       }
 
+      // explicit tag with quoted hash value: frage#'text value' / frage#"text value"
+      var rxHashQuotedValue = /(^|[\s\n\r])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#(?:'([^']*)'|"([^"]*)")/g;
+      var mhq;
+      while ((mhq = rxHashQuotedValue.exec(parseLine)) !== null) {
+        var nameHQ = mhq[2];
+        var rawHQ = mhq[3] != null ? mhq[3] : (mhq[4] || "");
+
+        if (!nameHQ) continue;
+        if (isInsideAtagQuoteState(quoteState, mhq.index)) continue;
+
+        addResolvedTagValue(
+          nameHQ,
+          rawHQ,
+          items, seen, aliasMap,
+          currentRowValue, currentRowUnit, currentRowRaw,
+          false
+        );
+      }
+
       // explicit tag with hash and value: test#string / test#5,
       var rxHashValue = /(^|[\s\n\r])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#([^\s]+)/g;
       var mh;
@@ -1188,6 +1208,7 @@ function collectAtags(cfg) {
         rawH = String(rawH).replace(/,+$/g, "");
 
         if (!nameH || rawH === "") continue;
+        if (rawH.charAt(0) === "'" || rawH.charAt(0) === '"') continue;
         if (isInsideAtagQuoteState(quoteState, mh.index)) continue;
 
         addResolvedTagValue(
