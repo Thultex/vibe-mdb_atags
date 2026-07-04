@@ -41,9 +41,14 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Change: `dd-linker.js` v0.17 schreibt `debugDayLinkerAccess()` zusätzlich immer zeilenweise ins Memento-Log.
 - Change: `dd-linker.js` v0.19 schreibt Debug-Ausgaben als einen zusammenhängenden Log-Block und ergänzt Version/Zeitpunkt im Debug-Header.
 - Fix: `dd-linker.js` v0.20 behandelt nicht lesbare Zielwerte beim Anhängen als leer, solange `set()` funktioniert; dadurch verschwinden falsche Fehler für `OutNote`/`OutTags`.
+- Fix: `dd-linker.js` v0.21 entpackt Rhino `NativeArray`-/Java-Listenwerte für Tags, statt Objektstrings wie `org.mozilla.javascript.NativeArray@...` in `OutTags` zu schreiben.
+- Fix: `dd-linker.js` v0.22 liest Array-/NativeArray-artige Tags vor `.entries()`, damit keine Index-Wert-Paare wie `0,tag` entstehen; falsche Ziel-Schreibfehler werden nur noch mit `strictWriteErrors: true` gemeldet.
+- Fix: `dd-linker.js` v0.23 ordnet Inputs über `dayStartHour` zu, Standard 4 Uhr; dadurch werden vorhandene DustingDay-Einträge über die fachliche Tagesgrenze wiederverwendet statt neu erstellt.
+- Change: `dd-linker.js` v0.24 beginnt Debug-Ausgaben einheitlich mit Datei, Version und Zeitpunkt und schreibt Fehlerdebug wieder als einen zusammenhängenden Log-Block.
+- Fix: `dd-linker.js` v0.25 prüft zuerst gleiche Kalendertage in den letzten `daySearchLimit` Day-Einträgen und nutzt den Vortag nur als Frühzeit-Fallback bis `dayStartHour`.
 - Test: `tests/test_dd_linker.js` deckt Tageserstellung, Source-Link, erste Notizzeile, Duplikatschutz und relative Row-Zeit ab.
 - Test: `tests/test_dustingDayCollector.js` deckt Array-/Java-Listen-Relationen, Feldmapping, Row-Rundung und leere Links ab.
-- *Versionen: Dusting Day Collector v0.13, Dusting Day Linker v0.20.*
+- *Versionen: Dusting Day Collector v0.13, Dusting Day Linker v0.25.*
 
 ### 2026-05-20 - (ca. 0,5h)
 

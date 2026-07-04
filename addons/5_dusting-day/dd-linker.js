@@ -1,9 +1,14 @@
 /*
 ========================================
-B11 Dusting Day Linker v0.21 (sys 2.30)
+B11 Dusting Day Linker v0.25 (sys 2.30)
 ========================================
 
 Änderungen
+- Tageszuordnung prüft zuerst gleiche Kalendertage in den letzten daySearchLimit Einträgen und nutzt den Vortag nur als Frühzeit-Fallback
+- Debug-Ausgaben beginnen einheitlich mit file, version und time und werden als ein Log-Block geschrieben
+- Tageszuordnung nutzt dayStartHour, Standard 4, als Grenze für den Vortags-Fallback
+- liest Array-/NativeArray-artige Tags nicht mehr über entries(), damit keine Index-Wert-Paare wie 0,tag entstehen
+- meldet Schreibfehler nur noch mit strictWriteErrors: true, weil Memento set() teils trotz erfolgreichem Schreiben werfen kann
 - Rhino NativeArray / Java-Listen werden für Tags zuverlässig in Einzelwerte entpackt
 - nicht lesbare Zielwerte werden beim Anhängen als leer behandelt, solange set() funktioniert
 - Debug-Log wird als ein zusammenhängender Block ausgegeben
@@ -33,6 +38,8 @@ appendToDayEntry({
   sourceDateField: "Date",
   targetDateField: "Date",
   sourceDayLinkField: "DayLinks",
+  dayStartHour: 4,
+  daySearchLimit: 10,
   rowMode: "clock",
   rowStepHours: 0.5,
   map: [
@@ -48,6 +55,9 @@ debugDayLinkerAccess({
   sourceDebugField: "Debug"
 });
 */
+
+var DDL_FILE = "dd-linker.js";
+var DDL_VERSION = "0.25";
 
 function ddlTrim(s) {
   return String(s || "").replace(/^\s+|\s+$/g, "");
@@ -106,8 +116,21 @@ function ddlToArray(val) {
 
   if (val == null || val === "") return out;
 
+  len = ddlListLength(list);
+  if (len != null) {
+    for (i = 0; i < len; i++) out.push(ddlListItem(list, i));
+    return out;
+  }
+
   try {
-    if (val && typeof val.entries === "function") list = val.entries();
+    if (typeof list.toArray === "function") {
+      list = list.toArray();
+      len = ddlListLength(list);
+      if (len != null) {
+        for (i = 0; i < len; i++) out.push(ddlListItem(list, i));
+        return out;
+      }
+    }
   } catch (e0) {}
 
   try {
@@ -132,18 +155,23 @@ function ddlToArray(val) {
     }
   } catch (e3) {}
 
-  len = ddlListLength(list);
-  if (len != null) {
-    for (i = 0; i < len; i++) out.push(ddlListItem(list, i));
-    return out;
-  }
-
   try {
-    if (typeof list.toArray === "function") {
-      list = list.toArray();
-      len = ddlListLength(list);
-      if (len != null) {
-        for (i = 0; i < len; i++) out.push(ddlListItem(list, i));
+    if (list && typeof list.entries === "function") {
+      list = list.entries();
+
+      if (list && typeof list.iterator === "function") list = list.iterator();
+
+      if (list && typeof list.hasNext === "function" && typeof list.next === "function") {
+        while (list.hasNext()) out.push(list.next());
+        return out;
+      }
+
+      if (list && typeof list.next === "function") {
+        while (true) {
+          next = list.next();
+          if (!next || next.done === true) break;
+          out.push(next.value);
+        }
         return out;
       }
     }
@@ -172,14 +200,14 @@ function ddlSafeField(entryObj, fieldName, errors, label) {
   }
 }
 
-function ddlSafeSet(entryObj, fieldName, value, errors, label) {
+function ddlSafeSet(entryObj, fieldName, value, errors, label, strictWriteErrors) {
   if (!entryObj || !fieldName) return false;
 
   try {
     entryObj.set(fieldName, value);
     return true;
   } catch (e) {
-    if (errors) errors.push((label || "Feld konnte nicht gesetzt werden") + ": " + fieldName);
+    if (errors && strictWriteErrors === true) errors.push((label || "Feld konnte nicht gesetzt werden") + ": " + fieldName);
     return false;
   }
 }
@@ -223,6 +251,35 @@ function ddlSameCalendarDay(a, b) {
   return a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate();
+}
+
+function ddlDayStartHour(cfg) {
+  var h = cfg && cfg.dayStartHour != null ? Number(cfg.dayStartHour) : 4;
+  if (isNaN(h) || h < 0 || h >= 24) return 4;
+  return h;
+}
+
+function ddlDaySearchLimit(cfg) {
+  var n = cfg && cfg.daySearchLimit != null ? Number(cfg.daySearchLimit) : 10;
+  if (isNaN(n)) return 10;
+  if (n < 0) return 0;
+  return Math.floor(n);
+}
+
+function ddlStartOfCalendarDay(dateObj) {
+  return new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), 0, 0, 0, 0);
+}
+
+function ddlPreviousCalendarDay(dateObj) {
+  var d = ddlStartOfCalendarDay(dateObj);
+  d.setDate(d.getDate() - 1);
+  return d;
+}
+
+function ddlIsBeforeDayStartLimit(dateObj, cfg) {
+  var boundary = ddlStartOfCalendarDay(dateObj);
+  boundary.setHours(ddlDayStartHour(cfg), 0, 0, 0);
+  return dateObj.getTime() < boundary.getTime();
 }
 
 function ddlStepHours(hours, step, mode) {
@@ -314,7 +371,7 @@ function ddlLineExists(text, line) {
   return false;
 }
 
-function ddlAppendUniqueLine(target, targetField, line, errors) {
+function ddlAppendUniqueLine(target, targetField, line, errors, cfg) {
   var oldText = ddlSafeField(target, targetField, null, null);
   var wrote;
 
@@ -325,13 +382,30 @@ function ddlAppendUniqueLine(target, targetField, line, errors) {
   if (ddlLineExists(oldText, line)) return false;
 
   if (ddlTrim(oldText) !== "") oldText += "\n";
-  wrote = ddlSafeSet(target, targetField, oldText + line, errors, "Zielfeld konnte nicht geschrieben werden");
+  wrote = ddlSafeSet(target, targetField, oldText + line, errors, "Zielfeld konnte nicht geschrieben werden", cfg && cfg.strictWriteErrors === true);
   return wrote;
 }
 
 function ddlTagText(tag) {
+  var parts;
+  var i;
+  var text;
+
   if (tag == null) return "";
-  return ddlTrim(tag);
+
+  if (ddlListLength(tag) != null && !ddlIsString(tag)) {
+    parts = ddlToArray(tag);
+    for (i = parts.length - 1; i >= 0; i--) {
+      text = ddlTagText(parts[i]);
+      if (text && !/^\d+$/.test(text)) return text;
+    }
+    return "";
+  }
+
+  text = ddlTrim(tag);
+  if (text.indexOf("org.mozilla.javascript.NativeArray@") === 0) return "";
+  if (text.indexOf("[object ") === 0) return "";
+  return text;
 }
 
 function ddlTagExists(tags, tag) {
@@ -347,7 +421,7 @@ function ddlTagExists(tags, tag) {
   return false;
 }
 
-function ddlAppendUniqueTags(target, targetField, value, errors) {
+function ddlAppendUniqueTags(target, targetField, value, errors, cfg) {
   var current = ddlToArray(ddlSafeField(target, targetField, null, null));
   var incoming = ddlToArray(value);
   var changed = false;
@@ -362,7 +436,7 @@ function ddlAppendUniqueTags(target, targetField, value, errors) {
     }
   }
 
-  if (changed) return ddlSafeSet(target, targetField, current, errors, "Tag-Zielfeld konnte nicht geschrieben werden");
+  if (changed) return ddlSafeSet(target, targetField, current, errors, "Tag-Zielfeld konnte nicht geschrieben werden", cfg && cfg.strictWriteErrors === true);
   return false;
 }
 
@@ -390,12 +464,23 @@ function ddlInferType(value) {
 
 function ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg) {
   var entries = ddlToArray(targetLib.entries ? targetLib.entries() : []);
+  var limit = ddlDaySearchLimit(cfg);
+  var max = limit > 0 && limit < entries.length ? limit : entries.length;
+  var previousDay;
   var i;
   var d;
 
-  for (i = 0; i < entries.length; i++) {
+  for (i = 0; i < max; i++) {
     d = ddlToDate(ddlSafeField(entries[i], targetDateField, null, null));
     if (ddlSameCalendarDay(d, sourceDate)) return entries[i];
+  }
+
+  if (ddlIsBeforeDayStartLimit(sourceDate, cfg)) {
+    previousDay = ddlPreviousCalendarDay(sourceDate);
+    for (i = 0; i < max; i++) {
+      d = ddlToDate(ddlSafeField(entries[i], targetDateField, null, null));
+      if (ddlSameCalendarDay(d, previousDay)) return entries[i];
+    }
   }
 
   return null;
@@ -511,7 +596,7 @@ function ddlApplyMapFromSourceToDay(src, target, sourceDate, targetDate, cfg, re
     type = item.type || ddlInferType(value);
 
     if (type === "tag") {
-      if (ddlAppendUniqueTags(target, item.to, value, errors)) result.tags.push(item.to);
+      if (ddlAppendUniqueTags(target, item.to, value, errors, cfg)) result.tags.push(item.to);
       continue;
     }
 
@@ -519,7 +604,7 @@ function ddlApplyMapFromSourceToDay(src, target, sourceDate, targetDate, cfg, re
     if (!text) continue;
 
     line = (row ? row : "?") + ": " + text;
-    if (ddlAppendUniqueLine(target, item.to, line, errors)) result.appended.push(item.to);
+    if (ddlAppendUniqueLine(target, item.to, line, errors, cfg)) result.appended.push(item.to);
   }
 }
 
@@ -539,23 +624,21 @@ function ddlRecalcEntry(entryObj, errors, label) {
 }
 
 function ddlWriteErrors(errors, cfg) {
-  var i;
   var debugEntry;
   var debugField;
+  var lines;
 
   if (!errors || !errors.length) return;
 
-  for (i = 0; i < errors.length; i++) {
-    try {
-      log(errors[i]);
-    } catch (e0) {}
-  }
+  lines = ddlDebugHeader("DEBUG Dusting Day Linker");
+  lines = lines.concat(errors);
+  ddlLogLines(lines);
 
   debugEntry = cfg && cfg.debugEntry;
   debugField = cfg && cfg.debugField;
 
   if (debugEntry && debugField) {
-    ddlSafeSet(debugEntry, debugField, errors.join("\n"), null, null);
+    ddlSafeSet(debugEntry, debugField, lines.join("\n"), null, null);
   }
 }
 
@@ -583,6 +666,15 @@ function ddlFormatDebugTime(dateObj) {
     d.getFullYear() + " " +
     ddlPad2(d.getHours()) + ":" +
     ddlPad2(d.getMinutes());
+}
+
+function ddlDebugHeader(title) {
+  return [
+    "file: " + DDL_FILE,
+    "version: " + DDL_VERSION,
+    "time: " + ddlFormatDebugTime(new Date()),
+    title || "DEBUG Dusting Day Linker"
+  ];
 }
 
 function ddlDescribeValue(val) {
@@ -629,12 +721,12 @@ function debugDayLinkerAccess(cfg) {
   var created;
   var canCreate = cfg.testCreate === true;
 
-  lines.push("DEBUG Dusting Day Linker");
-  lines.push("version: 0.19");
-  lines.push("time: " + ddlFormatDebugTime(new Date()));
+  lines = ddlDebugHeader("DEBUG Dusting Day Linker");
   lines.push("targetLib: " + targetLibName);
   lines.push("sourceDateField: " + sourceDateField);
   lines.push("targetDateField: " + targetDateField);
+  lines.push("dayStartHour: " + ddlDayStartHour(cfg));
+  lines.push("daySearchLimit: " + ddlDaySearchLimit(cfg));
 
   sourceDateRaw = ddlSafeField(src, sourceDateField, null, null);
   sourceDate = ddlToDate(sourceDateRaw);
@@ -714,7 +806,7 @@ function appendToDayEntry(cfg) {
   var errors = [];
   var src = cfg.entryObj || entry();
   var sourceDateField = cfg.sourceDateField || "Date";
-  var targetDateField = cfg.targetDateField || "Datum";
+  var targetDateField = cfg.targetDateField || "Date";
   var sourceDayLinkField = cfg.sourceDayLinkField || "DayLinks";
   var sourceDate = ddlToDate(ddlSafeField(src, sourceDateField, errors, "Quell-Datumsfeld fehlt"));
   var targetLib;
@@ -778,7 +870,7 @@ function appendToDayEntry(cfg) {
   targetDate = ddlToDate(ddlSafeField(target, targetDateField, null, null)) || sourceDate;
 
   if (sourceDayLinkField) {
-    result.linked = ddlSafeSet(src, sourceDayLinkField, target, errors, "DayLink-Feld fehlt oder ungültig");
+    result.linked = ddlSafeSet(src, sourceDayLinkField, target, errors, "DayLink-Feld fehlt oder ungültig", cfg.strictWriteErrors === true);
   }
 
   ddlApplyMapFromSourceToDay(src, target, sourceDate, targetDate, cfg, result, errors);
