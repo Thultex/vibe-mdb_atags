@@ -707,6 +707,7 @@ function testAlreadyLinkedInputDoesNotRewriteRelationOnRerun() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processExistingLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
@@ -787,6 +788,7 @@ function testAlreadyLinkedInputRecognizesRelationWrapperByDate() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processExistingLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
@@ -1087,6 +1089,7 @@ function testPostEntryDoesNotLoseFreeTextInStringRowsTarget() {
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
+    processExistingLink: true,
     postEntry: true,
     postEntryName: "destructiveRowsOnlyPostEntry",
     map: [
@@ -1167,7 +1170,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-name missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.52") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.53") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -1179,7 +1182,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.52") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.53") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -1353,7 +1356,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.52") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.53") < 0) {
     fail("error-debug-version missing");
   }
 

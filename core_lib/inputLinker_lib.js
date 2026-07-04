@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.53 (sys 2.30)
+#4 Input Linker Lib v0.54 (sys 2.30)
 ========================================
 
 Änderungen
+- erweitert debugInputLinkerAccess() um entry()/values()/field()-Kontext, DayLink-ID und findById-Auflösung
 - verarbeitet vorhandene DayLinks im Input-Trigger nicht mehr automatisch; Updates bestehender Inputs werden mit `processExistingLink: true` explizit freigeschaltet
 - loest vorhandene DayLinks bevorzugt per targetLib.findById(linked.id) auf und behandelt entry.deleted als primaeren Papierkorb-Indikator
 - schreibt standardmaessig nicht mehr direkt in Entry-Objekte aus Relation-Feldern; verlinkte Days werden zuerst gegen targetLib.entries() aufgeloest
@@ -102,7 +103,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.53";
+var DDL_VERSION = "0.54";
 
 function getInputLinkerLibVersion() {
   return {
@@ -257,6 +258,28 @@ function ddlSafeField(entryObj, fieldName, errors, label) {
     if (errors) errors.push((label || "Feld fehlt") + ": " + fieldName);
     return null;
   }
+}
+
+function ddlSafeValuesField(entryObj, fieldName) {
+  var values;
+
+  if (!entryObj || !fieldName) return null;
+
+  try {
+    if (typeof entryObj.values !== "function") return null;
+    values = entryObj.values();
+    if (!values) return null;
+    return values[fieldName];
+  } catch (e) {
+    return null;
+  }
+}
+
+function ddlSafeTriggerFieldValue() {
+  try {
+    if (typeof field === "function") return field();
+  } catch (e) {}
+  return null;
 }
 
 function ddlSafeSet(entryObj, fieldName, value, errors, label, strictWriteErrors) {
@@ -1595,11 +1618,17 @@ function debugInputLinkerAccess(cfg) {
   var targetDateField = cfg.targetDateField || "Date";
   var lines = [];
   var sourceDateRaw;
+  var sourceDateFromValuesRaw;
+  var triggerFieldRaw;
   var sourceDate;
   var targetLib;
   var entries;
   var first;
   var firstDateRaw;
+  var sourceLinks;
+  var firstLink;
+  var firstLinkId;
+  var firstLinkFound;
   var created;
   var canCreate = cfg.testCreate === true;
 
@@ -1612,11 +1641,27 @@ function debugInputLinkerAccess(cfg) {
   lines.push("rowSourceMode: " + (cfg.rowSourceMode || cfg.rowMode || "realtime"));
   lines.push("rowStepHours: " + (cfg.rowStepHours != null ? cfg.rowStepHours : 0.5));
   lines.push("rowRoundMode: " + (cfg.rowRoundMode || cfg.roundMode || "round"));
+  lines.push("source entry: " + ddlDescribeValue(src));
+  lines.push("source entry id: " + ddlEntryId(src));
+  lines.push("source entry deleted: " + ddlIsDeletedEntry(src));
 
   sourceDateRaw = ddlSafeField(src, sourceDateField, null, null);
+  sourceDateFromValuesRaw = ddlSafeValuesField(src, sourceDateField);
+  triggerFieldRaw = ddlSafeTriggerFieldValue();
   sourceDate = ddlToDate(sourceDateRaw);
   lines.push("source date raw: " + ddlDescribeValue(sourceDateRaw));
+  lines.push("source date values raw: " + ddlDescribeValue(sourceDateFromValuesRaw));
+  lines.push("trigger field() raw: " + ddlDescribeValue(triggerFieldRaw));
   lines.push("source date parsed: " + (sourceDate ? sourceDate.toString() : "null"));
+
+  sourceLinks = ddlToArray(ddlSafeField(src, cfg.sourceDayLinkField || "DayLinks", null, null));
+  firstLink = sourceLinks.length ? sourceLinks[0] : null;
+  firstLinkId = ddlEntryId(firstLink);
+  lines.push("sourceDayLinkField: " + (cfg.sourceDayLinkField || "DayLinks"));
+  lines.push("source DayLinks length: " + sourceLinks.length);
+  lines.push("source DayLink[0]: " + ddlDescribeValue(firstLink));
+  lines.push("source DayLink[0] id: " + firstLinkId);
+  lines.push("source DayLink[0] deleted: " + ddlIsDeletedEntry(firstLink));
 
   try {
     targetLib = libByName(targetLibName);
