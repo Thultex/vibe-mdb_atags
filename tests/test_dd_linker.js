@@ -329,7 +329,7 @@ function testNewInputAddsMissingTagsToExistingDay() {
   assertEquals("new-input-tags-merged", day.field("OutTags").join(","), "müde,erfolg");
 }
 
-function testReusesExistingSourceDayLinkBeforeDateSearch() {
+function testExistingFunctionalSourceDayLinkWinsOverDateSearch() {
   var linkedDay = makeEntry({
     Datum: "2020-02-02 09:00",
     OutNote: "",
@@ -359,9 +359,75 @@ function testReusesExistingSourceDayLinkBeforeDateSearch() {
     ]
   });
 
-  assertSame("reuse-existing-link-target", result.targetEntry, linkedDay);
-  assertEquals("reuse-existing-link-no-create", result.created, false);
-  assertEquals("reuse-existing-link-outnote", linkedDay.field("OutNote"), "10: nutzt link");
+  assertSame("functional-link-wins-target", result.targetEntry, linkedDay);
+  assertEquals("functional-link-wins-no-create", result.created, false);
+  assertEquals("functional-link-wins-outnote", linkedDay.field("OutNote"), "10: nutzt link");
+  assertEquals("functional-link-wins-other-empty", otherDay.field("OutNote"), "");
+  assertSame("functional-link-wins-source-kept", input.field("DayLinks"), linkedDay);
+}
+
+function testBrokenSourceDayLinkFallsBackToDateSearch() {
+  var brokenLink = {};
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "datum fallback",
+    InTag: [],
+    DayLinks: brokenLink
+  });
+
+  reset(input, [day]);
+
+  var result = appendToDayEntry({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    map: [
+      { from: "InNote", to: "OutNote", type: "string" }
+    ]
+  });
+
+  assertSame("broken-link-date-target", result.targetEntry, day);
+  assertEquals("broken-link-date-no-create", result.created, false);
+  assertEquals("broken-link-date-outnote", day.field("OutNote"), "10: datum fallback");
+  assertSame("broken-link-date-relinked", input.field("DayLinks"), day);
+}
+
+function testAlreadyLinkedInputCanAddNewMappedValuesOnRerun() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "10: alt",
+    OutTags: ["alt"]
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "neu",
+    InTag: ["alt", "neu"],
+    DayLinks: day
+  });
+
+  reset(input, [day]);
+
+  var result = appendToDayEntry({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    map: [
+      { from: "InNote", to: "OutNote", type: "string" },
+      { from: "InTag", to: "OutTags", type: "tag" }
+    ]
+  });
+
+  assertSame("rerun-linked-target", result.targetEntry, day);
+  assertEquals("rerun-linked-created", result.created, false);
+  assertEquals("rerun-linked-outnote", day.field("OutNote"), "10: alt\n10: neu");
+  assertEquals("rerun-linked-outtags", day.field("OutTags").join(","), "alt,neu");
 }
 
 function testRecalcSourceAndTargetWhenConfigured() {
@@ -428,7 +494,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-entry-count missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.25") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.27") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -440,7 +506,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.25") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.27") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -610,7 +676,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.25") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.27") < 0) {
     fail("error-debug-version missing");
   }
 
@@ -794,7 +860,9 @@ testSinceFirstUsesTargetDateAsZero();
 testWrongTargetDateFieldOnlyBlocksInStrictMode();
 testNonStrictTargetDateFieldAllowsCreate();
 testNewInputAddsMissingTagsToExistingDay();
-testReusesExistingSourceDayLinkBeforeDateSearch();
+testExistingFunctionalSourceDayLinkWinsOverDateSearch();
+testBrokenSourceDayLinkFallsBackToDateSearch();
+testAlreadyLinkedInputCanAddNewMappedValuesOnRerun();
 testRecalcSourceAndTargetWhenConfigured();
 testDebugDayLinkerAccessWritesDiagnostics();
 testWriteOnlyTargetFieldsDoNotProduceFalseReadErrors();

@@ -1,9 +1,10 @@
 /*
 ========================================
-B11 Dusting Day Linker v0.25 (sys 2.30)
+B11 Dusting Day Linker v0.27 (sys 2.30)
 ========================================
 
 Änderungen
+- brauchbare vorhandene DayLinks gewinnen wieder, der Feldabgleich läuft danach aber immer; Datumssuche ist Fallback
 - Tageszuordnung prüft zuerst gleiche Kalendertage in den letzten daySearchLimit Einträgen und nutzt den Vortag nur als Frühzeit-Fallback
 - Debug-Ausgaben beginnen einheitlich mit file, version und time und werden als ein Log-Block geschrieben
 - Tageszuordnung nutzt dayStartHour, Standard 4, als Grenze für den Vortags-Fallback
@@ -57,7 +58,7 @@ debugDayLinkerAccess({
 */
 
 var DDL_FILE = "dd-linker.js";
-var DDL_VERSION = "0.25";
+var DDL_VERSION = "0.27";
 
 function ddlTrim(s) {
   return String(s || "").replace(/^\s+|\s+$/g, "");
@@ -554,6 +555,16 @@ function ddlFirstLinkedDay(src, sourceDayLinkField) {
   return null;
 }
 
+function ddlCanUseLinkedDay(target) {
+  if (!target) return false;
+
+  try {
+    if (typeof target.field === "function" && typeof target.set === "function") return true;
+  } catch (e0) {}
+
+  return false;
+}
+
 function ddlCreateDayEntry(targetLib, sourceDate, targetDateField, cfg, errors) {
   var values = {};
   var target;
@@ -810,6 +821,7 @@ function appendToDayEntry(cfg) {
   var sourceDayLinkField = cfg.sourceDayLinkField || "DayLinks";
   var sourceDate = ddlToDate(ddlSafeField(src, sourceDateField, errors, "Quell-Datumsfeld fehlt"));
   var targetLib;
+  var linkedTarget;
   var target;
   var targetDate;
   var result = {
@@ -853,8 +865,8 @@ function appendToDayEntry(cfg) {
     return result;
   }
 
-  target = cfg.reuseExistingLink === false ? null : ddlFirstLinkedDay(src, sourceDayLinkField);
-  target = target || ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
+  linkedTarget = cfg.reuseExistingLink === false ? null : ddlFirstLinkedDay(src, sourceDayLinkField);
+  target = ddlCanUseLinkedDay(linkedTarget) ? linkedTarget : ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
 
   if (!target) {
     target = ddlCreateDayEntry(targetLib, sourceDate, targetDateField, cfg, errors);

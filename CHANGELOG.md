@@ -46,9 +46,11 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Fix: `dd-linker.js` v0.23 ordnet Inputs über `dayStartHour` zu, Standard 4 Uhr; dadurch werden vorhandene DustingDay-Einträge über die fachliche Tagesgrenze wiederverwendet statt neu erstellt.
 - Change: `dd-linker.js` v0.24 beginnt Debug-Ausgaben einheitlich mit Datei, Version und Zeitpunkt und schreibt Fehlerdebug wieder als einen zusammenhängenden Log-Block.
 - Fix: `dd-linker.js` v0.25 prüft zuerst gleiche Kalendertage in den letzten `daySearchLimit` Day-Einträgen und nutzt den Vortag nur als Frühzeit-Fallback bis `dayStartHour`.
+- Fix: `dd-linker.js` v0.26 lässt vorhandene `DayLinks` den Abgleich nicht mehr blockieren; die Datumssuche in `DustingDay` gewinnt, ein bestehender Link dient nur noch als Fallback.
+- Fix: `dd-linker.js` v0.27 lässt brauchbare vorhandene `DayLinks` wieder gewinnen, führt den Feldabgleich aber bei jedem Lauf erneut aus; kaputte Links fallen auf die Datumssuche zurück.
 - Test: `tests/test_dd_linker.js` deckt Tageserstellung, Source-Link, erste Notizzeile, Duplikatschutz und relative Row-Zeit ab.
 - Test: `tests/test_dustingDayCollector.js` deckt Array-/Java-Listen-Relationen, Feldmapping, Row-Rundung und leere Links ab.
-- *Versionen: Dusting Day Collector v0.13, Dusting Day Linker v0.25.*
+- *Versionen: Dusting Day Collector v0.13, Dusting Day Linker v0.27.*
 
 ### 2026-05-20 - (ca. 0,5h)
 
