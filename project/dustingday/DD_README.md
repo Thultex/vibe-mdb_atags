@@ -123,6 +123,7 @@ debugDayLinkerAccess({
 ```
 
 Damit wird in `DustingInput.Debug` sichtbar, ob `libByName("DustingDay")`, `entries()` und optional `create()` erreichbar sind. Einen Test-Create nur bewusst mit `testCreate: true` aktivieren.
+Die Debug-Ausgabe wird zusätzlich immer per `log()` ausgegeben.
 
 Zielablauf:
 

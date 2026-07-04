@@ -373,8 +373,24 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-entry-count missing");
   }
 
+  if (String(input.field("Debug")).indexOf("version: 0.19") < 0) {
+    fail("debug-linker-version missing");
+  }
+
+  if (String(input.field("Debug")).indexOf("time: ") < 0) {
+    fail("debug-linker-time missing");
+  }
+
   if (_logs.join("\n").indexOf("DEBUG Dusting Day Linker") < 0) {
     fail("debug-linker-log missing");
+  }
+
+  if (_logs.join("\n").indexOf("version: 0.19") < 0) {
+    fail("debug-linker-log-version missing");
+  }
+
+  if (_logs.length !== 1) {
+    fail("debug-linker-log-should-be-single-block");
   }
 }
 

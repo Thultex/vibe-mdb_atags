@@ -1,9 +1,11 @@
 /*
 ========================================
-B11 Dusting Day Linker v0.17 (sys 2.30)
+B11 Dusting Day Linker v0.19 (sys 2.30)
 ========================================
 
 Änderungen
+- Debug-Log wird als ein zusammenhängender Block ausgegeben
+- Debug-Header enthält Version und Zeitpunkt
 - Debug-Ausgaben werden zusätzlich immer per log() ausgegeben
 - unterstützt Iterator-Rückgaben von entries()
 - Debug-Funktion für Ziel-Library-Zugriff ergänzt
@@ -538,9 +540,23 @@ function ddlLogLine(line) {
 }
 
 function ddlLogLines(lines) {
-  var i;
   if (!lines) return;
-  for (i = 0; i < lines.length; i++) ddlLogLine(lines[i]);
+  ddlLogLine(lines.join("\n"));
+}
+
+function ddlPad2(n) {
+  n = Number(n);
+  if (isNaN(n)) n = 0;
+  return n < 10 ? "0" + n : String(n);
+}
+
+function ddlFormatDebugTime(dateObj) {
+  var d = dateObj || new Date();
+  return ddlPad2(d.getDate()) + "." +
+    ddlPad2(d.getMonth() + 1) + "." +
+    d.getFullYear() + " " +
+    ddlPad2(d.getHours()) + ":" +
+    ddlPad2(d.getMinutes());
 }
 
 function ddlDescribeValue(val) {
@@ -588,7 +604,8 @@ function debugDayLinkerAccess(cfg) {
   var canCreate = cfg.testCreate === true;
 
   lines.push("DEBUG Dusting Day Linker");
-  lines.push("version: 0.15");
+  lines.push("version: 0.19");
+  lines.push("time: " + ddlFormatDebugTime(new Date()));
   lines.push("targetLib: " + targetLibName);
   lines.push("sourceDateField: " + sourceDateField);
   lines.push("targetDateField: " + targetDateField);
