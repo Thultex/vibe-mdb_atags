@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.43 (sys 2.30)
+#4 Input Linker Lib v0.44 (sys 2.30)
 ========================================
 
 Änderungen
+- Relation-Felder werden ueber `entry.link(field, entry)` verknuepft; `set(field, entry)` wird vermieden
 - schreibt `sourceDayLinkField` nicht erneut, wenn der Input bereits mit dem Ziel-Day verlinkt ist
 - vorhandene DayLinks werden nur wiederverwendet, wenn ihr Zieldatum zum Input-Tag passt
 - schützt Nicht-Row-Bereich von `string_rows`-Zielfeldern vor PostEntry-/Cleaner-Seiteneffekten
@@ -93,7 +94,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.43";
+var DDL_VERSION = "0.44";
 
 function getInputLinkerLibVersion() {
   return {
@@ -260,6 +261,63 @@ function ddlSafeSet(entryObj, fieldName, value, errors, label, strictWriteErrors
     if (errors && strictWriteErrors === true) errors.push((label || "Feld konnte nicht gesetzt werden") + ": " + fieldName);
     return false;
   }
+}
+
+function ddlEntryLinkName(entryObj) {
+  var name;
+
+  if (!entryObj) return "";
+
+  try {
+    name = entryObj.name;
+    if (name) return String(name);
+  } catch (e0) {}
+
+  try {
+    name = entryObj.title;
+    if (name) return String(name);
+  } catch (e1) {}
+
+  try {
+    if (typeof entryObj.field === "function") {
+      name = entryObj.field("Name");
+      if (name) return String(name);
+    }
+  } catch (e2) {}
+
+  try {
+    if (typeof entryObj.field === "function") {
+      name = entryObj.field("Titel");
+      if (name) return String(name);
+    }
+  } catch (e3) {}
+
+  return "";
+}
+
+function ddlLinkEntry(src, sourceDayLinkField, target, errors, cfg) {
+  var linkName;
+
+  if (!src || !sourceDayLinkField || !target) return false;
+  if (ddlEntryLinksToDay(src, sourceDayLinkField, target)) return true;
+
+  try {
+    if (typeof src.link === "function") {
+      src.link(sourceDayLinkField, target);
+      return true;
+    }
+  } catch (e0) {
+    if (errors) errors.push("DayLink konnte nicht per link() gesetzt werden: " + sourceDayLinkField);
+    return false;
+  }
+
+  if (cfg && cfg.allowRelationSetFallback === true) {
+    linkName = ddlEntryLinkName(target);
+    if (linkName) return ddlSafeSet(src, sourceDayLinkField, [linkName], errors, "DayLink-Feld konnte nicht per set() geschrieben werden", cfg.strictWriteErrors === true);
+  }
+
+  if (errors) errors.push("DayLink-Feld kann nicht sicher geschrieben werden, entry.link() fehlt: " + sourceDayLinkField);
+  return false;
 }
 
 function ddlToDate(val) {
@@ -1058,7 +1116,7 @@ function ddlSelectInputsForDay(target, targetDate, cfg, result, errors) {
 
     if (matchesDay) {
       if (linkNewEntries && sourceDayLinkField && !linkedToTarget) {
-        if (ddlSafeSet(src, sourceDayLinkField, target, errors, "DayLink-Feld fehlt oder ungültig", cfg.strictWriteErrors === true)) {
+        if (ddlLinkEntry(src, sourceDayLinkField, target, errors, cfg)) {
           result.linked++;
           linkedToTarget = true;
         }
@@ -1541,7 +1599,7 @@ function linkInputEntryToTarget(cfg) {
 
   linkedTarget = cfg.reuseExistingLink === false ? null : ddlFirstLinkedDay(src, sourceDayLinkField);
   if (sourceDayLinkField && linkedTarget == null && ddlToArray(ddlSafeField(src, sourceDayLinkField, null, null)).length > 0) {
-    ddlSafeSet(src, sourceDayLinkField, null, errors, "DayLink-Feld konnte nicht bereinigt werden", cfg.strictWriteErrors === true);
+    result.skippedBrokenLinkCleanup = true;
   }
   target = ddlCanUseLinkedDay(linkedTarget, sourceDate, targetDateField, cfg) ? linkedTarget : ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
 
@@ -1561,7 +1619,7 @@ function linkInputEntryToTarget(cfg) {
   if (sourceDayLinkField && ddlEntryLinksToDay(src, sourceDayLinkField, target)) {
     result.linked = true;
   } else if (sourceDayLinkField) {
-    result.linked = ddlSafeSet(src, sourceDayLinkField, target, errors, "DayLink-Feld fehlt oder ungültig", cfg.strictWriteErrors === true);
+    result.linked = ddlLinkEntry(src, sourceDayLinkField, target, errors, cfg);
   }
 
   ddlApplyMapFromSourceToDay(src, target, sourceDate, targetDate, cfg, result, errors);

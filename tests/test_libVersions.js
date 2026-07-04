@@ -33,7 +33,7 @@ function log(msg) {
   _logs.push(String(msg));
 }
 
-assertEquals("libVersions-own-version", getLibVersionsVersion().version, "1.14");
+assertEquals("libVersions-own-version", getLibVersionsVersion().version, "1.15");
 assertEquals("helpers-lib-own-version", getHelpersLibVersion().version, "2.11");
 assertEquals("helpers-lib-sys-version", getHelpersLibVersion().sysVersion, "2.30");
 assertEquals("collect-lib-own-version", getCollectAtagsLibVersion().version, "1.59");
@@ -88,6 +88,33 @@ var getterOnlyOldOptional = checkAtagLibVersions({ names: ["inputLinker_lib"], c
 assertEquals("getter-only-old-optional-no-optional-missing", getterOnlyOldOptional.optionalMissing.length, 0);
 assertEquals("getter-only-old-optional-map-version", getterOnlyOldOptional.map.inputLinker_lib.version, "0.39");
 assertEquals("getter-only-old-optional-mismatch", getterOnlyOldOptional.versionMismatch[0], "inputLinker_lib expected 0.43 got 0.39");
+getInputLinkerLibVersion = savedGetInputLinkerLibVersion;
+ATAG_LIB_VERSIONS = savedRegistry;
+
+savedRegistry = ATAG_LIB_VERSIONS;
+savedGetInputLinkerLibVersion = getInputLinkerLibVersion;
+ATAG_LIB_VERSIONS = {};
+getInputLinkerLibVersion = function() {
+  return {
+    name: "inputLinker_lib",
+    version: "0.99",
+    sysVersion: "2.30",
+    path: "core_lib/inputLinker_lib.js"
+  };
+};
+var newerOptional = checkAtagLibVersions({ names: ["inputLinker_lib"], checkAccess: true, requireAll: false, asText: false });
+assertTrue("newer-version-ok", newerOptional.ok);
+assertEquals("newer-version-no-mismatch", newerOptional.versionMismatch.length, 0);
+getInputLinkerLibVersion = function() {
+  return {
+    name: "inputLinker_lib",
+    version: "0.99",
+    sysVersion: "2.29",
+    path: "core_lib/inputLinker_lib.js"
+  };
+};
+var newerWrongSys = checkAtagLibVersions({ names: ["inputLinker_lib"], checkAccess: true, requireAll: false, asText: false });
+assertEquals("newer-wrong-sys-mismatch", newerWrongSys.versionMismatch[0], "inputLinker_lib expected sys 2.30 got sys 2.29");
 getInputLinkerLibVersion = savedGetInputLinkerLibVersion;
 ATAG_LIB_VERSIONS = savedRegistry;
 

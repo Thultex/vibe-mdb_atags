@@ -1,6 +1,6 @@
 /*
 ========================================
-A1 Lib Versions v1.14 (sys 2.30)
+A1 Lib Versions v1.15 (sys 2.30)
 ========================================
 
 Notes
@@ -11,7 +11,7 @@ Notes
   - helpers_lib v2.11 (sys 2.30)
   - collectAtags_lib v1.59 (sys 2.30)
   - exportAtags_lib v1.83 (sys 2.30)
-  - inputLinker_lib v0.43 (sys 2.30, optional)
+  - inputLinker_lib v0.44 (sys 2.30, optional)
 
 ========================================
 */
@@ -34,7 +34,7 @@ var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERS
 function getLibVersionsVersion() {
   return {
     name: "libVersions",
-    version: "1.14",
+    version: "1.15",
     sysVersion: "2.30",
     path: "core/_checkLibs.js"
   };
@@ -44,7 +44,7 @@ var ATAG_EXPECTED_LIBS = [
   { name: "helpers_lib", version: "2.11", getter: "getHelpersLibVersion", path: "core_lib/helpers_lib.js" },
   { name: "collectAtags_lib", version: "1.59", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
   { name: "exportAtags_lib", version: "1.83", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" },
-  { name: "inputLinker_lib", version: "0.43", getter: "getInputLinkerLibVersion", path: "core_lib/inputLinker_lib.js", optional: true }
+  { name: "inputLinker_lib", version: "0.44", getter: "getInputLinkerLibVersion", path: "core_lib/inputLinker_lib.js", optional: true }
 ];
 
 function getExpectedAtagLibs() {
@@ -136,6 +136,38 @@ function addAtagResultLib(result, info) {
   }
 
   result.libs.push(info);
+}
+
+function compareAtagVersionParts(actual, expected) {
+  var a = String(actual || "").split(".");
+  var e = String(expected || "").split(".");
+  var len = a.length > e.length ? a.length : e.length;
+  var i;
+  var av;
+  var ev;
+
+  for (i = 0; i < len; i++) {
+    av = parseInt(a[i] || "0", 10);
+    ev = parseInt(e[i] || "0", 10);
+    if (isNaN(av)) av = 0;
+    if (isNaN(ev)) ev = 0;
+    if (av < ev) return -1;
+    if (av > ev) return 1;
+  }
+
+  return 0;
+}
+
+function atagVersionMismatchText(name, expected, got) {
+  if (String(got.sysVersion || "") !== String(expected.sysVersion || ATAG_SYS_VERSION || "")) {
+    return name + " expected sys " + (expected.sysVersion || ATAG_SYS_VERSION || "") + " got sys " + (got.sysVersion || "");
+  }
+
+  if (compareAtagVersionParts(got.version, expected.version) < 0) {
+    return name + " expected " + expected.version + " got " + got.version;
+  }
+
+  return "";
 }
 
 function checkLibVersions(cfg) {
@@ -257,9 +289,8 @@ function checkAtagLibVersions(cfg) {
       addAtagResultLib(result, got);
       result.missing = removeAtagListValue(result.missing, name);
       result.optionalMissing = removeAtagListValue(result.optionalMissing, name);
-      if (String(got.version || "") !== String(info.version || "")) {
-        versionMismatch.push(name + " expected " + info.version + " got " + got.version);
-      }
+      text = atagVersionMismatchText(name, info, got);
+      if (text) versionMismatch.push(text);
     }
   }
 

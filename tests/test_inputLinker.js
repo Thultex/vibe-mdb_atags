@@ -27,12 +27,17 @@ function makeEntry(fields) {
   return {
     _fields: fields || {},
     _recalcCount: 0,
+    _linkCounts: {},
     field: function(name) {
       if (!this._fields.hasOwnProperty(name)) throw new Error("missing field " + name);
       return this._fields[name];
     },
     set: function(name, value) {
       this._fields[name] = value;
+    },
+    link: function(name, entryObj) {
+      this._fields[name] = entryObj;
+      this._linkCounts[name] = (this._linkCounts[name] || 0) + 1;
     },
     recalc: function() {
       this._recalcCount++;
@@ -68,6 +73,12 @@ function makeCountingSetEntry(fields) {
     this._fields[name] = value;
     this._setCounts[name] = (this._setCounts[name] || 0) + 1;
   };
+  return e;
+}
+
+function makeNoLinkEntry(fields) {
+  var e = makeEntry(fields);
+  e.link = undefined;
   return e;
 }
 
@@ -213,6 +224,7 @@ function testCreatesDayLinksSourceAndAppendsMappedFields() {
   assertEquals("created", result.created, true);
   assertEquals("day-count", _libs.DustingDay.entries().length, 1);
   assertSame("source-linked", input.field("DayLinks"), result.targetEntry);
+  assertEquals("source-linked-via-link", input._linkCounts.DayLinks, 1);
   assertEquals("outnote", result.targetEntry.field("OutNote"), "14,5: erste Zeile");
   assertEquals("outtags", result.targetEntry.field("OutTags").join(","), "müde,stress");
 }
@@ -590,7 +602,41 @@ function testAlreadyLinkedInputDoesNotRewriteRelationOnRerun() {
   assertSame("already-linked-no-rewrite-target", result.targetEntry, day);
   assertEquals("already-linked-no-rewrite-result-linked", result.linked, true);
   assertEquals("already-linked-no-rewrite-daylinks-set-count", input._setCounts.DayLinks || 0, 0);
+  assertEquals("already-linked-no-rewrite-daylinks-link-count", input._linkCounts.DayLinks || 0, 0);
   assertEquals("already-linked-no-rewrite-note", day.field("OutNote"), "10: neu");
+}
+
+function testRelationWithoutLinkMethodDoesNotSetEntryObjectByDefault() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeNoLinkEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "nicht per set",
+    InTag: [],
+    DayLinks: null,
+    Debug: ""
+  });
+
+  reset(input, [day]);
+
+  var result = linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    sourceDebugField: "Debug",
+    map: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertEquals("no-link-method-result-linked", result.linked, false);
+  assertEquals("no-link-method-field-unchanged", input.field("DayLinks"), null);
+  assertEquals("no-link-method-error", result.errors[0].indexOf("entry.link() fehlt") >= 0, true);
+  assertEquals("no-link-method-still-appends", day.field("OutNote"), "10: nicht per set");
 }
 
 function testRecalcSourceAndTargetWhenConfigured() {
@@ -1511,6 +1557,7 @@ testMismatchingSourceDayLinkFallsBackToMatchingDateByDefault();
 testBrokenSourceDayLinkFallsBackToDateSearch();
 testAlreadyLinkedInputCanAddNewMappedValuesOnRerun();
 testAlreadyLinkedInputDoesNotRewriteRelationOnRerun();
+testRelationWithoutLinkMethodDoesNotSetEntryObjectByDefault();
 testRecalcSourceAndTargetWhenConfigured();
 testRunsPostEntryOnTargetWhenConfigured();
 testSuccessfulRunClearsExistingSourceDebugField();
