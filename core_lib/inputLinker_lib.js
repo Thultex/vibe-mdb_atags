@@ -1,9 +1,13 @@
 /*
 ========================================
-#4 Input Linker Lib v0.54 (sys 2.30)
+#4 Input Linker Lib v0.57 (sys 2.30)
 ========================================
 
 Änderungen
+- refreshCurrentTargetFromLinkedInputEntry() verarbeitet Day-seitig genau einen verlinkten Input gegen den aktuellen Day
+- refreshCurrentTargetFromInputEntries() ergänzt als Day-seitiger Wrapper für Linking-an-entry-Trigger mit aktuellem entry()
+- linkInputEntryToTarget() ist standardmaessig Link-only; Map/PostEntry/Recalc/Open laufen nur noch mit `processAfterLink: true`
+- refreshTargetFromInputEntries() kann Day-seitig `postEntry: true` auf dem Ziel-Day ausführen
 - erweitert debugInputLinkerAccess() um entry()/values()/field()-Kontext, DayLink-ID und findById-Auflösung
 - verarbeitet vorhandene DayLinks im Input-Trigger nicht mehr automatisch; Updates bestehender Inputs werden mit `processExistingLink: true` explizit freigeschaltet
 - loest vorhandene DayLinks bevorzugt per targetLib.findById(linked.id) auf und behandelt entry.deleted als primaeren Papierkorb-Indikator
@@ -103,7 +107,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.54";
+var DDL_VERSION = "0.57";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1772,6 +1776,7 @@ function linkInputEntryToTarget(cfg) {
     createSkippedExistingLink: false,
     directLinkedTargetWriteSkipped: false,
     processSkippedExistingLink: false,
+    processSkippedLinkOnly: false,
     unlinked: 0,
     skipped: false,
     skipReason: "",
@@ -1800,7 +1805,9 @@ function linkInputEntryToTarget(cfg) {
   }
 
   if (!cfg.map || !ddlIsArray(cfg.map)) {
-    errors.push("Config fehlt oder falsch: map");
+    if (cfg.processAfterLink === true || cfg.processExistingLink === true) {
+      errors.push("Config fehlt oder falsch: map");
+    }
     cfg.map = [];
   }
 
@@ -1897,6 +1904,15 @@ function linkInputEntryToTarget(cfg) {
 
   ddlCleanupStaleDayLinks(src, sourceDayLinkField, target, targetDateField, cfg, result, errors);
 
+  if (cfg.processAfterLink !== true && cfg.processExistingLink !== true) {
+    result.skipped = true;
+    result.skipReason = result.skipReason || "link_only";
+    result.processSkippedLinkOnly = true;
+    if (errors.length) ddlWriteErrors(errors, cfg);
+    else ddlClearDebugFieldIfExists(cfg);
+    return result;
+  }
+
   ddlApplyMapFromSourceToDay(src, target, sourceDate, targetDate, cfg, result, errors);
   ddlRunConfiguredPostEntry(src, target, cfg, result, errors);
 
@@ -1936,6 +1952,7 @@ function refreshTargetFromInputEntries(cfg) {
     tags: [],
     cleared: [],
     recalculated: [],
+    postEntries: [],
     errors: errors
   };
 
@@ -1977,6 +1994,8 @@ function refreshTargetFromInputEntries(cfg) {
     ddlApplyMapFromSourceToDay(inputs[i], target, sourceDate, targetDate, cfg, result, errors);
   }
 
+  ddlRunConfiguredPostEntry(null, target, cfg, result, errors);
+
   if (cfg.recalcTarget === true && ddlRecalcEntry(target, errors, "Target recalc fehlgeschlagen")) {
     result.recalculated.push("target");
   }
@@ -1984,4 +2003,56 @@ function refreshTargetFromInputEntries(cfg) {
   if (errors.length) ddlWriteErrors(errors, cfg);
   else ddlClearDebugFieldIfExists(cfg);
   return result;
+}
+
+function refreshCurrentTargetFromInputEntries(cfg) {
+  cfg = cfg || {};
+  if (!cfg.targetEntry && !cfg.entryObj) cfg.targetEntry = entry();
+  return refreshTargetFromInputEntries(cfg);
+}
+
+function ddlResolveLinkedInputEntry(cfg, target) {
+  var e;
+
+  if (cfg.inputEntry) return cfg.inputEntry;
+  if (cfg.sourceEntry) return cfg.sourceEntry;
+  if (cfg.linkedEntry) return cfg.linkedEntry;
+
+  try {
+    if (typeof linkedEntry === "function") {
+      e = linkedEntry();
+      if (e && e !== target) return e;
+    }
+  } catch (e0) {}
+
+  try {
+    if (typeof masterEntry === "function") {
+      e = masterEntry();
+      if (e && e !== target) return e;
+    }
+  } catch (e1) {}
+
+  try {
+    if (typeof attr === "function") {
+      e = attr();
+      if (e && typeof e.field === "function" && e !== target) return e;
+    }
+  } catch (e2) {}
+
+  return null;
+}
+
+function refreshCurrentTargetFromLinkedInputEntry(cfg) {
+  cfg = cfg || {};
+
+  var target = cfg.targetEntry || cfg.entryObj || entry();
+  var input = ddlResolveLinkedInputEntry(cfg, target);
+
+  cfg.targetEntry = target;
+  cfg.entries = input ? [input] : [];
+  cfg.findMatchingEntries = false;
+  cfg.linkNewEntries = false;
+  cfg.processAllEntries = false;
+
+  return refreshTargetFromInputEntries(cfg);
 }

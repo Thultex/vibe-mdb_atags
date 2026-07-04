@@ -78,6 +78,9 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Change: `updateSequenceSpree()` akzeptiert zusätzlich `entryObj` als Alias für `currentEntry`; bestehende `currentEntry`-Aufrufe haben weiter Vorrang.
 - Test: `tests/test_inputLinker.js` deckt Tageserstellung, Source-Link, erste Notizzeile, Duplikatschutz und relative Row-Zeit ab.
 - Change: Alter DustingDay-Collector-Ordner und zugehöriger Test wurden entfernt; der aktive Weg läuft über `inputLinker_lib`.
+- Feature: `Input Linker` v0.56 ergänzt `refreshCurrentTargetFromInputEntries()` als Day-seitigen Wrapper für Linking-an-entry-Trigger mit aktuellem `entry()`.
+- Change: `Input Linker` v0.55 macht `linkInputEntryToTarget()` standardmaessig Link-only; Day-Postwork läuft nur noch mit `processAfterLink: true` oder über Day-seitigen Refresh.
+- Debug: `Input Linker` v0.54 erweitert `debugInputLinkerAccess()` um `entry().field`, `entry().values`, globales `field()`, DayLink-ID und `targetLib.findById`.
 - Change: `Input Linker` v0.53 verarbeitet vorhandene DayLinks im Input-Trigger nicht mehr automatisch; Updates bestehender Inputs brauchen `processExistingLink: true` oder Day-seitigen Refresh.
 - Fix: `Input Linker` v0.52 loest vorhandene DayLinks bevorzugt per `targetLib.findById(linked.id)` auf und behandelt `entry.deleted` als primaeren Papierkorb-Indikator.
 - Fix: `Input Linker` v0.51 beschreibt verlinkte Relation-Objekte nicht mehr direkt; ein DayLink wird zuerst auf einen echten Eintrag aus `targetLib.entries()` aufgeloest.
@@ -88,7 +91,7 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Fix: `Input Linker` v0.46 erkennt bestehende Relationslinks robuster über Entry-ID und Name/Titel; das Zieldatum dient nur noch zur Tag-Plausibilisierung, nicht zur Gleichsetzung verschiedener Day-Einträge.
 - Fix: `Input Linker` v0.45 ueberspringt standardmaessig Memento-Linking-Trigger-Kontexte, damit programmgesteuertes Verlinken keinen zweiten rekursiven Linker-Lauf ausloest.
 - Fix: `Input Linker` v0.44 verknüpft Relation-Felder über `entry.link(field, entry)` und vermeidet `set(field, entryObj)`, da Memento `set()` für Link-to-Entry-Felder mit Entry-Namen/Strings dokumentiert.
-- *Versionen: collectAtags_lib v1.59, Input Linker v0.53, libVersions v1.16, Time Marker v1.32, Global Field Sync v1.03, Sequence Counter v1.05.*
+- *Versionen: collectAtags_lib v1.59, Input Linker v0.56, libVersions v1.16, Time Marker v1.32, Global Field Sync v1.03, Sequence Counter v1.05.*
 
 ### 2026-05-20 - (ca. 0,5h)
 

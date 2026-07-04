@@ -25,7 +25,7 @@ function assertSame(label, actual, expected) {
 }
 
 function makeEntry(fields) {
-  return {
+  var e = {
     _fields: fields || {},
     _recalcCount: 0,
     _linkCounts: {},
@@ -58,6 +58,9 @@ function makeEntry(fields) {
       this._recalcCount++;
     }
   };
+  if (fields && fields.id != null) e.id = fields.id;
+  if (fields && fields.deleted != null) e.deleted = fields.deleted;
+  return e;
 }
 
 function makeWriteOnlyEntry(fields, unreadableFields) {
@@ -248,6 +251,7 @@ function testCreatesDayLinksSourceAndAppendsMappedFields() {
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" },
       { from: "InTag", to: "OutTags", type: "tag" }
@@ -260,6 +264,61 @@ function testCreatesDayLinksSourceAndAppendsMappedFields() {
   assertEquals("source-linked-via-link", input._linkCounts.DayLinks, 1);
   assertEquals("outnote", result.targetEntry.field("OutNote"), "14,5: erste Zeile");
   assertEquals("outtags", result.targetEntry.field("OutTags").join(","), "müde,stress");
+}
+
+function testNewInputLinksOnlyByDefault() {
+  var input = makeEntry({
+    Date: "2020-02-02 14:35",
+    InNote: "nur link",
+    InTag: ["müde"],
+    DayLinks: null
+  });
+
+  reset(input, []);
+
+  var result = linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Datum",
+    sourceDayLinkField: "DayLinks",
+    map: [
+      { from: "InNote", to: "OutNote", type: "string_rows" },
+      { from: "InTag", to: "OutTags", type: "tag" }
+    ]
+  });
+
+  assertEquals("link-only-created", result.created, true);
+  assertSame("link-only-source-linked", input.field("DayLinks"), result.targetEntry);
+  assertEquals("link-only-linked", result.linked, true);
+  assertEquals("link-only-skipped", result.skipped, true);
+  assertEquals("link-only-reason", result.skipReason, "link_only");
+  assertEquals("link-only-process-skipped", result.processSkippedLinkOnly, true);
+  assertEquals("link-only-no-appended", result.appended.length, 0);
+  assertEquals("link-only-no-tags", result.tags.length, 0);
+}
+
+function testLinkOnlyDoesNotRequireMap() {
+  var input = makeEntry({
+    Date: "2020-02-02 14:35",
+    DayLinks: null,
+    Debug: ""
+  });
+
+  reset(input, []);
+
+  var result = linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Datum",
+    sourceDayLinkField: "DayLinks",
+    sourceDebugField: "Debug"
+  });
+
+  assertEquals("link-only-no-map-errors", result.errors.length, 0);
+  assertEquals("link-only-no-map-created", result.created, true);
+  assertEquals("link-only-no-map-linked", result.linked, true);
+  assertSame("link-only-no-map-source-link", input.field("DayLinks"), result.targetEntry);
+  assertEquals("link-only-no-map-debug-clear", input.field("Debug"), "");
 }
 
 function testDoesNotDuplicateSameLineOrTags() {
@@ -282,6 +341,7 @@ function testDoesNotDuplicateSameLineOrTags() {
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" },
       { from: "InTag", to: "OutTags", type: "tag" }
@@ -310,6 +370,7 @@ function testStringTypeAppendsPlainTextWithoutRowPrefix() {
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     map: [
       { from: "InNote", to: "PlainNote", type: "string" }
     ]
@@ -338,6 +399,7 @@ function testSinceFirstUsesTargetDateAsZero() {
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     rowMode: "sinceFirst",
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
@@ -367,6 +429,7 @@ function testRowSourceModeRealtimeSinceUsesTimeMarkerNames() {
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     rowSourceMode: "realtime_since",
     rowStepHours: 0.1,
     rowRoundMode: "round",
@@ -399,6 +462,7 @@ function testWrongTargetDateFieldOnlyBlocksInStrictMode() {
     sourceDateField: "Date",
     targetDateField: "WrongDate",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     sourceDebugField: "Debug",
     strictTargetValidation: true,
     map: [
@@ -431,6 +495,7 @@ function testNonStrictTargetDateFieldAllowsCreate() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
@@ -460,6 +525,7 @@ function testNewInputAddsMissingTagsToExistingDay() {
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     map: [
       { from: "InTag", to: "OutTags", type: "tag" }
     ]
@@ -493,6 +559,7 @@ function testExistingFunctionalSourceDayLinkWinsOverDateSearch() {
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     trustExistingLink: true,
     processExistingLink: true,
     map: [
@@ -830,6 +897,7 @@ function testLinkedDeletedDayDoesNotFallBackToDateMatchById() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
@@ -865,6 +933,7 @@ function testRelationWithoutLinkMethodDoesNotSetEntryObjectByDefault() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     sourceDebugField: "Debug",
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
@@ -899,6 +968,7 @@ function testInputLinkerSkipsMementoLinkingTriggerContextByDefault() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     sourceDebugField: "Debug",
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
@@ -931,6 +1001,7 @@ function testRecalcSourceAndTargetWhenConfigured() {
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     recalcSource: true,
     recalcTarget: true,
     map: [
@@ -996,6 +1067,7 @@ function testSuccessfulRunClearsExistingSourceDebugField() {
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     sourceDebugField: "Debug",
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
@@ -1025,6 +1097,7 @@ function testRunsPostEntryOnSourceWhenConfigured() {
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     postEntry: true,
     postEntryTarget: "source",
     map: [
@@ -1057,6 +1130,7 @@ function testRunsNamedPostEntryFunctionWhenConfigured() {
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     postEntry: true,
     postEntryName: "customInputLinkerPostEntry",
     map: [
@@ -1121,6 +1195,7 @@ function testPostEntryErrorIncludesFunctionAndMessage() {
     sourceDateField: "Date",
     targetDateField: "Datum",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     sourceDebugField: "Debug",
     postEntry: true,
     postEntryName: "throwingInputLinkerPostEntry",
@@ -1172,7 +1247,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-name missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.54") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.56") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -1184,7 +1259,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.54") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.56") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -1252,6 +1327,7 @@ function testWriteOnlyTargetFieldsDoNotProduceFalseReadErrors() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" },
       { from: "InTag", to: "OutTags", type: "tag" }
@@ -1283,6 +1359,7 @@ function testNativeArrayLikeTagsAreUnpacked() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     map: [
       { from: "InTag", to: "OutTags", type: "tag" }
     ]
@@ -1311,6 +1388,7 @@ function testArrayLikeTagsDoNotUseEntriesPairs() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     map: [
       { from: "InTag", to: "OutTags", type: "tag" }
     ]
@@ -1343,6 +1421,7 @@ function testSetThrowAfterWriteDoesNotLogFalseTargetErrorsByDefault() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     sourceDebugField: "Debug",
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" },
@@ -1372,6 +1451,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     sourceDebugField: "Debug",
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
@@ -1382,7 +1462,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.54") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.56") < 0) {
     fail("error-debug-version missing");
   }
 
@@ -1417,6 +1497,7 @@ function testFindsExistingDayFromIteratorEntries() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
@@ -1447,6 +1528,7 @@ function testUsesPreviousDayBeforeFourOnlyWhenSameCalendarDayIsMissing() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
@@ -1483,6 +1565,7 @@ function testBeforeFourPrefersSameCalendarDayOverPreviousDay() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
@@ -1514,6 +1597,7 @@ function testAfterFourCreatesNextDustingDayWhenSameDayIsMissing() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
     ]
@@ -1549,6 +1633,7 @@ function testDaySearchLimitRestrictsDateReuse() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     daySearchLimit: 1,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
@@ -1582,6 +1667,7 @@ function testRefreshDayLinksMatchingInputsAndAppends() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     findMatchingEntries: true,
     linkNewEntries: true,
     processAllEntries: true,
@@ -1621,6 +1707,7 @@ function testRefreshDayAppendAllAllowsDuplicateRowsAndTags() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     processAllEntries: true,
     processMode: "append all",
     processMap: [
@@ -1661,6 +1748,7 @@ function testRefreshDaySkipsInputsLinkedToOtherDayByDefault() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     findMatchingEntries: true,
     linkNewEntries: true,
     processAllEntries: true,
@@ -1698,6 +1786,7 @@ function testRefreshDayRebuildClearsMappedTargetsBeforeApplyingLinkedInputs() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     processAllEntries: true,
     processMode: "rebuild",
     processMap: [
@@ -1734,6 +1823,7 @@ function testRefreshDayRebuildKeepsFreeTextInStringRowsTarget() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     processAllEntries: true,
     processMode: "rebuild",
     processMap: [
@@ -1767,6 +1857,7 @@ function testRefreshDayRebuildKeepsFreeTextWhenSameTargetHasMixedMapTypes() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     processAllEntries: true,
     processMode: "rebuild",
     processMap: [
@@ -1800,6 +1891,7 @@ function testRefreshDayCanProcessOneSourceEntry() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     linkNewEntries: true,
     processMap: [
       { from: "InNote", to: "OutNote", type: "string_rows" }
@@ -1809,6 +1901,114 @@ function testRefreshDayCanProcessOneSourceEntry() {
   assertEquals("refresh-one-input-count", result.inputs, 1);
   assertSame("refresh-one-link", input.field("DayLinks"), day);
   assertEquals("refresh-one-note", day.field("OutNote"), "10: direkt");
+}
+
+function testRefreshDayRunsPostEntryOnTargetWhenConfigured() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "post vom day",
+    InTag: [],
+    DayLinks: day
+  });
+
+  resetWithLibs(day, {
+    DustingInput: makeLib([input])
+  });
+
+  var result = refreshTargetFromInputEntries({
+    inputLib: "DustingInput",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    processAllEntries: true,
+    postEntry: true,
+    processMap: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertEquals("refresh-post-entry-count", _postEntries.length, 1);
+  assertSame("refresh-post-entry-target", _postEntries[0], day);
+  assertEquals("refresh-post-entry-result", result.postEntries.join(","), "target");
+}
+
+function testRefreshCurrentTargetUsesCurrentEntry() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "current day",
+    InTag: [],
+    DayLinks: day
+  });
+
+  resetWithLibs(day, {
+    DustingInput: makeLib([input])
+  });
+
+  var result = refreshCurrentTargetFromInputEntries({
+    inputLib: "DustingInput",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    processAllEntries: true,
+    processMap: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertSame("refresh-current-target", result.targetEntry, day);
+  assertEquals("refresh-current-note", day.field("OutNote"), "10: current day");
+}
+
+function testRefreshCurrentTargetFromLinkedInputProcessesOnlyThatEntry() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var linkedInput = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "gelinkt",
+    InTag: ["a"],
+    DayLinks: day
+  });
+  var otherInput = makeEntry({
+    Date: "2020-02-02 11:00",
+    InNote: "nicht anfassen",
+    InTag: ["b"],
+    DayLinks: day
+  });
+
+  resetWithLibs(day, {
+    DustingInput: makeLib([linkedInput, otherInput])
+  });
+
+  var result = refreshCurrentTargetFromLinkedInputEntry({
+    inputEntry: linkedInput,
+    inputLib: "DustingInput",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    postEntry: true,
+    processMap: [
+      { from: "InNote", to: "OutNote", type: "string_rows" },
+      { from: "InTag", to: "OutTags", type: "tag" }
+    ]
+  });
+
+  assertEquals("refresh-linked-one-input-count", result.inputs, 1);
+  assertEquals("refresh-linked-one-note", day.field("OutNote"), "10: gelinkt");
+  assertEquals("refresh-linked-one-tags", day.field("OutTags").join(","), "a");
+  assertEquals("refresh-linked-one-post-entry", result.postEntries.join(","), "target");
 }
 
 function testSuccessfulRefreshClearsExistingTargetDebugField() {
@@ -1834,6 +2034,7 @@ function testSuccessfulRefreshClearsExistingTargetDebugField() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
     processAllEntries: true,
     targetDebugField: "Debug",
     processMap: [
@@ -1845,6 +2046,8 @@ function testSuccessfulRefreshClearsExistingTargetDebugField() {
 }
 
 testCreatesDayLinksSourceAndAppendsMappedFields();
+testNewInputLinksOnlyByDefault();
+testLinkOnlyDoesNotRequireMap();
 testDoesNotDuplicateSameLineOrTags();
 testStringTypeAppendsPlainTextWithoutRowPrefix();
 testSinceFirstUsesTargetDateAsZero();
@@ -1889,9 +2092,13 @@ testRefreshDayRebuildClearsMappedTargetsBeforeApplyingLinkedInputs();
 testRefreshDayRebuildKeepsFreeTextInStringRowsTarget();
 testRefreshDayRebuildKeepsFreeTextWhenSameTargetHasMixedMapTypes();
 testRefreshDayCanProcessOneSourceEntry();
+testRefreshDayRunsPostEntryOnTargetWhenConfigured();
+testRefreshCurrentTargetUsesCurrentEntry();
 testSuccessfulRefreshClearsExistingTargetDebugField();
 
 WScript.Echo("OK");
+
+
 
 
 
