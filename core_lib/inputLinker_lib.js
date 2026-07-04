@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.45 (sys 2.30)
+#4 Input Linker Lib v0.46 (sys 2.30)
 ========================================
 
 Änderungen
+- erkennt bereits bestehende Relationslinks robuster ueber ID, Name/Titel und Zieldatum
 - ueberspringt standardmaessig Memento-Linking-Trigger-Kontexte, um rekursive Neuverlinkung zu vermeiden
 - Relation-Felder werden ueber `entry.link(field, entry)` verknuepft; `set(field, entry)` wird vermieden
 - schreibt `sourceDayLinkField` nicht erneut, wenn der Input bereits mit dem Ziel-Day verlinkt ist
@@ -95,7 +96,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.45";
+var DDL_VERSION = "0.46";
 
 function getInputLinkerLibVersion() {
   return {
@@ -296,11 +297,35 @@ function ddlEntryLinkName(entryObj) {
   return "";
 }
 
+function ddlEntryPrimaryDate(entryObj, fieldName) {
+  var candidates = [];
+  var i;
+  var d;
+
+  if (!entryObj) return null;
+
+  if (fieldName) candidates.push(fieldName);
+  candidates.push("Datum");
+  candidates.push("Date");
+  candidates.push("Einnahmedatum");
+
+  for (i = 0; i < candidates.length; i++) {
+    try {
+      if (typeof entryObj.field === "function") {
+        d = ddlToDate(entryObj.field(candidates[i]));
+        if (d) return d;
+      }
+    } catch (e) {}
+  }
+
+  return null;
+}
+
 function ddlLinkEntry(src, sourceDayLinkField, target, errors, cfg) {
   var linkName;
 
   if (!src || !sourceDayLinkField || !target) return false;
-  if (ddlEntryLinksToDay(src, sourceDayLinkField, target)) return true;
+  if (ddlEntryLinksToDay(src, sourceDayLinkField, target, cfg && cfg.targetDateField)) return true;
 
   try {
     if (typeof src.link === "function") {
@@ -917,9 +942,13 @@ function ddlEntryId(entryObj) {
   return "";
 }
 
-function ddlSameEntry(a, b) {
+function ddlSameEntry(a, b, dateField) {
   var aid;
   var bid;
+  var aname;
+  var bname;
+  var adate;
+  var bdate;
 
   if (!a || !b) return false;
   if (a === b) return true;
@@ -927,10 +956,20 @@ function ddlSameEntry(a, b) {
   aid = ddlEntryId(a);
   bid = ddlEntryId(b);
 
-  return aid !== "" && aid === bid;
+  if (aid !== "" && aid === bid) return true;
+
+  aname = ddlEntryLinkName(a);
+  bname = ddlEntryLinkName(b);
+  if (aname && bname && aname === bname) return true;
+
+  adate = ddlEntryPrimaryDate(a, dateField);
+  bdate = ddlEntryPrimaryDate(b, dateField);
+  if (adate && bdate && ddlSameCalendarDay(adate, bdate)) return true;
+
+  return false;
 }
 
-function ddlEntryLinksToDay(src, sourceDayLinkField, target) {
+function ddlEntryLinksToDay(src, sourceDayLinkField, target, targetDateField) {
   var links;
   var i;
 
@@ -938,7 +977,7 @@ function ddlEntryLinksToDay(src, sourceDayLinkField, target) {
 
   links = ddlToArray(ddlSafeField(src, sourceDayLinkField, null, null));
   for (i = 0; i < links.length; i++) {
-    if (ddlSameEntry(links[i], target)) return true;
+    if (ddlSameEntry(links[i], target, targetDateField)) return true;
   }
 
   return false;
@@ -1119,7 +1158,7 @@ function ddlSelectInputsForDay(target, targetDate, cfg, result, errors) {
 
   for (i = 0; i < entries.length; i++) {
     src = entries[i];
-    linkedToTarget = ddlEntryLinksToDay(src, sourceDayLinkField, target);
+    linkedToTarget = ddlEntryLinksToDay(src, sourceDayLinkField, target, cfg.targetDateField || "Date");
     linkedToOther = !linkedToTarget && ddlInputLinkedToOtherDay(src, sourceDayLinkField, target);
 
     if (linkedToTarget && (processAllEntries || explicitEntries)) {
@@ -1152,7 +1191,7 @@ function ddlSelectInputsForDay(target, targetDate, cfg, result, errors) {
   if (processAllEntries) {
     selected = [];
     for (i = 0; i < entries.length; i++) {
-      if (ddlEntryLinksToDay(entries[i], sourceDayLinkField, target)) ddlPushUniqueEntry(selected, entries[i]);
+      if (ddlEntryLinksToDay(entries[i], sourceDayLinkField, target, cfg.targetDateField || "Date")) ddlPushUniqueEntry(selected, entries[i]);
     }
   }
 
@@ -1645,7 +1684,7 @@ function linkInputEntryToTarget(cfg) {
   result.targetEntry = target;
   targetDate = ddlToDate(ddlSafeField(target, targetDateField, null, null)) || sourceDate;
 
-  if (sourceDayLinkField && ddlEntryLinksToDay(src, sourceDayLinkField, target)) {
+  if (sourceDayLinkField && ddlEntryLinksToDay(src, sourceDayLinkField, target, targetDateField)) {
     result.linked = true;
   } else if (sourceDayLinkField) {
     result.linked = ddlLinkEntry(src, sourceDayLinkField, target, errors, cfg);

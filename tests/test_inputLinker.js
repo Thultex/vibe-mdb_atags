@@ -617,6 +617,41 @@ function testAlreadyLinkedInputDoesNotRewriteRelationOnRerun() {
   assertEquals("already-linked-no-rewrite-note", day.field("OutNote"), "10: neu");
 }
 
+function testAlreadyLinkedInputRecognizesRelationWrapperByDate() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var dayWrapper = makeEntry({
+    Date: "2020-02-02 18:00",
+    OutNote: "anderer wrapper"
+  });
+  var input = makeCountingSetEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "wrapper link",
+    InTag: [],
+    DayLinks: dayWrapper
+  });
+
+  reset(input, [day]);
+
+  var result = linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    map: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertSame("already-linked-wrapper-target", result.targetEntry, dayWrapper);
+  assertEquals("already-linked-wrapper-no-set", input._setCounts.DayLinks || 0, 0);
+  assertEquals("already-linked-wrapper-no-link", input._linkCounts.DayLinks || 0, 0);
+  assertEquals("already-linked-wrapper-note", dayWrapper.field("OutNote"), "anderer wrapper\n10: wrapper link");
+}
+
 function testRelationWithoutLinkMethodDoesNotSetEntryObjectByDefault() {
   var day = makeEntry({
     Date: "2020-02-02 09:00",
@@ -1602,6 +1637,7 @@ testMismatchingSourceDayLinkFallsBackToMatchingDateByDefault();
 testBrokenSourceDayLinkFallsBackToDateSearch();
 testAlreadyLinkedInputCanAddNewMappedValuesOnRerun();
 testAlreadyLinkedInputDoesNotRewriteRelationOnRerun();
+testAlreadyLinkedInputRecognizesRelationWrapperByDate();
 testRelationWithoutLinkMethodDoesNotSetEntryObjectByDefault();
 testInputLinkerSkipsMementoLinkingTriggerContextByDefault();
 testRecalcSourceAndTargetWhenConfigured();
