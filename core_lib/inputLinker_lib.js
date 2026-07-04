@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.60 (sys 2.30)
+#4 Input Linker Lib v0.61 (sys 2.30)
 ========================================
 
 Änderungen
+- vorhandene DayLinks werden im Input-Linker nicht mehr als Entry-Objekt aufgeloest; schon ein Relation-Wert fuehrt zum No-op
 - linkInputEntryToTarget() ist strikt Link-only: vorhandener DayLink = sofort raus; sonst Day suchen/erstellen und genau einmal verlinken
 - bestehende gültige DayLinks verlassen den Input-Linker ohne Debug-Clear, damit "nichts tun" wirklich keine Feldänderung auslöst
 - geloeschte vorhandene DayLinks blockieren die Neuzuordnung nicht mehr; Link-only darf einen neuen Ziel-Day suchen oder erstellen
@@ -109,7 +110,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.60";
+var DDL_VERSION = "0.61";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1764,7 +1765,6 @@ function linkInputEntryToTarget(cfg) {
   var sourceDayLinkField = cfg.sourceDayLinkField || "DayLinks";
   var sourceDate;
   var targetLib;
-  var linkedTarget;
   var sourceDayLinks;
   var sourceHasDayLinks;
   var target;
@@ -1801,13 +1801,10 @@ function linkInputEntryToTarget(cfg) {
   sourceHasDayLinks = sourceDayLinks.length > 0;
 
   if (sourceHasDayLinks) {
-    linkedTarget = ddlFirstLinkedDay(src, sourceDayLinkField);
-    result.targetEntry = linkedTarget;
-    result.linked = !!linkedTarget;
+    result.linked = true;
     result.linkSkippedExisting = true;
     result.skipped = true;
     result.skipReason = "existing_daylink_noop";
-    if (linkedTarget == null) result.skippedBrokenLinkCleanup = true;
     return result;
   }
 
