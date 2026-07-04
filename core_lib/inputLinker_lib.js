@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.50 (sys 2.30)
+#4 Input Linker Lib v0.51 (sys 2.30)
 ========================================
 
 Änderungen
+- schreibt standardmaessig nicht mehr direkt in Entry-Objekte aus Relation-Feldern; verlinkte Days werden zuerst gegen targetLib.entries() aufgeloest
 - erstellt keinen neuen Tages-Eintrag mehr, wenn am Input bereits ein DayLink existiert, aber kein brauchbarer Ziel-Day gefunden wird
 - schreibt Relation-Felder standardmaessig nur, wenn sie leer sind; bestehende Links werden beim Input-Update nicht automatisch ersetzt
 - optional kann `cleanupStaleDayLinks: true` stale DayLinks per `entry.unlink(field, oldEntry)` entfernen
@@ -99,7 +100,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.50";
+var DDL_VERSION = "0.51";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1040,6 +1041,26 @@ function ddlCanUseLinkedDay(target, sourceDate, targetDateField, cfg) {
   return true;
 }
 
+function ddlResolveLinkedTargetFromLibrary(targetLib, linkedTarget, targetDateField, sourceDate, cfg) {
+  var entries;
+  var i;
+
+  if (!targetLib || !linkedTarget) return null;
+
+  try {
+    entries = ddlToArray(targetLib.entries ? targetLib.entries() : []);
+  } catch (e0) {
+    entries = [];
+  }
+
+  for (i = 0; i < entries.length; i++) {
+    if (!ddlCanUseLinkedDay(entries[i], sourceDate, targetDateField, cfg)) continue;
+    if (ddlSameEntry(entries[i], linkedTarget, targetDateField)) return entries[i];
+  }
+
+  return null;
+}
+
 function ddlCreateDayEntry(targetLib, sourceDate, targetDateField, cfg, errors) {
   var values = {};
   var target;
@@ -1654,6 +1675,7 @@ function linkInputEntryToTarget(cfg) {
     linked: false,
     linkSkippedExisting: false,
     createSkippedExistingLink: false,
+    directLinkedTargetWriteSkipped: false,
     unlinked: 0,
     skipped: false,
     skipReason: "",
@@ -1710,7 +1732,18 @@ function linkInputEntryToTarget(cfg) {
   if (sourceDayLinkField && linkedTarget == null && sourceHasDayLinks) {
     result.skippedBrokenLinkCleanup = true;
   }
-  target = ddlCanUseLinkedDay(linkedTarget, sourceDate, targetDateField, cfg) ? linkedTarget : ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
+  if (ddlCanUseLinkedDay(linkedTarget, sourceDate, targetDateField, cfg)) {
+    target = ddlResolveLinkedTargetFromLibrary(targetLib, linkedTarget, targetDateField, sourceDate, cfg);
+    if (!target && cfg.allowDirectLinkedTargetWrite === true) {
+      target = linkedTarget;
+    } else if (!target) {
+      result.directLinkedTargetWriteSkipped = true;
+    }
+  }
+
+  if (!target) {
+    target = ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
+  }
 
   if (!target && sourceHasDayLinks && cfg.createWhenSourceHasLink !== true) {
     result.skipped = true;

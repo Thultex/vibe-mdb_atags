@@ -734,10 +734,11 @@ function testAlreadyLinkedInputRecognizesRelationWrapperByDate() {
     ]
   });
 
-  assertSame("already-linked-wrapper-target", result.targetEntry, dayWrapper);
+  assertSame("already-linked-wrapper-target", result.targetEntry, day);
   assertEquals("already-linked-wrapper-no-set", input._setCounts.DayLinks || 0, 0);
   assertEquals("already-linked-wrapper-no-link", input._linkCounts.DayLinks || 0, 0);
-  assertEquals("already-linked-wrapper-note", dayWrapper.field("OutNote"), "anderer wrapper\n10: wrapper link");
+  assertEquals("already-linked-wrapper-day-note", day.field("OutNote"), "10: wrapper link");
+  assertEquals("already-linked-wrapper-untouched", dayWrapper.field("OutNote"), "anderer wrapper");
 }
 
 function testRelationWithoutLinkMethodDoesNotSetEntryObjectByDefault() {
@@ -1064,7 +1065,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-name missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.50") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.51") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -1076,7 +1077,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.50") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.51") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -1250,7 +1251,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.50") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.51") < 0) {
     fail("error-debug-version missing");
   }
 
