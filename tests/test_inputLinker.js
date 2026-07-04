@@ -29,6 +29,7 @@ function makeEntry(fields) {
     _fields: fields || {},
     _recalcCount: 0,
     _linkCounts: {},
+    _unlinkCounts: {},
     field: function(name) {
       if (!this._fields.hasOwnProperty(name)) throw new Error("missing field " + name);
       return this._fields[name];
@@ -39,6 +40,19 @@ function makeEntry(fields) {
     link: function(name, entryObj) {
       this._fields[name] = entryObj;
       this._linkCounts[name] = (this._linkCounts[name] || 0) + 1;
+    },
+    unlink: function(name, entryObj) {
+      var current = this._fields[name];
+      var next = [];
+      var i;
+
+      this._unlinkCounts[name] = (this._unlinkCounts[name] || 0) + 1;
+
+      if (Object.prototype.toString.call(current) !== "[object Array]") current = current == null ? [] : [current];
+      for (i = 0; i < current.length; i++) {
+        if (current[i] !== entryObj) next.push(current[i]);
+      }
+      this._fields[name] = next.length === 1 ? next[0] : next;
     },
     recalc: function() {
       this._recalcCount++;
@@ -518,7 +532,48 @@ function testMismatchingSourceDayLinkFallsBackToMatchingDateByDefault() {
   assertEquals("mismatch-link-date-no-create", result.created, false);
   assertEquals("mismatch-link-old-empty", linkedDay.field("OutNote"), "");
   assertEquals("mismatch-link-matching-note", matchingDay.field("OutNote"), "10: nutzt datum");
-  assertSame("mismatch-link-relinked", input.field("DayLinks"), matchingDay);
+  assertSame("mismatch-link-kept-existing", input.field("DayLinks"), linkedDay);
+  assertEquals("mismatch-link-skipped-existing", result.linkSkippedExisting, true);
+}
+
+function testMismatchingSourceDayLinkDoesNotRewriteExistingRelationByDefault() {
+  var oldDay = makeEntry({
+    Datum: "2020-02-01 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var matchingDay = makeEntry({
+    Datum: "2020-02-03 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-03 10:00",
+    InNote: "alter link weg",
+    InTag: [],
+    DayLinks: oldDay
+  });
+
+  reset(input, [matchingDay, oldDay]);
+
+  var result = linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Datum",
+    sourceDayLinkField: "DayLinks",
+    map: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertSame("mismatch-unlink-target", result.targetEntry, matchingDay);
+  assertEquals("mismatch-unlink-count", result.unlinked, 0);
+  assertEquals("mismatch-unlink-call-count", input._unlinkCounts.DayLinks || 0, 0);
+  assertEquals("mismatch-link-call-count", input._linkCounts.DayLinks || 0, 0);
+  assertSame("mismatch-unlink-final-link", input.field("DayLinks"), oldDay);
+  assertEquals("mismatch-existing-link-skipped", result.linkSkippedExisting, true);
+  assertEquals("mismatch-unlink-old-empty", oldDay.field("OutNote"), "");
+  assertEquals("mismatch-unlink-note", matchingDay.field("OutNote"), "10: alter link weg");
 }
 
 function testBrokenSourceDayLinkFallsBackToDateSearch() {
@@ -976,7 +1031,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-name missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.45") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.47") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -988,7 +1043,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.45") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.47") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -1162,7 +1217,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.45") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.47") < 0) {
     fail("error-debug-version missing");
   }
 
@@ -1634,6 +1689,7 @@ testNonStrictTargetDateFieldAllowsCreate();
 testNewInputAddsMissingTagsToExistingDay();
 testExistingFunctionalSourceDayLinkWinsOverDateSearch();
 testMismatchingSourceDayLinkFallsBackToMatchingDateByDefault();
+testMismatchingSourceDayLinkDoesNotRewriteExistingRelationByDefault();
 testBrokenSourceDayLinkFallsBackToDateSearch();
 testAlreadyLinkedInputCanAddNewMappedValuesOnRerun();
 testAlreadyLinkedInputDoesNotRewriteRelationOnRerun();

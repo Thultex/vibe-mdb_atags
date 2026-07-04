@@ -1,9 +1,11 @@
 /*
 ========================================
-#4 Input Linker Lib v0.46 (sys 2.30)
+#4 Input Linker Lib v0.49 (sys 2.30)
 ========================================
 
 Änderungen
+- schreibt Relation-Felder standardmaessig nur, wenn sie leer sind; bestehende Links werden beim Input-Update nicht automatisch ersetzt
+- optional kann `cleanupStaleDayLinks: true` stale DayLinks per `entry.unlink(field, oldEntry)` entfernen
 - erkennt bereits bestehende Relationslinks robuster ueber ID, Name/Titel und Zieldatum
 - ueberspringt standardmaessig Memento-Linking-Trigger-Kontexte, um rekursive Neuverlinkung zu vermeiden
 - Relation-Felder werden ueber `entry.link(field, entry)` verknuepft; `set(field, entry)` wird vermieden
@@ -96,7 +98,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.46";
+var DDL_VERSION = "0.49";
 
 function getInputLinkerLibVersion() {
   return {
@@ -344,6 +346,42 @@ function ddlLinkEntry(src, sourceDayLinkField, target, errors, cfg) {
 
   if (errors) errors.push("DayLink-Feld kann nicht sicher geschrieben werden, entry.link() fehlt: " + sourceDayLinkField);
   return false;
+}
+
+function ddlUnlinkEntry(src, sourceDayLinkField, linkedEntry, errors) {
+  if (!src || !sourceDayLinkField || !linkedEntry) return false;
+
+  try {
+    if (typeof src.unlink === "function") {
+      src.unlink(sourceDayLinkField, linkedEntry);
+      return true;
+    }
+  } catch (e0) {
+    if (errors) errors.push("DayLink konnte nicht per unlink() entfernt werden: " + sourceDayLinkField);
+    return false;
+  }
+
+  if (errors) errors.push("Staler DayLink kann nicht sicher entfernt werden, entry.unlink() fehlt: " + sourceDayLinkField);
+  return false;
+}
+
+function ddlCleanupStaleDayLinks(src, sourceDayLinkField, target, targetDateField, cfg, result, errors) {
+  var links;
+  var i;
+  var removed = 0;
+
+  if (!src || !sourceDayLinkField || !target) return 0;
+  if (!cfg || cfg.cleanupStaleDayLinks !== true) return 0;
+
+  links = ddlToArray(ddlSafeField(src, sourceDayLinkField, null, null));
+  for (i = 0; i < links.length; i++) {
+    if (!links[i]) continue;
+    if (ddlSameEntry(links[i], target, targetDateField)) continue;
+    if (ddlUnlinkEntry(src, sourceDayLinkField, links[i], errors)) removed++;
+  }
+
+  if (result) result.unlinked = (result.unlinked || 0) + removed;
+  return removed;
 }
 
 function ddlIsLinkingTriggerContext() {
@@ -947,8 +985,6 @@ function ddlSameEntry(a, b, dateField) {
   var bid;
   var aname;
   var bname;
-  var adate;
-  var bdate;
 
   if (!a || !b) return false;
   if (a === b) return true;
@@ -961,10 +997,6 @@ function ddlSameEntry(a, b, dateField) {
   aname = ddlEntryLinkName(a);
   bname = ddlEntryLinkName(b);
   if (aname && bname && aname === bname) return true;
-
-  adate = ddlEntryPrimaryDate(a, dateField);
-  bdate = ddlEntryPrimaryDate(b, dateField);
-  if (adate && bdate && ddlSameCalendarDay(adate, bdate)) return true;
 
   return false;
 }
@@ -1611,12 +1643,16 @@ function linkInputEntryToTarget(cfg) {
   var sourceDate = ddlToDate(ddlSafeField(src, sourceDateField, errors, "Quell-Datumsfeld fehlt"));
   var targetLib;
   var linkedTarget;
+  var sourceDayLinks;
+  var sourceHasDayLinks;
   var target;
   var targetDate;
   var result = {
     targetEntry: null,
     created: false,
     linked: false,
+    linkSkippedExisting: false,
+    unlinked: 0,
     skipped: false,
     skipReason: "",
     appended: [],
@@ -1665,8 +1701,11 @@ function linkInputEntryToTarget(cfg) {
     return result;
   }
 
+  sourceDayLinks = sourceDayLinkField ? ddlToArray(ddlSafeField(src, sourceDayLinkField, null, null)) : [];
+  sourceHasDayLinks = sourceDayLinks.length > 0;
+
   linkedTarget = cfg.reuseExistingLink === false ? null : ddlFirstLinkedDay(src, sourceDayLinkField);
-  if (sourceDayLinkField && linkedTarget == null && ddlToArray(ddlSafeField(src, sourceDayLinkField, null, null)).length > 0) {
+  if (sourceDayLinkField && linkedTarget == null && sourceHasDayLinks) {
     result.skippedBrokenLinkCleanup = true;
   }
   target = ddlCanUseLinkedDay(linkedTarget, sourceDate, targetDateField, cfg) ? linkedTarget : ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
@@ -1686,9 +1725,13 @@ function linkInputEntryToTarget(cfg) {
 
   if (sourceDayLinkField && ddlEntryLinksToDay(src, sourceDayLinkField, target, targetDateField)) {
     result.linked = true;
+  } else if (sourceDayLinkField && sourceHasDayLinks && cfg.replaceExistingLink !== true) {
+    result.linkSkippedExisting = true;
   } else if (sourceDayLinkField) {
     result.linked = ddlLinkEntry(src, sourceDayLinkField, target, errors, cfg);
   }
+
+  ddlCleanupStaleDayLinks(src, sourceDayLinkField, target, targetDateField, cfg, result, errors);
 
   ddlApplyMapFromSourceToDay(src, target, sourceDate, targetDate, cfg, result, errors);
   ddlRunConfiguredPostEntry(src, target, cfg, result, errors);
