@@ -94,7 +94,7 @@ Aufruf:
 appendToDayEntry({
   targetLib: "DustingDay",
   sourceDateField: "Date",
-  targetDateField: "Datum",
+  targetDateField: "Date",
   sourceDayLinkField: "DayLinks",
   rowMode: "clock",
   rowStepHours: 0.5,
@@ -109,7 +109,7 @@ appendToDayEntry({
 
 Wichtig: Die URL funktioniert erst, wenn `addons/5_dusting-day/dd-linker.js` nach GitHub `main` gepusht wurde.
 
-Sicherheitsregel: Wenn vorhandene `DustingDay`-Einträge das konfigurierte `targetDateField` oder ein Ziel-Mappingfeld nicht besitzen, bricht der Linker ab statt neue falsche Tages-Einträge zu erstellen.
+Optionaler Schutzmodus: Mit `strictTargetValidation: true` bricht der Linker ab, wenn vorhandene `DustingDay`-Einträge das konfigurierte `targetDateField` oder Ziel-Mappingfelder nicht lesbar besitzen. Standardmäßig ist diese Prüfung aus, weil Memento-Feldzugriff je nach Kontext sonst fälschlich blockieren kann.
 
 Zielablauf:
 

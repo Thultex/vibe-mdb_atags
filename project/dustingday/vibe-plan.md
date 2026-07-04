@@ -219,7 +219,7 @@ Trigger-Aufruf:
 appendToDayEntry({
   targetLib: "DustingDay",
   sourceDateField: "Date",
-  targetDateField: "Datum",
+  targetDateField: "Date",
   sourceDayLinkField: "DayLinks",
   rowMode: "clock",
   rowStepHours: 0.5,

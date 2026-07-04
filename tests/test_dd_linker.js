@@ -167,7 +167,7 @@ function testSinceFirstUsesTargetDateAsZero() {
   assertEquals("relative-row", day.field("OutNote"), "1,5: später");
 }
 
-function testWrongTargetDateFieldDoesNotCreateDuplicateDay() {
+function testWrongTargetDateFieldOnlyBlocksInStrictMode() {
   var day = makeEntry({
     Datum: "2020-02-02 09:00",
     OutNote: "",
@@ -189,6 +189,7 @@ function testWrongTargetDateFieldDoesNotCreateDuplicateDay() {
     targetDateField: "WrongDate",
     sourceDayLinkField: "DayLinks",
     sourceDebugField: "Debug",
+    strictTargetValidation: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string" }
     ]
@@ -197,6 +198,35 @@ function testWrongTargetDateFieldDoesNotCreateDuplicateDay() {
   assertEquals("wrong-date-no-create", result.created, false);
   assertEquals("wrong-date-day-count", _libs.DustingDay.entries().length, 1);
   assertEquals("wrong-date-error", input.field("Debug").indexOf("Ziel-Datumsfeld fehlt") >= 0, true);
+}
+
+function testNonStrictTargetDateFieldAllowsCreate() {
+  var day = makeEntry({
+    Datum: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-03 14:35",
+    InNote: "erstellen erlaubt",
+    InTag: [],
+    DayLinks: null
+  });
+
+  reset(input, [day]);
+
+  var result = appendToDayEntry({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    map: [
+      { from: "InNote", to: "OutNote", type: "string" }
+    ]
+  });
+
+  assertEquals("non-strict-create", result.created, true);
+  assertEquals("non-strict-day-count", _libs.DustingDay.entries().length, 2);
 }
 
 function testNewInputAddsMissingTagsToExistingDay() {
@@ -225,6 +255,41 @@ function testNewInputAddsMissingTagsToExistingDay() {
   });
 
   assertEquals("new-input-tags-merged", day.field("OutTags").join(","), "müde,erfolg");
+}
+
+function testReusesExistingSourceDayLinkBeforeDateSearch() {
+  var linkedDay = makeEntry({
+    Datum: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var otherDay = makeEntry({
+    Datum: "2020-02-03 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-03 10:00",
+    InNote: "nutzt link",
+    InTag: [],
+    DayLinks: linkedDay
+  });
+
+  reset(input, [linkedDay, otherDay]);
+
+  var result = appendToDayEntry({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Datum",
+    sourceDayLinkField: "DayLinks",
+    map: [
+      { from: "InNote", to: "OutNote", type: "string" }
+    ]
+  });
+
+  assertSame("reuse-existing-link-target", result.targetEntry, linkedDay);
+  assertEquals("reuse-existing-link-no-create", result.created, false);
+  assertEquals("reuse-existing-link-outnote", linkedDay.field("OutNote"), "10: nutzt link");
 }
 
 function testRecalcSourceAndTargetWhenConfigured() {
@@ -262,8 +327,10 @@ function testRecalcSourceAndTargetWhenConfigured() {
 testCreatesDayLinksSourceAndAppendsMappedFields();
 testDoesNotDuplicateSameLineOrTags();
 testSinceFirstUsesTargetDateAsZero();
-testWrongTargetDateFieldDoesNotCreateDuplicateDay();
+testWrongTargetDateFieldOnlyBlocksInStrictMode();
+testNonStrictTargetDateFieldAllowsCreate();
 testNewInputAddsMissingTagsToExistingDay();
+testReusesExistingSourceDayLinkBeforeDateSearch();
 testRecalcSourceAndTargetWhenConfigured();
 
 WScript.Echo("OK");

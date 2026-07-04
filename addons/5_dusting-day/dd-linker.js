@@ -1,9 +1,11 @@
 /*
 ========================================
-B11 Dusting Day Linker v0.13 (sys 2.30)
+B11 Dusting Day Linker v0.14 (sys 2.30)
 ========================================
 
 Änderungen
+- Ziel-Feldvalidierung blockiert nicht mehr standardmäßig, weil Memento Feldzugriff je nach Kontext unzuverlässig sein kann
+- vorhandener Source-DayLink wird als erstes wiederverwendet
 - Day-seitige Refresh-Doppellogik entfernt
 - optionaler recalc-Aufruf für Source und Target ergänzt
 - verhindert Zieleintrag-Erstellung bei wahrscheinlich falschem targetDateField
@@ -375,6 +377,8 @@ function ddlValidateTargetConfig(targetLib, targetDateField, map, cfg, errors) {
   var item;
   var ok = true;
 
+  if (cfg.strictTargetValidation !== true) return true;
+
   if (entries.length > 0 && !ddlAnyEntryHasField(entries, targetDateField)) {
     errors.push("Ziel-Datumsfeld fehlt in vorhandenen Tages-Einträgen: " + targetDateField);
     ok = false;
@@ -391,6 +395,17 @@ function ddlValidateTargetConfig(targetLib, targetDateField, map, cfg, errors) {
   }
 
   return ok;
+}
+
+function ddlFirstLinkedDay(src, sourceDayLinkField) {
+  var links;
+
+  if (!src || !sourceDayLinkField) return null;
+
+  links = ddlToArray(ddlSafeField(src, sourceDayLinkField, null, null));
+  if (links.length > 0) return links[0];
+
+  return null;
 }
 
 function ddlCreateDayEntry(targetLib, sourceDate, targetDateField, cfg, errors) {
@@ -536,7 +551,8 @@ function appendToDayEntry(cfg) {
     return result;
   }
 
-  target = ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
+  target = cfg.reuseExistingLink === false ? null : ddlFirstLinkedDay(src, sourceDayLinkField);
+  target = target || ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
 
   if (!target) {
     target = ddlCreateDayEntry(targetLib, sourceDate, targetDateField, cfg, errors);
