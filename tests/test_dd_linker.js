@@ -372,6 +372,10 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
   if (String(input.field("Debug")).indexOf("target entries: 1") < 0) {
     fail("debug-linker-entry-count missing");
   }
+
+  if (_logs.join("\n").indexOf("DEBUG Dusting Day Linker") < 0) {
+    fail("debug-linker-log missing");
+  }
 }
 
 function testFindsExistingDayFromIteratorEntries() {

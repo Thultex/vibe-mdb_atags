@@ -1,9 +1,10 @@
 /*
 ========================================
-B11 Dusting Day Linker v0.16 (sys 2.30)
+B11 Dusting Day Linker v0.17 (sys 2.30)
 ========================================
 
 Änderungen
+- Debug-Ausgaben werden zusätzlich immer per log() ausgegeben
 - unterstützt Iterator-Rückgaben von entries()
 - Debug-Funktion für Ziel-Library-Zugriff ergänzt
 - Ziel-Feldvalidierung blockiert nicht mehr standardmäßig, weil Memento Feldzugriff je nach Kontext unzuverlässig sein kann
@@ -530,6 +531,18 @@ function ddlWriteErrors(errors, cfg) {
   }
 }
 
+function ddlLogLine(line) {
+  try {
+    log(String(line));
+  } catch (e) {}
+}
+
+function ddlLogLines(lines) {
+  var i;
+  if (!lines) return;
+  for (i = 0; i < lines.length; i++) ddlLogLine(lines[i]);
+}
+
 function ddlDescribeValue(val) {
   var len;
 
@@ -590,6 +603,7 @@ function debugDayLinkerAccess(cfg) {
     lines.push("libByName: " + ddlDescribeValue(targetLib));
   } catch (e0) {
     lines.push("libByName error: " + e0);
+    ddlLogLines(lines);
     ddlSafeSet(src, debugField, lines.join("\n"), null, null);
     return {
       ok: false,
@@ -599,6 +613,7 @@ function debugDayLinkerAccess(cfg) {
 
   if (!targetLib) {
     lines.push("target lib missing");
+    ddlLogLines(lines);
     ddlSafeSet(src, debugField, lines.join("\n"), null, null);
     return {
       ok: false,
@@ -640,6 +655,7 @@ function debugDayLinkerAccess(cfg) {
   }
 
   ddlSafeSet(src, debugField, lines.join("\n"), null, null);
+  ddlLogLines(lines);
 
   return {
     ok: true,
