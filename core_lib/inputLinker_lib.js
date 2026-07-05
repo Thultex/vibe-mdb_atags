@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.73 (sys 2.30)
+#4 Input Linker Lib v0.74 (sys 2.30)
 ========================================
 
 Änderungen
+- openTargetEntry fuehrt vor dem Oeffnen optional nochmal den Receive-Refresh aus
 - sourceDayIdField speichert/liest eine stabile Ziel-ID, damit Updates ohne Relation-Rewrite verarbeitet werden koennen
 - Input-Dedupe nutzt nur noch Objekt-/ID-Identitaet, damit zeitgleiche Eintraege mit gleichem Titel nicht verschwinden
 - Rebuild/processAllEntries verwirft passende Inputs nicht mehr, wenn der Relation-Wrapper-Vergleich fehlschlaegt
@@ -97,7 +98,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.73";
+var DDL_VERSION = "0.74";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1664,6 +1665,22 @@ function ddlOpenConfiguredTarget(target, cfg, result) {
   }
 }
 
+function ddlShouldOpenTarget(cfg) {
+  return !!(cfg && (cfg.openTargetEntry === true || cfg.openTarget === true || cfg.openDayEntry === true));
+}
+
+function ddlShallowCopyConfig(src) {
+  var out = {};
+  var k;
+
+  src = src || {};
+  for (k in src) {
+    if (src.hasOwnProperty(k)) out[k] = src[k];
+  }
+
+  return out;
+}
+
 function ddlReceiveAfterLink(src, target, cfg, result, errors) {
   var receiveCfg;
   var receiveResult;
@@ -1695,6 +1712,40 @@ function ddlReceiveAfterLink(src, target, cfg, result, errors) {
     errors.push("ReceiveAfterLink meldet Fehler: " + receiveResult.errors.join("; "));
   }
   return receiveResult;
+}
+
+function ddlRefreshBeforeOpen(src, target, cfg, result, errors) {
+  var refreshCfg;
+  var refreshResult;
+
+  if (!src || !target || !cfg) return null;
+  if (!ddlShouldOpenTarget(cfg)) return null;
+  if (cfg.refreshBeforeOpen === false || cfg.receiveBeforeOpen === false) return null;
+
+  refreshCfg = ddlShallowCopyConfig(cfg.receiveConfig || {});
+  refreshCfg.inputEntry = src;
+  refreshCfg.targetEntry = target;
+  refreshCfg.sourceDateField = refreshCfg.sourceDateField || cfg.sourceDateField;
+  refreshCfg.targetDateField = refreshCfg.targetDateField || cfg.targetDateField;
+  refreshCfg.sourceDayLinkField = refreshCfg.sourceDayLinkField || cfg.sourceDayLinkField;
+  refreshCfg.sourceDayIdField = refreshCfg.sourceDayIdField || cfg.sourceDayIdField || cfg.sourceTargetIdField || cfg.dayIdField;
+  refreshCfg.rowSourceMode = refreshCfg.rowSourceMode || cfg.rowSourceMode;
+  refreshCfg.rowStepHours = refreshCfg.rowStepHours || cfg.rowStepHours;
+  refreshCfg.rowRoundMode = refreshCfg.rowRoundMode || cfg.rowRoundMode;
+  refreshCfg.processMode = refreshCfg.processMode || cfg.processMode || "append";
+  refreshCfg.processMap = refreshCfg.processMap || cfg.processMap || cfg.map;
+  refreshCfg.postEntry = refreshCfg.postEntry === true || cfg.postEntry === true;
+  refreshCfg.postEntryName = refreshCfg.postEntryName || cfg.postEntryName || cfg.postEntryFunctionName;
+  refreshCfg.postEntryFn = refreshCfg.postEntryFn || cfg.postEntryFn;
+  refreshCfg.recalcTarget = refreshCfg.recalcTarget === true || cfg.recalcTarget === true;
+  refreshCfg.targetDebugField = refreshCfg.targetDebugField || cfg.targetDebugField;
+
+  refreshResult = recieveInputEntryFromSource(refreshCfg);
+  if (result) result.refreshBeforeOpenResult = refreshResult;
+  if (refreshResult && refreshResult.errors && refreshResult.errors.length && errors) {
+    errors.push("RefreshBeforeOpen meldet Fehler: " + refreshResult.errors.join("; "));
+  }
+  return refreshResult;
 }
 
 function ddlWriteErrors(errors, cfg) {
@@ -2052,6 +2103,7 @@ function linkInputEntryToTarget(cfg) {
     recalculated: [],
     postEntries: [],
     receiveResult: null,
+    refreshBeforeOpenResult: null,
     openResult: { attempted: false, ok: false, target: "", method: "", error: "" },
     errors: errors
   };
@@ -2110,6 +2162,8 @@ function linkInputEntryToTarget(cfg) {
       result.targetEntry = target;
       ddlWriteSourceDayId(src, sourceDayIdField, target, errors, cfg);
       ddlReceiveAfterLink(src, target, cfg, result, errors);
+      ddlRefreshBeforeOpen(src, target, cfg, result, errors);
+      ddlOpenConfiguredTarget(target, cfg, result);
       result.skipped = true;
       result.skipReason = "existing_daylink_receive";
       if (errors.length) ddlWriteErrors(errors, cfg);
@@ -2173,6 +2227,9 @@ function linkInputEntryToTarget(cfg) {
   if (result.linked) {
     ddlReceiveAfterLink(src, target, cfg, result, errors);
   }
+
+  ddlRefreshBeforeOpen(src, target, cfg, result, errors);
+  ddlOpenConfiguredTarget(target, cfg, result);
 
   result.skipped = true;
   result.skipReason = "link_only";

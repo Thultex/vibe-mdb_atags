@@ -1,10 +1,10 @@
 /*
 ========================================
-B7 Time Marker v1.33 (sys 2.30)
+B7 Time Marker v1.34 (sys 2.30)
 ========================================
 
 Änderungen
-- `mergeSameRows` ueberspringt identische Texte pro Row, statt `x; x` zu erzeugen
+- `mergeSameRowContents` entfernt identische Row-Inhalte getrennt vor `mergeSameRows`
 - `cleanupTimeMarker({ mergeSameRows: true })` fuehrt gleiche Row-Marker zusammen, z. B. `19: hallo` + `19: spannend` zu `19: hallo; spannend`
 - Cleanup gibt `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
 - `appendTimeMarker()` gibt ebenfalls `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
@@ -330,14 +330,37 @@ function normalizeTimeMarkerRowKey(label) {
   return String(Math.round(n * 1000000) / 1000000);
 }
 
-function timeMarkerArrayContains(list, value) {
-  var i;
+function mergeSameTimeMarkerRowContents(timeLines, cfg) {
+  if (!cfg || cfg.mergeSameRowContents !== true) return timeLines;
 
-  for (i = 0; i < list.length; i++) {
-    if (list[i] === value) return true;
+  var out = [];
+  var seen = {};
+  var i;
+  var line;
+  var parts;
+  var key;
+  var text;
+
+  for (i = 0; i < timeLines.length; i++) {
+    line = String(timeLines[i]);
+    parts = parseTimestampParts(line);
+
+    if (!parts) {
+      out.push(line);
+      continue;
+    }
+
+    key = normalizeTimeMarkerRowKey(parts.label);
+    text = String(parts.text || "").replace(/^\s+|\s+$/g, "");
+
+    if (seen.hasOwnProperty(key + "\n" + text)) continue;
+
+    seen[key + "\n" + text] = true;
+    parts.text = text;
+    out.push(parts.indent + parts.label + parts.separator + parts.text);
   }
 
-  return false;
+  return out;
 }
 
 function mergeSameTimeMarkerRows(timeLines, cfg) {
@@ -353,7 +376,6 @@ function mergeSameTimeMarkerRows(timeLines, cfg) {
   var key;
   var text;
   var current;
-  var currentTexts;
 
   for (i = 0; i < timeLines.length; i++) {
     line = String(timeLines[i]);
@@ -370,12 +392,9 @@ function mergeSameTimeMarkerRows(timeLines, cfg) {
     if (indexByKey.hasOwnProperty(key)) {
       if (!isBlankTimeMarkerText(text)) {
         current = partsByKey[key];
-        currentTexts = String(current.text || "").split(separator);
-        if (!timeMarkerArrayContains(currentTexts, text)) {
-          current.text = isBlankTimeMarkerText(current.text)
-            ? text
-            : current.text + separator + text;
-        }
+        current.text = isBlankTimeMarkerText(current.text)
+          ? text
+          : current.text + separator + text;
         out[indexByKey[key]] = current.indent + current.label + current.separator + current.text;
       }
       continue;
@@ -400,6 +419,7 @@ function buildTimeBlockText(timeLines, otherLines) {
 
 function arrangeTimeMarkerRows(text, cfg) {
   var blocks = splitTextBlocks(text);
+  blocks.timeLines = mergeSameTimeMarkerRowContents(blocks.timeLines, cfg || {});
   blocks.timeLines = mergeSameTimeMarkerRows(blocks.timeLines, cfg || {});
   return buildTimeBlockText(blocks.timeLines, blocks.otherLines);
 }

@@ -489,9 +489,9 @@ function testCleanupMergesSameRowsWhenConfigured() {
   assertEquals("cleanup-merges-same-rows", entryObj.field("Note"), "19: hallo; das ist spannend\n20: weiter");
 }
 
-function testCleanupMergesSameRowsWithoutExactDuplicates() {
+function testCleanupMergesSameRowsKeepsExactDuplicatesByDefault() {
   var entryObj = makeEntry({
-    Note: "19: hallo\n19: hallo\n19: das ist spannend\n20: weiter"
+    Note: "19: hallo\n19: hallo\n20: weiter"
   });
 
   cleanupTimeMarker({
@@ -500,7 +500,36 @@ function testCleanupMergesSameRowsWithoutExactDuplicates() {
     mergeSameRows: true
   });
 
+  assertEquals("cleanup-merges-same-rows-keeps-exact-duplicates-by-default", entryObj.field("Note"), "19: hallo; hallo\n20: weiter");
+}
+
+function testCleanupMergesSameRowsWithoutExactDuplicatesWhenConfigured() {
+  var entryObj = makeEntry({
+    Note: "19: hallo\n19: hallo\n19: das ist spannend\n20: weiter"
+  });
+
+  cleanupTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    mergeSameRowContents: true,
+    mergeSameRows: true
+  });
+
   assertEquals("cleanup-merges-same-rows-without-exact-duplicates", entryObj.field("Note"), "19: hallo; das ist spannend\n20: weiter");
+}
+
+function testCleanupRemovesExactDuplicateRowsWithoutMergingSameTimestamps() {
+  var entryObj = makeEntry({
+    Note: "19: hallo\n19: hallo\n19: das ist spannend\n20: weiter"
+  });
+
+  cleanupTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    mergeSameRowContents: true
+  });
+
+  assertEquals("cleanup-removes-exact-duplicate-rows-without-merging-same-timestamps", entryObj.field("Note"), "19: hallo\n19: das ist spannend\n20: weiter");
 }
 
 function testCleanupReturnsFalseWhenNoMarkersRemain() {
@@ -544,7 +573,9 @@ testCleanupRemovesTrailingEmptyTimestampWithCarriageReturn();
 testCleanupRemovesNonBreakingSpaceTimestamp();
 testCleanupAcceptsTextFieldAlias();
 testCleanupMergesSameRowsWhenConfigured();
-testCleanupMergesSameRowsWithoutExactDuplicates();
+testCleanupMergesSameRowsKeepsExactDuplicatesByDefault();
+testCleanupMergesSameRowsWithoutExactDuplicatesWhenConfigured();
+testCleanupRemovesExactDuplicateRowsWithoutMergingSameTimestamps();
 testCleanupReturnsFalseWhenNoMarkersRemain();
 
 print("OK");

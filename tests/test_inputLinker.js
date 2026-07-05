@@ -962,6 +962,51 @@ function testExistingInputUpdatesTargetByDayIdWithoutRewritingRelation() {
   assertEquals("existing-dayid-id-kept", input.field("DayId"), "day-real");
 }
 
+function testExistingInputRefreshesAgainBeforeOpeningTarget() {
+  var openedNote = "";
+  var day = makeEntry({
+    id: "day-open",
+    Date: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  day.show = function() {
+    openedNote = this.field("OutNote");
+  };
+
+  var input = makeCountingSetEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "vor open",
+    InTag: [],
+    DayId: "day-open",
+    DayLinks: day
+  });
+
+  reset(input, [day]);
+
+  var result = linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    sourceDayIdField: "DayId",
+    receiveExistingLink: true,
+    openTargetEntry: true,
+    receiveConfig: {
+      processMode: "append",
+      processMap: [
+        { from: "InNote", to: "OutNote", type: "string_rows" }
+      ]
+    }
+  });
+
+  assertEquals("existing-open-refresh-note", day.field("OutNote"), "10: vor open");
+  assertEquals("existing-open-refresh-before-open-result", result.refreshBeforeOpenResult.inputs, 1);
+  assertEquals("existing-open-refresh-open-attempted", result.openResult.attempted, true);
+  assertEquals("existing-open-refresh-open-ok", result.openResult.ok, true);
+  assertEquals("existing-open-refresh-opened-note", openedNote, "10: vor open");
+}
+
 function testLinkedDeletedDayAllowsNewTargetCreation() {
   var deletedDay = makeEntry({
     id: "day-deleted",
@@ -1335,7 +1380,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-name missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.73") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.74") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -1347,7 +1392,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.73") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.74") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -1550,7 +1595,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.73") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.74") < 0) {
     fail("error-debug-version missing");
   }
 
@@ -2243,6 +2288,7 @@ testAlreadyLinkedInputDoesNotRewriteRelationOnRerun();
 testExistingDayLinkDoesNotProcessTargetByDefault();
 testAlreadyLinkedInputRecognizesRelationWrapperByDate();
 testExistingInputUpdatesTargetByDayIdWithoutRewritingRelation();
+testExistingInputRefreshesAgainBeforeOpeningTarget();
 testLinkedDeletedDayAllowsNewTargetCreation();
 testRelationWithoutLinkMethodDoesNotSetEntryObjectByDefault();
 testInputLinkerSkipsMementoLinkingTriggerContextByDefault();
@@ -2278,9 +2324,6 @@ testRefreshCurrentTargetFromLinkedInputProcessesOnlyThatEntry();
 testSuccessfulRefreshClearsExistingTargetDebugField();
 
 WScript.Echo("OK");
-
-
-
 
 
 
