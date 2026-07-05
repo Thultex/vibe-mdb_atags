@@ -493,6 +493,20 @@ function testAutoRestoreAveragesAggregateTextByDefault() {
   assertEqual("auto-aggregate-text-default-avg", entryObj.field("MetricA_"), 2);
 }
 
+function testAutoRestoreAveragesDisplayAggregateTextByDefault() {
+  var entryObj = makeEntry({
+    "Atag Json": "{\"Testing\":\"12 - [41, 6, 5, 4, 4]\"}"
+  });
+
+  restoreAtags({
+    entryObj: entryObj,
+    sourceField: "Atag Json",
+    targetFields: ["Testing_"]
+  });
+
+  assertEqual("auto-display-aggregate-text-default-avg", entryObj.field("Testing_"), 12);
+}
+
 function testAggregateTextValueModesAreConfigurable() {
   var firstEntry = makeEntry({
     Json: "{\"emo\":\"2 [3, 1]\"}"
@@ -711,6 +725,7 @@ testEntryObjReplacesStaleEntryWhenEntriesProvided();
 testArrayValueModesDefaultAvgAndConfigurable();
 testAutoRestoreAveragesRepeatedJsonArrayByDefault();
 testAutoRestoreAveragesAggregateTextByDefault();
+testAutoRestoreAveragesDisplayAggregateTextByDefault();
 testAggregateTextValueModesAreConfigurable();
 testMappingValueModeOverridesGlobalMode();
 testRealFieldMappingFromJsonNumber();

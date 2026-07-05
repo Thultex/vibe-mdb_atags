@@ -458,7 +458,7 @@ Die Restore-Funktionen sind das dritte Add-on/Utility im Stack und werden aus hi
 - Java-Listen wie `lib().entries()` werden fuer Gruppen automatisch entpackt (`length`, `size()/get()` oder `iterator()`)
 - `currentEntry: entry()` oder `entryObj: entry()` verhaelt sich wie beim Sequence-Counter: ersetzt stale Library-Eintraege, ergaenzt fehlende aktuelle Eintraege und schreibt nur den aktuellen Eintrag
 - bei Gruppen werden gemappte Felder vor dem Schreiben geleert; bei Einzel-Entry nur mit `clearMappedFields: true`
-- mehrere Werte in einem JSON-Array oder Aggregat-Text wie `2 [3, 1]` werden standardmaessig per `valueMode: "avg"` gemittelt; moeglich sind `"avg"`, `"first"`, `"last"`, `"median"`, `"min"` und `"max"`
+- mehrere Werte in einem JSON-Array oder Aggregat-Text wie `2 [3, 1]` oder `12 - [41, 6, 5, 4, 4]` werden standardmaessig per `valueMode: "avg"` gemittelt; moeglich sind `"avg"`, `"first"`, `"last"`, `"median"`, `"min"` und `"max"`
 - Standard-Suffixe fuer den Auto-Restore sind `_` und `_l` fuer Listen; `suffix: ""` schreibt direkt in gleichnamige Felder
 - `debugField: "Feldname"` schreibt Diagnosezeilen in ein Textfeld; `debugLog: true` spiegelt sie zusaetzlich nach `log()`
 - Auto-Restore nutzt vorhandene Feldnamen aus `lib().fields()` und ueberspringt fehlende Ziele vor dem Schreiben; alternativ kann `targetFields` explizit gesetzt werden

@@ -1,6 +1,6 @@
 /*
 ========================================
-A3 restoreAtags v2.05 (sys 2.40)
+A3 restoreAtags v2.06 (sys 2.40)
 ========================================
 
 Notes:
@@ -10,7 +10,7 @@ Notes:
 - supports currentEntry like sequenceCounter
 - supports entryObj as currentEntry fallback when entries are provided
 - valueMode: avg, first, last, median, min, max
-- aggregate text like "2 [3, 1]" is treated as repeated values
+- aggregate text like "2 [3, 1]" or "12 - [41, 6, 5]" is treated as repeated values
 - optional debugField writes restore diagnostics
 - debugLog/logDebug mirrors diagnostics to log()
 - auto restore skips targets missing from lib().fields()
@@ -382,7 +382,7 @@ function parseRestoreAggregateText(val) {
   if (!isRestoreString(val)) return null;
 
   s = trimRestoreString(val);
-  m = s.match(/^[+-]?\d+(?:[.,]\d+)?\s*\[([^\]]+)\]\s*$/);
+  m = s.match(/^[+-]?\d+(?:[.,]\d+)?(?:\s*-\s*)?\s*\[([^\]]+)\]\s*$/);
   if (!m) return null;
 
   list = m[1];
@@ -657,7 +657,7 @@ function restoreAtagsForEntry(entryObj, cfg, clearMappedFields) {
   if (!entryObj) return;
 
   if (cfg.debugField) cfg._debugLines = [];
-  restoreDebugPush(cfg, "restoreAtags v2.05");
+  restoreDebugPush(cfg, "restoreAtags v2.06");
   restoreDebugPush(cfg, "sourceField: " + cfg.sourceField);
   restoreFieldNameMap(cfg);
   restoreDebugPush(cfg, "known fields: " + (cfg._fieldNameCount == null ? "unknown" : String(cfg._fieldNameCount)));
