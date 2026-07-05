@@ -1,6 +1,6 @@
 /*
 ========================================
-#4 Input Linker Lib v0.75 (sys 2.30)
+#4 Input Linker Lib v0.75 (sys 2.40)
 ========================================
 
 Änderungen
@@ -109,13 +109,13 @@ function getInputLinkerLibVersion() {
     name: "inputLinker_lib",
     displayName: DDL_NAME,
     version: DDL_VERSION,
-    sysVersion: "2.30",
+    sysVersion: "2.40",
     path: "core_lib/inputLinker_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("inputLinker_lib", DDL_VERSION, "2.30", "core_lib/inputLinker_lib.js", true);
+  registerAtagLibVersion("inputLinker_lib", DDL_VERSION, "2.40", "core_lib/inputLinker_lib.js", true);
 }
 
 function ddlTrim(s) {

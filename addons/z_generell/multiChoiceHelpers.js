@@ -1,6 +1,6 @@
 /*
 ========================================
-C1 Multi Choice Helpers v1.01 (sys 2.30)
+C1 Multi Choice Helpers v1.01 (sys 2.40)
 ========================================
 
 Changes

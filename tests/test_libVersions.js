@@ -35,7 +35,7 @@ function log(msg) {
 
 assertEquals("libVersions-own-version", getLibVersionsVersion().version, "1.16");
 assertEquals("helpers-lib-own-version", getHelpersLibVersion().version, "2.11");
-assertEquals("helpers-lib-sys-version", getHelpersLibVersion().sysVersion, "2.30");
+assertEquals("helpers-lib-sys-version", getHelpersLibVersion().sysVersion, "2.40");
 assertEquals("collect-lib-own-version", getCollectAtagsLibVersion().version, "1.61");
 assertEquals("export-lib-own-version", getExportAtagsLibVersion().version, "1.83");
 assertEquals("tag-cleaner-own-version", getTagCleanerVersion().version, "1.44");
@@ -80,7 +80,7 @@ getInputLinkerLibVersion = function() {
   return {
     name: "inputLinker_lib",
     version: "0.39",
-    sysVersion: "2.30",
+    sysVersion: "2.40",
     path: "core_lib/inputLinker_lib.js"
   };
 };
@@ -93,11 +93,11 @@ ATAG_LIB_VERSIONS = savedRegistry;
 
 savedRegistry = ATAG_LIB_VERSIONS;
 ATAG_LIB_VERSIONS = {};
-registerAtagLibVersion("inputLinker_lib", "0.39", "2.30", "core_lib/inputLinker_lib.js", true);
+registerAtagLibVersion("inputLinker_lib", "0.39", "2.40", "core_lib/inputLinker_lib.js", true);
 var registryOnlyOldOptional = checkAtagLibVersions({ names: ["inputLinker_lib"], requireAll: false, asText: false });
 assertEquals("registry-only-old-optional-mismatch", registryOnlyOldOptional.versionMismatch[0], "inputLinker_lib expected 0.75 got 0.39");
 ATAG_LIB_VERSIONS = {};
-registerAtagLibVersion("inputLinker_lib", "0.99", "2.30", "core_lib/inputLinker_lib.js", true);
+registerAtagLibVersion("inputLinker_lib", "0.99", "2.40", "core_lib/inputLinker_lib.js", true);
 var registryOnlyNewerOptional = checkAtagLibVersions({ names: ["inputLinker_lib"], requireAll: false, asText: false });
 assertTrue("registry-only-newer-ok", registryOnlyNewerOptional.ok);
 assertEquals("registry-only-newer-no-mismatch", registryOnlyNewerOptional.versionMismatch.length, 0);
@@ -110,7 +110,7 @@ getInputLinkerLibVersion = function() {
   return {
     name: "inputLinker_lib",
     version: "0.99",
-    sysVersion: "2.30",
+    sysVersion: "2.40",
     path: "core_lib/inputLinker_lib.js"
   };
 };
@@ -126,7 +126,7 @@ getInputLinkerLibVersion = function() {
   };
 };
 var newerWrongSys = checkAtagLibVersions({ names: ["inputLinker_lib"], checkAccess: true, requireAll: false, asText: false });
-assertEquals("newer-wrong-sys-mismatch", newerWrongSys.versionMismatch[0], "inputLinker_lib expected sys 2.30 got sys 2.29");
+assertEquals("newer-wrong-sys-mismatch", newerWrongSys.versionMismatch[0], "inputLinker_lib expected sys 2.40 got sys 2.29");
 getInputLinkerLibVersion = savedGetInputLinkerLibVersion;
 ATAG_LIB_VERSIONS = savedRegistry;
 

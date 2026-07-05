@@ -1,6 +1,6 @@
 /*
 ========================================
-A4 Tag Cleaner v1.44 (sys 2.30)
+A4 Tag Cleaner v1.44 (sys 2.40)
 ========================================
 
 Notes
@@ -33,7 +33,7 @@ function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
     version: "1.44",
-    sysVersion: "2.30",
+    sysVersion: "2.40",
     path: "core/tagCleaner.js"
   };
 }

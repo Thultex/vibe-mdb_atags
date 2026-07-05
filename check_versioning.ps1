@@ -50,7 +50,7 @@ function Get-VersionLine {
 
   $match = [regex]::Match($Content, '(?m)^((?:#|[ABC])\d+) [^\r\n]* v(\d+\.\d+) \(sys (\d+\.\d+)\)$')
   if (-not $match.Success) {
-    throw "Keine Versionszeile im erwarteten Format gefunden: $Path (erwartet z.B. A1 restoreAtags v1.37 (sys 2.20) oder #1 helpers_lib v2.11 (sys 2.30))"
+    throw "Keine Versionszeile im erwarteten Format gefunden: $Path (erwartet z.B. A1 restoreAtags v1.37 (sys 2.20) oder #1 helpers_lib v2.11 (sys 2.40))"
   }
 
   return [pscustomobject]@{

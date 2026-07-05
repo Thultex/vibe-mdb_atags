@@ -1,6 +1,6 @@
 /*
 ========================================
-A1 Lib Versions v1.16 (sys 2.30)
+A1 Lib Versions v1.16 (sys 2.40)
 ========================================
 
 Notes
@@ -8,10 +8,10 @@ Notes
 - Load before optional lib files to collect registered versions.
 - Each lib can still expose its own get...Version function.
 - Current libs:
-  - helpers_lib v2.11 (sys 2.30)
-  - collectAtags_lib v1.61 (sys 2.30)
-  - exportAtags_lib v1.83 (sys 2.30)
-  - inputLinker_lib v0.75 (sys 2.30, optional)
+  - helpers_lib v2.11 (sys 2.40)
+  - collectAtags_lib v1.61 (sys 2.40)
+  - exportAtags_lib v1.83 (sys 2.40)
+  - inputLinker_lib v0.75 (sys 2.40, optional)
 
 ========================================
 */
@@ -28,14 +28,14 @@ if (RUN_LIB_CHECK) {
   });
 }
 
-var ATAG_SYS_VERSION = typeof ATAG_SYS_VERSION !== "undefined" ? ATAG_SYS_VERSION : "2.30";
+var ATAG_SYS_VERSION = typeof ATAG_SYS_VERSION !== "undefined" ? ATAG_SYS_VERSION : "2.40";
 var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERSIONS : {};
 
 function getLibVersionsVersion() {
   return {
     name: "libVersions",
     version: "1.16",
-    sysVersion: "2.30",
+    sysVersion: "2.40",
     path: "core/_checkLibs.js"
   };
 }

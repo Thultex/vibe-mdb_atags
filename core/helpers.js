@@ -1,6 +1,6 @@
 /*
 ========================================
-A2 Atag Helpers v1.02 (sys 2.30)
+A2 Atag Helpers v1.02 (sys 2.40)
 ========================================
 
 Notes
@@ -15,7 +15,7 @@ function getHelpersVersion() {
   return {
     name: "helpers",
     version: "1.02",
-    sysVersion: "2.30",
+    sysVersion: "2.40",
     path: "core/helpers.js"
   };
 }
