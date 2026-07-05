@@ -105,10 +105,9 @@ Der eigentliche Alltags-Trigger liegt in `DustingInput`:
 DustingInput speichern
   -> passenden DustingDay finden oder erstellen
   -> DustingInput.DayLinks auf DustingDay setzen
-  -> DustingDay.Notiz und Tags aktualisieren
 ```
 
-Aktueller Prototyp-Aufruf beim Zusammenführen mit der Eindosierungstabelle:
+Aktueller Input-Aufruf:
 
 ```js
 linkInputEntryToTarget({
@@ -116,23 +115,90 @@ linkInputEntryToTarget({
   sourceDateField: "Datum",
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
-  rowSourceMode: "realtime_since",
+  dayStartHour: 4,
+  daySearchLimit: 10
+});
+```
+
+Input-Aufruf mit direktem Receive-Nachlauf, falls `DustingDay` bei scriptgesetztem Link keinen `Linking an entry`-Trigger ausführt:
+
+```js
+linkInputEntryToTarget({
+  targetLib: "DustingDay",
+  sourceDateField: "Datum",
+  targetDateField: "Datum",
+  sourceDayLinkField: "DayLinks",
+  dayStartHour: 4,
+  daySearchLimit: 10,
+  receiveAfterLink: true,
+  receiveConfig: {
+    rowSourceMode: "realtime",
+    rowStepHours: 0.1,
+    rowRoundMode: "round",
+    processMode: "append",
+    postEntry: true,
+    postEntryName: "PostEntry",
+    recalcTarget: true,
+    targetDebugField: "Debug",
+    processMap: [
+      { from: "InNote", to: "Notiz", type: "string_rows" },
+      { from: "InTag", to: "Tags", type: "tag" }
+    ]
+  }
+});
+```
+
+Input-Aufruf für Update-Test bei bereits vorhandenem `DayLinks`:
+
+```js
+linkInputEntryToTarget({
+  targetLib: "DustingDay",
+  sourceDateField: "Datum",
+  targetDateField: "Datum",
+  sourceDayLinkField: "DayLinks",
+  debugReceive: true,
+  receiveExistingLink: true,
+  receiveConfig: {
+    rowSourceMode: "realtime",
+    rowStepHours: 0.1,
+    rowRoundMode: "round",
+    processMode: "append",
+    postEntry: true,
+    postEntryName: "PostEntry",
+    recalcTarget: true,
+    targetDebugField: "Debug",
+    processMap: [
+      { from: "InNote", to: "Notiz", type: "string_rows" },
+      { from: "InTag", to: "Tags", type: "tag" }
+    ]
+  }
+});
+```
+
+Day-seitiger Trigger `Linking an entry` in `DustingDay`:
+
+```js
+recieveInputEntryFromSource({
+  inputLib: "DustingInput",
+  sourceDateField: "Datum",
+  targetDateField: "Datum",
+  sourceDayLinkField: "DayLinks",
+  rowSourceMode: "realtime",
   rowStepHours: 0.1,
   rowRoundMode: "round",
-  recalcTarget: true,
-  recalcSource: true,
+  processMode: "append",
   postEntry: true,
   postEntryName: "PostEntry",
-  openTargetEntry: true,
-  sourceDebugField: "Debug",
-  map: [
+  recalcTarget: true,
+  targetDebugField: "Debug",
+  processMap: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
     { from: "InTag", to: "Tags", type: "tag" }
   ]
 });
 ```
 
-Day-seitiger Refresh in `DustingDay`:
+Day-seitiger manueller Refresh in `DustingDay`:
 
 ```js
 refreshTargetFromInputEntries({
