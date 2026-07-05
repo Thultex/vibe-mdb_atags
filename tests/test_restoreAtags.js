@@ -479,6 +479,21 @@ function testAutoRestoreAveragesRepeatedJsonArrayByDefault() {
   assertEqual("auto-array-default-avg", entryObj.field("emo_"), 2);
 }
 
+function testSelectRestoreValueAveragesJavaListLikeArrayByDefault() {
+  var value = makeJavaSizeList([41, 6, 5, 4, 4]);
+
+  assertEqual("java-list-like-array-default-avg", selectRestoreValue(value, null, null), 12);
+  assertEqual("java-list-like-array-max", selectRestoreValue(value, "max", null), 41);
+}
+
+function testSelectRestoreValueIgnoresStringsForNumericModes() {
+  var value = makeJavaSizeList([41, "Testing", 6, 5, 4, 4]);
+
+  assertEqual("mixed-list-default-avg", selectRestoreValue(value, null, null), 12);
+  assertEqual("mixed-list-median", selectRestoreValue(value, "median", null), 5);
+  assertEqual("mixed-list-first-keeps-position", selectRestoreValue(value, "first", null), 41);
+}
+
 function testAutoRestoreAveragesAggregateTextByDefault() {
   var entryObj = makeEntry({
     "Atag Json": "{\"MetricA\":\"2 [3, 1]\"}"
@@ -724,6 +739,8 @@ testCurrentEntryIsAddedWhenMissingLikeSequenceCounter();
 testEntryObjReplacesStaleEntryWhenEntriesProvided();
 testArrayValueModesDefaultAvgAndConfigurable();
 testAutoRestoreAveragesRepeatedJsonArrayByDefault();
+testSelectRestoreValueAveragesJavaListLikeArrayByDefault();
+testSelectRestoreValueIgnoresStringsForNumericModes();
 testAutoRestoreAveragesAggregateTextByDefault();
 testAutoRestoreAveragesDisplayAggregateTextByDefault();
 testAggregateTextValueModesAreConfigurable();

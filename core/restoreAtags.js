@@ -1,6 +1,6 @@
 /*
 ========================================
-A3 restoreAtags v2.06 (sys 2.40)
+A3 restoreAtags v2.08 (sys 2.40)
 ========================================
 
 Notes:
@@ -11,6 +11,8 @@ Notes:
 - supports entryObj as currentEntry fallback when entries are provided
 - valueMode: avg, first, last, median, min, max
 - aggregate text like "2 [3, 1]" or "12 - [41, 6, 5]" is treated as repeated values
+- Rhino/Java-listartige JSON-Arrays werden wie normale Arrays behandelt
+- avg/min/max/median ignorieren nicht-numerische Zwischenwerte in gemischten Listen
 - optional debugField writes restore diagnostics
 - debugLog/logDebug mirrors diagnostics to log()
 - auto restore skips targets missing from lib().fields()
@@ -73,13 +75,18 @@ function parseListValue(val) {
 }
 
 function isListLikeValue(val) {
-  if (isRestoreArray(val)) return true;
+  if (isRestoreListLike(val)) return true;
   if (val == null) return false;
   return String(val).indexOf(",") >= 0;
 }
 
 function isRestoreArray(val) {
   return Object.prototype.toString.call(val) === "[object Array]";
+}
+
+function isRestoreListLike(val) {
+  if (isRestoreArray(val)) return true;
+  return restoreListLength(val) != null;
 }
 
 function isRestoreString(val) {
@@ -330,6 +337,10 @@ function selectRestoreValue(val, valueMode, force_type) {
     if (agg) val = agg.values;
   }
 
+  if (!isRestoreArray(val) && force_type !== "list" && isRestoreListLike(val)) {
+    val = restoreToArray(val);
+  }
+
   if (!isRestoreArray(val) || force_type === "list") return val;
 
   values = compactRestoreValues(val);
@@ -342,9 +353,11 @@ function selectRestoreValue(val, valueMode, force_type) {
   nums = [];
   for (i = 0; i < values.length; i++) {
     n = toRestoreNumber(values[i]);
-    if (n == null) return values[0];
+    if (n == null) continue;
     nums.push(n);
   }
+
+  if (!nums.length) return values[0];
 
   if (mode === "median") {
     nums.sort(function(a, b) { return a - b; });
@@ -402,12 +415,13 @@ function parseRestoreAggregateText(val) {
 
 function compactRestoreValues(val) {
   var out = [];
+  var values = restoreToArray(val);
   var i;
 
-  for (i = 0; i < val.length; i++) {
-    if (val[i] == null) continue;
-    if (String(val[i]) === "") continue;
-    out.push(val[i]);
+  for (i = 0; i < values.length; i++) {
+    if (values[i] == null) continue;
+    if (String(values[i]) === "") continue;
+    out.push(values[i]);
   }
 
   return out;
@@ -657,7 +671,7 @@ function restoreAtagsForEntry(entryObj, cfg, clearMappedFields) {
   if (!entryObj) return;
 
   if (cfg.debugField) cfg._debugLines = [];
-  restoreDebugPush(cfg, "restoreAtags v2.06");
+  restoreDebugPush(cfg, "restoreAtags v2.08");
   restoreDebugPush(cfg, "sourceField: " + cfg.sourceField);
   restoreFieldNameMap(cfg);
   restoreDebugPush(cfg, "known fields: " + (cfg._fieldNameCount == null ? "unknown" : String(cfg._fieldNameCount)));

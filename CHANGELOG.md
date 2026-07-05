@@ -75,6 +75,8 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Fix: `collectAtags_lib` v1.61 liest auch Slot-Werte mit Leerzeichen nach Doppelpunkt, z. B. `tag: _inhalt_`, und lässt gefüllte Slots nach leeren Slots gewinnen. `Input Linker` v0.75 ergänzt `mode: "prepend"`/`"prepend all"` für Text-Maps.
 - Fix: `Tag Pair Parser` v1.01 schreibt einfache Ganzzahl-Paare aus Tagfeldern kompakt ins Textfeld, z. B. `springen, 3` zu `springen3` und `fallen, -3` zu `fallen-3`; Dezimal- und kumulative Formen bleiben bei `name#wert`.
 - Fix: `syncLastFromLatest` v1.05 wendet `clearTemplateSlots` auch auf Java-/stringartige Memento-Textwerte an, z. B. `Testing: _safd_` zu `Testing: __`.
+- Fix: `restoreAtags` v2.08 ignoriert bei `avg`/`median`/`min`/`max` nicht-numerische Zwischenwerte in gemischten JSON-Listen; `[41, "Text", 6, 5, 4, 4]` wird mit Default wieder zu `12`, während `first` weiter positionsbasiert `41` liefert.
+- Fix: `restoreAtags` v2.07 behandelt Rhino-/Java-listartige JSON-Arrays wie normale Arrays; wiederholte Werte aus `Atag Json`, z. B. `Testing: [41, 6, 5, 4, 4]`, werden mit Default `valueMode: "avg"` wieder zu `12` statt als erster Wert `41` in Zahlenfelder zu rutschen.
 - Fix: `restoreAtags` v2.06 erkennt auch Export-Aggregate mit Trennstrich wie `12 - [41, 6, 5, 4, 4]`; der Default `valueMode: "avg"` schreibt damit wieder den Mittelwert statt den ersten Detailwert.
 - Feature: `Input Linker` v0.79 versucht nach dem Linken versehentlich in den Papierkorb verschobene Source-/Target-Einträge per verfügbarer Restore-Methode zurückzuholen und protokolliert `restored` im Debug.
 - Feature: `Input Linker` v0.78 übernimmt `receiveConfig` jetzt auch in `recieveInputEntryFromSource()` und `refreshTargetFromInputEntries()`; die DustingDay-Beispiele bündeln Receive-/Process-Optionen dort einheitlich mit `processMode` als erstem Eintrag.
@@ -102,7 +104,7 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Fix: `Input Linker` v0.46 erkennt bestehende Relationslinks robuster über Entry-ID und Name/Titel; das Zieldatum dient nur noch zur Tag-Plausibilisierung, nicht zur Gleichsetzung verschiedener Day-Einträge.
 - Fix: `Input Linker` v0.45 ueberspringt standardmaessig Memento-Linking-Trigger-Kontexte, damit programmgesteuertes Verlinken keinen zweiten rekursiven Linker-Lauf ausloest.
 - Fix: `Input Linker` v0.44 verknüpft Relation-Felder über `entry.link(field, entry)` und vermeidet `set(field, entryObj)`, da Memento `set()` für Link-to-Entry-Felder mit Entry-Namen/Strings dokumentiert.
-- *Versionen: sys 2.40, collectAtags_lib v1.61, Input Linker v0.79, libVersions v1.21, Time Marker v1.37, Tag Pair Parser v1.01, restoreAtags v2.06, Global Field Sync v1.03, Sync Last From Latest v1.05, Sequence Counter v1.05.*
+- *Versionen: sys 2.40, collectAtags_lib v1.61, Input Linker v0.79, libVersions v1.21, Time Marker v1.37, Tag Pair Parser v1.01, restoreAtags v2.08, Global Field Sync v1.03, Sync Last From Latest v1.05, Sequence Counter v1.05.*
 
 ### 2026-05-20 - (ca. 0,5h)
 
