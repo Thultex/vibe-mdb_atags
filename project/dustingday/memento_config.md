@@ -42,6 +42,9 @@ Aktuelle Felder:
   - optional
 - `Notiz`
   - Typ: Text
+- `Record`
+  - Typ: Text
+  - wird vom letzten Tages-Eintrag übernommen; Template-Slot-Inhalte werden dabei geleert
 - `Datum`
   - Typ: Datum/Zeit
 - `Tags`
@@ -207,6 +210,17 @@ recieveInputEntryFromSource({
 });
 ```
 
+Record vom letzten Day übernehmen, dabei ausfüllbare Slots leeren:
+
+```js
+syncLastFromLatest({
+  fields: ["Record"],
+  fieldDate: "Datum",
+  clearTemplateSlots: true,
+  templateSlotMarker: "_"
+});
+```
+
 Day-seitiger manueller Refresh in `DustingDay`:
 
 ```js
@@ -230,7 +244,5 @@ refreshTargetFromInputEntries({
   ]
 });
 ```
-
-
 
 

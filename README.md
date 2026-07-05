@@ -257,6 +257,19 @@ syncLastFromLatest({
 });
 ```
 
+Template-Slots koennen beim Mitnehmen geleert werden. `clearTemplateSlots` ist standardmaessig aus. Standard-Marker ist `_`; mit `templateSlotMarker` kann ein anderes einzelnes Zeichen genutzt werden.
+
+```js
+syncLastFromLatest({
+  fields: ["Record"],
+  fieldDate: "Datum",
+  clearTemplateSlots: true,
+  templateSlotMarker: "_"
+});
+```
+
+Damit wird z. B. `Laufen:_2 km_` zu `Laufen:__`, waehrend die Vorlage selbst erhalten bleibt.
+
 **Typed Text Fields (Syncing)**
 
 Uebertraegt Text-Hilfsfelder mit Token-Suffix in passend benannte Zielfelder. Beispiel: `Dauer(t-d)` wird nach `Dauer` geschrieben, `Tags(t-tag)` nach `Tags`.

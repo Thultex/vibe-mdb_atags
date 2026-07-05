@@ -190,6 +190,42 @@ function testGetNewestLibraryEntryDefaultsToFirstEntry() {
   assertSame("newest-modified-mode", getNewestLibraryEntry({ mode: "modified" }), modifiedLater);
 }
 
+function testClearTemplateSlotsWhenCopyingLatestValue() {
+  var current = makeEntry({ Datum: "2026-07-05", Record: "" });
+  var previous = makeEntry({
+    Datum: "2026-07-04",
+    Record: "Laufen:_2 km_\nLaufen::__\nLaufen#_warm_\nLaufen::_ja_\nNotiz_normal_bleibt"
+  });
+  _entries = [current, previous];
+
+  var result = syncLastFromLatest({
+    fields: ["Record"],
+    fieldDate: "Datum",
+    clearTemplateSlots: true
+  });
+
+  assertEquals("clear-template-slots-record", current.field("Record"), "Laufen:__\nLaufen::__\nLaufen#__\nLaufen::__\nNotiz_normal_bleibt");
+  assertArrayEquals("clear-template-slots-updated", result.updated, ["Record"]);
+}
+
+function testTemplateSlotsCanUseCustomMarker() {
+  var current = makeEntry({ Datum: "2026-07-05", Record: "" });
+  var previous = makeEntry({
+    Datum: "2026-07-04",
+    Record: "Laufen:~2 km~\nLaufen#~warm~\nLaufen:_bleibt_"
+  });
+  _entries = [current, previous];
+
+  syncLastFromLatest({
+    fields: ["Record"],
+    fieldDate: "Datum",
+    clearTemplateSlots: true,
+    templateSlotMarker: "~"
+  });
+
+  assertEquals("custom-template-slot-marker", current.field("Record"), "Laufen:~~\nLaufen#~~\nLaufen:_bleibt_");
+}
+
 testCopiesLatestPreviousEntry();
 testMapAndOnlyIfEmpty();
 testSyncWithoutDateFieldUsesNewestLibraryEntry();
@@ -199,5 +235,7 @@ testDateFieldMaxEntriesMinusOneScansAll();
 testFindNewestEntryUsesModifiedTimeAndIdFallback();
 testFindNewestEntryMaxScanCanTradePrecisionForSpeed();
 testGetNewestLibraryEntryDefaultsToFirstEntry();
+testClearTemplateSlotsWhenCopyingLatestValue();
+testTemplateSlotsCanUseCustomMarker();
 
 WScript.Echo("OK");

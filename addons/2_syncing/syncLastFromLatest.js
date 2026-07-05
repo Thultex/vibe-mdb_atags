@@ -1,9 +1,10 @@
 /*
 ========================================
-B4 Sync Last From Latest v1.03 (sys 2.30)
+B4 Sync Last From Latest v1.04 (sys 2.30)
 ========================================
 
 Changes
+- add clearTemplateSlots to empty marker-wrapped template values while carrying templates forward
 - support maxEntries 0 for newest entry and -1 for full date scan
 - use newest library entry when syncLastFromLatest has no fieldDate
 - limit date-field scans by maxEntries/maxScan with default 100
@@ -91,6 +92,32 @@ function slflIsEmpty(val) {
 function slflClone(val) {
   if (slflIsArray(val)) return val.slice(0);
   return val;
+}
+
+function slflRegexEscape(text) {
+  return String(text || "").replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
+}
+
+function slflTemplateSlotMarker(cfg) {
+  var marker = cfg && cfg.templateSlotMarker;
+  marker = marker == null || marker === "" ? "_" : String(marker);
+  return marker.charAt(0);
+}
+
+function slflClearTemplateSlots(text, cfg) {
+  var tagName = "#?[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\\-]*";
+  var marker = slflRegexEscape(slflTemplateSlotMarker(cfg));
+  var rx = new RegExp("(^|[\\s,;.!?()\\[\\]{}])(" + tagName + "\\s*(?:::\\s*|:\\s*|#))" + marker + "([^" + marker + "\\r\\n]*)" + marker, "g");
+
+  return String(text || "").replace(rx, function(all, lead, prefix) {
+    return lead + prefix + slflTemplateSlotMarker(cfg) + slflTemplateSlotMarker(cfg);
+  });
+}
+
+function slflPrepareValueForCopy(value, cfg) {
+  if (!cfg || cfg.clearTemplateSlots !== true) return slflClone(value);
+  if (slflIsString(value)) return slflClearTemplateSlots(value, cfg);
+  return slflClone(value);
 }
 
 function slflEntryIdValue(entryObj) {
@@ -283,7 +310,7 @@ function getNewestLibraryEntry(cfg) {
   return slflFirstEntry(entries);
 }
 
-function slflCopyField(sourceEntry, targetEntry, sourceField, targetField, onlyIfEmpty, result) {
+function slflCopyField(sourceEntry, targetEntry, sourceField, targetField, onlyIfEmpty, result, cfg) {
   var sourceVal;
   var targetVal;
 
@@ -303,7 +330,7 @@ function slflCopyField(sourceEntry, targetEntry, sourceField, targetField, onlyI
     }
   }
 
-  targetEntry.set(targetField, slflClone(sourceVal));
+  targetEntry.set(targetField, slflPrepareValueForCopy(sourceVal, cfg));
   result.updated.push(targetField);
 }
 
@@ -331,7 +358,7 @@ function syncLastFromLatest(cfg) {
   if (cfg.map) {
     for (target in cfg.map) {
       if (cfg.map.hasOwnProperty(target)) {
-        slflCopyField(latestEntry, currentEntry, cfg.map[target], target, onlyIfEmpty, result);
+        slflCopyField(latestEntry, currentEntry, cfg.map[target], target, onlyIfEmpty, result, cfg);
       }
     }
     return result;
@@ -339,7 +366,7 @@ function syncLastFromLatest(cfg) {
 
   fields = slflNormalizeFields(cfg.fields);
   for (i = 0; i < fields.length; i++) {
-    slflCopyField(latestEntry, currentEntry, fields[i], fields[i], onlyIfEmpty, result);
+    slflCopyField(latestEntry, currentEntry, fields[i], fields[i], onlyIfEmpty, result, cfg);
   }
 
   return result;
