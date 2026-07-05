@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.76 (sys 2.40)
+#4 Input Linker Lib v0.77 (sys 2.40)
 ========================================
 
 Änderungen
+- string_rows entfernt führende Tagbar-Prefixe wie "| " vor dem Row-Wrapping
 - string/text Maps können mit mode "prepend" nach vorne schreiben
 - openTargetEntry führt vor dem Öffnen optional nochmal den Receive-Refresh aus
 - sourceDayIdField speichert/liest eine stabile Ziel-ID, damit Updates ohne Relation-Rewrite verarbeitet werden können
@@ -105,7 +106,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.76";
+var DDL_VERSION = "0.77";
 
 function getInputLinkerLibVersion() {
   return {
@@ -633,6 +634,21 @@ function ddlValueToText(value, type) {
   if (typeof value === "number") return String(value).replace(".", ",");
 
   return ddlFirstLine(value);
+}
+
+function ddlNormalizeStringRowText(text) {
+  var s = ddlTrim(text);
+  var m;
+
+  if (!s) return "";
+
+  m = s.match(/^"\|{1,2}\s*(.*)$/);
+  if (m) return ddlTrim(m[1] || "");
+
+  m = s.match(/^\|{1,2}\s*(.*)$/);
+  if (m) return ddlTrim(m[1] || "");
+
+  return s;
 }
 
 function ddlSplitLines(text) {
@@ -1512,6 +1528,7 @@ function ddlApplyMapFromSourceToDay(src, target, sourceDate, targetDate, cfg, re
     }
 
     text = ddlValueToText(value, type);
+    if (type === "string_rows") text = ddlNormalizeStringRowText(text);
     if (!text) continue;
 
     line = type === "string_rows" ? (row ? row : "?") + ": " + text : text;

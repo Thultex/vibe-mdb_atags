@@ -504,6 +504,36 @@ function testStringTypeCanPrependAllPlainText() {
   assertEquals("plain-string-prepend-all", day.field("Record"), "gleicher record\ngleicher record");
 }
 
+function testStringRowsWrapReadableTagLineAfterLinking() {
+  var day = makeEntry({
+    Datum: "2020-02-02 02:00",
+    OutNote: ""
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 02:30",
+    InNote: "| Testing: _4_",
+    DayLinks: null
+  });
+
+  reset(input, [day]);
+
+  linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Datum",
+    sourceDayLinkField: "DayLinks",
+    rowSourceMode: "realtime",
+    rowStepHours: 0.5,
+    rowRoundMode: "round",
+    processAfterLink: true,
+    map: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertEquals("readable-tag-line-wrapped-as-row", day.field("OutNote"), "2,5: Testing: _4_");
+}
+
 function testSinceFirstUsesTargetDateAsZero() {
   var day = makeEntry({
     Datum: "2020-02-02 14:35",
@@ -2357,6 +2387,7 @@ testStringTypeAppendsPlainTextWithoutRowPrefix();
 testStringTypeCanPrependPlainText();
 testStringTypePrependKeepsUniqueByDefault();
 testStringTypeCanPrependAllPlainText();
+testStringRowsWrapReadableTagLineAfterLinking();
 testSinceFirstUsesTargetDateAsZero();
 testRowSourceModeRealtimeSinceUsesTimeMarkerNames();
 testWrongTargetDateFieldOnlyBlocksInStrictMode();

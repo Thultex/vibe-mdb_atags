@@ -7,7 +7,7 @@ Aktuelle Library-Dateien und Versionen:
 | #1 collectAtags_lib | 1.61 | 2.40 | `core_lib/collectAtags_lib.js` |
 | #2 exportAtags_lib | 1.83 | 2.40 | `core_lib/exportAtags_lib.js` |
 | #3 helpers_lib | 2.11 | 2.40 | `core_lib/helpers_lib.js` |
-| #4 inputLinker_lib | 0.76 | 2.40 | `core_lib/inputLinker_lib.js` |
+| #4 inputLinker_lib | 0.77 | 2.40 | `core_lib/inputLinker_lib.js` |
 
 ## Checker
 
@@ -15,7 +15,7 @@ Aktuelle Library-Dateien und Versionen:
 
 | Name | Version | Sys | Pfad |
 | --- | ---: | ---: | --- |
-| A1 libVersions | 1.18 | 2.40 | `core/_checkLibs.js` |
+| A1 libVersions | 1.19 | 2.40 | `core/_checkLibs.js` |
 
 ## Zugehoerige Memento-Dateien
 
@@ -72,5 +72,4 @@ checkAtagLibVersions({
 ```
 
 `core/helpers.js` kann danach geladen werden, wenn Memento-Wrapper wie `applyTags()` gebraucht werden. Es wird dabei bewusst nicht in `checkLibVersions()` aufgefuehrt.
-
 
