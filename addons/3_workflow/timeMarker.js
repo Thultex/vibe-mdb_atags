@@ -1,10 +1,11 @@
 /*
 ========================================
-B7 Time Marker v1.34 (sys 2.40)
+B7 Time Marker v1.35 (sys 2.40)
 ========================================
 
 Änderungen
 - `mergeSameRowContents` entfernt identische Row-Inhalte getrennt vor `mergeSameRows`
+- Merge-Optionen akzeptieren auch Boolean-/String-Varianten aus Memento/Rhino, nicht nur primitives `true`
 - `cleanupTimeMarker({ mergeSameRows: true })` fuehrt gleiche Row-Marker zusammen, z. B. `19: hallo` + `19: spannend` zu `19: hallo; spannend`
 - Cleanup gibt `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
 - `appendTimeMarker()` gibt ebenfalls `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
@@ -330,8 +331,22 @@ function normalizeTimeMarkerRowKey(label) {
   return String(Math.round(n * 1000000) / 1000000);
 }
 
+function isTimeMarkerOptionEnabled(value) {
+  if (value === true) return true;
+  if (value === false || value == null) return false;
+
+  var s = String(value).replace(/^\s+|\s+$/g, "").toLowerCase();
+  return s === "true" || s === "1" || s === "yes" || s === "on";
+}
+
+function resolveSameRowSeparator(cfg) {
+  if (cfg && cfg.mergeSameRowsSeparator != null) return String(cfg.mergeSameRowsSeparator);
+  if (cfg && cfg.sameRowSeparator != null) return String(cfg.sameRowSeparator);
+  return "; ";
+}
+
 function mergeSameTimeMarkerRowContents(timeLines, cfg) {
-  if (!cfg || cfg.mergeSameRowContents !== true) return timeLines;
+  if (!cfg || !isTimeMarkerOptionEnabled(cfg.mergeSameRowContents)) return timeLines;
 
   var out = [];
   var seen = {};
@@ -364,9 +379,9 @@ function mergeSameTimeMarkerRowContents(timeLines, cfg) {
 }
 
 function mergeSameTimeMarkerRows(timeLines, cfg) {
-  if (!cfg || cfg.mergeSameRows !== true) return timeLines;
+  if (!cfg || !isTimeMarkerOptionEnabled(cfg.mergeSameRows)) return timeLines;
 
-  var separator = cfg.mergeSameRowsSeparator || cfg.sameRowSeparator || "; ";
+  var separator = resolveSameRowSeparator(cfg);
   var out = [];
   var indexByKey = {};
   var partsByKey = {};
