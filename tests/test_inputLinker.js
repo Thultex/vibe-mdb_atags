@@ -1288,7 +1288,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-name missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.71") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.72") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -1300,7 +1300,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.71") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.72") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -1503,7 +1503,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.71") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.72") < 0) {
     fail("error-debug-version missing");
   }
 
@@ -1840,6 +1840,51 @@ function testRefreshDayRebuildClearsMappedTargetsBeforeApplyingLinkedInputs() {
   assertEquals("refresh-rebuild-cleared", result.cleared.join(","), "OutNote,OutTags");
   assertEquals("refresh-rebuild-note", day.field("OutNote"), "stale\n10: fresh");
   assertEquals("refresh-rebuild-tags", day.field("OutTags").join(","), "freshTag");
+}
+
+function testRefreshDayRebuildKeepsDistinctInputsWithSameVisibleEntryName() {
+  var day = makeEntry({
+    Date: "2020-02-02 00:17",
+    OutNote: "",
+    OutTags: []
+  });
+  var input1 = makeEntry({
+    id: "input-1",
+    Date: "2020-02-02 02:29",
+    title: "Sonntag, 2. Februar 2020 02:29",
+    InNote: "1. test1",
+    InTag: [],
+    DayLinks: day
+  });
+  var input2 = makeEntry({
+    id: "input-2",
+    Date: "2020-02-02 02:29",
+    title: "Sonntag, 2. Februar 2020 02:29",
+    InNote: "2. test2",
+    InTag: [],
+    DayLinks: day
+  });
+  input1.title = "Sonntag, 2. Februar 2020 02:29";
+  input2.title = "Sonntag, 2. Februar 2020 02:29";
+
+  resetWithLibs(day, {
+    DustingInput: makeLib([input1, input2])
+  });
+
+  refreshTargetFromInputEntries({
+    inputLib: "DustingInput",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    processAllEntries: true,
+    processMode: "rebuild",
+    processMap: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertTrue("refresh-rebuild-same-visible-name-keeps-first", day.field("OutNote").indexOf("1. test1") !== -1);
+  assertTrue("refresh-rebuild-same-visible-name-keeps-second", day.field("OutNote").indexOf("2. test2") !== -1);
 }
 
 function testRefreshDayRebuildKeepsFreeTextInStringRowsTarget() {
@@ -2185,9 +2230,6 @@ testRefreshCurrentTargetFromLinkedInputProcessesOnlyThatEntry();
 testSuccessfulRefreshClearsExistingTargetDebugField();
 
 WScript.Echo("OK");
-
-
-
 
 
 

@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.71 (sys 2.30)
+#4 Input Linker Lib v0.72 (sys 2.30)
 ========================================
 
 Änderungen
+- Input-Dedupe nutzt nur noch Objekt-/ID-Identitaet, damit zeitgleiche Eintraege mit gleichem Titel nicht verschwinden
 - Rebuild/processAllEntries verwirft passende Inputs nicht mehr, wenn der Relation-Wrapper-Vergleich fehlschlaegt
 - Receive-Flags akzeptieren true/"true"/1 und Debug zeigt die angekommenen Flags
 - `debugReceive: true` schreibt einen Trace fuer Link-/Update-/Receive-Pfade ins Input-Debugfeld und ins Log
@@ -95,7 +96,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.71";
+var DDL_VERSION = "0.72";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1094,6 +1095,21 @@ function ddlSameEntry(a, b, dateField) {
   return false;
 }
 
+function ddlSameEntryIdentity(a, b) {
+  var aid;
+  var bid;
+
+  if (!a || !b) return false;
+  if (a === b) return true;
+
+  aid = ddlEntryId(a);
+  bid = ddlEntryId(b);
+
+  if (aid !== "" && aid === bid) return true;
+
+  return false;
+}
+
 function ddlEntryLinksToDay(src, sourceDayLinkField, target, targetDateField) {
   var links;
   var i;
@@ -1248,7 +1264,7 @@ function ddlPushUniqueEntry(out, entryObj) {
   if (!entryObj) return;
 
   for (i = 0; i < out.length; i++) {
-    if (ddlSameEntry(out[i], entryObj)) return;
+    if (ddlSameEntryIdentity(out[i], entryObj)) return;
   }
 
   out.push(entryObj);
