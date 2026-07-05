@@ -330,10 +330,7 @@ Aktuelle DustingDay-PostEntry-Variante:
 
 ```js
 function PostEntry(e, fileOps) {
-  if (e === true) {
-    fileOps = true;
-    e = null;
-  }
+  fileOps = fileOps || false;
   e = e || entry();
 
   applyTagCleaner({

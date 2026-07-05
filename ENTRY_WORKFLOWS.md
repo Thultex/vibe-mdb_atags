@@ -15,7 +15,6 @@ Diese Datei dokumentiert die aktuelle generelle Memento-Entry-Struktur. Die Reih
 
 - **New Entry / Update Entry Before Save**
   - laeuft vor dem Speichern neuer und bearbeiteter Eintraege
-  - entspricht der bisherigen `AfterEntry()`-Pipeline
   - bereinigt und parst in der dokumentierten Reihenfolge
 
 ## New Entry Open
@@ -51,7 +50,7 @@ syncFieldTo({
 
 ## Before Save Reihenfolge
 
-Vor dem `AfterEntry()`-Code muessen die genutzten Dateien in dieser Reihenfolge geladen sein:
+Vor dem Before-Save-Code muessen die genutzten Dateien in dieser Reihenfolge geladen sein:
 
 1. `core_lib/helpers_lib.js`
 2. `core_lib/collectAtags_lib.js`
@@ -89,133 +88,6 @@ Ohne `core/helpers.js` sind `applyTags()`, `bulkApplyTags()` und `bulkExportAtag
    - `makeObsidianMementoUri()` laeuft spaet, damit der finale Notizinhalt verwendet wird.
    - `Hidden` wird am Ende gesetzt.
 
-## Entry-Argument
-
-Die Workflow-Funktion kann optional einen konkreten Eintrag annehmen:
-
-```js
-function AfterEntry(e) {
-  e = e || entry();
-  // alle entry-spezifischen Schritte bekommen entryObj: e
-}
-```
-
-Damit bleibt der normale Trigger-Aufruf `AfterEntry()` unverändert. Andere Scripts können dieselbe Logik aber gezielt auf einen fremden Eintrag anwenden, z. B. `AfterEntry(dayEntry)` nach einem Cross-Library-Update.
-
-Wichtig bei Cross-Library-Aufrufen:
-
-- `applyTagCleaner()`, `applyTags()`, `cleanupTimeMarker()` und `syncFieldBack()` bekommen `entryObj: e`.
-- `updateSequenceSpree()` akzeptiert `entryObj: e` als Alias für `currentEntry`.
-- `lib().entries()` bleibt immer der aktuelle Trigger-Kontext. Wenn `AfterEntry(dayEntry)` aus einer anderen Library heraus läuft, muss `entries` explizit aus der Ziel-Library kommen, z. B. `libByName("DustingDay").entries()`.
-- `syncFieldBack({ entryObj: e })` nutzt die Library des übergebenen Eintrags, falls Memento sie am Entry bereitstellt; sonst bleibt der bisherige `lib()`-Fallback.
-
-## Before Save Code
-
-```js
-function AfterEntry(e) {
-  e = e || entry();
-
-  markerFound = cleanupTimeMarker({
-    entryObj: e,
-    targetTextField: "Notiz",
-    sourceMode: "realtime",
-    stepHours: 0.5,
-    roundMode: "round",
-    insertMode: "time_block_top",
-    maxHours: 30
-  });
-
-  if (markerFound) {
-    multiChoiceAppend({
-      field: "typ",
-      value: "Tag"
-    });
-  }
-
-  if (!field("Titel")) {
-    multiChoiceRemove({
-      field: "typ",
-      value: "Freiwort"
-    });
-  }
-
-  applyTagCleaner({
-    entryObj: e,
-    textField: "Notiz",
-    tagBarPosition: "time_top",
-    tagBarSpacing: "blank",
-    tagFields: ["Tags", "Tags User"],
-  });
-
-  applyTagPairParser({
-    entryObj: e,
-    tagField: "Tags",
-    targetTextField: "Notiz",
-    appendMode: "comma"
-  });
-
-  result = applyTags({
-    entryObj: e,
-    textFields: ["Notiz", "Record", "Atag Aliases"],
-    targetField: "tags",
-    targetFieldType: "tags",
-    preserveForeignTagsField: "Tags User",
-    parserOwnedTagsField: "Tags Parser"
-  });
-
-  applyTags({
-    entryObj: e,
-    textFields: ["Notiz", "Record"],
-    targetField: "Atag MD",
-    targetFieldType: "md",
-    markdownGroupSeparator: "",
-    includeBlankTags: false,
-    result: result
-  });
-
-  applyTags({
-    entryObj: e,
-    textFields: ["Notiz", "Record"],
-    targetField: "Atag Rows MD",
-    targetFieldType: "rows_md",
-    result: result
-  });
-
-  applyTags({
-    entryObj: e,
-    textFields: ["Notiz", "Record"],
-    targetField: "Atag Rows Html",
-    targetFieldType: "rows_html",
-    result: result
-  });
-
-  applyTags({
-    entryObj: e,
-    textFields: ["Notiz", "Record"],
-    targetField: "Atag Json",
-    targetFieldType: "json",
-    result: result
-  });
-
-  syncFieldBack({
-    entryObj: e,
-    fields: ["Atag Aliases"],
-    overwrite: true
-  });
-
-  makeObsidianMementoUri({
-    contentField: "Notiz",
-    overwriteMarkdownField: "Obsidian Uri",
-    obsidianMarkdownField: "Obsidian Link",
-    dateField: "Datum/Zeit",
-    vault: "ExampleVault",
-    open: true
-  });
-
-  e.set("Hidden", true);
-}
-```
-
 ## PostEntry-Variante
 
 Für PostEntry-Trigger kann dieselbe Form genutzt werden. Beispiel für die aktuell verwendete ATAG-Pipeline mit optionalem Entry-Argument. Dateioperationen wie `restoreAtags()` laufen nur mit `PostEntry(e, true)`.
@@ -224,10 +96,7 @@ Aus dem Input-Linker heraus entspricht das `postEntryOptions: true` in der jewei
 
 ```js
 function PostEntry(e, fileOps) {
-  if (e === true) {
-    fileOps = true;
-    e = null;
-  }
+  fileOps = fileOps || false;
   e = e || entry();
 
   applyTagCleaner({
