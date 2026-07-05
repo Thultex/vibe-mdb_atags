@@ -1,12 +1,13 @@
 /*
 ========================================
-#4 Input Linker Lib v0.79 (sys 2.40)
+#4 Input Linker Lib v0.80 (sys 2.40)
 ========================================
 
 Änderungen
 - nach dem Linken wird versucht, versehentlich in den Papierkorb verschobene Source-/Target-Einträge wiederherzustellen
 - recieveInputEntryFromSource() und refreshTargetFromInputEntries() können Receive-/Process-Optionen auch aus receiveConfig übernehmen
-- string_rows entfernt führende Tagbar-Prefixe wie "| " vor dem Row-Wrapping
+- string_rows bewahrt führende Tagbar-Prefixe wie "| " als rohe Zeile ohne Zeitstempel
+- DustingDay Record-Beispiele nutzen string/append statt string_rows, damit Record-Zeilen nicht mit Zeitstempel versehen werden
 - string/text Maps können mit mode "prepend" nach vorne schreiben
 - openTargetEntry führt vor dem Öffnen optional nochmal den Receive-Refresh aus
 - sourceDayIdField speichert/liest eine stabile Ziel-ID, damit Updates ohne Relation-Rewrite verarbeitet werden können
@@ -55,7 +56,7 @@ linkInputEntryToTarget({
     recalcTarget: true,
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
-      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
+      { from: "InRecord", to: "Record", type: "string", mode: "append" },
       { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
@@ -77,7 +78,7 @@ recieveInputEntryFromSource({
     recalcTarget: true,
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
-      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
+      { from: "InRecord", to: "Record", type: "string", mode: "append" },
       { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
@@ -96,7 +97,7 @@ refreshTargetFromInputEntries({
     processMode: "rebuild",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
-      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
+      { from: "InRecord", to: "Record", type: "string", mode: "append" },
       { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
@@ -112,7 +113,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.79";
+var DDL_VERSION = "0.80";
 
 function getInputLinkerLibVersion() {
   return {
@@ -642,19 +643,9 @@ function ddlValueToText(value, type) {
   return ddlFirstLine(value);
 }
 
-function ddlNormalizeStringRowText(text) {
+function ddlIsRawTagbarLine(text) {
   var s = ddlTrim(text);
-  var m;
-
-  if (!s) return "";
-
-  m = s.match(/^"\|{1,2}\s*(.*)$/);
-  if (m) return ddlTrim(m[1] || "");
-
-  m = s.match(/^\|{1,2}\s*(.*)$/);
-  if (m) return ddlTrim(m[1] || "");
-
-  return s;
+  return /^"?\|{1,2}(?:\s|$)/.test(s);
 }
 
 function ddlSplitLines(text) {
@@ -1588,10 +1579,9 @@ function ddlApplyMapFromSourceToDay(src, target, sourceDate, targetDate, cfg, re
     }
 
     text = ddlValueToText(value, type);
-    if (type === "string_rows") text = ddlNormalizeStringRowText(text);
     if (!text) continue;
 
-    line = type === "string_rows" ? (row ? row : "?") + ": " + text : text;
+    line = type === "string_rows" && !ddlIsRawTagbarLine(text) ? (row ? row : "?") + ": " + text : text;
     if (mode === "prepend" || mode === "prepend_all") {
       if (ddlPrependLine(target, item.to, line, errors, cfg, unique)) result.appended.push(item.to);
     } else if (ddlAppendLine(target, item.to, line, errors, cfg, unique)) {

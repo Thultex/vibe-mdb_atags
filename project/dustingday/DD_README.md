@@ -130,7 +130,7 @@ linkInputEntryToTarget({
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
-      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
+      { from: "InRecord", to: "Record", type: "string", mode: "append" },
       { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
@@ -161,7 +161,7 @@ linkInputEntryToTarget({
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
-      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
+      { from: "InRecord", to: "Record", type: "string", mode: "append" },
       { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
@@ -220,7 +220,7 @@ recieveInputEntryFromSource({
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
-      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
+      { from: "InRecord", to: "Record", type: "string", mode: "append" },
       { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
@@ -231,6 +231,7 @@ recieveInputEntryFromSource({
 `postEntry: true` ruft nach dem Mappen `postEntry(dayEntry)` bzw. `PostEntry(dayEntry)` auf, damit die ATAG-/Cleaner-Pipeline des Tages sofort mit dem konkreten `DustingDay`-Eintrag laufen kann. Mit `postEntryName: "PostEntryDustingDay"` kann der Funktionsname frei gesetzt werden; alternativ geht `postEntryFn: meineFunktion`.
 
 Hinweis zu Rows: Für DustingDay ist `rowSourceMode: "realtime"` der einfache absolute Tageszeit-Modus. Die Row kommt aus der Uhrzeit des Input-Eintrags.
+Zeilen, die mit `|` oder `||` beginnen, bleiben als rohe Tagbar-/Vorlagenzeilen ohne Zeitstempel erhalten.
 
 ## Day-seitiger Refresh
 
@@ -265,7 +266,7 @@ refreshTargetFromInputEntries({
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
-      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
+      { from: "InRecord", to: "Record", type: "string", mode: "append" },
       { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
@@ -285,7 +286,7 @@ refreshTargetFromInputEntries({
     processMode: "rebuild",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
-      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
+      { from: "InRecord", to: "Record", type: "string", mode: "append" },
       { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
@@ -306,7 +307,7 @@ refreshTargetFromInputEntries({
     processMode: "append",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
-      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
+      { from: "InRecord", to: "Record", type: "string", mode: "append" },
       { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
@@ -401,6 +402,3 @@ function PostEntry(e) {
   return result;
 }
 ```
-
-
-

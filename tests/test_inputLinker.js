@@ -504,6 +504,33 @@ function testStringTypeCanPrependAllPlainText() {
   assertEquals("plain-string-prepend-all", day.field("Record"), "gleicher record\ngleicher record");
 }
 
+function testStringTypeAppendsReadableTagLineWithoutRowPrefix() {
+  var day = makeEntry({
+    Datum: "2020-02-02 14:35",
+    Record: "alter record"
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 14:35",
+    InRecord: "| Testing: _4_",
+    DayLinks: null
+  });
+
+  reset(input, [day]);
+
+  linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Datum",
+    sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
+    map: [
+      { from: "InRecord", to: "Record", type: "string", mode: "append" }
+    ]
+  });
+
+  assertEquals("plain-string-readable-tag-append-no-row", day.field("Record"), "alter record\n| Testing: _4_");
+}
+
 function testStringRowsWrapReadableTagLineAfterLinking() {
   var day = makeEntry({
     Datum: "2020-02-02 02:00",
@@ -531,7 +558,7 @@ function testStringRowsWrapReadableTagLineAfterLinking() {
     ]
   });
 
-  assertEquals("readable-tag-line-wrapped-as-row", day.field("OutNote"), "2,5: Testing: _4_");
+  assertEquals("readable-tag-line-kept-without-row", day.field("OutNote"), "| Testing: _4_");
 }
 
 function testSinceFirstUsesTargetDateAsZero() {

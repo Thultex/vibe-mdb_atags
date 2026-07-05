@@ -158,7 +158,7 @@ linkInputEntryToTarget({
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
-      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
+      { from: "InRecord", to: "Record", type: "string", mode: "append" },
       { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
@@ -191,7 +191,7 @@ linkInputEntryToTarget({
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
-      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
+      { from: "InRecord", to: "Record", type: "string", mode: "append" },
       { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
@@ -217,7 +217,7 @@ recieveInputEntryFromSource({
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
-      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
+      { from: "InRecord", to: "Record", type: "string", mode: "append" },
       { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
@@ -255,7 +255,7 @@ refreshTargetFromInputEntries({
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
-      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
+      { from: "InRecord", to: "Record", type: "string", mode: "append" },
       { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
