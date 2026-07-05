@@ -63,7 +63,7 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Fix: `Input Linker` v0.42 verwendet vorhandene `DayLinks` nur noch automatisch, wenn deren Datum zum Input-Tag passt; altes blindes Link-Vertrauen bleibt mit `trustExistingLink: true` möglich.
 - Fix: `Input Linker` v0.41 schützt den Nicht-Row-Bereich von `string_rows`-Zielfeldern vor PostEntry-/Cleaner-Seiteneffekten.
 - Fix: `Input Linker` v0.40 schützt beim Rebuild von `string_rows` den freien Text-/Tagbar-Bereich auch dann, wenn mehrere Map-Einträge auf dasselbe Zielfeld zeigen.
-- Fix: `libVersions` v1.16 prüft ältere geladene Lib-Versionen auch ohne `checkAccess`; neuere Versionen bleiben ok, solange `sysVersion` passt.
+- Fix: `libVersions` v1.17 meldet Major-Version-Mismatch auch dann, wenn die geladene Version numerisch neuer ist; v1.16 prüft ältere geladene Lib-Versionen auch ohne `checkAccess`.
 - Change: `libVersions` v1.15 meldet Versionsmismatch nur noch für ältere geladene Lib-Versionen; neuere Versionen sind ok, solange `sysVersion` passt.
 - Fix: `libVersions` v1.14 verschiebt den deaktivierten `RUN_LIB_CHECK`-Block hinter die Funktionsdefinitionen, damit er bei Aktivierung echte Versionen sieht.
 - Change: `libVersions` v1.13 dokumentiert einen deaktivierten `RUN_LIB_CHECK`-Block als schnellen manuellen Memento-Test.
@@ -95,7 +95,7 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Fix: `Input Linker` v0.46 erkennt bestehende Relationslinks robuster über Entry-ID und Name/Titel; das Zieldatum dient nur noch zur Tag-Plausibilisierung, nicht zur Gleichsetzung verschiedener Day-Einträge.
 - Fix: `Input Linker` v0.45 ueberspringt standardmaessig Memento-Linking-Trigger-Kontexte, damit programmgesteuertes Verlinken keinen zweiten rekursiven Linker-Lauf ausloest.
 - Fix: `Input Linker` v0.44 verknüpft Relation-Felder über `entry.link(field, entry)` und vermeidet `set(field, entryObj)`, da Memento `set()` für Link-to-Entry-Felder mit Entry-Namen/Strings dokumentiert.
-- *Versionen: sys 2.40, collectAtags_lib v1.61, Input Linker v0.75, libVersions v1.16, Time Marker v1.34, Global Field Sync v1.03, Sync Last From Latest v1.05, Sequence Counter v1.05.*
+- *Versionen: sys 2.40, collectAtags_lib v1.61, Input Linker v0.75, libVersions v1.17, Time Marker v1.34, Global Field Sync v1.03, Sync Last From Latest v1.05, Sequence Counter v1.05.*
 
 ### 2026-05-20 - (ca. 0,5h)
 

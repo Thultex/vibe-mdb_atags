@@ -1,9 +1,10 @@
 /*
 ========================================
-A1 Lib Versions v1.16 (sys 2.40)
+A1 Lib Versions v1.17 (sys 2.40)
 ========================================
 
 Notes
+- Reports major version mismatches even when loaded versions are newer.
 - Shared remote-library version registry.
 - Load before optional lib files to collect registered versions.
 - Each lib can still expose its own get...Version function.
@@ -34,7 +35,7 @@ var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERS
 function getLibVersionsVersion() {
   return {
     name: "libVersions",
-    version: "1.16",
+    version: "1.17",
     sysVersion: "2.40",
     path: "core/_checkLibs.js"
   };
@@ -158,9 +159,18 @@ function compareAtagVersionParts(actual, expected) {
   return 0;
 }
 
+function atagMajorVersion(version) {
+  var n = parseInt(String(version || "0").split(".")[0] || "0", 10);
+  return isNaN(n) ? 0 : n;
+}
+
 function atagVersionMismatchText(name, expected, got) {
   if (String(got.sysVersion || "") !== String(expected.sysVersion || ATAG_SYS_VERSION || "")) {
     return name + " expected sys " + (expected.sysVersion || ATAG_SYS_VERSION || "") + " got sys " + (got.sysVersion || "");
+  }
+
+  if (atagMajorVersion(got.version) !== atagMajorVersion(expected.version)) {
+    return name + " expected major " + atagMajorVersion(expected.version) + " got major " + atagMajorVersion(got.version) + " (" + expected.version + " vs " + got.version + ")";
   }
 
   if (compareAtagVersionParts(got.version, expected.version) < 0) {

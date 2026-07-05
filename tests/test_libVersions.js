@@ -33,7 +33,7 @@ function log(msg) {
   _logs.push(String(msg));
 }
 
-assertEquals("libVersions-own-version", getLibVersionsVersion().version, "1.16");
+assertEquals("libVersions-own-version", getLibVersionsVersion().version, "1.17");
 assertEquals("helpers-lib-own-version", getHelpersLibVersion().version, "2.11");
 assertEquals("helpers-lib-sys-version", getHelpersLibVersion().sysVersion, "2.40");
 assertEquals("collect-lib-own-version", getCollectAtagsLibVersion().version, "1.61");
@@ -101,6 +101,10 @@ registerAtagLibVersion("inputLinker_lib", "0.99", "2.40", "core_lib/inputLinker_
 var registryOnlyNewerOptional = checkAtagLibVersions({ names: ["inputLinker_lib"], requireAll: false, asText: false });
 assertTrue("registry-only-newer-ok", registryOnlyNewerOptional.ok);
 assertEquals("registry-only-newer-no-mismatch", registryOnlyNewerOptional.versionMismatch.length, 0);
+ATAG_LIB_VERSIONS = {};
+registerAtagLibVersion("inputLinker_lib", "1.00", "2.40", "core_lib/inputLinker_lib.js", true);
+var registryOnlyMajorOptional = checkAtagLibVersions({ names: ["inputLinker_lib"], requireAll: false, asText: false });
+assertEquals("registry-only-major-optional-mismatch", registryOnlyMajorOptional.versionMismatch[0], "inputLinker_lib expected major 0 got major 1 (0.75 vs 1.00)");
 ATAG_LIB_VERSIONS = savedRegistry;
 
 savedRegistry = ATAG_LIB_VERSIONS;
@@ -145,6 +149,4 @@ assertEquals("undefined-expected-list-empty", missingExpectedList.libs.length, 0
 ATAG_EXPECTED_LIBS = savedExpectedLibs;
 
 WScript.Echo("OK");
-
-
 

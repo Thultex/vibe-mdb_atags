@@ -15,7 +15,7 @@ Aktuelle Library-Dateien und Versionen:
 
 | Name | Version | Sys | Pfad |
 | --- | ---: | ---: | --- |
-| A1 libVersions | 1.16 | 2.40 | `core/_checkLibs.js` |
+| A1 libVersions | 1.17 | 2.40 | `core/_checkLibs.js` |
 
 ## Zugehoerige Memento-Dateien
 
@@ -72,6 +72,5 @@ checkAtagLibVersions({
 ```
 
 `core/helpers.js` kann danach geladen werden, wenn Memento-Wrapper wie `applyTags()` gebraucht werden. Es wird dabei bewusst nicht in `checkLibVersions()` aufgefuehrt.
-
 
 
