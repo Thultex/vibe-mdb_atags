@@ -231,6 +231,8 @@ Hinweis zu Rows: Für DustingDay ist `rowSourceMode: "realtime"` der einfache ab
 
 Hinweis zu `sourceDayIdField`: Der Input-Linker nutzt das Feld nicht mehr automatisch als Schreibziel. Für den stabilen Input-Pfad wird nur `DayLinks` gesetzt; Day-seitige Refreshes können IDs weiterhin auswerten, wenn sie vorhanden sind.
 
+Papierkorb-Warnung: `recieveInputEntryFromSource()` und `refreshTargetFromInputEntries()` prüfen standardmäßig, ob der Ziel-Day als gelöscht/Papierkorb erkennbar ist. Dann wird oben in Ziel-Debug und Ziel-Notiz `ACHTUNG: Datei im Papierkorb!` ergänzt. Abschalten geht mit `checkTargetTrash: false`.
+
 ## Day-seitiger Refresh
 
 `refreshTargetFromInputEntries()` ist die DustingDay-Seite des `Input Linker`. Sie läuft auf einem Tages-Eintrag und kann:

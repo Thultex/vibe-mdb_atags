@@ -165,6 +165,8 @@ linkInputEntryToTarget({
 
 `sourceDayIdField: "DayId"` kann von Day-seitigen Refresh-/Receive-Funktionen ausgewertet werden. Der Input-Linker schreibt diese ID bewusst nicht mehr automatisch, damit beim normalen Verlinken nur die Relation selbst geändert wird. Bei vorhandenem `DayLinks` soll der Input-Linker mit `receiveExistingLink: false` sofort abbrechen und nichts mehr schreiben.
 
+Papierkorb-Warnung: Day-seitige Receive-/Refresh-Funktionen prüfen standardmäßig den Ziel-Day. Wenn Memento den Ziel-Eintrag als gelöscht/Papierkorb meldet, wird oben in Ziel-Debug und Ziel-Notiz `ACHTUNG: Datei im Papierkorb!` geschrieben. Optional abschalten mit `checkTargetTrash: false`.
+
 Input-Aufruf für Update-Test bei bereits vorhandenem `DayLinks`:
 
 ```js

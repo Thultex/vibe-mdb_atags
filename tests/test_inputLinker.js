@@ -2404,6 +2404,76 @@ function testSuccessfulRefreshClearsExistingTargetDebugField() {
   assertEquals("successful-refresh-clears-target-debug", day.field("Debug"), "");
 }
 
+function testRefreshWarnsWhenTargetIsInTrash() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    deleted: true,
+    Notiz: "",
+    Debug: ""
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "trotz papierkorb",
+    DayLinks: day
+  });
+
+  reset(day, [], {
+    DustingInput: makeLib([input])
+  });
+
+  var result = refreshTargetFromInputEntries({
+    inputLib: "DustingInput",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    processAllEntries: true,
+    targetDebugField: "Debug",
+    processMap: [
+      { from: "InNote", to: "Notiz", type: "string_rows" }
+    ]
+  });
+
+  assertEquals("trash-warning-result", result.targetInTrash, true);
+  assertEquals("trash-warning-written", result.trashWarningWritten, true);
+  assertEquals("trash-warning-note", day.field("Notiz"), "ACHTUNG: Datei im Papierkorb!\n10: trotz papierkorb");
+  assertEquals("trash-warning-debug", day.field("Debug"), "ACHTUNG: Datei im Papierkorb!");
+}
+
+function testRefreshTrashWarningCanBeDisabled() {
+  var day = makeEntry({
+    Date: "2020-02-02 09:00",
+    deleted: true,
+    Notiz: "",
+    Debug: ""
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "ohne warnung",
+    DayLinks: day
+  });
+
+  reset(day, [], {
+    DustingInput: makeLib([input])
+  });
+
+  var result = refreshTargetFromInputEntries({
+    inputLib: "DustingInput",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    processAllEntries: true,
+    targetDebugField: "Debug",
+    checkTargetTrash: false,
+    processMap: [
+      { from: "InNote", to: "Notiz", type: "string_rows" }
+    ]
+  });
+
+  assertEquals("trash-warning-disabled-result", result.targetInTrash, false);
+  assertEquals("trash-warning-disabled-note", day.field("Notiz"), "10: ohne warnung");
+  assertEquals("trash-warning-disabled-debug", day.field("Debug"), "");
+}
+
 testCreatesDayLinksSourceAndAppendsMappedFields();
 testNewInputLinksOnlyByDefault();
 testEmptyRelationListDoesNotBlockNewLink();
@@ -2464,5 +2534,7 @@ testRefreshDayRunsPostEntryOnTargetWhenConfigured();
 testRefreshCurrentTargetUsesCurrentEntry();
 testRefreshCurrentTargetFromLinkedInputProcessesOnlyThatEntry();
 testSuccessfulRefreshClearsExistingTargetDebugField();
+testRefreshWarnsWhenTargetIsInTrash();
+testRefreshTrashWarningCanBeDisabled();
 
 WScript.Echo("OK");

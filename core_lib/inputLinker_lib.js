@@ -1,6 +1,6 @@
 /*
 ========================================
-#4 Input Linker Lib v0.83 (sys 2.40)
+#4 Input Linker Lib v0.84 (sys 2.40)
 ========================================
 
 Änderungen
@@ -10,6 +10,7 @@
 - refreshBeforeOpen schreibt nicht mehr aus dem Input-Linker heraus; nach dem Linken gibt es maximal den einen receiveAfterLink-Lauf
 - bestehender DayLink ohne receiveExistingLink bleibt ein echter No-op ohne Debug-Schreibzugriff
 - linkInputEntryToTarget() schreibt keine DayId mehr in den Input und ruft keinen Restore-/EnsureActive-Nachlauf mehr auf
+- Receive/Refresh warnt standardmäßig im Ziel-Debug und oben in der Ziel-Notiz, wenn der Ziel-Eintrag im Papierkorb liegt
 - DustingDay Record-Beispiele nutzen string/append statt string_rows, damit Record-Zeilen nicht mit Zeitstempel versehen werden
 - string/text Maps können mit mode "prepend" nach vorne schreiben
 - openTargetEntry öffnet nach dem Linken den Ziel-Eintrag, ohne einen zweiten Receive-Refresh auszuführen
@@ -115,7 +116,8 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.83";
+var DDL_VERSION = "0.84";
+var DDL_TRASH_WARNING = "ACHTUNG: Datei im Papierkorb!";
 
 function getInputLinkerLibVersion() {
   return {
@@ -803,6 +805,57 @@ function ddlPrependLine(target, targetField, line, errors, cfg, unique) {
   newText = line;
   if (ddlTrim(oldText) !== "") newText += "\n" + oldText;
   wrote = ddlSafeSet(target, targetField, newText, errors, "Zielfeld konnte nicht geschrieben werden", cfg && cfg.strictWriteErrors === true);
+  return wrote;
+}
+
+function ddlIsTargetTrashWarningEnabled(cfg) {
+  if (!cfg) return true;
+  if (cfg.checkTargetTrash === false) return false;
+  if (cfg.warnTargetTrash === false) return false;
+  if (cfg.targetTrashWarning === false) return false;
+  return true;
+}
+
+function ddlFirstTextTargetField(map) {
+  var i;
+  var item;
+  var type;
+
+  if (!ddlIsArray(map)) return "";
+
+  for (i = 0; i < map.length; i++) {
+    item = ddlNormalizeMapItem(map[i]);
+    type = item.type || "";
+    if (item.to && type !== "tag") return item.to;
+  }
+
+  return "";
+}
+
+function ddlWarnIfTargetInTrash(target, cfg, result, errors) {
+  var noteField;
+  var debugField;
+  var wrote = false;
+
+  if (!target || !ddlIsTargetTrashWarningEnabled(cfg)) return false;
+  if (!ddlIsDeletedEntry(target)) return false;
+
+  noteField = cfg.targetTrashWarningNoteField || cfg.targetNoteField || cfg.noteField || ddlFirstTextTargetField(cfg.map || cfg.processMap) || "Notiz";
+  debugField = cfg.targetTrashWarningDebugField || cfg.targetDebugField || cfg.debugField || "Debug";
+
+  if (noteField && ddlEntryHasField(target, noteField)) {
+    wrote = ddlPrependLine(target, noteField, DDL_TRASH_WARNING, errors, cfg, true) || wrote;
+  }
+
+  if (debugField && ddlEntryHasField(target, debugField)) {
+    wrote = ddlPrependLine(target, debugField, DDL_TRASH_WARNING, errors, cfg, true) || wrote;
+  }
+
+  if (result) {
+    result.targetInTrash = true;
+    if (wrote) result.trashWarningWritten = true;
+  }
+
   return wrote;
 }
 
@@ -2338,6 +2391,8 @@ function refreshTargetFromInputEntries(cfg) {
     recalculated: [],
     postEntries: [],
     restored: [],
+    targetInTrash: false,
+    trashWarningWritten: false,
     errors: errors
   };
 
@@ -2385,8 +2440,10 @@ function refreshTargetFromInputEntries(cfg) {
     result.recalculated.push("target");
   }
 
+  ddlWarnIfTargetInTrash(target, cfg, result, errors);
+
   if (errors.length) ddlWriteErrors(errors, cfg);
-  else ddlClearDebugFieldIfExists(cfg);
+  else if (!result.trashWarningWritten) ddlClearDebugFieldIfExists(cfg);
   return result;
 }
 
