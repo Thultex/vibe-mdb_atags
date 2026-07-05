@@ -1,6 +1,6 @@
 /*
 ========================================
-#4 Input Linker Lib v0.85 (sys 2.40)
+#4 Input Linker Lib v0.86 (sys 2.40)
 ========================================
 
 Änderungen
@@ -11,11 +11,12 @@
 - bestehender DayLink ohne receiveExistingLink bleibt ein echter No-op ohne Debug-Schreibzugriff
 - linkInputEntryToTarget() schreibt keine DayId mehr in den Input und ruft keinen Restore-/EnsureActive-Nachlauf mehr auf
 - Receive/Refresh warnt standardmäßig im Ziel-Debug und oben in der Ziel-Notiz, wenn der Ziel-Eintrag im Papierkorb liegt
+- refreshTargetFromInputEntries() wertet DayId nicht mehr für die Input-Auswahl aus; DayLinks ist wieder die einzige Refresh-Relation
 - refreshTargetFromInputEntries() schreibt keine DayId mehr in Inputs und ruft keinen Restore-/EnsureActive-Nachlauf nach Refresh-Links auf
 - DustingDay Record-Beispiele nutzen string/append statt string_rows, damit Record-Zeilen nicht mit Zeitstempel versehen werden
 - string/text Maps können mit mode "prepend" nach vorne schreiben
 - openTargetEntry öffnet nach dem Linken den Ziel-Eintrag, ohne einen zweiten Receive-Refresh auszuführen
-- sourceDayIdField bleibt für Day-seitige Refreshes lesbar; der Input-Linker schreibt die ID nicht mehr automatisch
+- sourceDayIdField bleibt nur als opt-in Legacy-Auflösung für den Input-Linker erhalten; Refresh nutzt die Relation
 - Input-Dedupe nutzt nur noch Objekt-/ID-Identität, damit zeitgleiche Einträge mit gleichem Titel nicht verschwinden
 - Rebuild/processAllEntries verwirft passende Inputs nicht mehr, wenn der Relation-Wrapper-Vergleich fehlschlägt
 - Receive-Flags akzeptieren true/"true"/1 und Debug zeigt die angekommenen Flags
@@ -45,7 +46,6 @@ linkInputEntryToTarget({
   sourceDateField: "Datum",
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
-  sourceDayIdField: "DayId",
   openTargetEntry: true,
   dayStartHour: 4,
   daySearchLimit: 10,
@@ -117,7 +117,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.85";
+var DDL_VERSION = "0.86";
 var DDL_TRASH_WARNING = "ACHTUNG: Datei im Papierkorb!";
 
 function getInputLinkerLibVersion() {
@@ -1370,36 +1370,6 @@ function ddlInputLinkedToOtherDay(src, sourceDayLinkField, target) {
   return false;
 }
 
-function ddlInputDayIdLinksToTarget(src, sourceDayIdField, target) {
-  var sourceId;
-  var targetId;
-
-  if (!src || !sourceDayIdField || !target) return false;
-
-  targetId = ddlEntryId(target);
-  if (!targetId) return false;
-
-  sourceId = ddlSafeField(src, sourceDayIdField, null, null);
-  if (sourceId == null || String(sourceId) === "") return false;
-
-  return String(sourceId) === String(targetId);
-}
-
-function ddlInputDayIdLinksToOther(src, sourceDayIdField, target) {
-  var sourceId;
-  var targetId;
-
-  if (!src || !sourceDayIdField || !target) return false;
-
-  sourceId = ddlSafeField(src, sourceDayIdField, null, null);
-  if (sourceId == null || String(sourceId) === "") return false;
-
-  targetId = ddlEntryId(target);
-  if (!targetId) return false;
-
-  return String(sourceId) !== String(targetId);
-}
-
 function ddlPushUniqueEntry(out, entryObj) {
   var i;
 
@@ -1452,7 +1422,6 @@ function ddlClearMappedTargets(target, map, cfg, result, errors, forceAll) {
 function ddlSelectInputsForDay(target, targetDate, cfg, result, errors) {
   var sourceDateField = cfg.sourceDateField || "Date";
   var sourceDayLinkField = cfg.sourceDayLinkField || "DayLinks";
-  var sourceDayIdField = cfg.sourceDayIdField || cfg.sourceTargetIdField || cfg.dayIdField || "";
   var findMatchingEntries = cfg.findMatchingEntries === true;
   var linkNewEntries = cfg.linkNewEntries === true;
   var processAllEntries = cfg.processAllEntries === true;
@@ -1484,8 +1453,8 @@ function ddlSelectInputsForDay(target, targetDate, cfg, result, errors) {
       continue;
     }
 
-    linkedToTarget = ddlInputDayIdLinksToTarget(src, sourceDayIdField, target) || ddlEntryLinksToDay(src, sourceDayLinkField, target, cfg.targetDateField || "Date");
-    linkedToOther = !linkedToTarget && (ddlInputDayIdLinksToOther(src, sourceDayIdField, target) || ddlInputLinkedToOtherDay(src, sourceDayLinkField, target));
+    linkedToTarget = ddlEntryLinksToDay(src, sourceDayLinkField, target, cfg.targetDateField || "Date");
+    linkedToOther = !linkedToTarget && ddlInputLinkedToOtherDay(src, sourceDayLinkField, target);
 
     if (linkedToTarget && (processAllEntries || explicitEntries)) {
       ddlPushUniqueEntry(selected, src);
@@ -1515,10 +1484,7 @@ function ddlSelectInputsForDay(target, targetDate, cfg, result, errors) {
 
   if (processAllEntries) {
     for (i = 0; i < entries.length; i++) {
-      if (
-        ddlInputDayIdLinksToTarget(entries[i], sourceDayIdField, target) ||
-        ddlEntryLinksToDay(entries[i], sourceDayLinkField, target, cfg.targetDateField || "Date")
-      ) {
+      if (ddlEntryLinksToDay(entries[i], sourceDayLinkField, target, cfg.targetDateField || "Date")) {
         ddlPushUniqueEntry(selected, entries[i]);
       }
     }
