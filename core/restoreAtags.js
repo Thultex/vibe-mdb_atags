@@ -1,6 +1,6 @@
 /*
 ========================================
-A3 restoreAtags v2.04 (sys 2.40)
+A3 restoreAtags v2.05 (sys 2.40)
 ========================================
 
 Notes:
@@ -8,6 +8,7 @@ Notes:
 - default suffixes: _ and _l
 - supports entry groups and direct maps
 - supports currentEntry like sequenceCounter
+- supports entryObj as currentEntry fallback when entries are provided
 - valueMode: avg, first, last, median, min, max
 - aggregate text like "2 [3, 1]" is treated as repeated values
 - optional debugField writes restore diagnostics
@@ -25,8 +26,19 @@ restoreAtags({
 
 restoreAtags({
   sourceField: "Atag Json",
+  entryObj: entry()
+});
+
+restoreAtags({
+  sourceField: "Atag Json",
   entries: lib().entries(),
   currentEntry: entry()
+});
+
+restoreAtags({
+  sourceField: "Atag Json",
+  entries: lib().entries(),
+  entryObj: entry()
 });
 
 restoreAtags({
@@ -645,7 +657,7 @@ function restoreAtagsForEntry(entryObj, cfg, clearMappedFields) {
   if (!entryObj) return;
 
   if (cfg.debugField) cfg._debugLines = [];
-  restoreDebugPush(cfg, "restoreAtags v2.01");
+  restoreDebugPush(cfg, "restoreAtags v2.05");
   restoreDebugPush(cfg, "sourceField: " + cfg.sourceField);
   restoreFieldNameMap(cfg);
   restoreDebugPush(cfg, "known fields: " + (cfg._fieldNameCount == null ? "unknown" : String(cfg._fieldNameCount)));
@@ -704,7 +716,7 @@ function restoreAtags(cfg) {
   cfg = cfg || {};
 
   var all = getRestoreEntries(cfg);
-  var currentEntry = cfg.currentEntry || null;
+  var currentEntry = cfg.currentEntry || cfg.entryObj || null;
   var limit = cfg.limit != null ? Number(cfg.limit) : (cfg.maxEntries != null ? Number(cfg.maxEntries) : null);
   var isGroup = all.length > 1;
   var clearMappedFields = cfg.clearMappedFields != null ? cfg.clearMappedFields === true : isGroup;

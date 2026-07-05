@@ -378,6 +378,29 @@ function testCurrentEntryIsAddedWhenMissingLikeSequenceCounter() {
   assertEqual("restore-current-entry-added-skips-other", other.field("emo_"), undefined);
 }
 
+function testEntryObjReplacesStaleEntryWhenEntriesProvided() {
+  var stale = makeFunctionIdEntry("2", {
+    Json: "{\"emo\":1}"
+  });
+  var entryObj = makeFunctionIdEntry("2", {
+    Json: "{\"emo\":11}"
+  });
+  var other = makeFunctionIdEntry("1", {
+    Json: "{\"emo\":3}"
+  });
+
+  restoreAtags({
+    entries: [other, stale],
+    entryObj: entryObj,
+    sourceField: "Json",
+    targetFields: ["emo_"]
+  });
+
+  assertEqual("restore-entry-obj-replaces-stale", entryObj.field("emo_"), 11);
+  assertEqual("restore-entry-obj-skips-other", other.field("emo_"), undefined);
+  assertEqual("restore-entry-obj-stale-not-written", stale.field("emo_"), undefined);
+}
+
 function testArrayValueModesDefaultAvgAndConfigurable() {
   var avgEntry = makeEntry({
     Json: "{\"emo\":[1,3,8]}"
@@ -684,6 +707,7 @@ testRestoreIteratorEntries();
 testEntriesOptionDoesNotCallEntriesMethod();
 testCurrentEntryReplacesStaleEntryLikeSequenceCounter();
 testCurrentEntryIsAddedWhenMissingLikeSequenceCounter();
+testEntryObjReplacesStaleEntryWhenEntriesProvided();
 testArrayValueModesDefaultAvgAndConfigurable();
 testAutoRestoreAveragesRepeatedJsonArrayByDefault();
 testAutoRestoreAveragesAggregateTextByDefault();

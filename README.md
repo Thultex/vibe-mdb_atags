@@ -456,7 +456,7 @@ Die Restore-Funktionen sind das dritte Add-on/Utility im Stack und werden aus hi
 - direkte Zuordnungen sind standardmaessig exklusiv; mit `additional: true` laeuft danach zusaetzlich der Suffix-Auto-Restore
 - fuer Gruppen kann `restoreAtags()` `entries`, `entryGroup` oder `group` nehmen; Gruppen koennen ein Array oder ein Objekt mit `.entries()` sein
 - Java-Listen wie `lib().entries()` werden fuer Gruppen automatisch entpackt (`length`, `size()/get()` oder `iterator()`)
-- `currentEntry: entry()` verhaelt sich wie beim Sequence-Counter: ersetzt stale Library-Eintraege, ergaenzt fehlende aktuelle Eintraege und schreibt nur den aktuellen Eintrag
+- `currentEntry: entry()` oder `entryObj: entry()` verhaelt sich wie beim Sequence-Counter: ersetzt stale Library-Eintraege, ergaenzt fehlende aktuelle Eintraege und schreibt nur den aktuellen Eintrag
 - bei Gruppen werden gemappte Felder vor dem Schreiben geleert; bei Einzel-Entry nur mit `clearMappedFields: true`
 - mehrere Werte in einem JSON-Array oder Aggregat-Text wie `2 [3, 1]` werden standardmaessig per `valueMode: "avg"` gemittelt; moeglich sind `"avg"`, `"first"`, `"last"`, `"median"`, `"min"` und `"max"`
 - Standard-Suffixe fuer den Auto-Restore sind `_` und `_l` fuer Listen; `suffix: ""` schreibt direkt in gleichnamige Felder
@@ -476,8 +476,13 @@ restoreAtags({
 
 restoreAtags({
   sourceField: "Atag Json",
+  entryObj: entry()
+});
+
+restoreAtags({
+  sourceField: "Atag Json",
   entries: lib().entries(),
-  currentEntry: entry(),
+  entryObj: entry(),
   aliasTextFields: ["Alias"],
   limit: 1
 });
