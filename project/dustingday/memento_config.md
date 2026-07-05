@@ -152,7 +152,6 @@ linkInputEntryToTarget({
     rowRoundMode: "round",
     postEntry: true,
     postEntryName: "PostEntry",
-    recalcTarget: true,
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
@@ -165,7 +164,7 @@ linkInputEntryToTarget({
 
 `sourceDayIdField: "DayId"` kann von Day-seitigen Refresh-/Receive-Funktionen ausgewertet werden. Der Input-Linker schreibt diese ID bewusst nicht mehr automatisch, damit beim normalen Verlinken nur die Relation selbst geändert wird. Bei vorhandenem `DayLinks` soll der Input-Linker mit `receiveExistingLink: false` sofort abbrechen und nichts mehr schreiben.
 
-Papierkorb-Warnung: Day-seitige Receive-/Refresh-Funktionen prüfen standardmäßig den Ziel-Day. Wenn Memento den Ziel-Eintrag als gelöscht/Papierkorb meldet, wird oben in Ziel-Debug und Ziel-Notiz `ACHTUNG: Datei im Papierkorb!` geschrieben. Optional abschalten mit `checkTargetTrash: false`.
+Papierkorb-Warnung: Day-seitige Receive-/Refresh-Funktionen prüfen den Ziel-Day nur mit `checkTargetTrash: true`. Wenn Memento den Ziel-Eintrag als gelöscht/Papierkorb meldet, wird oben in Ziel-Debug und Ziel-Notiz `ACHTUNG: Datei im Papierkorb!` geschrieben.
 
 Input-Aufruf für Update-Test bei bereits vorhandenem `DayLinks`:
 
@@ -186,7 +185,6 @@ linkInputEntryToTarget({
     rowRoundMode: "round",
     postEntry: true,
     postEntryName: "PostEntry",
-    recalcTarget: true,
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
@@ -212,7 +210,6 @@ recieveInputEntryFromSource({
     rowRoundMode: "round",
     postEntry: true,
     postEntryName: "PostEntry",
-    recalcTarget: true,
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
@@ -250,7 +247,6 @@ refreshTargetFromInputEntries({
     rowSourceMode: "realtime_since",
     rowStepHours: 0.1,
     rowRoundMode: "round",
-    recalcTarget: true,
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },

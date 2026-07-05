@@ -995,7 +995,6 @@ function testExistingDayLinkDoesNotProcessTargetByDefault() {
     sourceDateField: "Date",
     targetDateField: "Date",
     sourceDayLinkField: "DayLinks",
-    recalcTarget: true,
     postEntry: true,
     openTargetEntry: true,
     map: [
@@ -1255,39 +1254,6 @@ function testInputLinkerSkipsMementoLinkingTriggerContextByDefault() {
   assertEquals("linking-trigger-skip-reason", result.skipReason, "linking_trigger_context");
   assertEquals("linking-trigger-no-link", input.field("DayLinks"), null);
   assertEquals("linking-trigger-no-append", day.field("OutNote"), "");
-}
-
-function testRecalcSourceAndTargetWhenConfigured() {
-  var day = makeEntry({
-    Datum: "2020-02-02 09:00",
-    OutNote: "",
-    OutTags: []
-  });
-  var input = makeEntry({
-    Date: "2020-02-02 10:00",
-    InNote: "gleiches datum",
-    InTags: [],
-    DayLinks: null
-  });
-
-  reset(input, [day]);
-
-  var result = linkInputEntryToTarget({
-    targetLib: "DustingDay",
-    sourceDateField: "Date",
-    targetDateField: "Datum",
-    sourceDayLinkField: "DayLinks",
-    processAfterLink: true,
-    recalcSource: true,
-    recalcTarget: true,
-    map: [
-      { from: "InNote", to: "OutNote", type: "string_rows" }
-    ]
-  });
-
-  assertEquals("recalc-target", day._recalcCount, 1);
-  assertEquals("recalc-source", input._recalcCount, 1);
-  assertEquals("recalc-result", result.recalculated.join(","), "target,source");
 }
 
 function testRunsPostEntryOnTargetWhenConfigured() {
@@ -2467,6 +2433,7 @@ function testRefreshWarnsWhenTargetIsInTrash() {
     sourceDayLinkField: "DayLinks",
     processAllEntries: true,
     targetDebugField: "Debug",
+    checkTargetTrash: true,
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" }
     ]
@@ -2478,7 +2445,7 @@ function testRefreshWarnsWhenTargetIsInTrash() {
   assertEquals("trash-warning-debug", day.field("Debug"), "ACHTUNG: Datei im Papierkorb!");
 }
 
-function testRefreshTrashWarningCanBeDisabled() {
+function testRefreshTrashWarningIsDisabledByDefault() {
   var day = makeEntry({
     Date: "2020-02-02 09:00",
     deleted: true,
@@ -2502,15 +2469,14 @@ function testRefreshTrashWarningCanBeDisabled() {
     sourceDayLinkField: "DayLinks",
     processAllEntries: true,
     targetDebugField: "Debug",
-    checkTargetTrash: false,
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" }
     ]
   });
 
-  assertEquals("trash-warning-disabled-result", result.targetInTrash, false);
-  assertEquals("trash-warning-disabled-note", day.field("Notiz"), "10: ohne warnung");
-  assertEquals("trash-warning-disabled-debug", day.field("Debug"), "");
+  assertEquals("trash-warning-default-result", result.targetInTrash, false);
+  assertEquals("trash-warning-default-note", day.field("Notiz"), "10: ohne warnung");
+  assertEquals("trash-warning-default-debug", day.field("Debug"), "");
 }
 
 testCreatesDayLinksSourceAndAppendsMappedFields();
@@ -2543,7 +2509,6 @@ testExistingInputOpensTargetWithoutRefreshBeforeOpen();
 testLinkedDeletedDayAllowsNewTargetCreation();
 testRelationWithoutLinkMethodDoesNotSetEntryObjectByDefault();
 testInputLinkerSkipsMementoLinkingTriggerContextByDefault();
-testRecalcSourceAndTargetWhenConfigured();
 testRunsPostEntryOnTargetWhenConfigured();
 testSuccessfulRunClearsExistingSourceDebugField();
 testRunsPostEntryOnSourceWhenConfigured();
@@ -2575,6 +2540,6 @@ testRefreshCurrentTargetUsesCurrentEntry();
 testRefreshCurrentTargetFromLinkedInputProcessesOnlyThatEntry();
 testSuccessfulRefreshClearsExistingTargetDebugField();
 testRefreshWarnsWhenTargetIsInTrash();
-testRefreshTrashWarningCanBeDisabled();
+testRefreshTrashWarningIsDisabledByDefault();
 
 WScript.Echo("OK");

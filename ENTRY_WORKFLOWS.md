@@ -193,8 +193,6 @@ function PostEntry(e, fileOps) {
     overwrite: true
   });
 
-  if (typeof e.recalc === "function") e.recalc();
-
   return result;
 }
 ```

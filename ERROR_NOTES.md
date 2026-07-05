@@ -54,6 +54,8 @@ Lösung:
   - vorhandene `DayLinks` mit `receiveExistingLink: false` bleiben ein echter No-op.
 - `Input Linker` v0.85 entfernte die kritischen Restore-/EnsureActive- und DayId-Schreibfunktionen ganz aus dem Code, damit auch `refreshTargetFromInputEntries()` sie nicht mehr versehentlich ausführt.
 - Verdacht vom 05.07.2026: `restoreAtags()` im normalen `PostEntry(e)` ist riskant, weil es aus `Atag Json` per `entryObj.set(...)` in Ziel-/Auto-Felder zurückschreibt. Dieser Schritt gehört hinter eine explizite zweite `PostEntry`-Option, nicht in den normalen Linker-Postwork.
+- `Input Linker` v0.88 führt `recalcTarget` nicht mehr aus und prüft Papierkorb-Ziele nur noch mit `checkTargetTrash: true`. Damit bleiben Refresh/Rebuild näher am alten funktionierenden Schreibpfad.
+- Der lesende `DayId`-Check im Day-Refresh ist wieder aktiv, damit stabile IDs beim Rebuild helfen können; der Input-Linker schreibt `DayId` weiterhin nicht.
 - Produktiver Input-Aufruf darf weiter `openTargetEntry: true` und `receiveAfterLink: true` nutzen.
 
 Hinweis für später:

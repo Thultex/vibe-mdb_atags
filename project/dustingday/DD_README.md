@@ -124,7 +124,6 @@ linkInputEntryToTarget({
     rowRoundMode: "round",
     postEntry: true,
     postEntryName: "PostEntry",
-    recalcTarget: true,
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
@@ -154,7 +153,6 @@ linkInputEntryToTarget({
     rowRoundMode: "round",
     postEntry: true,
     postEntryName: "PostEntry",
-    recalcTarget: true,
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
@@ -213,7 +211,6 @@ recieveInputEntryFromSource({
     rowRoundMode: "round",
     postEntry: true,
     postEntryName: "PostEntry",
-    recalcTarget: true,
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
@@ -224,14 +221,13 @@ recieveInputEntryFromSource({
 });
 ```
 
-`recalcTarget` ruft nach dem Schreiben defensiv `recalc()` auf dem Day auf, falls Memento diese Entry-Methode im jeweiligen Kontext anbietet.
 `postEntry: true` ruft nach dem Mappen `postEntry(dayEntry)` bzw. `PostEntry(dayEntry)` auf, damit die ATAG-/Cleaner-Pipeline des Tages sofort mit dem konkreten `DustingDay`-Eintrag laufen kann. Mit `postEntryName: "PostEntryDustingDay"` kann der Funktionsname frei gesetzt werden; alternativ geht `postEntryFn: meineFunktion`.
 
 Hinweis zu Rows: Für DustingDay ist `rowSourceMode: "realtime"` der einfache absolute Tageszeit-Modus. Die Row kommt aus der Uhrzeit des Input-Eintrags.
 
 Hinweis zu `sourceDayIdField`: Der Input-Linker nutzt das Feld nicht mehr automatisch als Schreibziel. Für den stabilen Input-Pfad wird nur `DayLinks` gesetzt; Day-seitige Refreshes können IDs weiterhin auswerten, wenn sie vorhanden sind.
 
-Papierkorb-Warnung: `recieveInputEntryFromSource()` und `refreshTargetFromInputEntries()` prüfen standardmäßig, ob der Ziel-Day als gelöscht/Papierkorb erkennbar ist. Dann wird oben in Ziel-Debug und Ziel-Notiz `ACHTUNG: Datei im Papierkorb!` ergänzt. Abschalten geht mit `checkTargetTrash: false`.
+Papierkorb-Warnung: `recieveInputEntryFromSource()` und `refreshTargetFromInputEntries()` prüfen den Ziel-Day nur mit `checkTargetTrash: true`. Dann wird oben in Ziel-Debug und Ziel-Notiz `ACHTUNG: Datei im Papierkorb!` ergänzt.
 
 ## Day-seitiger Refresh
 
@@ -262,7 +258,6 @@ refreshTargetFromInputEntries({
     rowSourceMode: "realtime_since",
     rowStepHours: 0.1,
     rowRoundMode: "round",
-    recalcTarget: true,
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
@@ -414,8 +409,6 @@ function PostEntry(e, fileOps) {
     fields: ["Atag Aliases"],
     overwrite: true
   });
-
-  if (typeof e.recalc === "function") e.recalc();
 
   return result;
 }

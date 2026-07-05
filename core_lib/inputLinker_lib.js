@@ -1,17 +1,18 @@
 /*
 ========================================
-#4 Input Linker Lib v0.87 (sys 2.40)
+#4 Input Linker Lib v0.88 (sys 2.40)
 ========================================
 
 Änderungen
-- nach dem Linken wird versucht, versehentlich in den Papierkorb verschobene Source-/Target-Einträge wiederherzustellen
+- Link-/Refresh-Pfade verzichten auf Restore-/EnsureActive- und Recalc-Nachläufe
 - recieveInputEntryFromSource() und refreshTargetFromInputEntries() können Receive-/Process-Optionen auch aus receiveConfig übernehmen
 - string_rows nutzt wieder einheitlich Zeitstempel; keine Sonderregel mehr für führende "|"-Zeilen
 - refreshBeforeOpen schreibt nicht mehr aus dem Input-Linker heraus; nach dem Linken gibt es maximal den einen receiveAfterLink-Lauf
 - bestehender DayLink ohne receiveExistingLink bleibt ein echter No-op ohne Debug-Schreibzugriff
 - linkInputEntryToTarget() schreibt keine DayId mehr in den Input und ruft keinen Restore-/EnsureActive-Nachlauf mehr auf
-- Receive/Refresh warnt standardmäßig im Ziel-Debug und oben in der Ziel-Notiz, wenn der Ziel-Eintrag im Papierkorb liegt
-- refreshTargetFromInputEntries() schreibt keine DayId mehr in Inputs und ruft keinen Restore-/EnsureActive-Nachlauf nach Refresh-Links auf
+- Receive/Refresh warnt nur noch mit checkTargetTrash: true, wenn der Ziel-Eintrag im Papierkorb liegt
+- refreshTargetFromInputEntries() nutzt DayId wieder als lesende Auswahlhilfe, schreibt aber keine DayId in Inputs
+- recalcTarget wird nicht mehr aus dem Input Linker ausgeführt
 - PostEntry kann optional ein zweites Argument über postEntryOptions/postEntryArgs erhalten
 - DustingDay Record-Beispiele nutzen string/append statt string_rows, damit Record-Zeilen nicht mit Zeitstempel versehen werden
 - string/text Maps können mit mode "prepend" nach vorne schreiben
@@ -58,7 +59,6 @@ linkInputEntryToTarget({
     rowRoundMode: "round",
     postEntry: true,
     postEntryName: "PostEntry",
-    recalcTarget: true,
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
       { from: "InRecord", to: "Record", type: "string", mode: "append" },
@@ -80,7 +80,6 @@ recieveInputEntryFromSource({
     rowRoundMode: "round",
     postEntry: true,
     postEntryName: "PostEntry",
-    recalcTarget: true,
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
       { from: "InRecord", to: "Record", type: "string", mode: "append" },
@@ -118,7 +117,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.87";
+var DDL_VERSION = "0.88";
 var DDL_TRASH_WARNING = "ACHTUNG: Datei im Papierkorb!";
 
 function getInputLinkerLibVersion() {
@@ -811,11 +810,14 @@ function ddlPrependLine(target, targetField, line, errors, cfg, unique) {
 }
 
 function ddlIsTargetTrashWarningEnabled(cfg) {
-  if (!cfg) return true;
+  if (!cfg) return false;
+  if (cfg.checkTargetTrash === true) return true;
+  if (cfg.warnTargetTrash === true) return true;
+  if (cfg.targetTrashWarning === true) return true;
   if (cfg.checkTargetTrash === false) return false;
   if (cfg.warnTargetTrash === false) return false;
   if (cfg.targetTrashWarning === false) return false;
-  return true;
+  return false;
 }
 
 function ddlFirstTextTargetField(map) {
@@ -1453,7 +1455,7 @@ function ddlClearMappedTargets(target, map, cfg, result, errors, forceAll) {
 function ddlSelectInputsForDay(target, targetDate, cfg, result, errors) {
   var sourceDateField = cfg.sourceDateField || "Date";
   var sourceDayLinkField = cfg.sourceDayLinkField || "DayLinks";
-  var sourceDayIdField = cfg.sourceDayIdField || cfg.sourceTargetIdField || cfg.dayIdField || "";
+  var sourceDayIdField = cfg.sourceDayIdField || cfg.sourceTargetIdField || cfg.dayIdField || "DayId";
   var findMatchingEntries = cfg.findMatchingEntries === true;
   var linkNewEntries = cfg.linkNewEntries === true;
   var processAllEntries = cfg.processAllEntries === true;
@@ -1569,21 +1571,6 @@ function ddlApplyMapFromSourceToDay(src, target, sourceDate, targetDate, cfg, re
       result.appended.push(item.to);
     }
   }
-}
-
-function ddlRecalcEntry(entryObj, errors, label) {
-  if (!entryObj) return false;
-
-  try {
-    if (typeof entryObj.recalc === "function") {
-      entryObj.recalc();
-      return true;
-    }
-  } catch (e) {
-    if (errors) errors.push((label || "recalc fehlgeschlagen"));
-  }
-
-  return false;
 }
 
 function ddlResolvePostEntryFunction(cfg) {
@@ -1811,7 +1798,6 @@ function ddlReceiveAfterLink(src, target, cfg, result, errors) {
   if (receiveCfg.postEntryOptions === undefined && cfg.postEntryOptions !== undefined) receiveCfg.postEntryOptions = cfg.postEntryOptions;
   if (receiveCfg.postEntryArgs === undefined && cfg.postEntryArgs !== undefined) receiveCfg.postEntryArgs = cfg.postEntryArgs;
   if (receiveCfg.postEntryConfig === undefined && cfg.postEntryConfig !== undefined) receiveCfg.postEntryConfig = cfg.postEntryConfig;
-  receiveCfg.recalcTarget = receiveCfg.recalcTarget === true || cfg.recalcTarget === true;
   receiveCfg.targetDebugField = receiveCfg.targetDebugField || cfg.targetDebugField;
 
   receiveResult = recieveInputEntryFromSource(receiveCfg);
@@ -2380,10 +2366,6 @@ function refreshTargetFromInputEntries(cfg) {
   }
 
   ddlRunConfiguredPostEntry(null, target, cfg, result, errors);
-
-  if (cfg.recalcTarget === true && ddlRecalcEntry(target, errors, "Target recalc fehlgeschlagen")) {
-    result.recalculated.push("target");
-  }
 
   ddlWarnIfTargetInTrash(target, cfg, result, errors);
 
