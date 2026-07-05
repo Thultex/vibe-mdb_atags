@@ -1,59 +1,29 @@
 /*
 ========================================
-#4 Input Linker Lib v0.49 (sys 2.30)
+#4 Input Linker Lib v0.71 (sys 2.30)
 ========================================
 
 Änderungen
-- schreibt Relation-Felder standardmaessig nur, wenn sie leer sind; bestehende Links werden beim Input-Update nicht automatisch ersetzt
-- optional kann `cleanupStaleDayLinks: true` stale DayLinks per `entry.unlink(field, oldEntry)` entfernen
-- erkennt bereits bestehende Relationslinks robuster ueber ID, Name/Titel und Zieldatum
-- ueberspringt standardmaessig Memento-Linking-Trigger-Kontexte, um rekursive Neuverlinkung zu vermeiden
-- Relation-Felder werden ueber `entry.link(field, entry)` verknuepft; `set(field, entry)` wird vermieden
-- schreibt `sourceDayLinkField` nicht erneut, wenn der Input bereits mit dem Ziel-Day verlinkt ist
-- vorhandene DayLinks werden nur wiederverwendet, wenn ihr Zieldatum zum Input-Tag passt
-- schützt Nicht-Row-Bereich von `string_rows`-Zielfeldern vor PostEntry-/Cleaner-Seiteneffekten
-- Rebuild-Clearing entscheidet pro Zielfeld; jedes `string_rows`-Mapping schuetzt freien Text/Tagbar vor Voll-Leerung
-- optionale Zielöffnung nach Input-Linking ergänzt: `openTargetEntry: true`
-- geloeschte/Trash-Links in Input-Relationen werden ignoriert und vor neuer Zuordnung entfernt
-- Rebuild von `string_rows` leert nur Row-Zeilen und erhaelt freien Text/Tagbar im Zielfeld
-- vorhandenes Debug-Feld wird zu Beginn und bei erfolgreicher Durchführung geleert
-- PostEntry-Fehlerdebug gibt Funktionsname/Ziel und Fehlermeldung aus
-- PostEntry-Funktion kann per `postEntryName`/`postEntryFunctionName` oder String in `postEntryFunction` benannt werden
-- optionale PostEntry-Ausführung nach dem Input-Linking ergänzt: `postEntry: true` ruft `postEntry(targetEntry)`/`PostEntry(targetEntry)` auf
-- feste Core-Lib als inputLinker_lib; alte Day-/Failsafe-Funktionsnamen entfernt
-- Datei nach core_lib/inputLinker_lib.js verschoben und Day-Refresh-API vereinfacht
-- processMap, processMode, entries, findMatchingEntries, linkNewEntries und processAllEntries ergänzt
-- Map-Typ string_rows für Row-Notizen ergänzt; string hängt normalen Text ohne Row-Prefix an
-- refreshTargetFromInputEntries() ergänzt Day-seitiges Suchen, Verlinken, Append und Rebuild aus Input-Einträgen
-- rowSourceMode "realtime_since" schreibt absolute Tageszeit; relative Rows bleiben nur über sinceFirst/relative
-- Lib-Name auf Input Linker gesetzt und Row-Optionen an TimeMarker-Namen angeglichen
-- brauchbare vorhandene DayLinks gewinnen wieder, der Feldabgleich läuft danach aber immer; Datumssuche ist Fallback
-- Tageszuordnung prüft zuerst gleiche Kalendertage in den letzten daySearchLimit Einträgen und nutzt den Vortag nur als Frühzeit-Fallback
-- Debug-Ausgaben beginnen einheitlich mit file, version und time und werden als ein Log-Block geschrieben
-- Tageszuordnung nutzt dayStartHour, Standard 4, als Grenze für den Vortags-Fallback
-- liest Array-/NativeArray-artige Tags nicht mehr über entries(), damit keine Index-Wert-Paare wie 0,tag entstehen
-- meldet Schreibfehler nur noch mit strictWriteErrors: true, weil Memento set() teils trotz erfolgreichem Schreiben werfen kann
-- Rhino NativeArray / Java-Listen werden für Tags zuverlässig in Einzelwerte entpackt
-- nicht lesbare Zielwerte werden beim Anhängen als leer behandelt, solange set() funktioniert
-- Debug-Log wird als ein zusammenhängender Block ausgegeben
-- Debug-Header enthält Version und Zeitpunkt
-- Debug-Ausgaben werden zusätzlich immer per log() ausgegeben
-- unterstützt Iterator-Rückgaben von entries()
-- Debug-Funktion für Ziel-Library-Zugriff ergänzt
-- Ziel-Feldvalidierung blockiert nicht mehr standardmäßig, weil Memento Feldzugriff je nach Kontext unzuverlässig sein kann
-- vorhandener Source-DayLink wird als erstes wiederverwendet
-- Day-seitige Refresh-Doppellogik entfernt
-- optionaler recalc-Aufruf für Source und Target ergänzt
-- verhindert Zieleintrag-Erstellung bei wahrscheinlich falschem targetDateField
-- prüft Ziel-Zuordnungsfelder gegen vorhandene Tages-Einträge
-- Tags werden bei jedem Lauf gegen bestehende Tags abgeglichen und fehlende ergänzt
-- erster Linker nach DustingInput.DayLinks -> DustingDay
-- sucht oder erstellt Tages-Eintrag über Kalendertag
-- verarbeitet map-Einträge mit Typisierung
-- hängt Textwerte als eindeutige Rows an
-- übernimmt nur die erste Zeile aus Textwerten
-- ergänzt Tags nur, wenn sie im Zielfeld fehlen
-- unterstützt rowSourceMode analog zu TimeMarker, z. B. "realtime" und "realtime_since"
+- Rebuild/processAllEntries verwirft passende Inputs nicht mehr, wenn der Relation-Wrapper-Vergleich fehlschlaegt
+- Receive-Flags akzeptieren true/"true"/1 und Debug zeigt die angekommenen Flags
+- `debugReceive: true` schreibt einen Trace fuer Link-/Update-/Receive-Pfade ins Input-Debugfeld und ins Log
+- Map-Lesung bevorzugt beim aktuellen Input-Entry den Triggerwert `field(...)`, damit Updates nicht am alten Entry-Snapshot haengen
+- explizit uebergebene `entries` werden beim Receive nicht mehr durch Link-Wrapper-Vergleich ausgeskippt
+- leere/null Relation-Listen zaehlen nicht mehr als vorhandener DayLink
+- `receiveExistingLink` loest den vorhandenen Relation-Wert bewusst gegen die Ziel-Library auf, bevor geschrieben wird
+- linkInputEntryToTarget() kann mit `receiveExistingLink: true` bestehende Links bewusst fuer Updates verarbeiten
+- linkInputEntryToTarget() kann nach frisch gesetztem Script-Link optional `receiveAfterLink: true` ausführen
+- recieveInputEntryFromSource()/receiveInputEntryFromSource() werden explizit global exportiert
+- vorhandene DayLinks werden im Input-Linker nicht mehr als Entry-Objekt aufgeloest; schon ein Relation-Wert fuehrt zum No-op
+- linkInputEntryToTarget() ist strikt Link-only: vorhandener DayLink = sofort raus; sonst Day suchen/erstellen und genau einmal verlinken
+- bestehende gültige DayLinks verlassen den Input-Linker ohne Debug-Clear, damit "nichts tun" wirklich keine Feldänderung auslöst
+- geloeschte vorhandene DayLinks blockieren die Neuzuordnung nicht mehr; Link-only darf einen neuen Ziel-Day suchen oder erstellen
+- recieveInputEntryFromSource() verarbeitet Day-seitig genau einen verlinkten Input gegen den aktuellen Day
+- refreshCurrentTargetFromInputEntries() bleibt als Day-seitiger Wrapper mit aktuellem entry()
+- refreshTargetFromInputEntries() kann Day-seitig `postEntry: true` auf dem Ziel-Day ausführen
+- erweitert debugInputLinkerAccess() um entry()/values()/field()-Kontext, DayLink-ID und findById-Auflösung
+- verarbeitet vorhandene DayLinks im Input-Trigger nicht mehr automatisch; Updates bestehender Inputs laufen über Day-seitigen Refresh
+- loest vorhandene DayLinks bevorzugt per targetLib.findById(linked.id) auf und behandelt entry.deleted als primaeren Papierkorb-Indikator
 
 Usage
 
@@ -64,15 +34,42 @@ linkInputEntryToTarget({
   sourceDayLinkField: "DayLinks",
   dayStartHour: 4,
   daySearchLimit: 10,
+  receiveAfterLink: true,
+  receiveConfig: {
+    rowSourceMode: "realtime",
+    rowStepHours: 0.1,
+    rowRoundMode: "round",
+    processMode: "append",
+    postEntry: true,
+    postEntryName: "PostEntry",
+    recalcTarget: true,
+    processMap: [
+      { from: "InNote", to: "Notiz", type: "string_rows" },
+      { from: "InTag", to: "Tags", type: "tag" }
+    ]
+  }
+});
+
+// DustingDay: Linking an entry
+recieveInputEntryFromSource({
+  inputLib: "DustingInput",
+  sourceDateField: "Datum",
+  targetDateField: "Datum",
+  sourceDayLinkField: "DayLinks",
   rowSourceMode: "realtime",
   rowStepHours: 0.1,
   rowRoundMode: "round",
-  map: [
-    { from: "InNote", to: "OutNote", type: "string_rows" },
-    { from: "InTag", to: "OutTags", type: "tag" }
+  processMode: "append",
+  postEntry: true,
+  postEntryName: "PostEntry",
+  recalcTarget: true,
+  processMap: [
+    { from: "InNote", to: "Notiz", type: "string_rows" },
+    { from: "InTag", to: "Tags", type: "tag" }
   ]
 });
 
+// DustingDay: manuelle Reparatur/Auffrischung fuer den aktuellen Day
 refreshTargetFromInputEntries({
   inputLib: "DustingInput",
   sourceDateField: "Datum",
@@ -98,7 +95,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.49";
+var DDL_VERSION = "0.71";
 
 function getInputLinkerLibVersion() {
   return {
@@ -116,6 +113,30 @@ if (typeof registerAtagLibVersion === "function") {
 
 function ddlTrim(s) {
   return String(s || "").replace(/^\s+|\s+$/g, "");
+}
+
+function ddlTruthy(value) {
+  if (value === true) return true;
+  if (value === 1) return true;
+  if (typeof value === "string" && ddlTrim(value).toLowerCase() === "true") return true;
+  return false;
+}
+
+function ddlShouldReceiveAfterLink(cfg) {
+  return cfg && (
+    ddlTruthy(cfg.receiveAfterLink) ||
+    ddlTruthy(cfg.processAfterLink)
+  );
+}
+
+function ddlShouldReceiveExistingLink(cfg) {
+  return cfg && (
+    ddlTruthy(cfg.receiveExistingLink) ||
+    ddlTruthy(cfg.updateExistingLink) ||
+    ddlTruthy(cfg.receiveOnExistingLink) ||
+    ddlTruthy(cfg.receiveOnExisting) ||
+    ddlTruthy(cfg.processExistingLink)
+  );
 }
 
 function ddlIsArray(val) {
@@ -244,6 +265,19 @@ function ddlToArray(val) {
   return out;
 }
 
+function ddlFirstRelationValue(values) {
+  var links = ddlToArray(values);
+  var i;
+
+  for (i = 0; i < links.length; i++) {
+    if (links[i] == null) continue;
+    if (links[i] === "") continue;
+    return links[i];
+  }
+
+  return null;
+}
+
 function ddlSafeField(entryObj, fieldName, errors, label) {
   if (!entryObj || !fieldName) return null;
 
@@ -253,6 +287,51 @@ function ddlSafeField(entryObj, fieldName, errors, label) {
     if (errors) errors.push((label || "Feld fehlt") + ": " + fieldName);
     return null;
   }
+}
+
+function ddlIsCurrentEntry(entryObj) {
+  try {
+    return typeof entry === "function" && entry() === entryObj;
+  } catch (e) {
+    return false;
+  }
+}
+
+function ddlSafeSourceField(entryObj, fieldName, errors, label, cfg) {
+  var value;
+
+  if (cfg && cfg.preferTriggerFields !== false && ddlIsCurrentEntry(entryObj)) {
+    try {
+      if (typeof field === "function") {
+        value = field(fieldName);
+        if (value != null) return value;
+      }
+    } catch (e0) {}
+  }
+
+  return ddlSafeField(entryObj, fieldName, errors, label);
+}
+
+function ddlSafeValuesField(entryObj, fieldName) {
+  var values;
+
+  if (!entryObj || !fieldName) return null;
+
+  try {
+    if (typeof entryObj.values !== "function") return null;
+    values = entryObj.values();
+    if (!values) return null;
+    return values[fieldName];
+  } catch (e) {
+    return null;
+  }
+}
+
+function ddlSafeTriggerFieldValue() {
+  try {
+    if (typeof field === "function") return field();
+  } catch (e) {}
+  return null;
 }
 
 function ddlSafeSet(entryObj, fieldName, value, errors, label, strictWriteErrors) {
@@ -919,6 +998,16 @@ function ddlFirstLinkedDay(src, sourceDayLinkField) {
   return null;
 }
 
+function ddlHasDeletedLinkedDay(links) {
+  var i;
+
+  for (i = 0; i < links.length; i++) {
+    if (ddlIsDeletedEntry(links[i])) return true;
+  }
+
+  return false;
+}
+
 function ddlEntryFlag(entryObj, names) {
   var i;
   var name;
@@ -953,6 +1042,10 @@ function ddlEntryFlag(entryObj, names) {
 }
 
 function ddlIsDeletedEntry(entryObj) {
+  try {
+    if (entryObj && entryObj.deleted === true) return true;
+  } catch (e0) {}
+
   return ddlEntryFlag(entryObj, [
     "deleted",
     "isDeleted",
@@ -1037,6 +1130,41 @@ function ddlCanUseLinkedDay(target, sourceDate, targetDateField, cfg) {
   }
 
   return true;
+}
+
+function ddlResolveLinkedTargetFromLibrary(targetLib, linkedTarget, targetDateField, sourceDate, cfg) {
+  var entries;
+  var id;
+  var found;
+  var i;
+
+  if (!targetLib || !linkedTarget) return null;
+
+  id = ddlEntryId(linkedTarget);
+  if (id) {
+    try {
+      if (typeof targetLib.findById === "function") {
+        found = targetLib.findById(id);
+        if (ddlCanUseLinkedDay(found, sourceDate, targetDateField, cfg)) return found;
+        return null;
+      }
+    } catch (e0) {
+      return null;
+    }
+  }
+
+  try {
+    entries = ddlToArray(targetLib.entries ? targetLib.entries() : []);
+  } catch (e1) {
+    entries = [];
+  }
+
+  for (i = 0; i < entries.length; i++) {
+    if (!ddlCanUseLinkedDay(entries[i], sourceDate, targetDateField, cfg)) continue;
+    if (ddlSameEntry(entries[i], linkedTarget, targetDateField)) return entries[i];
+  }
+
+  return null;
 }
 
 function ddlCreateDayEntry(targetLib, sourceDate, targetDateField, cfg, errors) {
@@ -1171,6 +1299,7 @@ function ddlSelectInputsForDay(target, targetDate, cfg, result, errors) {
   var processAllEntries = cfg.processAllEntries === true;
   var skipLinkedToOther = cfg.skipLinkedToOther !== false;
   var explicitEntries = cfg.entries || null;
+  var forceExplicitEntries = explicitEntries && cfg.forceExplicitEntries !== false;
   var entries = [];
   var selected = [];
   var i;
@@ -1190,6 +1319,12 @@ function ddlSelectInputsForDay(target, targetDate, cfg, result, errors) {
 
   for (i = 0; i < entries.length; i++) {
     src = entries[i];
+
+    if (forceExplicitEntries && !processAllEntries) {
+      ddlPushUniqueEntry(selected, src);
+      continue;
+    }
+
     linkedToTarget = ddlEntryLinksToDay(src, sourceDayLinkField, target, cfg.targetDateField || "Date");
     linkedToOther = !linkedToTarget && ddlInputLinkedToOtherDay(src, sourceDayLinkField, target);
 
@@ -1221,7 +1356,6 @@ function ddlSelectInputsForDay(target, targetDate, cfg, result, errors) {
   }
 
   if (processAllEntries) {
-    selected = [];
     for (i = 0; i < entries.length; i++) {
       if (ddlEntryLinksToDay(entries[i], sourceDayLinkField, target, cfg.targetDateField || "Date")) ddlPushUniqueEntry(selected, entries[i]);
     }
@@ -1249,7 +1383,7 @@ function ddlApplyMapFromSourceToDay(src, target, sourceDate, targetDate, cfg, re
       continue;
     }
 
-    value = ddlSafeField(src, item.from, errors, "Quellfeld fehlt");
+    value = ddlSafeSourceField(src, item.from, errors, "Quellfeld fehlt", cfg);
     if (value == null || value === "") continue;
 
     type = item.type || ddlInferType(value);
@@ -1441,6 +1575,38 @@ function ddlOpenConfiguredTarget(target, cfg, result) {
   }
 }
 
+function ddlReceiveAfterLink(src, target, cfg, result, errors) {
+  var receiveCfg;
+  var receiveResult;
+
+  if (!src || !target || !cfg) return null;
+  if (!ddlShouldReceiveAfterLink(cfg) && !ddlShouldReceiveExistingLink(cfg)) return null;
+
+  receiveCfg = cfg.receiveConfig || {};
+  receiveCfg.inputEntry = src;
+  receiveCfg.targetEntry = target;
+  receiveCfg.sourceDateField = receiveCfg.sourceDateField || cfg.sourceDateField;
+  receiveCfg.targetDateField = receiveCfg.targetDateField || cfg.targetDateField;
+  receiveCfg.sourceDayLinkField = receiveCfg.sourceDayLinkField || cfg.sourceDayLinkField;
+  receiveCfg.rowSourceMode = receiveCfg.rowSourceMode || cfg.rowSourceMode;
+  receiveCfg.rowStepHours = receiveCfg.rowStepHours || cfg.rowStepHours;
+  receiveCfg.rowRoundMode = receiveCfg.rowRoundMode || cfg.rowRoundMode;
+  receiveCfg.processMode = receiveCfg.processMode || cfg.processMode || "append";
+  receiveCfg.processMap = receiveCfg.processMap || cfg.processMap || cfg.map;
+  receiveCfg.postEntry = receiveCfg.postEntry === true || cfg.postEntry === true;
+  receiveCfg.postEntryName = receiveCfg.postEntryName || cfg.postEntryName || cfg.postEntryFunctionName;
+  receiveCfg.postEntryFn = receiveCfg.postEntryFn || cfg.postEntryFn;
+  receiveCfg.recalcTarget = receiveCfg.recalcTarget === true || cfg.recalcTarget === true;
+  receiveCfg.targetDebugField = receiveCfg.targetDebugField || cfg.targetDebugField;
+
+  receiveResult = recieveInputEntryFromSource(receiveCfg);
+  if (result) result.receiveResult = receiveResult;
+  if (receiveResult && receiveResult.errors && receiveResult.errors.length && errors) {
+    errors.push("ReceiveAfterLink meldet Fehler: " + receiveResult.errors.join("; "));
+  }
+  return receiveResult;
+}
+
 function ddlWriteErrors(errors, cfg) {
   var debugEntry;
   var debugField;
@@ -1532,6 +1698,98 @@ function ddlDescribeValue(val) {
   return "unknown object";
 }
 
+function ddlDebugFieldRaw(fieldName) {
+  try {
+    if (typeof field === "function") return ddlDescribeValue(field(fieldName));
+  } catch (e) {
+    return "field() error: " + e;
+  }
+  return "field() unavailable";
+}
+
+function ddlDebugEntryFieldRaw(entryObj, fieldName) {
+  try {
+    if (entryObj && typeof entryObj.field === "function") return ddlDescribeValue(entryObj.field(fieldName));
+  } catch (e) {
+    return "entry.field() error: " + e;
+  }
+  return "entry.field() unavailable";
+}
+
+function ddlDebugWriteToEntry(entryObj, fieldName, lines) {
+  if (!entryObj || !fieldName || !lines) return false;
+  if (!ddlEntryHasField(entryObj, fieldName)) return false;
+  return ddlSafeSet(entryObj, fieldName, lines.join("\n"), null, null, false);
+}
+
+function ddlDebugReceiveTrace(stage, src, target, cfg, result, errors) {
+  var lines;
+  var links;
+  var firstLink;
+  var map;
+  var i;
+  var item;
+  var debugField;
+  var sourceDateField;
+  var targetDateField;
+  var rr;
+
+  if (!cfg || (cfg.debugReceive !== true && cfg.debugLinker !== true && cfg.linkerDebug !== true)) return;
+
+  sourceDateField = cfg.sourceDateField || "Date";
+  targetDateField = cfg.targetDateField || "Date";
+  links = ddlToArray(ddlSafeField(src, cfg.sourceDayLinkField || "DayLinks", null, null));
+  firstLink = ddlFirstRelationValue(links);
+  map = cfg.processMap || cfg.map || (cfg.receiveConfig && (cfg.receiveConfig.processMap || cfg.receiveConfig.map)) || [];
+  rr = result && result.receiveResult;
+
+  lines = ddlDebugHeader("DEBUG Input Linker Receive");
+  lines.push("stage: " + stage);
+  lines.push("cfg.receiveAfterLink: " + ddlDescribeValue(cfg.receiveAfterLink));
+  lines.push("cfg.receiveExistingLink: " + ddlDescribeValue(cfg.receiveExistingLink));
+  lines.push("cfg.updateExistingLink: " + ddlDescribeValue(cfg.updateExistingLink));
+  lines.push("cfg.processExistingLink: " + ddlDescribeValue(cfg.processExistingLink));
+  lines.push("shouldReceiveAfterLink: " + ddlShouldReceiveAfterLink(cfg));
+  lines.push("shouldReceiveExistingLink: " + ddlShouldReceiveExistingLink(cfg));
+  lines.push("skipReason: " + (result && result.skipReason ? result.skipReason : ""));
+  lines.push("created: " + !!(result && result.created));
+  lines.push("linked: " + !!(result && result.linked));
+  lines.push("sourceDayLinkField: " + (cfg.sourceDayLinkField || "DayLinks"));
+  lines.push("source DayLinks length: " + links.length);
+  lines.push("source DayLink first: " + ddlDescribeValue(firstLink));
+  lines.push("source DayLink first id: " + ddlEntryId(firstLink));
+  lines.push("source date trigger raw: " + ddlDebugFieldRaw(sourceDateField));
+  lines.push("source date entry raw: " + ddlDebugEntryFieldRaw(src, sourceDateField));
+  lines.push("target: " + ddlDescribeValue(target));
+  lines.push("target id: " + ddlEntryId(target));
+  lines.push("target date raw: " + ddlDebugEntryFieldRaw(target, targetDateField));
+
+  if (rr) {
+    lines.push("receive inputs: " + rr.inputs);
+    lines.push("receive linked: " + rr.linked);
+    lines.push("receive skippedLinkedToOther: " + rr.skippedLinkedToOther);
+    lines.push("receive appended: " + rr.appended.join(","));
+    lines.push("receive tags: " + rr.tags.join(","));
+    lines.push("receive postEntries: " + rr.postEntries.join(","));
+    lines.push("receive errors: " + rr.errors.join("; "));
+  } else {
+    lines.push("receive result: null");
+  }
+
+  for (i = 0; i < map.length; i++) {
+    item = ddlNormalizeMapItem(map[i]);
+    if (!item.from) continue;
+    lines.push("map " + item.from + " trigger raw: " + ddlDebugFieldRaw(item.from));
+    lines.push("map " + item.from + " entry raw: " + ddlDebugEntryFieldRaw(src, item.from));
+  }
+
+  if (errors && errors.length) lines.push("errors: " + errors.join("; "));
+
+  ddlLogLines(lines);
+  debugField = cfg.sourceDebugField || cfg.debugField || "Debug";
+  ddlDebugWriteToEntry(src, debugField, lines);
+}
+
 function debugInputLinkerAccess(cfg) {
   cfg = cfg || {};
 
@@ -1542,11 +1800,17 @@ function debugInputLinkerAccess(cfg) {
   var targetDateField = cfg.targetDateField || "Date";
   var lines = [];
   var sourceDateRaw;
+  var sourceDateFromValuesRaw;
+  var triggerFieldRaw;
   var sourceDate;
   var targetLib;
   var entries;
   var first;
   var firstDateRaw;
+  var sourceLinks;
+  var firstLink;
+  var firstLinkId;
+  var firstLinkFound;
   var created;
   var canCreate = cfg.testCreate === true;
 
@@ -1559,11 +1823,27 @@ function debugInputLinkerAccess(cfg) {
   lines.push("rowSourceMode: " + (cfg.rowSourceMode || cfg.rowMode || "realtime"));
   lines.push("rowStepHours: " + (cfg.rowStepHours != null ? cfg.rowStepHours : 0.5));
   lines.push("rowRoundMode: " + (cfg.rowRoundMode || cfg.roundMode || "round"));
+  lines.push("source entry: " + ddlDescribeValue(src));
+  lines.push("source entry id: " + ddlEntryId(src));
+  lines.push("source entry deleted: " + ddlIsDeletedEntry(src));
 
   sourceDateRaw = ddlSafeField(src, sourceDateField, null, null);
+  sourceDateFromValuesRaw = ddlSafeValuesField(src, sourceDateField);
+  triggerFieldRaw = ddlSafeTriggerFieldValue();
   sourceDate = ddlToDate(sourceDateRaw);
   lines.push("source date raw: " + ddlDescribeValue(sourceDateRaw));
+  lines.push("source date values raw: " + ddlDescribeValue(sourceDateFromValuesRaw));
+  lines.push("trigger field() raw: " + ddlDescribeValue(triggerFieldRaw));
   lines.push("source date parsed: " + (sourceDate ? sourceDate.toString() : "null"));
+
+  sourceLinks = ddlToArray(ddlSafeField(src, cfg.sourceDayLinkField || "DayLinks", null, null));
+  firstLink = sourceLinks.length ? sourceLinks[0] : null;
+  firstLinkId = ddlEntryId(firstLink);
+  lines.push("sourceDayLinkField: " + (cfg.sourceDayLinkField || "DayLinks"));
+  lines.push("source DayLinks length: " + sourceLinks.length);
+  lines.push("source DayLink[0]: " + ddlDescribeValue(firstLink));
+  lines.push("source DayLink[0] id: " + firstLinkId);
+  lines.push("source DayLink[0] deleted: " + ddlIsDeletedEntry(firstLink));
 
   try {
     targetLib = libByName(targetLibName);
@@ -1586,6 +1866,24 @@ function debugInputLinkerAccess(cfg) {
       ok: false,
       text: lines.join("\n")
     };
+  }
+
+  if (firstLinkId) {
+    try {
+      if (typeof targetLib.findById === "function") {
+        firstLinkFound = targetLib.findById(firstLinkId);
+        lines.push("target findById DayLink[0]: " + ddlDescribeValue(firstLinkFound));
+        lines.push("target findById DayLink[0] id: " + ddlEntryId(firstLinkFound));
+        lines.push("target findById DayLink[0] deleted: " + ddlIsDeletedEntry(firstLinkFound));
+        lines.push("target findById DayLink[0] date raw: " + ddlDescribeValue(ddlSafeField(firstLinkFound, targetDateField, null, null)));
+      } else {
+        lines.push("target findById available: false");
+      }
+    } catch (eFind) {
+      lines.push("target findById error: " + eFind);
+    }
+  } else {
+    lines.push("target findById DayLink[0]: skipped");
   }
 
   try {
@@ -1640,18 +1938,21 @@ function linkInputEntryToTarget(cfg) {
   var sourceDateField = cfg.sourceDateField || "Date";
   var targetDateField = cfg.targetDateField || "Date";
   var sourceDayLinkField = cfg.sourceDayLinkField || "DayLinks";
-  var sourceDate = ddlToDate(ddlSafeField(src, sourceDateField, errors, "Quell-Datumsfeld fehlt"));
+  var sourceDate;
   var targetLib;
-  var linkedTarget;
   var sourceDayLinks;
+  var sourceDayLinkValue;
   var sourceHasDayLinks;
   var target;
-  var targetDate;
   var result = {
     targetEntry: null,
     created: false,
     linked: false,
     linkSkippedExisting: false,
+    createSkippedExistingLink: false,
+    directLinkedTargetWriteSkipped: false,
+    processSkippedExistingLink: false,
+    processSkippedLinkOnly: false,
     unlinked: 0,
     skipped: false,
     skipReason: "",
@@ -1659,13 +1960,13 @@ function linkInputEntryToTarget(cfg) {
     tags: [],
     recalculated: [],
     postEntries: [],
+    receiveResult: null,
     openResult: { attempted: false, ok: false, target: "", method: "", error: "" },
     errors: errors
   };
 
   cfg.debugEntry = src;
   cfg.debugField = cfg.debugField || cfg.sourceDebugField || "Debug";
-  ddlClearDebugFieldIfExists(cfg);
 
   if (cfg.entryObj == null && cfg.skipLinkingTrigger !== false && ddlIsLinkingTriggerContext()) {
     result.skipped = true;
@@ -1673,16 +1974,67 @@ function linkInputEntryToTarget(cfg) {
     return result;
   }
 
+  sourceDayLinks = sourceDayLinkField ? ddlToArray(ddlSafeField(src, sourceDayLinkField, null, null)) : [];
+  sourceDayLinkValue = ddlFirstRelationValue(sourceDayLinks);
+  sourceHasDayLinks = sourceDayLinkValue != null;
+
+  if (sourceHasDayLinks) {
+    result.linked = true;
+    result.linkSkippedExisting = true;
+
+    if (ddlShouldReceiveExistingLink(cfg)) {
+      sourceDate = ddlToDate(ddlSafeField(src, sourceDateField, errors, "Quell-Datumsfeld fehlt"));
+      if (!sourceDate) {
+        errors.push("Quell-Datum leer oder ungültig: " + sourceDateField);
+        ddlWriteErrors(errors, cfg);
+        return result;
+      }
+
+      try {
+        targetLib = libByName(cfg.targetLib || "DustingDay");
+      } catch (eExistingLib) {
+        targetLib = null;
+      }
+
+      if (!targetLib) {
+        errors.push("Bibliothek fehlt: " + (cfg.targetLib || "DustingDay"));
+        ddlWriteErrors(errors, cfg);
+        return result;
+      }
+
+      target = ddlResolveLinkedTargetFromLibrary(targetLib, sourceDayLinkValue, targetDateField, sourceDate, cfg);
+      if (!target) target = ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
+
+      if (!target) {
+        errors.push("Bestehender DayLink konnte nicht zu einem beschreibbaren Tages-Eintrag aufgeloest werden");
+        ddlWriteErrors(errors, cfg);
+        return result;
+      }
+
+      result.targetEntry = target;
+      ddlReceiveAfterLink(src, target, cfg, result, errors);
+      result.skipped = true;
+      result.skipReason = "existing_daylink_receive";
+      if (errors.length) ddlWriteErrors(errors, cfg);
+      ddlDebugReceiveTrace("existing_link_receive", src, target, cfg, result, errors);
+      return result;
+    }
+
+    result.skipped = true;
+    result.skipReason = "existing_daylink_noop";
+    ddlDebugReceiveTrace("existing_link_noop", src, null, cfg, result, errors);
+    return result;
+  }
+
+  sourceDate = ddlToDate(ddlSafeField(src, sourceDateField, errors, "Quell-Datumsfeld fehlt"));
+
   if (!sourceDate) {
     errors.push("Quell-Datum leer oder ungültig: " + sourceDateField);
     ddlWriteErrors(errors, cfg);
     return result;
   }
 
-  if (!cfg.map || !ddlIsArray(cfg.map)) {
-    errors.push("Config fehlt oder falsch: map");
-    cfg.map = [];
-  }
+  cfg.map = [];
 
   try {
     targetLib = libByName(cfg.targetLib || "DustingDay");
@@ -1701,14 +2053,7 @@ function linkInputEntryToTarget(cfg) {
     return result;
   }
 
-  sourceDayLinks = sourceDayLinkField ? ddlToArray(ddlSafeField(src, sourceDayLinkField, null, null)) : [];
-  sourceHasDayLinks = sourceDayLinks.length > 0;
-
-  linkedTarget = cfg.reuseExistingLink === false ? null : ddlFirstLinkedDay(src, sourceDayLinkField);
-  if (sourceDayLinkField && linkedTarget == null && sourceHasDayLinks) {
-    result.skippedBrokenLinkCleanup = true;
-  }
-  target = ddlCanUseLinkedDay(linkedTarget, sourceDate, targetDateField, cfg) ? linkedTarget : ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
+  target = ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
 
   if (!target) {
     target = ddlCreateDayEntry(targetLib, sourceDate, targetDateField, cfg, errors);
@@ -1721,33 +2066,20 @@ function linkInputEntryToTarget(cfg) {
   }
 
   result.targetEntry = target;
-  targetDate = ddlToDate(ddlSafeField(target, targetDateField, null, null)) || sourceDate;
 
-  if (sourceDayLinkField && ddlEntryLinksToDay(src, sourceDayLinkField, target, targetDateField)) {
-    result.linked = true;
-  } else if (sourceDayLinkField && sourceHasDayLinks && cfg.replaceExistingLink !== true) {
-    result.linkSkippedExisting = true;
-  } else if (sourceDayLinkField) {
+  if (sourceDayLinkField) {
     result.linked = ddlLinkEntry(src, sourceDayLinkField, target, errors, cfg);
   }
 
-  ddlCleanupStaleDayLinks(src, sourceDayLinkField, target, targetDateField, cfg, result, errors);
-
-  ddlApplyMapFromSourceToDay(src, target, sourceDate, targetDate, cfg, result, errors);
-  ddlRunConfiguredPostEntry(src, target, cfg, result, errors);
-
-  if (cfg.recalcTarget === true && ddlRecalcEntry(target, errors, "Target recalc fehlgeschlagen")) {
-    result.recalculated.push("target");
+  if (result.linked) {
+    ddlReceiveAfterLink(src, target, cfg, result, errors);
   }
 
-  if (cfg.recalcSource === true && ddlRecalcEntry(src, errors, "Source recalc fehlgeschlagen")) {
-    result.recalculated.push("source");
-  }
-
-  ddlOpenConfiguredTarget(target, cfg, result);
-
+  result.skipped = true;
+  result.skipReason = "link_only";
+  result.processSkippedLinkOnly = true;
   if (errors.length) ddlWriteErrors(errors, cfg);
-  else ddlClearDebugFieldIfExists(cfg);
+  ddlDebugReceiveTrace("new_link", src, target, cfg, result, errors);
   return result;
 }
 
@@ -1772,6 +2104,7 @@ function refreshTargetFromInputEntries(cfg) {
     tags: [],
     cleared: [],
     recalculated: [],
+    postEntries: [],
     errors: errors
   };
 
@@ -1813,6 +2146,8 @@ function refreshTargetFromInputEntries(cfg) {
     ddlApplyMapFromSourceToDay(inputs[i], target, sourceDate, targetDate, cfg, result, errors);
   }
 
+  ddlRunConfiguredPostEntry(null, target, cfg, result, errors);
+
   if (cfg.recalcTarget === true && ddlRecalcEntry(target, errors, "Target recalc fehlgeschlagen")) {
     result.recalculated.push("target");
   }
@@ -1821,3 +2156,69 @@ function refreshTargetFromInputEntries(cfg) {
   else ddlClearDebugFieldIfExists(cfg);
   return result;
 }
+
+function refreshCurrentTargetFromInputEntries(cfg) {
+  cfg = cfg || {};
+  if (!cfg.targetEntry && !cfg.entryObj) cfg.targetEntry = entry();
+  return refreshTargetFromInputEntries(cfg);
+}
+
+function ddlResolveLinkedInputEntry(cfg, target) {
+  var e;
+
+  if (cfg.inputEntry) return cfg.inputEntry;
+  if (cfg.sourceEntry) return cfg.sourceEntry;
+  if (cfg.linkedEntry) return cfg.linkedEntry;
+
+  try {
+    if (typeof linkedEntry === "function") {
+      e = linkedEntry();
+      if (e && e !== target) return e;
+    }
+  } catch (e0) {}
+
+  try {
+    if (typeof masterEntry === "function") {
+      e = masterEntry();
+      if (e && e !== target) return e;
+    }
+  } catch (e1) {}
+
+  try {
+    if (typeof attr === "function") {
+      e = attr();
+      if (e && typeof e.field === "function" && e !== target) return e;
+    }
+  } catch (e2) {}
+
+  return null;
+}
+
+function recieveInputEntryFromSource(cfg) {
+  cfg = cfg || {};
+
+  var target = cfg.targetEntry || cfg.entryObj || entry();
+  var input = ddlResolveLinkedInputEntry(cfg, target);
+
+  cfg.targetEntry = target;
+  cfg.entries = input ? [input] : [];
+  cfg.findMatchingEntries = false;
+  cfg.linkNewEntries = false;
+  cfg.processAllEntries = false;
+
+  return refreshTargetFromInputEntries(cfg);
+}
+
+function receiveInputEntryFromSource(cfg) {
+  return recieveInputEntryFromSource(cfg);
+}
+
+function refreshCurrentTargetFromLinkedInputEntry(cfg) {
+  return recieveInputEntryFromSource(cfg);
+}
+
+try {
+  this.recieveInputEntryFromSource = recieveInputEntryFromSource;
+  this.receiveInputEntryFromSource = receiveInputEntryFromSource;
+  this.refreshCurrentTargetFromLinkedInputEntry = refreshCurrentTargetFromLinkedInputEntry;
+} catch (eGlobalInputLinker) {}
