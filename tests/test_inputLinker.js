@@ -1288,7 +1288,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-name missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.68") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.70") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -1300,7 +1300,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.68") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.70") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -1503,7 +1503,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.68") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.70") < 0) {
     fail("error-debug-version missing");
   }
 

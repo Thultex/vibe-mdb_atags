@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.69 (sys 2.30)
+#4 Input Linker Lib v0.70 (sys 2.30)
 ========================================
 
 Änderungen
+- Receive-Flags akzeptieren true/"true"/1 und Debug zeigt die angekommenen Flags
 - `debugReceive: true` schreibt einen Trace fuer Link-/Update-/Receive-Pfade ins Input-Debugfeld und ins Log
 - Map-Lesung bevorzugt beim aktuellen Input-Entry den Triggerwert `field(...)`, damit Updates nicht am alten Entry-Snapshot haengen
 - explizit uebergebene `entries` werden beim Receive nicht mehr durch Link-Wrapper-Vergleich ausgeskippt
@@ -93,7 +94,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.69";
+var DDL_VERSION = "0.70";
 
 function getInputLinkerLibVersion() {
   return {
@@ -111,6 +112,30 @@ if (typeof registerAtagLibVersion === "function") {
 
 function ddlTrim(s) {
   return String(s || "").replace(/^\s+|\s+$/g, "");
+}
+
+function ddlTruthy(value) {
+  if (value === true) return true;
+  if (value === 1) return true;
+  if (typeof value === "string" && ddlTrim(value).toLowerCase() === "true") return true;
+  return false;
+}
+
+function ddlShouldReceiveAfterLink(cfg) {
+  return cfg && (
+    ddlTruthy(cfg.receiveAfterLink) ||
+    ddlTruthy(cfg.processAfterLink)
+  );
+}
+
+function ddlShouldReceiveExistingLink(cfg) {
+  return cfg && (
+    ddlTruthy(cfg.receiveExistingLink) ||
+    ddlTruthy(cfg.updateExistingLink) ||
+    ddlTruthy(cfg.receiveOnExistingLink) ||
+    ddlTruthy(cfg.receiveOnExisting) ||
+    ddlTruthy(cfg.processExistingLink)
+  );
 }
 
 function ddlIsArray(val) {
@@ -1555,7 +1580,7 @@ function ddlReceiveAfterLink(src, target, cfg, result, errors) {
   var receiveResult;
 
   if (!src || !target || !cfg) return null;
-  if (cfg.receiveAfterLink !== true && cfg.receiveExistingLink !== true && cfg.updateExistingLink !== true && cfg.processAfterLink !== true) return null;
+  if (!ddlShouldReceiveAfterLink(cfg) && !ddlShouldReceiveExistingLink(cfg)) return null;
 
   receiveCfg = cfg.receiveConfig || {};
   receiveCfg.inputEntry = src;
@@ -1720,6 +1745,12 @@ function ddlDebugReceiveTrace(stage, src, target, cfg, result, errors) {
 
   lines = ddlDebugHeader("DEBUG Input Linker Receive");
   lines.push("stage: " + stage);
+  lines.push("cfg.receiveAfterLink: " + ddlDescribeValue(cfg.receiveAfterLink));
+  lines.push("cfg.receiveExistingLink: " + ddlDescribeValue(cfg.receiveExistingLink));
+  lines.push("cfg.updateExistingLink: " + ddlDescribeValue(cfg.updateExistingLink));
+  lines.push("cfg.processExistingLink: " + ddlDescribeValue(cfg.processExistingLink));
+  lines.push("shouldReceiveAfterLink: " + ddlShouldReceiveAfterLink(cfg));
+  lines.push("shouldReceiveExistingLink: " + ddlShouldReceiveExistingLink(cfg));
   lines.push("skipReason: " + (result && result.skipReason ? result.skipReason : ""));
   lines.push("created: " + !!(result && result.created));
   lines.push("linked: " + !!(result && result.linked));
@@ -1951,7 +1982,7 @@ function linkInputEntryToTarget(cfg) {
     result.linked = true;
     result.linkSkippedExisting = true;
 
-    if (cfg.receiveExistingLink === true || cfg.updateExistingLink === true) {
+    if (ddlShouldReceiveExistingLink(cfg)) {
       sourceDate = ddlToDate(ddlSafeField(src, sourceDateField, errors, "Quell-Datumsfeld fehlt"));
       if (!sourceDate) {
         errors.push("Quell-Datum leer oder ungültig: " + sourceDateField);

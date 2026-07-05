@@ -138,6 +138,7 @@ linkInputEntryToTarget({
   sourceDateField: "Datum",
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
+  debugReceive: true,
   receiveExistingLink: true,
   receiveConfig: {
     rowSourceMode: "realtime",
