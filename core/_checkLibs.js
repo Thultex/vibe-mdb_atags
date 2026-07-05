@@ -1,6 +1,6 @@
 /*
 ========================================
-A1 Lib Versions v1.15 (sys 2.30)
+A1 Lib Versions v1.16 (sys 2.30)
 ========================================
 
 Notes
@@ -11,7 +11,7 @@ Notes
   - helpers_lib v2.11 (sys 2.30)
   - collectAtags_lib v1.59 (sys 2.30)
   - exportAtags_lib v1.83 (sys 2.30)
-  - inputLinker_lib v0.49 (sys 2.30, optional)
+  - inputLinker_lib v0.71 (sys 2.30, optional)
 
 ========================================
 */
@@ -34,7 +34,7 @@ var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERS
 function getLibVersionsVersion() {
   return {
     name: "libVersions",
-    version: "1.15",
+    version: "1.16",
     sysVersion: "2.30",
     path: "core/_checkLibs.js"
   };
@@ -44,7 +44,7 @@ var ATAG_EXPECTED_LIBS = [
   { name: "helpers_lib", version: "2.11", getter: "getHelpersLibVersion", path: "core_lib/helpers_lib.js" },
   { name: "collectAtags_lib", version: "1.59", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
   { name: "exportAtags_lib", version: "1.83", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" },
-  { name: "inputLinker_lib", version: "0.49", getter: "getInputLinkerLibVersion", path: "core_lib/inputLinker_lib.js", optional: true }
+  { name: "inputLinker_lib", version: "0.71", getter: "getInputLinkerLibVersion", path: "core_lib/inputLinker_lib.js", optional: true }
 ];
 
 function getExpectedAtagLibs() {
@@ -170,6 +170,16 @@ function atagVersionMismatchText(name, expected, got) {
   return "";
 }
 
+function addAtagVersionMismatch(list, text) {
+  var i;
+
+  if (!text) return;
+  for (i = 0; i < list.length; i++) {
+    if (String(list[i] || "") === String(text)) return;
+  }
+  list.push(text);
+}
+
 function checkLibVersions(cfg) {
   cfg = cfg || {};
   var names = cfg.names || cfg.libs || null;
@@ -270,6 +280,14 @@ function checkAtagLibVersions(cfg) {
     asText: false
   });
 
+  for (i = 0; i < names.length; i++) {
+    name = String(names[i] || "");
+    info = getExpectedAtagLibInfo(name);
+    if (!info || !result.map[name]) continue;
+    text = atagVersionMismatchText(name, info, result.map[name]);
+    addAtagVersionMismatch(versionMismatch, text);
+  }
+
   if (accessCheck) {
     for (i = 0; i < names.length; i++) {
       name = String(names[i] || "");
@@ -290,7 +308,7 @@ function checkAtagLibVersions(cfg) {
       result.missing = removeAtagListValue(result.missing, name);
       result.optionalMissing = removeAtagListValue(result.optionalMissing, name);
       text = atagVersionMismatchText(name, info, got);
-      if (text) versionMismatch.push(text);
+      addAtagVersionMismatch(versionMismatch, text);
     }
   }
 
