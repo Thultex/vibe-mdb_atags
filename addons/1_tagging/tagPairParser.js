@@ -1,12 +1,13 @@
 /*
 ========================================
-B2 Tag Pair Parser v1.00 (sys 2.40)
+B2 Tag Pair Parser v1.01 (sys 2.40)
 ========================================
 
 Änderungen
 - Add-on für 2-Tag-Paare im Tag-Feld ergänzt
 - ohne direkten Eingriff in applyTags() / bulkApplyTags()
 - ergänzt Werte als name#wert im Textfeld
+- schreibt einfache Ganzzahl-Paare kompakt, z. B. `springen, 3` -> `springen3` und `springen, -3` -> `springen-3`
 - entfernt den zweiten Wert-Tag optional aus dem Tag-Feld
 
 Anwendung
@@ -125,6 +126,14 @@ function normalizePairValue(raw) {
   return null;
 }
 
+function formatTagPairTextValue(name, normalizedValue, rawValue) {
+  if (/^[+-]?[1-9]\d*$/.test(trimTagPairValue(rawValue))) {
+    return String(name || "") + String(normalizedValue);
+  }
+
+  return String(name || "") + "#" + String(normalizedValue || "");
+}
+
 function appendTagPairTextValue(entryObj, targetTextField, lines, appendMode) {
   if (!lines || !lines.length) return;
 
@@ -186,7 +195,7 @@ function applyTagPairParser(cfg) {
       var normalized = normalizePairValue(next);
 
       if (normalized != null) {
-        textAdds.push(current + "#" + normalized);
+        textAdds.push(formatTagPairTextValue(current, normalized, next));
         outTags.push(current);
 
         if (keepOriginalValueTag) {

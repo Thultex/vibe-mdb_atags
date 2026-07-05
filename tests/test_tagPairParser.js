@@ -83,7 +83,25 @@ function testKeepOriginalValueTag() {
   assertEquals("keep-note", entryObj.field("Note"), "emo#+2");
 }
 
+function testSimpleIntegerPairUsesCompactTagSyntax() {
+  var entryObj = makeEntry({
+    Tags: ["springen", "3", "fallen", "-3", "heben", "+2", "test"],
+    Note: ""
+  });
+
+  var out = applyTagPairParser({
+    entryObj: entryObj,
+    tagField: "Tags",
+    targetTextField: "Note"
+  });
+
+  assertArray("simple-int-tags", entryObj.field("Tags"), ["springen", "fallen", "heben", "test"]);
+  assertEquals("simple-int-note", entryObj.field("Note"), "springen3\nfallen-3\nheben+2");
+  assertArray("simple-int-adds", out.textAdds, ["springen3", "fallen-3", "heben+2"]);
+}
+
 testStandaloneParser();
 testKeepOriginalValueTag();
+testSimpleIntegerPairUsesCompactTagSyntax();
 
 print("OK");
