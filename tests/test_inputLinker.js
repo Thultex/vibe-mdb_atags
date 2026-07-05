@@ -8,6 +8,7 @@ var _currentEntry = null;
 var _libs = {};
 var _logs = [];
 var _postEntries = [];
+var _postEntryArgs = [];
 var _linkingTriggerContext = false;
 
 function fail(msg) {
@@ -193,12 +194,14 @@ function masterLib() {
   return _linkingTriggerContext ? makeLib([]) : null;
 }
 
-function postEntry(e) {
+function postEntry(e, arg) {
   _postEntries.push(e);
+  _postEntryArgs.push(arg);
 }
 
-function customInputLinkerPostEntry(e) {
+function customInputLinkerPostEntry(e, arg) {
   _postEntries.push(e);
+  _postEntryArgs.push(arg);
 }
 
 function throwingInputLinkerPostEntry(e) {
@@ -221,6 +224,7 @@ function reset(input, dayEntries) {
   _currentEntry = input;
   _logs = [];
   _postEntries = [];
+  _postEntryArgs = [];
   _linkingTriggerContext = false;
   _libs = {
     DustingDay: makeLib(dayEntries || []),
@@ -232,6 +236,7 @@ function resetWithLibs(current, libs) {
   _currentEntry = current;
   _logs = [];
   _postEntries = [];
+  _postEntryArgs = [];
   _linkingTriggerContext = false;
   _libs = libs;
 }
@@ -1411,7 +1416,41 @@ function testRunsNamedPostEntryFunctionWhenConfigured() {
 
   assertEquals("post-entry-named-count", _postEntries.length, 1);
   assertSame("post-entry-named-entry", _postEntries[0], day);
+  assertEquals("post-entry-named-no-arg", _postEntryArgs[0], undefined);
   assertEquals("post-entry-named-result", result.postEntries.join(","), "target");
+}
+
+function testPassesPostEntryOptionsAsSecondArgument() {
+  var day = makeEntry({
+    Datum: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "post arg",
+    InTags: [],
+    DayLinks: null
+  });
+
+  reset(input, [day]);
+
+  linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Datum",
+    sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
+    postEntry: true,
+    postEntryName: "customInputLinkerPostEntry",
+    postEntryOptions: true,
+    map: [
+      { from: "InNote", to: "OutNote", type: "string_rows" }
+    ]
+  });
+
+  assertEquals("post-entry-arg-count", _postEntryArgs.length, 1);
+  assertEquals("post-entry-arg-bool", _postEntryArgs[0], true);
 }
 
 function testPostEntryDoesNotLoseFreeTextInStringRowsTarget() {
@@ -2509,6 +2548,7 @@ testRunsPostEntryOnTargetWhenConfigured();
 testSuccessfulRunClearsExistingSourceDebugField();
 testRunsPostEntryOnSourceWhenConfigured();
 testRunsNamedPostEntryFunctionWhenConfigured();
+testPassesPostEntryOptionsAsSecondArgument();
 testPostEntryDoesNotLoseFreeTextInStringRowsTarget();
 testPostEntryErrorIncludesFunctionAndMessage();
 testDebugDayLinkerAccessWritesDiagnostics();

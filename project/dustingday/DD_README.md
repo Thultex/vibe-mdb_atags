@@ -314,12 +314,26 @@ refreshTargetFromInputEntries({
 });
 ```
 
-Die allgemeine PostEntry-/ATAG-Vorlage steht zentral in `ENTRY_WORKFLOWS.md`. Für DustingDay ist dort besonders der optionale `PostEntry(e)`-Parameter relevant, damit ein `DustingDay`-Eintrag auch aus einem `DustingInput`-Trigger heraus gezielt ausgewertet werden kann.
+Die allgemeine PostEntry-/ATAG-Vorlage steht zentral in `ENTRY_WORKFLOWS.md`. Für DustingDay ist dort besonders der optionale `PostEntry(e)`-Parameter relevant, damit ein `DustingDay`-Eintrag auch aus einem `DustingInput`-Trigger heraus gezielt ausgewertet werden kann. Dateioperationen laufen nur mit zweitem Argument: `PostEntry(e, true)`.
+
+Wenn der Input-Linker diese Dateioperationen ausnahmsweise freischalten soll, wird der Bool übergeben:
+
+```js
+receiveConfig: {
+  postEntry: true,
+  postEntryName: "PostEntry",
+  postEntryOptions: true
+}
+```
 
 Aktuelle DustingDay-PostEntry-Variante:
 
 ```js
-function PostEntry(e) {
+function PostEntry(e, fileOps) {
+  if (e === true) {
+    fileOps = true;
+    e = null;
+  }
   e = e || entry();
 
   applyTagCleaner({
@@ -380,6 +394,13 @@ function PostEntry(e) {
     includeEmptyCategories: false,
     result: result
   });
+
+  if (fileOps === true) {
+    restoreAtags({
+      sourceField: "Atag Json",
+      entryObj: e
+    });
+  }
 
   cleanupTimeMarker({
     entryObj: e,

@@ -218,10 +218,16 @@ function AfterEntry(e) {
 
 ## PostEntry-Variante
 
-Für PostEntry-Trigger kann dieselbe Form genutzt werden. Beispiel für die aktuell verwendete ATAG-Pipeline mit optionalem Entry-Argument:
+Für PostEntry-Trigger kann dieselbe Form genutzt werden. Beispiel für die aktuell verwendete ATAG-Pipeline mit optionalem Entry-Argument. Dateioperationen wie `restoreAtags()` laufen nur mit `PostEntry(e, true)`.
+
+Aus dem Input-Linker heraus entspricht das `postEntryOptions: true` in der jeweiligen `receiveConfig`.
 
 ```js
-function PostEntry(e) {
+function PostEntry(e, fileOps) {
+  if (e === true) {
+    fileOps = true;
+    e = null;
+  }
   e = e || entry();
 
   applyTagCleaner({
@@ -282,6 +288,13 @@ function PostEntry(e) {
     includeEmptyCategories: false,
     result: result
   });
+
+  if (fileOps === true) {
+    restoreAtags({
+      sourceField: "Atag Json",
+      entryObj: e
+    });
+  }
 
   updateSequenceSpree({
     entries: lib().entries(),

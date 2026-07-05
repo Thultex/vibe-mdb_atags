@@ -1,6 +1,6 @@
 /*
 ========================================
-#4 Input Linker Lib v0.85 (sys 2.40)
+#4 Input Linker Lib v0.87 (sys 2.40)
 ========================================
 
 Änderungen
@@ -12,6 +12,7 @@
 - linkInputEntryToTarget() schreibt keine DayId mehr in den Input und ruft keinen Restore-/EnsureActive-Nachlauf mehr auf
 - Receive/Refresh warnt standardmäßig im Ziel-Debug und oben in der Ziel-Notiz, wenn der Ziel-Eintrag im Papierkorb liegt
 - refreshTargetFromInputEntries() schreibt keine DayId mehr in Inputs und ruft keinen Restore-/EnsureActive-Nachlauf nach Refresh-Links auf
+- PostEntry kann optional ein zweites Argument über postEntryOptions/postEntryArgs erhalten
 - DustingDay Record-Beispiele nutzen string/append statt string_rows, damit Record-Zeilen nicht mit Zeitstempel versehen werden
 - string/text Maps können mit mode "prepend" nach vorne schreiben
 - openTargetEntry öffnet nach dem Linken den Ziel-Eintrag, ohne einen zweiten Receive-Refresh auszuführen
@@ -117,7 +118,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.85";
+var DDL_VERSION = "0.87";
 var DDL_TRASH_WARNING = "ACHTUNG: Datei im Papierkorb!";
 
 function getInputLinkerLibVersion() {
@@ -1622,8 +1623,17 @@ function ddlPostEntryFunctionName(cfg) {
   return "postEntry/PostEntry";
 }
 
+function ddlPostEntryOptions(cfg) {
+  if (!cfg) return undefined;
+  if (cfg.postEntryOptions !== undefined) return cfg.postEntryOptions;
+  if (cfg.postEntryArgs !== undefined) return cfg.postEntryArgs;
+  if (cfg.postEntryConfig !== undefined) return cfg.postEntryConfig;
+  return undefined;
+}
+
 function ddlRunPostEntry(entryObj, cfg, result, errors, label) {
   var fn;
+  var options;
 
   if (!entryObj) return false;
 
@@ -1634,7 +1644,9 @@ function ddlRunPostEntry(entryObj, cfg, result, errors, label) {
   }
 
   try {
-    fn(entryObj);
+    options = ddlPostEntryOptions(cfg);
+    if (options === undefined) fn(entryObj);
+    else fn(entryObj, options);
     result.postEntries.push(label || "entry");
     return true;
   } catch (e) {
@@ -1796,6 +1808,9 @@ function ddlReceiveAfterLink(src, target, cfg, result, errors) {
   receiveCfg.postEntry = receiveCfg.postEntry === true || cfg.postEntry === true;
   receiveCfg.postEntryName = receiveCfg.postEntryName || cfg.postEntryName || cfg.postEntryFunctionName;
   receiveCfg.postEntryFn = receiveCfg.postEntryFn || cfg.postEntryFn;
+  if (receiveCfg.postEntryOptions === undefined && cfg.postEntryOptions !== undefined) receiveCfg.postEntryOptions = cfg.postEntryOptions;
+  if (receiveCfg.postEntryArgs === undefined && cfg.postEntryArgs !== undefined) receiveCfg.postEntryArgs = cfg.postEntryArgs;
+  if (receiveCfg.postEntryConfig === undefined && cfg.postEntryConfig !== undefined) receiveCfg.postEntryConfig = cfg.postEntryConfig;
   receiveCfg.recalcTarget = receiveCfg.recalcTarget === true || cfg.recalcTarget === true;
   receiveCfg.targetDebugField = receiveCfg.targetDebugField || cfg.targetDebugField;
 
