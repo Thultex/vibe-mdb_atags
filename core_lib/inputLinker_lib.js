@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.72 (sys 2.30)
+#4 Input Linker Lib v0.73 (sys 2.30)
 ========================================
 
 Änderungen
+- sourceDayIdField speichert/liest eine stabile Ziel-ID, damit Updates ohne Relation-Rewrite verarbeitet werden koennen
 - Input-Dedupe nutzt nur noch Objekt-/ID-Identitaet, damit zeitgleiche Eintraege mit gleichem Titel nicht verschwinden
 - Rebuild/processAllEntries verwirft passende Inputs nicht mehr, wenn der Relation-Wrapper-Vergleich fehlschlaegt
 - Receive-Flags akzeptieren true/"true"/1 und Debug zeigt die angekommenen Flags
@@ -96,7 +97,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.72";
+var DDL_VERSION = "0.73";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1183,6 +1184,41 @@ function ddlResolveLinkedTargetFromLibrary(targetLib, linkedTarget, targetDateFi
   return null;
 }
 
+function ddlResolveTargetBySourceId(targetLib, src, sourceDayIdField, targetDateField, sourceDate, cfg) {
+  var id;
+  var found;
+
+  if (!targetLib || !src || !sourceDayIdField) return null;
+
+  id = ddlSafeField(src, sourceDayIdField, null, null);
+  if (id == null || String(id) === "") return null;
+  id = String(id);
+
+  try {
+    if (typeof targetLib.findById === "function") {
+      found = targetLib.findById(id);
+      if (ddlCanUseLinkedDay(found, sourceDate, targetDateField, cfg)) return found;
+    }
+  } catch (e0) {}
+
+  return null;
+}
+
+function ddlWriteSourceDayId(src, sourceDayIdField, target, errors, cfg) {
+  var id;
+  var current;
+
+  if (!src || !sourceDayIdField || !target) return false;
+
+  id = ddlEntryId(target);
+  if (!id) return false;
+
+  current = ddlSafeField(src, sourceDayIdField, null, null);
+  if (String(current || "") === String(id)) return true;
+
+  return ddlSafeSet(src, sourceDayIdField, String(id), errors, "DayId-Feld konnte nicht geschrieben werden", cfg && cfg.strictWriteErrors === true);
+}
+
 function ddlCreateDayEntry(targetLib, sourceDate, targetDateField, cfg, errors) {
   var values = {};
   var target;
@@ -1258,6 +1294,36 @@ function ddlInputLinkedToOtherDay(src, sourceDayLinkField, target) {
   return false;
 }
 
+function ddlInputDayIdLinksToTarget(src, sourceDayIdField, target) {
+  var sourceId;
+  var targetId;
+
+  if (!src || !sourceDayIdField || !target) return false;
+
+  targetId = ddlEntryId(target);
+  if (!targetId) return false;
+
+  sourceId = ddlSafeField(src, sourceDayIdField, null, null);
+  if (sourceId == null || String(sourceId) === "") return false;
+
+  return String(sourceId) === String(targetId);
+}
+
+function ddlInputDayIdLinksToOther(src, sourceDayIdField, target) {
+  var sourceId;
+  var targetId;
+
+  if (!src || !sourceDayIdField || !target) return false;
+
+  sourceId = ddlSafeField(src, sourceDayIdField, null, null);
+  if (sourceId == null || String(sourceId) === "") return false;
+
+  targetId = ddlEntryId(target);
+  if (!targetId) return false;
+
+  return String(sourceId) !== String(targetId);
+}
+
 function ddlPushUniqueEntry(out, entryObj) {
   var i;
 
@@ -1310,6 +1376,7 @@ function ddlClearMappedTargets(target, map, cfg, result, errors, forceAll) {
 function ddlSelectInputsForDay(target, targetDate, cfg, result, errors) {
   var sourceDateField = cfg.sourceDateField || "Date";
   var sourceDayLinkField = cfg.sourceDayLinkField || "DayLinks";
+  var sourceDayIdField = cfg.sourceDayIdField || cfg.sourceTargetIdField || cfg.dayIdField || "";
   var findMatchingEntries = cfg.findMatchingEntries === true;
   var linkNewEntries = cfg.linkNewEntries === true;
   var processAllEntries = cfg.processAllEntries === true;
@@ -1341,8 +1408,8 @@ function ddlSelectInputsForDay(target, targetDate, cfg, result, errors) {
       continue;
     }
 
-    linkedToTarget = ddlEntryLinksToDay(src, sourceDayLinkField, target, cfg.targetDateField || "Date");
-    linkedToOther = !linkedToTarget && ddlInputLinkedToOtherDay(src, sourceDayLinkField, target);
+    linkedToTarget = ddlInputDayIdLinksToTarget(src, sourceDayIdField, target) || ddlEntryLinksToDay(src, sourceDayLinkField, target, cfg.targetDateField || "Date");
+    linkedToOther = !linkedToTarget && (ddlInputDayIdLinksToOther(src, sourceDayIdField, target) || ddlInputLinkedToOtherDay(src, sourceDayLinkField, target));
 
     if (linkedToTarget && (processAllEntries || explicitEntries)) {
       ddlPushUniqueEntry(selected, src);
@@ -1364,6 +1431,7 @@ function ddlSelectInputsForDay(target, targetDate, cfg, result, errors) {
           linkedToTarget = true;
         }
       }
+      ddlWriteSourceDayId(src, sourceDayIdField, target, errors, cfg);
 
       if (!processAllEntries) {
         ddlPushUniqueEntry(selected, src);
@@ -1373,7 +1441,12 @@ function ddlSelectInputsForDay(target, targetDate, cfg, result, errors) {
 
   if (processAllEntries) {
     for (i = 0; i < entries.length; i++) {
-      if (ddlEntryLinksToDay(entries[i], sourceDayLinkField, target, cfg.targetDateField || "Date")) ddlPushUniqueEntry(selected, entries[i]);
+      if (
+        ddlInputDayIdLinksToTarget(entries[i], sourceDayIdField, target) ||
+        ddlEntryLinksToDay(entries[i], sourceDayLinkField, target, cfg.targetDateField || "Date")
+      ) {
+        ddlPushUniqueEntry(selected, entries[i]);
+      }
     }
   }
 
@@ -1604,6 +1677,7 @@ function ddlReceiveAfterLink(src, target, cfg, result, errors) {
   receiveCfg.sourceDateField = receiveCfg.sourceDateField || cfg.sourceDateField;
   receiveCfg.targetDateField = receiveCfg.targetDateField || cfg.targetDateField;
   receiveCfg.sourceDayLinkField = receiveCfg.sourceDayLinkField || cfg.sourceDayLinkField;
+  receiveCfg.sourceDayIdField = receiveCfg.sourceDayIdField || cfg.sourceDayIdField || cfg.sourceTargetIdField || cfg.dayIdField;
   receiveCfg.rowSourceMode = receiveCfg.rowSourceMode || cfg.rowSourceMode;
   receiveCfg.rowStepHours = receiveCfg.rowStepHours || cfg.rowStepHours;
   receiveCfg.rowRoundMode = receiveCfg.rowRoundMode || cfg.rowRoundMode;
@@ -1954,6 +2028,7 @@ function linkInputEntryToTarget(cfg) {
   var sourceDateField = cfg.sourceDateField || "Date";
   var targetDateField = cfg.targetDateField || "Date";
   var sourceDayLinkField = cfg.sourceDayLinkField || "DayLinks";
+  var sourceDayIdField = cfg.sourceDayIdField || cfg.sourceTargetIdField || cfg.dayIdField || "";
   var sourceDate;
   var targetLib;
   var sourceDayLinks;
@@ -2018,8 +2093,13 @@ function linkInputEntryToTarget(cfg) {
         return result;
       }
 
-      target = ddlResolveLinkedTargetFromLibrary(targetLib, sourceDayLinkValue, targetDateField, sourceDate, cfg);
+      target = ddlResolveTargetBySourceId(targetLib, src, sourceDayIdField, targetDateField, sourceDate, cfg);
+      if (!target && (!sourceDayIdField || cfg.resolveExistingLinkFromRelation === true)) target = ddlResolveLinkedTargetFromLibrary(targetLib, sourceDayLinkValue, targetDateField, sourceDate, cfg);
       if (!target) target = ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
+      if (!target && cfg.createMissingExistingDay !== false) {
+        target = ddlCreateDayEntry(targetLib, sourceDate, targetDateField, cfg, errors);
+        result.created = !!target;
+      }
 
       if (!target) {
         errors.push("Bestehender DayLink konnte nicht zu einem beschreibbaren Tages-Eintrag aufgeloest werden");
@@ -2028,6 +2108,7 @@ function linkInputEntryToTarget(cfg) {
       }
 
       result.targetEntry = target;
+      ddlWriteSourceDayId(src, sourceDayIdField, target, errors, cfg);
       ddlReceiveAfterLink(src, target, cfg, result, errors);
       result.skipped = true;
       result.skipReason = "existing_daylink_receive";
@@ -2069,7 +2150,8 @@ function linkInputEntryToTarget(cfg) {
     return result;
   }
 
-  target = ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
+  target = ddlResolveTargetBySourceId(targetLib, src, sourceDayIdField, targetDateField, sourceDate, cfg);
+  if (!target) target = ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
 
   if (!target) {
     target = ddlCreateDayEntry(targetLib, sourceDate, targetDateField, cfg, errors);
@@ -2082,6 +2164,7 @@ function linkInputEntryToTarget(cfg) {
   }
 
   result.targetEntry = target;
+  ddlWriteSourceDayId(src, sourceDayIdField, target, errors, cfg);
 
   if (sourceDayLinkField) {
     result.linked = ddlLinkEntry(src, sourceDayLinkField, target, errors, cfg);

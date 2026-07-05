@@ -915,6 +915,53 @@ function testAlreadyLinkedInputRecognizesRelationWrapperByDate() {
   assertEquals("already-linked-wrapper-untouched", dayWrapper.field("OutNote"), "anderer wrapper");
 }
 
+function testExistingInputUpdatesTargetByDayIdWithoutRewritingRelation() {
+  var day = makeEntry({
+    id: "day-real",
+    Date: "2020-02-02 09:00",
+    OutNote: "",
+    OutTags: []
+  });
+  var staleDay = makeEntry({
+    id: "day-stale",
+    Date: "2020-02-02 08:00",
+    OutNote: "stale"
+  });
+  var input = makeCountingSetEntry({
+    Date: "2020-02-02 10:00",
+    InNote: "update per id",
+    InTag: ["idtag"],
+    DayId: "day-real",
+    DayLinks: staleDay
+  });
+
+  reset(input, [staleDay, day]);
+
+  var result = linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Date",
+    sourceDayLinkField: "DayLinks",
+    sourceDayIdField: "DayId",
+    receiveExistingLink: true,
+    receiveConfig: {
+      processMode: "append",
+      processMap: [
+        { from: "InNote", to: "OutNote", type: "string_rows" },
+        { from: "InTag", to: "OutTags", type: "tag" }
+      ]
+    }
+  });
+
+  assertSame("existing-dayid-target", result.targetEntry, day);
+  assertEquals("existing-dayid-note", day.field("OutNote"), "10: update per id");
+  assertEquals("existing-dayid-tags", day.field("OutTags").join(","), "idtag");
+  assertEquals("existing-dayid-stale-untouched", staleDay.field("OutNote"), "stale");
+  assertEquals("existing-dayid-no-daylinks-set", input._setCounts.DayLinks || 0, 0);
+  assertEquals("existing-dayid-no-daylinks-link", input._linkCounts.DayLinks || 0, 0);
+  assertEquals("existing-dayid-id-kept", input.field("DayId"), "day-real");
+}
+
 function testLinkedDeletedDayAllowsNewTargetCreation() {
   var deletedDay = makeEntry({
     id: "day-deleted",
@@ -1288,7 +1335,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-name missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.72") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.73") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -1300,7 +1347,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.72") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.73") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -1503,7 +1550,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.72") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.73") < 0) {
     fail("error-debug-version missing");
   }
 
@@ -2195,6 +2242,7 @@ testAlreadyLinkedInputCanAddNewMappedValuesOnRerun();
 testAlreadyLinkedInputDoesNotRewriteRelationOnRerun();
 testExistingDayLinkDoesNotProcessTargetByDefault();
 testAlreadyLinkedInputRecognizesRelationWrapperByDate();
+testExistingInputUpdatesTargetByDayIdWithoutRewritingRelation();
 testLinkedDeletedDayAllowsNewTargetCreation();
 testRelationWithoutLinkMethodDoesNotSetEntryObjectByDefault();
 testInputLinkerSkipsMementoLinkingTriggerContextByDefault();
@@ -2230,9 +2278,6 @@ testRefreshCurrentTargetFromLinkedInputProcessesOnlyThatEntry();
 testSuccessfulRefreshClearsExistingTargetDebugField();
 
 WScript.Echo("OK");
-
-
-
 
 
 
