@@ -97,6 +97,9 @@ linkInputEntryToTarget({
   sourceDateField: "Datum",
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
+  sourceDayIdField: "DayId",
+  openTargetEntry: true,
+  refreshBeforeOpen: true,
   dayStartHour: 4,
   daySearchLimit: 10
 });
@@ -110,6 +113,9 @@ linkInputEntryToTarget({
   sourceDateField: "Datum",
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
+  sourceDayIdField: "DayId",
+  openTargetEntry: true,
+  refreshBeforeOpen: true,
   dayStartHour: 4,
   daySearchLimit: 10,
   receiveAfterLink: true,
@@ -124,7 +130,7 @@ linkInputEntryToTarget({
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
-      { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
+      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
       { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
@@ -139,6 +145,9 @@ linkInputEntryToTarget({
   sourceDateField: "Datum",
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
+  sourceDayIdField: "DayId",
+  openTargetEntry: true,
+  refreshBeforeOpen: true,
   debugReceive: true,
   receiveExistingLink: true,
   receiveConfig: {
@@ -152,7 +161,7 @@ linkInputEntryToTarget({
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
-      { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
+      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
       { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
@@ -210,7 +219,7 @@ recieveInputEntryFromSource({
   targetDebugField: "Debug",
   processMap: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
-    { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
+    { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
     { from: "InTags", to: "Tags", type: "tag" }
   ]
 });
@@ -253,7 +262,7 @@ refreshTargetFromInputEntries({
   targetDebugField: "Debug",
   processMap: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
-    { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
+    { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
     { from: "InTags", to: "Tags", type: "tag" }
   ]
 });
@@ -271,7 +280,7 @@ refreshTargetFromInputEntries({
   processMode: "rebuild",
   processMap: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
-    { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
+    { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
     { from: "InTags", to: "Tags", type: "tag" }
   ]
 });
@@ -289,7 +298,7 @@ refreshTargetFromInputEntries({
   linkNewEntries: true,
   processMap: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
-    { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
+    { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
     { from: "InTags", to: "Tags", type: "tag" }
   ]
 });
@@ -383,7 +392,6 @@ function PostEntry(e) {
   return result;
 }
 ```
-
 
 
 

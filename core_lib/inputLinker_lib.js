@@ -1,33 +1,33 @@
 /*
 ========================================
-#4 Input Linker Lib v0.75 (sys 2.40)
+#4 Input Linker Lib v0.76 (sys 2.40)
 ========================================
 
 Änderungen
-- string/text Maps koennen mit mode "prepend" nach vorne schreiben
-- openTargetEntry fuehrt vor dem Oeffnen optional nochmal den Receive-Refresh aus
-- sourceDayIdField speichert/liest eine stabile Ziel-ID, damit Updates ohne Relation-Rewrite verarbeitet werden koennen
-- Input-Dedupe nutzt nur noch Objekt-/ID-Identitaet, damit zeitgleiche Eintraege mit gleichem Titel nicht verschwinden
-- Rebuild/processAllEntries verwirft passende Inputs nicht mehr, wenn der Relation-Wrapper-Vergleich fehlschlaegt
+- string/text Maps können mit mode "prepend" nach vorne schreiben
+- openTargetEntry führt vor dem Öffnen optional nochmal den Receive-Refresh aus
+- sourceDayIdField speichert/liest eine stabile Ziel-ID, damit Updates ohne Relation-Rewrite verarbeitet werden können
+- Input-Dedupe nutzt nur noch Objekt-/ID-Identität, damit zeitgleiche Einträge mit gleichem Titel nicht verschwinden
+- Rebuild/processAllEntries verwirft passende Inputs nicht mehr, wenn der Relation-Wrapper-Vergleich fehlschlägt
 - Receive-Flags akzeptieren true/"true"/1 und Debug zeigt die angekommenen Flags
 - `debugReceive: true` schreibt einen Trace fuer Link-/Update-/Receive-Pfade ins Input-Debugfeld und ins Log
 - Map-Lesung bevorzugt beim aktuellen Input-Entry den Triggerwert `field(...)`, damit Updates nicht am alten Entry-Snapshot haengen
-- explizit uebergebene `entries` werden beim Receive nicht mehr durch Link-Wrapper-Vergleich ausgeskippt
-- leere/null Relation-Listen zaehlen nicht mehr als vorhandener DayLink
-- `receiveExistingLink` loest den vorhandenen Relation-Wert bewusst gegen die Ziel-Library auf, bevor geschrieben wird
-- linkInputEntryToTarget() kann mit `receiveExistingLink: true` bestehende Links bewusst fuer Updates verarbeiten
+- explizit übergebene `entries` werden beim Receive nicht mehr durch Link-Wrapper-Vergleich ausgeskippt
+- leere/null Relation-Listen zählen nicht mehr als vorhandener DayLink
+- `receiveExistingLink` löst den vorhandenen Relation-Wert bewusst gegen die Ziel-Library auf, bevor geschrieben wird
+- linkInputEntryToTarget() kann mit `receiveExistingLink: true` bestehende Links bewusst für Updates verarbeiten
 - linkInputEntryToTarget() kann nach frisch gesetztem Script-Link optional `receiveAfterLink: true` ausführen
 - recieveInputEntryFromSource()/receiveInputEntryFromSource() werden explizit global exportiert
-- vorhandene DayLinks werden im Input-Linker nicht mehr als Entry-Objekt aufgeloest; schon ein Relation-Wert fuehrt zum No-op
+- vorhandene DayLinks werden im Input-Linker nicht mehr als Entry-Objekt aufgelöst; schon ein Relation-Wert führt zum No-op
 - linkInputEntryToTarget() ist strikt Link-only: vorhandener DayLink = sofort raus; sonst Day suchen/erstellen und genau einmal verlinken
 - bestehende gültige DayLinks verlassen den Input-Linker ohne Debug-Clear, damit "nichts tun" wirklich keine Feldänderung auslöst
-- geloeschte vorhandene DayLinks blockieren die Neuzuordnung nicht mehr; Link-only darf einen neuen Ziel-Day suchen oder erstellen
+- gelöschte vorhandene DayLinks blockieren die Neuzuordnung nicht mehr; Link-only darf einen neuen Ziel-Day suchen oder erstellen
 - recieveInputEntryFromSource() verarbeitet Day-seitig genau einen verlinkten Input gegen den aktuellen Day
 - refreshCurrentTargetFromInputEntries() bleibt als Day-seitiger Wrapper mit aktuellem entry()
 - refreshTargetFromInputEntries() kann Day-seitig `postEntry: true` auf dem Ziel-Day ausführen
 - erweitert debugInputLinkerAccess() um entry()/values()/field()-Kontext, DayLink-ID und findById-Auflösung
 - verarbeitet vorhandene DayLinks im Input-Trigger nicht mehr automatisch; Updates bestehender Inputs laufen über Day-seitigen Refresh
-- loest vorhandene DayLinks bevorzugt per targetLib.findById(linked.id) auf und behandelt entry.deleted als primaeren Papierkorb-Indikator
+- löst vorhandene DayLinks bevorzugt per targetLib.findById(linked.id) auf und behandelt entry.deleted als primären Papierkorb-Indikator
 
 Usage
 
@@ -36,6 +36,9 @@ linkInputEntryToTarget({
   sourceDateField: "Datum",
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
+  sourceDayIdField: "DayId",
+  openTargetEntry: true,
+  refreshBeforeOpen: true,
   dayStartHour: 4,
   daySearchLimit: 10,
   receiveAfterLink: true,
@@ -49,7 +52,7 @@ linkInputEntryToTarget({
     recalcTarget: true,
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
-      { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
+      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
       { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
@@ -70,7 +73,7 @@ recieveInputEntryFromSource({
   recalcTarget: true,
   processMap: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
-    { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
+    { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
     { from: "InTags", to: "Tags", type: "tag" }
   ]
 });
@@ -87,7 +90,7 @@ refreshTargetFromInputEntries({
   processMode: "append",
   processMap: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
-    { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
+    { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
     { from: "InTags", to: "Tags", type: "tag" }
   ]
 });
@@ -102,7 +105,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.75";
+var DDL_VERSION = "0.76";
 
 function getInputLinkerLibVersion() {
   return {
