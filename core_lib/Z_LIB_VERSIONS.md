@@ -7,7 +7,7 @@ Aktuelle Library-Dateien und Versionen:
 | #1 collectAtags_lib | 1.59 | 2.30 | `core_lib/collectAtags_lib.js` |
 | #2 exportAtags_lib | 1.83 | 2.30 | `core_lib/exportAtags_lib.js` |
 | #3 helpers_lib | 2.11 | 2.30 | `core_lib/helpers_lib.js` |
-| #4 inputLinker_lib | 0.70 | 2.30 | `core_lib/inputLinker_lib.js` |
+| #4 inputLinker_lib | 0.71 | 2.30 | `core_lib/inputLinker_lib.js` |
 
 ## Checker
 

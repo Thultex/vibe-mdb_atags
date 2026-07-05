@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.70 (sys 2.30)
+#4 Input Linker Lib v0.71 (sys 2.30)
 ========================================
 
 Änderungen
+- Rebuild/processAllEntries verwirft passende Inputs nicht mehr, wenn der Relation-Wrapper-Vergleich fehlschlaegt
 - Receive-Flags akzeptieren true/"true"/1 und Debug zeigt die angekommenen Flags
 - `debugReceive: true` schreibt einen Trace fuer Link-/Update-/Receive-Pfade ins Input-Debugfeld und ins Log
 - Map-Lesung bevorzugt beim aktuellen Input-Entry den Triggerwert `field(...)`, damit Updates nicht am alten Entry-Snapshot haengen
@@ -94,7 +95,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.70";
+var DDL_VERSION = "0.71";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1355,7 +1356,6 @@ function ddlSelectInputsForDay(target, targetDate, cfg, result, errors) {
   }
 
   if (processAllEntries) {
-    selected = [];
     for (i = 0; i < entries.length; i++) {
       if (ddlEntryLinksToDay(entries[i], sourceDayLinkField, target, cfg.targetDateField || "Date")) ddlPushUniqueEntry(selected, entries[i]);
     }
