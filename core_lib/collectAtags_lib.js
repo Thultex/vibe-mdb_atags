@@ -1,13 +1,14 @@
 /*
 ========================================
-#1 collectAtags Lib v1.59 (sys 2.30)
+#1 collectAtags Lib v1.60 (sys 2.30)
 ========================================
 
 Changes
+- parse template slot values `_inhalt_` as string values and ignore empty `_`/`__`
 - parse quoted hash values after normal tag names, e.g. frage#"wer ist der coolste"
 - multiAliasTargets defaults to true for one alias token mapping to multiple tags
 - parse cumulative +/-, explicit null 00 and zero-decimal forms from issue #38
-- ignore template tag values `_` in `tag:_` and `tag:: _`
+- ignore template tag values `_` in `tag:_`, `tag:: _` and `tag:__`
 - alias brackets define categories, e.g. `@@Tag (T)[self, help]: alias`
 - category aliases can use `@@@self (sf)`
 - category aliases can define fixed children, e.g. `@@@help: ActivityA, ActivityB`
@@ -47,14 +48,14 @@ Changes
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.59",
+    version: "1.60",
     sysVersion: "2.30",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.59", "2.30", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.60", "2.30", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");
@@ -127,6 +128,15 @@ function collectAtags(cfg) {
 
   function trimAtagString(val) {
     return String(val || "").replace(/^\s+|\s+$/g, "");
+  }
+
+  function normalizeTemplateSlotAttr(raw) {
+    var s = trimAtagString(raw);
+
+    if (s === "_" || s === "__") return null;
+    if (/^_[^_\r\n]+_$/.test(s)) return s.substring(1, s.length - 1);
+
+    return raw;
   }
 
   function normalizeTagName(rawName) {
@@ -722,7 +732,10 @@ function collectAtags(cfg) {
 
       if (!resolvedName || isExcluded(resolvedName)) continue;
       if (skipTemplates && /^\/\//.test(String(effectiveRaw || ""))) continue;
-      if (skipTemplates && trimAtagString(effectiveRaw) === "_") continue;
+      if (skipTemplates) {
+        effectiveRaw = normalizeTemplateSlotAttr(effectiveRaw);
+        if (effectiveRaw == null) continue;
+      }
 
       norm = normalizeAttr(effectiveRaw);
       if (aliasInfo.invert) norm = invertNormalizedAttr(norm);
@@ -1152,11 +1165,11 @@ function collectAtags(cfg) {
       }
 
       // colon: gfk: 1,4 / tag:inhalt / tag:: inhalt
-      var rxColon = /(^|[\s\n\r])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:(?:"([^"]*)"|([^:\s,;.!?()\[\]{}]+))/g;
+      var rxColon = /(^|[\s\n\r])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:(?:"([^"]*)"|(_[^_\r\n]*_)|([^:\s,;.!?()\[\]{}]+))/g;
       var m1;
       while ((m1 = rxColon.exec(parseLine)) !== null) {
         var name1 = m1[2];
-        var raw1 = m1[3] != null && m1[3] !== "" ? m1[3] : (m1[4] || "");
+        var raw1 = m1[3] != null && m1[3] !== "" ? m1[3] : (m1[4] != null && m1[4] !== "" ? m1[4] : (m1[5] || ""));
         raw1 = trimAtagString(raw1);
 
         if (!name1) continue;
@@ -1171,9 +1184,9 @@ function collectAtags(cfg) {
         addParsedTagValue(m1[2] || "", raw1, items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw);
       }
 
-      var rxColonExplicit = /(^|[\s\n\r])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*::\s*(?:"([^"]*)"|([^\r\n,;.!?()\[\]{}]+))/g;
+      var rxColonExplicit = /(^|[\s\n\r])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*::\s*(?:"([^"]*)"|(_[^_\r\n]*_)|([^\r\n,;.!?()\[\]{}]+))/g;
       while ((m1 = rxColonExplicit.exec(parseLine)) !== null) {
-        raw1 = m1[3] != null && m1[3] !== "" ? m1[3] : (m1[4] || "");
+        raw1 = m1[3] != null && m1[3] !== "" ? m1[3] : (m1[4] != null && m1[4] !== "" ? m1[4] : (m1[5] || ""));
         raw1 = trimAtagString(raw1);
         if (isInsideAtagQuoteState(quoteState, m1.index)) continue;
         addParsedTagValue(m1[2] || "", raw1, items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw);
@@ -1184,7 +1197,7 @@ function collectAtags(cfg) {
       var mhq;
       while ((mhq = rxHashQuotedValue.exec(parseLine)) !== null) {
         var nameHQ = mhq[2];
-        var rawHQ = mhq[3] != null ? mhq[3] : (mhq[4] || "");
+        var rawHQ = typeof mhq[3] !== "undefined" && mhq[3] != null && mhq[3] !== "" ? mhq[3] : (mhq[4] || "");
 
         if (!nameHQ) continue;
         if (isInsideAtagQuoteState(quoteState, mhq.index)) continue;
@@ -1199,7 +1212,7 @@ function collectAtags(cfg) {
       }
 
       // explicit tag with hash and value: test#string / test#5,
-      var rxHashValue = /(^|[\s\n\r])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#([^\s]+)/g;
+      var rxHashValue = /(^|[\s\n\r])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#(_[^_\r\n]*_|[^\s]+)/g;
       var mh;
       while ((mh = rxHashValue.exec(parseLine)) !== null) {
         var nameH = mh[2];
@@ -1216,7 +1229,7 @@ function collectAtags(cfg) {
           rawH,
           items, seen, aliasMap,
           currentRowValue, currentRowUnit, currentRowRaw,
-          false
+          true
         );
       }
 

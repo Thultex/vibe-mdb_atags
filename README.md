@@ -426,7 +426,7 @@ emo² tag⁻⁰³ stuff⁺⁺
 tag⁺ tag⁻⁻ tag⁺⁺² tag⁰⁰ tag⁰² tag⁻⁰²
 ```
 
-Mit `formatValues: "keep"` bleibt `tag+3` als `tag⁺³`, während `tag3` zu `tag³` wird. Mit `"max"` wird auch `tag³` zu `tag⁺³`; mit `"min"` wird `tag⁺³` zu `tag³`. Kumulative Formen bleiben bewusst sichtbar: `tag+` wird `tag⁺`, `tag++` wird `tag⁺⁺`, `tag++2` wird `tag⁺⁺²`. Längere Läufe werden verdichtet: `tag++++` wird wie `tag++4` gelesen. `tag:_` und `tag:: _` gelten als Vorlagen und werden aus der Tagleiste nicht übernommen. `tag:: Inhalt` bleibt mit doppeltem Doppelpunkt erhalten; `tag::Inhalt` wird zu `tag:: Inhalt`. In der Tagleiste wird auch `test_b: sdfd` als Stringwert erkannt und zu `test_b:sdfd`; im normalen Text bleibt diese Form unberührt. Wörter mit Unterstrich vor der Zahl bleiben Wörter, z. B. `test_00` und `test_3`. Alleinstehende Superscripts werden als normaler Text zurückgeschrieben, z. B. `Nr ²` zu `Nr 2`.
+Mit `formatValues: "keep"` bleibt `tag+3` als `tag⁺³`, während `tag3` zu `tag³` wird. Mit `"max"` wird auch `tag³` zu `tag⁺³`; mit `"min"` wird `tag⁺³` zu `tag³`. Kumulative Formen bleiben bewusst sichtbar: `tag+` wird `tag⁺`, `tag++` wird `tag⁺⁺`, `tag++2` wird `tag⁺⁺²`. Längere Läufe werden verdichtet: `tag++++` wird wie `tag++4` gelesen. `tag:_`, `tag::__` und `tag#__` gelten als leere Vorlagen und werden aus der Tagleiste nicht übernommen; Slot-Werte wie `tag:_2 km_`, `tag::_2 km_` oder `tag#_2 km_` werden als Stringwert `2 km` gelesen. `tag:: Inhalt` bleibt mit doppeltem Doppelpunkt erhalten; `tag::Inhalt` wird zu `tag:: Inhalt`. In der Tagleiste wird auch `test_b: sdfd` als Stringwert erkannt und zu `test_b:sdfd`; im normalen Text bleibt diese Form unberührt. Wörter mit Unterstrich vor der Zahl bleiben Wörter, z. B. `test_00` und `test_3`. Alleinstehende Superscripts werden als normaler Text zurückgeschrieben, z. B. `Nr ²` zu `Nr 2`.
 
 Tagleisten:
 
@@ -712,7 +712,7 @@ Aggregation:
 - `sum`
 - `null`
 
-Kumulative `+`/`-`-Tags wie `tag+`, `tag++`, `tag--` und `tag++2` werden in Row-Aggregationen immer addiert, auch wenn `rowAggregateMode: "avg"` gesetzt ist. Bei `tag++324` ist `324` der kumulative Wert; `tag++++` wird als Kurzform für `tag++4` gelesen. `tag00` ist ein leerer/null-Wert, `tag0` ist die Zahl 0, `tag02`/`tag0,2` sind 0,2. `test_00` und `test_3` werden nicht als Tagwert erkannt, weil die Zahl Teil des Wortes ist. `tag:_` und `tag:: _` gelten als Vorlagen und werden ignoriert.
+Kumulative `+`/`-`-Tags wie `tag+`, `tag++`, `tag--` und `tag++2` werden in Row-Aggregationen immer addiert, auch wenn `rowAggregateMode: "avg"` gesetzt ist. Bei `tag++324` ist `324` der kumulative Wert; `tag++++` wird als Kurzform für `tag++4` gelesen. `tag00` ist ein leerer/null-Wert, `tag0` ist die Zahl 0, `tag02`/`tag0,2` sind 0,2. `test_00` und `test_3` werden nicht als Tagwert erkannt, weil die Zahl Teil des Wortes ist. `tag:_`, `tag::__` und `tag#__` gelten als Vorlagen und werden ignoriert; `tag:_inhalt_` wird als Stringwert gelesen.
 
 **Alias-System**
 

@@ -229,6 +229,12 @@ assertItem("colon-double-text", "tag:: inhalt", "tag", "inhalt", "inhalt", null,
 assertItem("colon-double-quoted-sentence", "Aussage:: \"das ist ein Satz\"", "Aussage", "das ist ein Satz", "das ist ein Satz", null, null);
 assertMissing("colon-template-ignored", "test:_", "test");
 assertMissing("colon-explicit-template-ignored", "test:: _", "test");
+assertMissing("colon-empty-slot-template-ignored", "test:__", "test");
+assertMissing("colon-explicit-empty-slot-template-ignored", "test::__", "test");
+assertMissing("hash-empty-slot-template-ignored", "test#__", "test");
+assertItem("colon-slot-string-value", "Laufen:_2 km_", "Laufen", "2 km", "2 km", null, null);
+assertItem("colon-explicit-slot-string-value", "Laufen::_2 km_", "Laufen", "2 km", "2 km", null, null);
+assertItem("hash-slot-string-value", "Laufen#_2 km_", "Laufen", "2 km", "2 km", null, null);
 assertMissing("colon-normal-text-not-tag", "text: inhalt", "text");
 assertItem("inverted-tag-value", "inhalt(:tag)", "tag", "inhalt", "inhalt", null, null);
 assertItem("inverted-tag-quoted-sentence", "\"das ist ein Satz\"(:Aussage)", "Aussage", "das ist ein Satz", "das ist ein Satz", null, null);
