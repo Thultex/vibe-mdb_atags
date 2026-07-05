@@ -231,7 +231,6 @@ recieveInputEntryFromSource({
 `postEntry: true` ruft nach dem Mappen `postEntry(dayEntry)` bzw. `PostEntry(dayEntry)` auf, damit die ATAG-/Cleaner-Pipeline des Tages sofort mit dem konkreten `DustingDay`-Eintrag laufen kann. Mit `postEntryName: "PostEntryDustingDay"` kann der Funktionsname frei gesetzt werden; alternativ geht `postEntryFn: meineFunktion`.
 
 Hinweis zu Rows: Für DustingDay ist `rowSourceMode: "realtime"` der einfache absolute Tageszeit-Modus. Die Row kommt aus der Uhrzeit des Input-Eintrags.
-Zeilen, die mit `|` oder `||` beginnen, bleiben als rohe Tagbar-/Vorlagenzeilen ohne Zeitstempel erhalten.
 
 ## Day-seitiger Refresh
 

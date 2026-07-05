@@ -1,12 +1,12 @@
 /*
 ========================================
-#4 Input Linker Lib v0.80 (sys 2.40)
+#4 Input Linker Lib v0.81 (sys 2.40)
 ========================================
 
 Änderungen
 - nach dem Linken wird versucht, versehentlich in den Papierkorb verschobene Source-/Target-Einträge wiederherzustellen
 - recieveInputEntryFromSource() und refreshTargetFromInputEntries() können Receive-/Process-Optionen auch aus receiveConfig übernehmen
-- string_rows bewahrt führende Tagbar-Prefixe wie "| " als rohe Zeile ohne Zeitstempel
+- string_rows nutzt wieder einheitlich Zeitstempel; keine Sonderregel mehr für führende "|"-Zeilen
 - DustingDay Record-Beispiele nutzen string/append statt string_rows, damit Record-Zeilen nicht mit Zeitstempel versehen werden
 - string/text Maps können mit mode "prepend" nach vorne schreiben
 - openTargetEntry führt vor dem Öffnen optional nochmal den Receive-Refresh aus
@@ -113,7 +113,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.80";
+var DDL_VERSION = "0.81";
 
 function getInputLinkerLibVersion() {
   return {
@@ -641,11 +641,6 @@ function ddlValueToText(value, type) {
   if (typeof value === "number") return String(value).replace(".", ",");
 
   return ddlFirstLine(value);
-}
-
-function ddlIsRawTagbarLine(text) {
-  var s = ddlTrim(text);
-  return /^"?\|{1,2}(?:\s|$)/.test(s);
 }
 
 function ddlSplitLines(text) {
@@ -1581,7 +1576,7 @@ function ddlApplyMapFromSourceToDay(src, target, sourceDate, targetDate, cfg, re
     text = ddlValueToText(value, type);
     if (!text) continue;
 
-    line = type === "string_rows" && !ddlIsRawTagbarLine(text) ? (row ? row : "?") + ": " + text : text;
+    line = type === "string_rows" ? (row ? row : "?") + ": " + text : text;
     if (mode === "prepend" || mode === "prepend_all") {
       if (ddlPrependLine(target, item.to, line, errors, cfg, unique)) result.appended.push(item.to);
     } else if (ddlAppendLine(target, item.to, line, errors, cfg, unique)) {

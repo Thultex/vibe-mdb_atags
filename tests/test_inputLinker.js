@@ -558,7 +558,7 @@ function testStringRowsWrapReadableTagLineAfterLinking() {
     ]
   });
 
-  assertEquals("readable-tag-line-kept-without-row", day.field("OutNote"), "| Testing: _4_");
+  assertEquals("readable-tag-line-wrapped-as-row", day.field("OutNote"), "2,5: | Testing: _4_");
 }
 
 function testSinceFirstUsesTargetDateAsZero() {
