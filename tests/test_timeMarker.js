@@ -379,6 +379,32 @@ function testCleanupRemovesWhitespaceOnlyTimestamp() {
   assertEquals("cleanup-return-true-when-marker-remains", hasMarkers, true);
 }
 
+function testCleanupRemovesTemplateOnlyTimestamp() {
+  var entryObj = makeEntry({
+    Note: "1: Testing: __\n2: Other: _; Third#__\n3: Inhalt"
+  });
+
+  cleanupTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note"
+  });
+
+  assertEquals("cleanup-removes-template-only-timestamp", entryObj.field("Note"), "3: Inhalt");
+}
+
+function testCleanupKeepsFilledTemplateSlotTimestamp() {
+  var entryObj = makeEntry({
+    Note: "1: Testing: _safd_\n2: Other: __"
+  });
+
+  cleanupTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note"
+  });
+
+  assertEquals("cleanup-keeps-filled-template-slot-timestamp", entryObj.field("Note"), "1: Testing: _safd_");
+}
+
 function testCleanupMovesRowsAboveDoubleColonText() {
   var entryObj = makeEntry({
     Note: "15,5: tst(:inhalt)\nnur normaler text:: der interresant ist\n16: neue row"
@@ -619,6 +645,8 @@ testCleanupFillsColonPlaceholderWithCurrentMarker();
 testCleanupFillsColonPlaceholderWithSourceAfterExistingMarker();
 testCleanupFillsColonPlaceholderWithZeroSource();
 testCleanupRemovesWhitespaceOnlyTimestamp();
+testCleanupRemovesTemplateOnlyTimestamp();
+testCleanupKeepsFilledTemplateSlotTimestamp();
 testCleanupMovesRowsAboveDoubleColonText();
 testCleanupKeepsBlankLinesInsideFreeText();
 testCleanupFillsColonPlaceholderWithCurrentRowAfterEmptyRow();

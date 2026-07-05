@@ -1,11 +1,12 @@
 /*
 ========================================
-B7 Time Marker v1.36 (sys 2.40)
+B7 Time Marker v1.37 (sys 2.40)
 ========================================
 
 Änderungen
 - `mergeSameRowContents` entfernt identische Row-Inhalte getrennt vor `mergeSameRows`
 - `mergeSameRows` bleibt mit `mergeSameRowContents` idempotent und verdoppelt bereits zusammengefasste Segmente nicht erneut
+- Rows mit nur leeren Template-Slots wie `Testing: __` gelten als leer und werden entfernt
 - Merge-Optionen akzeptieren auch Boolean-/String-Varianten aus Memento/Rhino, nicht nur primitives `true`
 - `cleanupTimeMarker({ mergeSameRows: true })` fuehrt gleiche Row-Marker zusammen, z. B. `19: hallo` + `19: spannend` zu `19: hallo; spannend`
 - Cleanup gibt `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
@@ -156,7 +157,29 @@ function hasTimestampLines(text) {
 
 function isEmptyTimestampLine(line) {
   var m = String(line || "").match(/^\s*\d+(?:[.,]\d+)?\s*:(.*)$/);
-  return !!(m && isBlankTimeMarkerText(m[1]));
+  return !!(m && isEmptyTimeMarkerRowText(m[1]));
+}
+
+function isEmptyTemplateSlotText(text) {
+  var s = String(text || "").replace(/^\s+|\s+$/g, "");
+  var parts;
+  var i;
+  var part;
+
+  if (!s) return true;
+
+  parts = s.split(/\s*[;,]\s*/);
+  for (i = 0; i < parts.length; i++) {
+    part = String(parts[i] || "").replace(/^\s+|\s+$/g, "");
+    if (!part) continue;
+    if (!/^#?[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*\s*(?:::{0,1}|#)\s*_{1,2}$/.test(part)) return false;
+  }
+
+  return true;
+}
+
+function isEmptyTimeMarkerRowText(text) {
+  return isBlankTimeMarkerText(text) || isEmptyTemplateSlotText(text);
 }
 
 function removeEmptyTimestampLines(text) {
