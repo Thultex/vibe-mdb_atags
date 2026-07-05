@@ -489,6 +489,20 @@ function testCleanupMergesSameRowsWhenConfigured() {
   assertEquals("cleanup-merges-same-rows", entryObj.field("Note"), "19: hallo; das ist spannend\n20: weiter");
 }
 
+function testCleanupMergesSameRowsWithoutExactDuplicates() {
+  var entryObj = makeEntry({
+    Note: "19: hallo\n19: hallo\n19: das ist spannend\n20: weiter"
+  });
+
+  cleanupTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    mergeSameRows: true
+  });
+
+  assertEquals("cleanup-merges-same-rows-without-exact-duplicates", entryObj.field("Note"), "19: hallo; das ist spannend\n20: weiter");
+}
+
 function testCleanupReturnsFalseWhenNoMarkersRemain() {
   var entryObj = makeEntry({
     Note: "3: "
@@ -530,6 +544,7 @@ testCleanupRemovesTrailingEmptyTimestampWithCarriageReturn();
 testCleanupRemovesNonBreakingSpaceTimestamp();
 testCleanupAcceptsTextFieldAlias();
 testCleanupMergesSameRowsWhenConfigured();
+testCleanupMergesSameRowsWithoutExactDuplicates();
 testCleanupReturnsFalseWhenNoMarkersRemain();
 
 print("OK");

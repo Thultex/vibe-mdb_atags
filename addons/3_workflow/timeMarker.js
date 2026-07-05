@@ -1,9 +1,10 @@
 /*
 ========================================
-B7 Time Marker v1.32 (sys 2.30)
+B7 Time Marker v1.33 (sys 2.30)
 ========================================
 
 Änderungen
+- `mergeSameRows` ueberspringt identische Texte pro Row, statt `x; x` zu erzeugen
 - `cleanupTimeMarker({ mergeSameRows: true })` fuehrt gleiche Row-Marker zusammen, z. B. `19: hallo` + `19: spannend` zu `19: hallo; spannend`
 - Cleanup gibt `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
 - `appendTimeMarker()` gibt ebenfalls `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
@@ -329,6 +330,16 @@ function normalizeTimeMarkerRowKey(label) {
   return String(Math.round(n * 1000000) / 1000000);
 }
 
+function timeMarkerArrayContains(list, value) {
+  var i;
+
+  for (i = 0; i < list.length; i++) {
+    if (list[i] === value) return true;
+  }
+
+  return false;
+}
+
 function mergeSameTimeMarkerRows(timeLines, cfg) {
   if (!cfg || cfg.mergeSameRows !== true) return timeLines;
 
@@ -342,6 +353,7 @@ function mergeSameTimeMarkerRows(timeLines, cfg) {
   var key;
   var text;
   var current;
+  var currentTexts;
 
   for (i = 0; i < timeLines.length; i++) {
     line = String(timeLines[i]);
@@ -358,9 +370,12 @@ function mergeSameTimeMarkerRows(timeLines, cfg) {
     if (indexByKey.hasOwnProperty(key)) {
       if (!isBlankTimeMarkerText(text)) {
         current = partsByKey[key];
-        current.text = isBlankTimeMarkerText(current.text)
-          ? text
-          : current.text + separator + text;
+        currentTexts = String(current.text || "").split(separator);
+        if (!timeMarkerArrayContains(currentTexts, text)) {
+          current.text = isBlankTimeMarkerText(current.text)
+            ? text
+            : current.text + separator + text;
+        }
         out[indexByKey[key]] = current.indent + current.label + current.separator + current.text;
       }
       continue;
