@@ -548,6 +548,30 @@ function testCleanupMergesSameRowsWithDefaultSeparator() {
   assertEquals("cleanup-merges-same-rows-with-default-separator", entryObj.field("Note"), "2,5: 1. test\u00B9; 2. test\u00B2; 3. test\u00B3; 4. test\u2074\n3,5: sa\n\nds");
 }
 
+function testCleanupMergedRowsAreIdempotentWhenRepeated() {
+  var entryObj = makeEntry({
+    Note: "2: 1. test\u00B9; 2. test\u00B2\n2: 1. test\u00B9\n2: 2. test\u00B2\n3: 3. test\u00B3; 4. test\u2074\n3: 3. test\u00B3\n3: 4. test\u2074\n\nfrei"
+  });
+
+  cleanupTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    mergeSameRowContents: true,
+    mergeSameRows: true
+  });
+
+  assertEquals("cleanup-merged-rows-idempotent-first-pass", entryObj.field("Note"), "2: 1. test\u00B9; 2. test\u00B2\n3: 3. test\u00B3; 4. test\u2074\n\nfrei");
+
+  cleanupTimeMarker({
+    entryObj: entryObj,
+    targetTextField: "Note",
+    mergeSameRowContents: true,
+    mergeSameRows: true
+  });
+
+  assertEquals("cleanup-merged-rows-idempotent-second-pass", entryObj.field("Note"), "2: 1. test\u00B9; 2. test\u00B2\n3: 3. test\u00B3; 4. test\u2074\n\nfrei");
+}
+
 function testCleanupRemovesExactDuplicateRowsWithoutMergingSameTimestamps() {
   var entryObj = makeEntry({
     Note: "19: hallo\n19: hallo\n19: das ist spannend\n20: weiter"
@@ -607,6 +631,7 @@ testCleanupMergesSameRowsKeepsExactDuplicatesByDefault();
 testCleanupMergesSameRowsWithoutExactDuplicatesWhenConfigured();
 testCleanupMergesSameRowsWithBoxedBooleanOptions();
 testCleanupMergesSameRowsWithDefaultSeparator();
+testCleanupMergedRowsAreIdempotentWhenRepeated();
 testCleanupRemovesExactDuplicateRowsWithoutMergingSameTimestamps();
 testCleanupReturnsFalseWhenNoMarkersRemain();
 

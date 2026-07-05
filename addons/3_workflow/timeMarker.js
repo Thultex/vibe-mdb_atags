@@ -1,10 +1,11 @@
 /*
 ========================================
-B7 Time Marker v1.35 (sys 2.40)
+B7 Time Marker v1.36 (sys 2.40)
 ========================================
 
 Änderungen
 - `mergeSameRowContents` entfernt identische Row-Inhalte getrennt vor `mergeSameRows`
+- `mergeSameRows` bleibt mit `mergeSameRowContents` idempotent und verdoppelt bereits zusammengefasste Segmente nicht erneut
 - Merge-Optionen akzeptieren auch Boolean-/String-Varianten aus Memento/Rhino, nicht nur primitives `true`
 - `cleanupTimeMarker({ mergeSameRows: true })` fuehrt gleiche Row-Marker zusammen, z. B. `19: hallo` + `19: spannend` zu `19: hallo; spannend`
 - Cleanup gibt `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
@@ -345,6 +346,57 @@ function resolveSameRowSeparator(cfg) {
   return "; ";
 }
 
+function splitSameRowContentSegments(text, separator, dedupeSegments) {
+  var s = String(text || "").replace(/^\s+|\s+$/g, "");
+  var sep = String(separator || "");
+  var out = [];
+  var parts;
+  var i;
+  var part;
+
+  if (!s) return out;
+  if (!dedupeSegments || !sep) return [s];
+
+  parts = s.split(sep);
+  for (i = 0; i < parts.length; i++) {
+    part = String(parts[i] || "").replace(/^\s+|\s+$/g, "");
+    if (part) out.push(part);
+  }
+
+  return out;
+}
+
+function appendSameRowContent(current, text, separator, dedupeSegments) {
+  var currentParts = splitSameRowContentSegments(current.text, separator, dedupeSegments);
+  var newParts = splitSameRowContentSegments(text, separator, dedupeSegments);
+  var seen = {};
+  var out = [];
+  var i;
+  var part;
+
+  if (!dedupeSegments) {
+    if (isBlankTimeMarkerText(current.text)) return text;
+    if (isBlankTimeMarkerText(text)) return current.text;
+    return current.text + separator + text;
+  }
+
+  for (i = 0; i < currentParts.length; i++) {
+    part = currentParts[i];
+    if (seen.hasOwnProperty(part)) continue;
+    seen[part] = true;
+    out.push(part);
+  }
+
+  for (i = 0; i < newParts.length; i++) {
+    part = newParts[i];
+    if (seen.hasOwnProperty(part)) continue;
+    seen[part] = true;
+    out.push(part);
+  }
+
+  return out.join(separator);
+}
+
 function mergeSameTimeMarkerRowContents(timeLines, cfg) {
   if (!cfg || !isTimeMarkerOptionEnabled(cfg.mergeSameRowContents)) return timeLines;
 
@@ -382,6 +434,7 @@ function mergeSameTimeMarkerRows(timeLines, cfg) {
   if (!cfg || !isTimeMarkerOptionEnabled(cfg.mergeSameRows)) return timeLines;
 
   var separator = resolveSameRowSeparator(cfg);
+  var dedupeSegments = isTimeMarkerOptionEnabled(cfg.mergeSameRowContents);
   var out = [];
   var indexByKey = {};
   var partsByKey = {};
@@ -407,9 +460,7 @@ function mergeSameTimeMarkerRows(timeLines, cfg) {
     if (indexByKey.hasOwnProperty(key)) {
       if (!isBlankTimeMarkerText(text)) {
         current = partsByKey[key];
-        current.text = isBlankTimeMarkerText(current.text)
-          ? text
-          : current.text + separator + text;
+        current.text = appendSameRowContent(current, text, separator, dedupeSegments);
         out[indexByKey[key]] = current.indent + current.label + current.separator + current.text;
       }
       continue;
