@@ -1,15 +1,17 @@
 /*
 ========================================
-#4 Input Linker Lib v0.81 (sys 2.40)
+#4 Input Linker Lib v0.82 (sys 2.40)
 ========================================
 
 Änderungen
 - nach dem Linken wird versucht, versehentlich in den Papierkorb verschobene Source-/Target-Einträge wiederherzustellen
 - recieveInputEntryFromSource() und refreshTargetFromInputEntries() können Receive-/Process-Optionen auch aus receiveConfig übernehmen
 - string_rows nutzt wieder einheitlich Zeitstempel; keine Sonderregel mehr für führende "|"-Zeilen
+- refreshBeforeOpen schreibt nicht mehr aus dem Input-Linker heraus; nach dem Linken gibt es maximal den einen receiveAfterLink-Lauf
+- bestehender DayLink ohne receiveExistingLink bleibt ein echter No-op ohne Debug-Schreibzugriff
 - DustingDay Record-Beispiele nutzen string/append statt string_rows, damit Record-Zeilen nicht mit Zeitstempel versehen werden
 - string/text Maps können mit mode "prepend" nach vorne schreiben
-- openTargetEntry führt vor dem Öffnen optional nochmal den Receive-Refresh aus
+- openTargetEntry öffnet nach dem Linken den Ziel-Eintrag, ohne einen zweiten Receive-Refresh auszuführen
 - sourceDayIdField speichert/liest eine stabile Ziel-ID, damit Updates ohne Relation-Rewrite verarbeitet werden können
 - Input-Dedupe nutzt nur noch Objekt-/ID-Identität, damit zeitgleiche Einträge mit gleichem Titel nicht verschwinden
 - Rebuild/processAllEntries verwirft passende Inputs nicht mehr, wenn der Relation-Wrapper-Vergleich fehlschlägt
@@ -42,7 +44,6 @@ linkInputEntryToTarget({
   sourceDayLinkField: "DayLinks",
   sourceDayIdField: "DayId",
   openTargetEntry: true,
-  refreshBeforeOpen: true,
   dayStartHour: 4,
   daySearchLimit: 10,
   receiveAfterLink: true,
@@ -113,7 +114,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.81";
+var DDL_VERSION = "0.82";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1822,40 +1823,6 @@ function ddlReceiveAfterLink(src, target, cfg, result, errors) {
   return receiveResult;
 }
 
-function ddlRefreshBeforeOpen(src, target, cfg, result, errors) {
-  var refreshCfg;
-  var refreshResult;
-
-  if (!src || !target || !cfg) return null;
-  if (!ddlShouldOpenTarget(cfg)) return null;
-  if (cfg.refreshBeforeOpen === false || cfg.receiveBeforeOpen === false) return null;
-
-  refreshCfg = ddlShallowCopyConfig(cfg.receiveConfig || {});
-  refreshCfg.inputEntry = src;
-  refreshCfg.targetEntry = target;
-  refreshCfg.sourceDateField = refreshCfg.sourceDateField || cfg.sourceDateField;
-  refreshCfg.targetDateField = refreshCfg.targetDateField || cfg.targetDateField;
-  refreshCfg.sourceDayLinkField = refreshCfg.sourceDayLinkField || cfg.sourceDayLinkField;
-  refreshCfg.sourceDayIdField = refreshCfg.sourceDayIdField || cfg.sourceDayIdField || cfg.sourceTargetIdField || cfg.dayIdField;
-  refreshCfg.rowSourceMode = refreshCfg.rowSourceMode || cfg.rowSourceMode;
-  refreshCfg.rowStepHours = refreshCfg.rowStepHours || cfg.rowStepHours;
-  refreshCfg.rowRoundMode = refreshCfg.rowRoundMode || cfg.rowRoundMode;
-  refreshCfg.processMode = refreshCfg.processMode || cfg.processMode || "append";
-  refreshCfg.processMap = refreshCfg.processMap || cfg.processMap || cfg.map;
-  refreshCfg.postEntry = refreshCfg.postEntry === true || cfg.postEntry === true;
-  refreshCfg.postEntryName = refreshCfg.postEntryName || cfg.postEntryName || cfg.postEntryFunctionName;
-  refreshCfg.postEntryFn = refreshCfg.postEntryFn || cfg.postEntryFn;
-  refreshCfg.recalcTarget = refreshCfg.recalcTarget === true || cfg.recalcTarget === true;
-  refreshCfg.targetDebugField = refreshCfg.targetDebugField || cfg.targetDebugField;
-
-  refreshResult = recieveInputEntryFromSource(refreshCfg);
-  if (result) result.refreshBeforeOpenResult = refreshResult;
-  if (refreshResult && refreshResult.errors && refreshResult.errors.length && errors) {
-    errors.push("RefreshBeforeOpen meldet Fehler: " + refreshResult.errors.join("; "));
-  }
-  return refreshResult;
-}
-
 function ddlWriteErrors(errors, cfg) {
   var debugEntry;
   var debugField;
@@ -2214,7 +2181,6 @@ function linkInputEntryToTarget(cfg) {
     postEntries: [],
     restored: [],
     receiveResult: null,
-    refreshBeforeOpenResult: null,
     openResult: { attempted: false, ok: false, target: "", method: "", error: "" },
     errors: errors
   };
@@ -2273,7 +2239,6 @@ function linkInputEntryToTarget(cfg) {
       result.targetEntry = target;
       ddlWriteSourceDayId(src, sourceDayIdField, target, errors, cfg);
       ddlReceiveAfterLink(src, target, cfg, result, errors);
-      ddlRefreshBeforeOpen(src, target, cfg, result, errors);
       ddlEnsureActiveAfterLink(src, target, result, errors);
       ddlOpenConfiguredTarget(target, cfg, result);
       result.skipped = true;
@@ -2285,7 +2250,6 @@ function linkInputEntryToTarget(cfg) {
 
     result.skipped = true;
     result.skipReason = "existing_daylink_noop";
-    ddlDebugReceiveTrace("existing_link_noop", src, null, cfg, result, errors);
     return result;
   }
 
@@ -2342,7 +2306,6 @@ function linkInputEntryToTarget(cfg) {
     ddlEnsureActiveAfterLink(src, target, result, errors);
   }
 
-  ddlRefreshBeforeOpen(src, target, cfg, result, errors);
   ddlEnsureActiveAfterLink(src, target, result, errors);
   ddlOpenConfiguredTarget(target, cfg, result);
 

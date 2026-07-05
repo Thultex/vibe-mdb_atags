@@ -126,7 +126,6 @@ linkInputEntryToTarget({
   sourceDayLinkField: "DayLinks",
   sourceDayIdField: "DayId",
   openTargetEntry: true,
-  refreshBeforeOpen: true,
   dayStartHour: 4,
   daySearchLimit: 10
 });
@@ -142,11 +141,10 @@ linkInputEntryToTarget({
   sourceDayLinkField: "DayLinks",
   sourceDayIdField: "DayId",
   openTargetEntry: true,
-  refreshBeforeOpen: true,
   dayStartHour: 4,
   daySearchLimit: 10,
   receiveAfterLink: true,
-  receiveExistingLink: true,
+  receiveExistingLink: false,
   receiveConfig: {
     processMode: "append",
     rowSourceMode: "realtime",
@@ -165,7 +163,7 @@ linkInputEntryToTarget({
 });
 ```
 
-`sourceDayIdField: "DayId"` speichert beim ersten erfolgreichen Zuordnen die echte ID des `DustingDay` im Input. Bei späteren Änderungen kann der Input-Linker den Day per `findById(DayId)` aktualisieren, ohne `DayLinks` neu zu schreiben. Die Relation bleibt damit sichtbare UI-Verbindung, die technische Update-Brücke läuft über die stabile ID. Wenn `openTargetEntry: true` aktiv ist, führt `refreshBeforeOpen: true` direkt vor dem Öffnen noch einmal denselben Receive-Refresh aus.
+`sourceDayIdField: "DayId"` speichert beim ersten erfolgreichen Zuordnen die echte ID des `DustingDay` im Input. Die Relation bleibt damit sichtbare UI-Verbindung. Bei vorhandenem `DayLinks` soll der Input-Linker mit `receiveExistingLink: false` sofort abbrechen und nichts mehr schreiben.
 
 Input-Aufruf für Update-Test bei bereits vorhandenem `DayLinks`:
 
@@ -177,7 +175,6 @@ linkInputEntryToTarget({
   sourceDayLinkField: "DayLinks",
   sourceDayIdField: "DayId",
   openTargetEntry: true,
-  refreshBeforeOpen: true,
   debugReceive: true,
   receiveExistingLink: true,
   receiveConfig: {

@@ -99,7 +99,6 @@ linkInputEntryToTarget({
   sourceDayLinkField: "DayLinks",
   sourceDayIdField: "DayId",
   openTargetEntry: true,
-  refreshBeforeOpen: true,
   dayStartHour: 4,
   daySearchLimit: 10
 });
@@ -115,7 +114,6 @@ linkInputEntryToTarget({
   sourceDayLinkField: "DayLinks",
   sourceDayIdField: "DayId",
   openTargetEntry: true,
-  refreshBeforeOpen: true,
   dayStartHour: 4,
   daySearchLimit: 10,
   receiveAfterLink: true,
@@ -147,7 +145,6 @@ linkInputEntryToTarget({
   sourceDayLinkField: "DayLinks",
   sourceDayIdField: "DayId",
   openTargetEntry: true,
-  refreshBeforeOpen: true,
   debugReceive: true,
   receiveExistingLink: true,
   receiveConfig: {

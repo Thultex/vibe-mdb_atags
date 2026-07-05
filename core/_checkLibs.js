@@ -1,6 +1,6 @@
 /*
 ========================================
-A1 Lib Versions v1.23 (sys 2.40)
+A1 Lib Versions v1.24 (sys 2.40)
 ========================================
 
 Notes
@@ -12,7 +12,7 @@ Notes
   - helpers_lib v2.11 (sys 2.40)
   - collectAtags_lib v1.61 (sys 2.40)
   - exportAtags_lib v1.83 (sys 2.40)
-  - inputLinker_lib v0.81 (sys 2.40, optional)
+  - inputLinker_lib v0.82 (sys 2.40, optional)
 
 ========================================
 */
@@ -35,7 +35,7 @@ var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERS
 function getLibVersionsVersion() {
   return {
     name: "libVersions",
-    version: "1.23",
+    version: "1.24",
     sysVersion: "2.40",
     path: "core/_checkLibs.js"
   };
@@ -45,7 +45,7 @@ var ATAG_EXPECTED_LIBS = [
   { name: "helpers_lib", version: "2.11", getter: "getHelpersLibVersion", path: "core_lib/helpers_lib.js" },
   { name: "collectAtags_lib", version: "1.61", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
   { name: "exportAtags_lib", version: "1.83", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" },
-  { name: "inputLinker_lib", version: "0.81", getter: "getInputLinkerLibVersion", path: "core_lib/inputLinker_lib.js", optional: true }
+  { name: "inputLinker_lib", version: "0.82", getter: "getInputLinkerLibVersion", path: "core_lib/inputLinker_lib.js", optional: true }
 ];
 
 function getExpectedAtagLibs() {

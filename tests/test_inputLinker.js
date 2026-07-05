@@ -999,10 +999,10 @@ function testExistingDayLinkDoesNotProcessTargetByDefault() {
     ]
   });
 
-  assertSame("existing-link-default-target", result.targetEntry, day);
+  assertSame("existing-link-default-target", result.targetEntry, null);
   assertEquals("existing-link-default-skipped", result.skipped, true);
-  assertEquals("existing-link-default-reason", result.skipReason, "existing_daylink_process_disabled");
-  assertEquals("existing-link-default-process-skipped", result.processSkippedExistingLink, true);
+  assertEquals("existing-link-default-reason", result.skipReason, "existing_daylink_noop");
+  assertEquals("existing-link-default-process-skipped", result.processSkippedExistingLink, false);
   assertEquals("existing-link-default-note-untouched", day.field("OutNote"), "10: alt");
   assertEquals("existing-link-default-tags-untouched", day.field("OutTags").join(","), "alt");
   assertEquals("existing-link-default-no-recalc", day._recalcCount, 0);
@@ -1100,7 +1100,7 @@ function testExistingInputUpdatesTargetByDayIdWithoutRewritingRelation() {
   assertEquals("existing-dayid-id-kept", input.field("DayId"), "day-real");
 }
 
-function testExistingInputRefreshesAgainBeforeOpeningTarget() {
+function testExistingInputOpensTargetWithoutRefreshBeforeOpen() {
   var openedNote = "";
   var day = makeEntry({
     id: "day-open",
@@ -1138,8 +1138,8 @@ function testExistingInputRefreshesAgainBeforeOpeningTarget() {
     }
   });
 
-  assertEquals("existing-open-refresh-note", day.field("OutNote"), "10: vor open");
-  assertEquals("existing-open-refresh-before-open-result", result.refreshBeforeOpenResult.inputs, 1);
+  assertEquals("existing-open-receive-note", day.field("OutNote"), "10: vor open");
+  assertEquals("existing-open-refresh-before-open-result", result.refreshBeforeOpenResult, null);
   assertEquals("existing-open-refresh-open-attempted", result.openResult.attempted, true);
   assertEquals("existing-open-refresh-open-ok", result.openResult.ok, true);
   assertEquals("existing-open-refresh-opened-note", openedNote, "10: vor open");
@@ -2430,7 +2430,7 @@ testAlreadyLinkedInputDoesNotRewriteRelationOnRerun();
 testExistingDayLinkDoesNotProcessTargetByDefault();
 testAlreadyLinkedInputRecognizesRelationWrapperByDate();
 testExistingInputUpdatesTargetByDayIdWithoutRewritingRelation();
-testExistingInputRefreshesAgainBeforeOpeningTarget();
+testExistingInputOpensTargetWithoutRefreshBeforeOpen();
 testLinkedDeletedDayAllowsNewTargetCreation();
 testRelationWithoutLinkMethodDoesNotSetEntryObjectByDefault();
 testInputLinkerSkipsMementoLinkingTriggerContextByDefault();
