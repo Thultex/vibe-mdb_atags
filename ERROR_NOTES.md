@@ -26,3 +26,34 @@ Workaround:
 
 Hinweis fuer spaeter:
 - Wenn Struktur-Bearbeitung abstuerzt, aber der aktuelle Code isoliert unauffaellig wirkt, immer auch die interne Feldhistorie von Memento als Fehlerquelle pruefen.
+
+## DustingDay/Input Linker: neuer Day landet nach dem Linken im Papierkorb
+
+Datum:
+- 2026-07-05
+
+Symptome:
+- Beim Speichern eines neuen `DustingInput` wurde ein passender `DustingDay` gefunden oder erstellt und verlinkt.
+- Danach landete der neu erstellte oder aktualisierte Day-Eintrag trotzdem im Papierkorb.
+- Das Problem trat zeitweise sogar beim ganz normalen Neu-Erstellen auf, also nicht nur bei bereits vorhandenen `DayLinks`.
+- Mit `openTargetEntry: true` lief es wieder stabil, sobald der Link-Pfad minimal gehalten wurde.
+
+Beobachtung:
+- Die stabile Phase des `Input Linker` lag bei einem weitgehend reinen Link-only-Pfad: Day suchen/erstellen, `entry.link(...)`, danach möglichst wenig am Input anfassen.
+- Später eingeschobene Komfortpfade machten den Memento-Relation-Lifecycle fragil:
+  - `refreshBeforeOpen` führte direkt vor dem Öffnen einen zweiten Receive-/Schreibdurchlauf aus.
+  - `linkInputEntryToTarget()` schrieb zusätzlich `DayId` in den Input.
+  - Restore-/EnsureActive-Nachläufe liefen direkt nach dem Linken.
+- `receiveAfterLink` selbst war nicht der frische Hauptverdacht, weil es schon in einer funktionierenden Zwischenphase existierte.
+
+Lösung:
+- `Input Linker` v0.82 entfernte `refreshBeforeOpen` vollständig aus dem Input-Linker-Pfad.
+- `Input Linker` v0.83 brachte den Neu-Link-Pfad näher an die stabile Link-only-Version:
+  - kein automatisches Schreiben von `DayId` im Input-Linker,
+  - kein Restore-/EnsureActive-Nachlauf im normalen `linkInputEntryToTarget()`-Pfad,
+  - vorhandene `DayLinks` mit `receiveExistingLink: false` bleiben ein echter No-op.
+- Produktiver Input-Aufruf darf weiter `openTargetEntry: true` und `receiveAfterLink: true` nutzen.
+
+Hinweis für später:
+- Wenn Day-Einträge wieder im Papierkorb landen, zuerst prüfen, ob im Input-Linker-Pfad erneut zusätzliche Schreib-/Refresh-/Restore-Aufrufe vor oder nach dem Relation-Link gelandet sind.
+- Der Input-Linker sollte nur den Link herstellen; Aggregation, Rebuild und Reparatur gehören vorzugsweise in den `DustingDay`-Kontext.
