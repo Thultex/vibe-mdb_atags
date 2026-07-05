@@ -1,6 +1,6 @@
 /*
 ========================================
-#4 Input Linker Lib v0.84 (sys 2.40)
+#4 Input Linker Lib v0.85 (sys 2.40)
 ========================================
 
 Änderungen
@@ -11,6 +11,7 @@
 - bestehender DayLink ohne receiveExistingLink bleibt ein echter No-op ohne Debug-Schreibzugriff
 - linkInputEntryToTarget() schreibt keine DayId mehr in den Input und ruft keinen Restore-/EnsureActive-Nachlauf mehr auf
 - Receive/Refresh warnt standardmäßig im Ziel-Debug und oben in der Ziel-Notiz, wenn der Ziel-Eintrag im Papierkorb liegt
+- refreshTargetFromInputEntries() schreibt keine DayId mehr in Inputs und ruft keinen Restore-/EnsureActive-Nachlauf nach Refresh-Links auf
 - DustingDay Record-Beispiele nutzen string/append statt string_rows, damit Record-Zeilen nicht mit Zeitstempel versehen werden
 - string/text Maps können mit mode "prepend" nach vorne schreiben
 - openTargetEntry öffnet nach dem Linken den Ziel-Eintrag, ohne einen zweiten Receive-Refresh auszuführen
@@ -116,7 +117,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.84";
+var DDL_VERSION = "0.85";
 var DDL_TRASH_WARNING = "ACHTUNG: Datei im Papierkorb!";
 
 function getInputLinkerLibVersion() {
@@ -1151,59 +1152,6 @@ function ddlIsDeletedEntry(entryObj) {
   ]);
 }
 
-function ddlTryRestoreEntry(entryObj, errors, label) {
-  var methods = [
-    "restore",
-    "undelete",
-    "untrash",
-    "recover",
-    "restoreFromTrash",
-    "removeFromTrash"
-  ];
-  var i;
-  var name;
-
-  if (!entryObj || !ddlIsDeletedEntry(entryObj)) return true;
-
-  for (i = 0; i < methods.length; i++) {
-    name = methods[i];
-    try {
-      if (typeof entryObj[name] === "function") {
-        entryObj[name]();
-        return !ddlIsDeletedEntry(entryObj);
-      }
-    } catch (e0) {
-      if (errors) errors.push((label || "Eintrag") + " konnte nicht per " + name + "() aus dem Papierkorb geholt werden");
-      return false;
-    }
-  }
-
-  if (errors) errors.push((label || "Eintrag") + " liegt im Papierkorb; keine Restore-Methode am Entry-Objekt gefunden");
-  return false;
-}
-
-function ddlEnsureActiveAfterLink(src, target, result, errors) {
-  var ok = true;
-
-  if (src && ddlIsDeletedEntry(src)) {
-    if (ddlTryRestoreEntry(src, errors, "Source-Entry")) {
-      if (result && result.restored) result.restored.push("source");
-    } else {
-      ok = false;
-    }
-  }
-
-  if (target && ddlIsDeletedEntry(target)) {
-    if (ddlTryRestoreEntry(target, errors, "Target-Entry")) {
-      if (result && result.restored) result.restored.push("target");
-    } else {
-      ok = false;
-    }
-  }
-
-  return ok;
-}
-
 function ddlEntryId(entryObj) {
   if (!entryObj) return "";
 
@@ -1345,21 +1293,6 @@ function ddlResolveTargetBySourceId(targetLib, src, sourceDayIdField, targetDate
   } catch (e0) {}
 
   return null;
-}
-
-function ddlWriteSourceDayId(src, sourceDayIdField, target, errors, cfg) {
-  var id;
-  var current;
-
-  if (!src || !sourceDayIdField || !target) return false;
-
-  id = ddlEntryId(target);
-  if (!id) return false;
-
-  current = ddlSafeField(src, sourceDayIdField, null, null);
-  if (String(current || "") === String(id)) return true;
-
-  return ddlSafeSet(src, sourceDayIdField, String(id), errors, "DayId-Feld konnte nicht geschrieben werden", cfg && cfg.strictWriteErrors === true);
 }
 
 function ddlCreateDayEntry(targetLib, sourceDate, targetDateField, cfg, errors) {
@@ -1572,11 +1505,8 @@ function ddlSelectInputsForDay(target, targetDate, cfg, result, errors) {
         if (ddlLinkEntry(src, sourceDayLinkField, target, errors, cfg)) {
           result.linked++;
           linkedToTarget = true;
-          ddlEnsureActiveAfterLink(src, target, result, errors);
         }
       }
-      ddlWriteSourceDayId(src, sourceDayIdField, target, errors, cfg);
-
       if (!processAllEntries) {
         ddlPushUniqueEntry(selected, src);
       }

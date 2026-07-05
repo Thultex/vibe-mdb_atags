@@ -52,6 +52,7 @@ Lösung:
   - kein automatisches Schreiben von `DayId` im Input-Linker,
   - kein Restore-/EnsureActive-Nachlauf im normalen `linkInputEntryToTarget()`-Pfad,
   - vorhandene `DayLinks` mit `receiveExistingLink: false` bleiben ein echter No-op.
+- `Input Linker` v0.85 entfernte die kritischen Restore-/EnsureActive- und DayId-Schreibfunktionen ganz aus dem Code, damit auch `refreshTargetFromInputEntries()` sie nicht mehr versehentlich ausführt.
 - Produktiver Input-Aufruf darf weiter `openTargetEntry: true` und `receiveAfterLink: true` nutzen.
 
 Hinweis für später:
