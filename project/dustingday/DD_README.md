@@ -229,6 +229,8 @@ recieveInputEntryFromSource({
 
 Hinweis zu Rows: Für DustingDay ist `rowSourceMode: "realtime"` der einfache absolute Tageszeit-Modus. Die Row kommt aus der Uhrzeit des Input-Eintrags.
 
+Hinweis zu `sourceDayIdField`: Der Input-Linker nutzt das Feld nicht mehr automatisch als Schreibziel. Für den stabilen Input-Pfad wird nur `DayLinks` gesetzt; Day-seitige Refreshes können IDs weiterhin auswerten, wenn sie vorhanden sind.
+
 ## Day-seitiger Refresh
 
 `refreshTargetFromInputEntries()` ist die DustingDay-Seite des `Input Linker`. Sie läuft auf einem Tages-Eintrag und kann:

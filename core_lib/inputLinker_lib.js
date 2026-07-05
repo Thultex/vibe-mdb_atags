@@ -1,6 +1,6 @@
 /*
 ========================================
-#4 Input Linker Lib v0.82 (sys 2.40)
+#4 Input Linker Lib v0.83 (sys 2.40)
 ========================================
 
 Änderungen
@@ -9,10 +9,11 @@
 - string_rows nutzt wieder einheitlich Zeitstempel; keine Sonderregel mehr für führende "|"-Zeilen
 - refreshBeforeOpen schreibt nicht mehr aus dem Input-Linker heraus; nach dem Linken gibt es maximal den einen receiveAfterLink-Lauf
 - bestehender DayLink ohne receiveExistingLink bleibt ein echter No-op ohne Debug-Schreibzugriff
+- linkInputEntryToTarget() schreibt keine DayId mehr in den Input und ruft keinen Restore-/EnsureActive-Nachlauf mehr auf
 - DustingDay Record-Beispiele nutzen string/append statt string_rows, damit Record-Zeilen nicht mit Zeitstempel versehen werden
 - string/text Maps können mit mode "prepend" nach vorne schreiben
 - openTargetEntry öffnet nach dem Linken den Ziel-Eintrag, ohne einen zweiten Receive-Refresh auszuführen
-- sourceDayIdField speichert/liest eine stabile Ziel-ID, damit Updates ohne Relation-Rewrite verarbeitet werden können
+- sourceDayIdField bleibt für Day-seitige Refreshes lesbar; der Input-Linker schreibt die ID nicht mehr automatisch
 - Input-Dedupe nutzt nur noch Objekt-/ID-Identität, damit zeitgleiche Einträge mit gleichem Titel nicht verschwinden
 - Rebuild/processAllEntries verwirft passende Inputs nicht mehr, wenn der Relation-Wrapper-Vergleich fehlschlägt
 - Receive-Flags akzeptieren true/"true"/1 und Debug zeigt die angekommenen Flags
@@ -114,7 +115,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.82";
+var DDL_VERSION = "0.83";
 
 function getInputLinkerLibVersion() {
   return {
@@ -2222,7 +2223,8 @@ function linkInputEntryToTarget(cfg) {
         return result;
       }
 
-      target = ddlResolveTargetBySourceId(targetLib, src, sourceDayIdField, targetDateField, sourceDate, cfg);
+      target = null;
+      if (cfg.useSourceDayIdInInputLinker === true) target = ddlResolveTargetBySourceId(targetLib, src, sourceDayIdField, targetDateField, sourceDate, cfg);
       if (!target && (!sourceDayIdField || cfg.resolveExistingLinkFromRelation === true)) target = ddlResolveLinkedTargetFromLibrary(targetLib, sourceDayLinkValue, targetDateField, sourceDate, cfg);
       if (!target) target = ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
       if (!target && cfg.createMissingExistingDay !== false) {
@@ -2237,9 +2239,7 @@ function linkInputEntryToTarget(cfg) {
       }
 
       result.targetEntry = target;
-      ddlWriteSourceDayId(src, sourceDayIdField, target, errors, cfg);
       ddlReceiveAfterLink(src, target, cfg, result, errors);
-      ddlEnsureActiveAfterLink(src, target, result, errors);
       ddlOpenConfiguredTarget(target, cfg, result);
       result.skipped = true;
       result.skipReason = "existing_daylink_receive";
@@ -2280,7 +2280,8 @@ function linkInputEntryToTarget(cfg) {
     return result;
   }
 
-  target = ddlResolveTargetBySourceId(targetLib, src, sourceDayIdField, targetDateField, sourceDate, cfg);
+  target = null;
+  if (cfg.useSourceDayIdInInputLinker === true) target = ddlResolveTargetBySourceId(targetLib, src, sourceDayIdField, targetDateField, sourceDate, cfg);
   if (!target) target = ddlFindDayEntry(targetLib, sourceDate, targetDateField, cfg);
 
   if (!target) {
@@ -2294,19 +2295,15 @@ function linkInputEntryToTarget(cfg) {
   }
 
   result.targetEntry = target;
-  ddlWriteSourceDayId(src, sourceDayIdField, target, errors, cfg);
 
   if (sourceDayLinkField) {
     result.linked = ddlLinkEntry(src, sourceDayLinkField, target, errors, cfg);
-    if (result.linked) ddlEnsureActiveAfterLink(src, target, result, errors);
   }
 
   if (result.linked) {
     ddlReceiveAfterLink(src, target, cfg, result, errors);
-    ddlEnsureActiveAfterLink(src, target, result, errors);
   }
 
-  ddlEnsureActiveAfterLink(src, target, result, errors);
   ddlOpenConfiguredTarget(target, cfg, result);
 
   result.skipped = true;

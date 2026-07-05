@@ -163,7 +163,7 @@ linkInputEntryToTarget({
 });
 ```
 
-`sourceDayIdField: "DayId"` speichert beim ersten erfolgreichen Zuordnen die echte ID des `DustingDay` im Input. Die Relation bleibt damit sichtbare UI-Verbindung. Bei vorhandenem `DayLinks` soll der Input-Linker mit `receiveExistingLink: false` sofort abbrechen und nichts mehr schreiben.
+`sourceDayIdField: "DayId"` kann von Day-seitigen Refresh-/Receive-Funktionen ausgewertet werden. Der Input-Linker schreibt diese ID bewusst nicht mehr automatisch, damit beim normalen Verlinken nur die Relation selbst geändert wird. Bei vorhandenem `DayLinks` soll der Input-Linker mit `receiveExistingLink: false` sofort abbrechen und nichts mehr schreiben.
 
 Input-Aufruf für Update-Test bei bereits vorhandenem `DayLinks`:
 
