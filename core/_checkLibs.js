@@ -9,7 +9,7 @@ Notes
 - Each lib can still expose its own get...Version function.
 - Current libs:
   - helpers_lib v2.11 (sys 2.30)
-  - collectAtags_lib v1.60 (sys 2.30)
+  - collectAtags_lib v1.61 (sys 2.30)
   - exportAtags_lib v1.83 (sys 2.30)
   - inputLinker_lib v0.75 (sys 2.30, optional)
 
@@ -42,7 +42,7 @@ function getLibVersionsVersion() {
 
 var ATAG_EXPECTED_LIBS = [
   { name: "helpers_lib", version: "2.11", getter: "getHelpersLibVersion", path: "core_lib/helpers_lib.js" },
-  { name: "collectAtags_lib", version: "1.60", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
+  { name: "collectAtags_lib", version: "1.61", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
   { name: "exportAtags_lib", version: "1.83", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" },
   { name: "inputLinker_lib", version: "0.75", getter: "getInputLinkerLibVersion", path: "core_lib/inputLinker_lib.js", optional: true }
 ];

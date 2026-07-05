@@ -1,9 +1,10 @@
 /*
 ========================================
-#1 collectAtags Lib v1.60 (sys 2.30)
+#1 collectAtags Lib v1.61 (sys 2.30)
 ========================================
 
 Changes
+- slot values allow spacing after colon, e.g. `tag: _inhalt_`
 - parse template slot values `_inhalt_` as string values and ignore empty `_`/`__`
 - parse quoted hash values after normal tag names, e.g. frage#"wer ist der coolste"
 - multiAliasTargets defaults to true for one alias token mapping to multiple tags
@@ -48,14 +49,14 @@ Changes
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.60",
+    version: "1.61",
     sysVersion: "2.30",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.60", "2.30", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.61", "2.30", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");
@@ -1164,8 +1165,16 @@ function collectAtags(cfg) {
         addParsedTagValue(mib[3] || "", mib[2] || "", items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw);
       }
 
+      // template slot values allow spacing after : / ::
+      var rxColonSlotValue = /(^|[\s\n\r])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:{1,2}\s*(_[^_\r\n]+_)/g;
+      var mslot;
+      while ((mslot = rxColonSlotValue.exec(parseLine)) !== null) {
+        if (isInsideAtagQuoteState(quoteState, mslot.index)) continue;
+        addParsedTagValue(mslot[2] || "", mslot[3] || "", items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw);
+      }
+
       // colon: gfk: 1,4 / tag:inhalt / tag:: inhalt
-      var rxColon = /(^|[\s\n\r])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:(?:"([^"]*)"|(_[^_\r\n]*_)|([^:\s,;.!?()\[\]{}]+))/g;
+      var rxColon = /(^|[\s\n\r])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:(?:"([^"]*)"|(_[^_\r\n]+_)|([^:\s,;.!?()\[\]{}]+))/g;
       var m1;
       while ((m1 = rxColon.exec(parseLine)) !== null) {
         var name1 = m1[2];
@@ -1184,7 +1193,7 @@ function collectAtags(cfg) {
         addParsedTagValue(m1[2] || "", raw1, items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw);
       }
 
-      var rxColonExplicit = /(^|[\s\n\r])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*::\s*(?:"([^"]*)"|(_[^_\r\n]*_)|([^\r\n,;.!?()\[\]{}]+))/g;
+      var rxColonExplicit = /(^|[\s\n\r])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*::\s*(?:"([^"]*)"|(_[^_\r\n]+_)|([^\r\n,;.!?()\[\]{}]+))/g;
       while ((m1 = rxColonExplicit.exec(parseLine)) !== null) {
         raw1 = m1[3] != null && m1[3] !== "" ? m1[3] : (m1[4] != null && m1[4] !== "" ? m1[4] : (m1[5] || ""));
         raw1 = trimAtagString(raw1);
@@ -1212,7 +1221,7 @@ function collectAtags(cfg) {
       }
 
       // explicit tag with hash and value: test#string / test#5,
-      var rxHashValue = /(^|[\s\n\r])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#(_[^_\r\n]*_|[^\s]+)/g;
+      var rxHashValue = /(^|[\s\n\r])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#(_[^_\r\n]+_|[^\s]+)/g;
       var mh;
       while ((mh = rxHashValue.exec(parseLine)) !== null) {
         var nameH = mh[2];
