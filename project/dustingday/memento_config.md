@@ -24,6 +24,9 @@ Aktuelle Felder:
   - Typ: Beziehung / Relation
   - Ziel: `DustingDay`
   - verbindet den Input-Eintrag mit seinem Tages-Eintrag
+- `DayId`
+  - Typ: Text
+  - optional, empfohlen als stabile technische ID des verknüpften `DustingDay`
 - `Debug`
   - Typ: Text
   - optionales Diagnosefeld für Input-Trigger
@@ -128,9 +131,11 @@ linkInputEntryToTarget({
   sourceDateField: "Datum",
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
+  sourceDayIdField: "DayId",
   dayStartHour: 4,
   daySearchLimit: 10,
   receiveAfterLink: true,
+  receiveExistingLink: true,
   receiveConfig: {
     rowSourceMode: "realtime",
     rowStepHours: 0.1,
@@ -147,6 +152,8 @@ linkInputEntryToTarget({
   }
 });
 ```
+
+`sourceDayIdField: "DayId"` speichert beim ersten erfolgreichen Zuordnen die echte ID des `DustingDay` im Input. Bei späteren Änderungen kann der Input-Linker den Day per `findById(DayId)` aktualisieren, ohne `DayLinks` neu zu schreiben. Die Relation bleibt damit sichtbare UI-Verbindung, die technische Update-Brücke läuft über die stabile ID.
 
 Input-Aufruf für Update-Test bei bereits vorhandenem `DayLinks`:
 
@@ -221,7 +228,6 @@ refreshTargetFromInputEntries({
   ]
 });
 ```
-
 
 
 
