@@ -97,6 +97,7 @@ linkInputEntryToTarget({
   sourceDateField: "Datum",
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
+  sourceDayIdField: "DayId",
   openTargetEntry: true,
   dayStartHour: 4,
   daySearchLimit: 10
@@ -111,6 +112,7 @@ linkInputEntryToTarget({
   sourceDateField: "Datum",
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
+  sourceDayIdField: "DayId",
   openTargetEntry: true,
   dayStartHour: 4,
   daySearchLimit: 10,
@@ -141,6 +143,7 @@ linkInputEntryToTarget({
   sourceDateField: "Datum",
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
+  sourceDayIdField: "DayId",
   openTargetEntry: true,
   debugReceive: true,
   receiveExistingLink: true,
@@ -226,7 +229,7 @@ recieveInputEntryFromSource({
 
 Hinweis zu Rows: Für DustingDay ist `rowSourceMode: "realtime"` der einfache absolute Tageszeit-Modus. Die Row kommt aus der Uhrzeit des Input-Eintrags.
 
-Hinweis zu `sourceDayIdField`: Der stabile DustingDay-Pfad nutzt nur `DayLinks`. `sourceDayIdField` bleibt als Legacy-/Opt-in-Auflösung für Sonderfälle im Input-Linker vorhanden, wird aber von `refreshTargetFromInputEntries()` nicht mehr zur Input-Auswahl verwendet.
+Hinweis zu `sourceDayIdField`: Der Input-Linker nutzt das Feld nicht mehr automatisch als Schreibziel. Für den stabilen Input-Pfad wird nur `DayLinks` gesetzt; Day-seitige Refreshes können IDs weiterhin auswerten, wenn sie vorhanden sind.
 
 Papierkorb-Warnung: `recieveInputEntryFromSource()` und `refreshTargetFromInputEntries()` prüfen standardmäßig, ob der Ziel-Day als gelöscht/Papierkorb erkennbar ist. Dann wird oben in Ziel-Debug und Ziel-Notiz `ACHTUNG: Datei im Papierkorb!` ergänzt. Abschalten geht mit `checkTargetTrash: false`.
 

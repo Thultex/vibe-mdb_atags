@@ -53,10 +53,8 @@ Lösung:
   - kein Restore-/EnsureActive-Nachlauf im normalen `linkInputEntryToTarget()`-Pfad,
   - vorhandene `DayLinks` mit `receiveExistingLink: false` bleiben ein echter No-op.
 - `Input Linker` v0.85 entfernte die kritischen Restore-/EnsureActive- und DayId-Schreibfunktionen ganz aus dem Code, damit auch `refreshTargetFromInputEntries()` sie nicht mehr versehentlich ausführt.
-- `Input Linker` v0.86 entfernte nach Vergleich mit der stabileren Vorphase auch die DayId-Auswertung aus `refreshTargetFromInputEntries()`: Rebuild/Refresh wählen Inputs wieder nur über `DayLinks`. `PostEntry`/`recalcTarget` blieben bewusst drin, weil sie bereits in der funktionierenden Phase vorhanden waren und nicht der Vergleichsbruch waren.
 - Produktiver Input-Aufruf darf weiter `openTargetEntry: true` und `receiveAfterLink: true` nutzen.
 
 Hinweis für später:
 - Wenn Day-Einträge wieder im Papierkorb landen, zuerst prüfen, ob im Input-Linker-Pfad erneut zusätzliche Schreib-/Refresh-/Restore-Aufrufe vor oder nach dem Relation-Link gelandet sind.
-- Bei Refresh-/Rebuild-Problemen nicht `DayId` als zweite Wahrheit neben der Relation einführen. Für DustingDay ist `DayLinks` die kanonische Verbindung.
 - Der Input-Linker sollte nur den Link herstellen; Aggregation, Rebuild und Reparatur gehören vorzugsweise in den `DustingDay`-Kontext.
