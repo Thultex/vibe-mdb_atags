@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.68 (sys 2.30)
+#4 Input Linker Lib v0.69 (sys 2.30)
 ========================================
 
 Änderungen
+- `debugReceive: true` schreibt einen Trace fuer Link-/Update-/Receive-Pfade ins Input-Debugfeld und ins Log
 - Map-Lesung bevorzugt beim aktuellen Input-Entry den Triggerwert `field(...)`, damit Updates nicht am alten Entry-Snapshot haengen
 - explizit uebergebene `entries` werden beim Receive nicht mehr durch Link-Wrapper-Vergleich ausgeskippt
 - leere/null Relation-Listen zaehlen nicht mehr als vorhandener DayLink
@@ -92,7 +93,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.68";
+var DDL_VERSION = "0.69";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1672,6 +1673,92 @@ function ddlDescribeValue(val) {
   return "unknown object";
 }
 
+function ddlDebugFieldRaw(fieldName) {
+  try {
+    if (typeof field === "function") return ddlDescribeValue(field(fieldName));
+  } catch (e) {
+    return "field() error: " + e;
+  }
+  return "field() unavailable";
+}
+
+function ddlDebugEntryFieldRaw(entryObj, fieldName) {
+  try {
+    if (entryObj && typeof entryObj.field === "function") return ddlDescribeValue(entryObj.field(fieldName));
+  } catch (e) {
+    return "entry.field() error: " + e;
+  }
+  return "entry.field() unavailable";
+}
+
+function ddlDebugWriteToEntry(entryObj, fieldName, lines) {
+  if (!entryObj || !fieldName || !lines) return false;
+  if (!ddlEntryHasField(entryObj, fieldName)) return false;
+  return ddlSafeSet(entryObj, fieldName, lines.join("\n"), null, null, false);
+}
+
+function ddlDebugReceiveTrace(stage, src, target, cfg, result, errors) {
+  var lines;
+  var links;
+  var firstLink;
+  var map;
+  var i;
+  var item;
+  var debugField;
+  var sourceDateField;
+  var targetDateField;
+  var rr;
+
+  if (!cfg || (cfg.debugReceive !== true && cfg.debugLinker !== true && cfg.linkerDebug !== true)) return;
+
+  sourceDateField = cfg.sourceDateField || "Date";
+  targetDateField = cfg.targetDateField || "Date";
+  links = ddlToArray(ddlSafeField(src, cfg.sourceDayLinkField || "DayLinks", null, null));
+  firstLink = ddlFirstRelationValue(links);
+  map = cfg.processMap || cfg.map || (cfg.receiveConfig && (cfg.receiveConfig.processMap || cfg.receiveConfig.map)) || [];
+  rr = result && result.receiveResult;
+
+  lines = ddlDebugHeader("DEBUG Input Linker Receive");
+  lines.push("stage: " + stage);
+  lines.push("skipReason: " + (result && result.skipReason ? result.skipReason : ""));
+  lines.push("created: " + !!(result && result.created));
+  lines.push("linked: " + !!(result && result.linked));
+  lines.push("sourceDayLinkField: " + (cfg.sourceDayLinkField || "DayLinks"));
+  lines.push("source DayLinks length: " + links.length);
+  lines.push("source DayLink first: " + ddlDescribeValue(firstLink));
+  lines.push("source DayLink first id: " + ddlEntryId(firstLink));
+  lines.push("source date trigger raw: " + ddlDebugFieldRaw(sourceDateField));
+  lines.push("source date entry raw: " + ddlDebugEntryFieldRaw(src, sourceDateField));
+  lines.push("target: " + ddlDescribeValue(target));
+  lines.push("target id: " + ddlEntryId(target));
+  lines.push("target date raw: " + ddlDebugEntryFieldRaw(target, targetDateField));
+
+  if (rr) {
+    lines.push("receive inputs: " + rr.inputs);
+    lines.push("receive linked: " + rr.linked);
+    lines.push("receive skippedLinkedToOther: " + rr.skippedLinkedToOther);
+    lines.push("receive appended: " + rr.appended.join(","));
+    lines.push("receive tags: " + rr.tags.join(","));
+    lines.push("receive postEntries: " + rr.postEntries.join(","));
+    lines.push("receive errors: " + rr.errors.join("; "));
+  } else {
+    lines.push("receive result: null");
+  }
+
+  for (i = 0; i < map.length; i++) {
+    item = ddlNormalizeMapItem(map[i]);
+    if (!item.from) continue;
+    lines.push("map " + item.from + " trigger raw: " + ddlDebugFieldRaw(item.from));
+    lines.push("map " + item.from + " entry raw: " + ddlDebugEntryFieldRaw(src, item.from));
+  }
+
+  if (errors && errors.length) lines.push("errors: " + errors.join("; "));
+
+  ddlLogLines(lines);
+  debugField = cfg.sourceDebugField || cfg.debugField || "Debug";
+  ddlDebugWriteToEntry(src, debugField, lines);
+}
+
 function debugInputLinkerAccess(cfg) {
   cfg = cfg || {};
 
@@ -1898,11 +1985,13 @@ function linkInputEntryToTarget(cfg) {
       result.skipped = true;
       result.skipReason = "existing_daylink_receive";
       if (errors.length) ddlWriteErrors(errors, cfg);
+      ddlDebugReceiveTrace("existing_link_receive", src, target, cfg, result, errors);
       return result;
     }
 
     result.skipped = true;
     result.skipReason = "existing_daylink_noop";
+    ddlDebugReceiveTrace("existing_link_noop", src, null, cfg, result, errors);
     return result;
   }
 
@@ -1959,6 +2048,7 @@ function linkInputEntryToTarget(cfg) {
   result.skipReason = "link_only";
   result.processSkippedLinkOnly = true;
   if (errors.length) ddlWriteErrors(errors, cfg);
+  ddlDebugReceiveTrace("new_link", src, target, cfg, result, errors);
   return result;
 }
 
