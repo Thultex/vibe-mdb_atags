@@ -73,6 +73,7 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Feature: `Input Linker` v0.39 ergänzt `openTargetEntry: true`, um nach dem Input-Linking den gefundenen oder erstellten Ziel-Day zu öffnen, sofern Memento eine Open-Methode anbietet.
 - Change: `libVersions` v1.09 unterstützt optionale Libs und `verbose: true` für schnelle Version-/Zugriffsprüfung per Log-Ausgabe.
 - Feature: `Input Linker` v0.75 ergänzt `mode: "prepend"`/`"prepend all"` für Text-Maps; DustingDay nutzt damit `InRecord -> Record` nach vorne. `collectAtags_lib` v1.60 liest Slot-Werte wie `tag:_inhalt_` als Stringwerte und ignoriert leere Slots.
+- Fix: `syncLastFromLatest` v1.05 wendet `clearTemplateSlots` auch auf Java-/stringartige Memento-Textwerte an, z. B. `Testing: _safd_` zu `Testing: __`.
 - Feature: `Input Linker` v0.74 führt bei `openTargetEntry` direkt vor dem Öffnen optional nochmal den Receive-Refresh aus; Time Marker v1.34 trennt exakte Row-Dedupe per `mergeSameRowContents: true` vom Zusammenführen gleicher Zeitstempel per `mergeSameRows: true`.
 - Feature: `syncLastFromLatest` v1.04 kann mit `clearTemplateSlots: true` Inhalte in Slot-Markern beim Kopieren leeren, z. B. `Laufen:_2 km_` zu `Laufen:__`; der Marker ist per `templateSlotMarker` einstellbar.
 - Change: `syncFieldBack()` nutzt bei übergebenem `entryObj` dessen Library für den Ziel-Eintrag, sofern Memento diese am Entry bereitstellt; `syncFieldTo()` und `syncFieldAll()` verwenden denselben Entry-Library-Fallback.
@@ -94,7 +95,7 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Fix: `Input Linker` v0.46 erkennt bestehende Relationslinks robuster über Entry-ID und Name/Titel; das Zieldatum dient nur noch zur Tag-Plausibilisierung, nicht zur Gleichsetzung verschiedener Day-Einträge.
 - Fix: `Input Linker` v0.45 ueberspringt standardmaessig Memento-Linking-Trigger-Kontexte, damit programmgesteuertes Verlinken keinen zweiten rekursiven Linker-Lauf ausloest.
 - Fix: `Input Linker` v0.44 verknüpft Relation-Felder über `entry.link(field, entry)` und vermeidet `set(field, entryObj)`, da Memento `set()` für Link-to-Entry-Felder mit Entry-Namen/Strings dokumentiert.
-- *Versionen: collectAtags_lib v1.60, Input Linker v0.75, libVersions v1.16, Time Marker v1.34, Global Field Sync v1.03, Sync Last From Latest v1.04, Sequence Counter v1.05.*
+- *Versionen: collectAtags_lib v1.60, Input Linker v0.75, libVersions v1.16, Time Marker v1.34, Global Field Sync v1.03, Sync Last From Latest v1.05, Sequence Counter v1.05.*
 
 ### 2026-05-20 - (ca. 0,5h)
 
@@ -589,6 +590,5 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Test/Doku: `tests/test_collectAtags.js` ergaenzt.
 - *Versionen: collectAtags v1.22.*
 ```
-
 
 

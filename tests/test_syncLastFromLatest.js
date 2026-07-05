@@ -226,6 +226,28 @@ function testTemplateSlotsCanUseCustomMarker() {
   assertEquals("custom-template-slot-marker", current.field("Record"), "Laufen:~~\nLaufen#~~\nLaufen:_bleibt_");
 }
 
+function testClearTemplateSlotsAcceptsStringLikeObjects() {
+  var current = makeEntry({ Datum: "2026-07-05", InRecord: "" });
+  var previous = makeEntry({
+    Datum: "2026-07-04",
+    InRecord: {
+      toString: function() {
+        return "Testing: _safd_";
+      }
+    }
+  });
+  _entries = [current, previous];
+
+  syncLastFromLatest({
+    fields: ["InRecord"],
+    fieldDate: "Datum",
+    clearTemplateSlots: true,
+    templateSlotMarker: "_"
+  });
+
+  assertEquals("clear-template-slots-string-like-object", current.field("InRecord"), "Testing: __");
+}
+
 testCopiesLatestPreviousEntry();
 testMapAndOnlyIfEmpty();
 testSyncWithoutDateFieldUsesNewestLibraryEntry();
@@ -237,5 +259,6 @@ testFindNewestEntryMaxScanCanTradePrecisionForSpeed();
 testGetNewestLibraryEntryDefaultsToFirstEntry();
 testClearTemplateSlotsWhenCopyingLatestValue();
 testTemplateSlotsCanUseCustomMarker();
+testClearTemplateSlotsAcceptsStringLikeObjects();
 
 WScript.Echo("OK");

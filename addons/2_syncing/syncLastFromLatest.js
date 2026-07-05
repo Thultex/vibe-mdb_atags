@@ -1,9 +1,10 @@
 /*
 ========================================
-B4 Sync Last From Latest v1.04 (sys 2.30)
+B4 Sync Last From Latest v1.05 (sys 2.30)
 ========================================
 
 Changes
+- clearTemplateSlots also handles Java/string-like text field values
 - add clearTemplateSlots to empty marker-wrapped template values while carrying templates forward
 - support maxEntries 0 for newest entry and -1 for full date scan
 - use newest library entry when syncLastFromLatest has no fieldDate
@@ -115,8 +116,19 @@ function slflClearTemplateSlots(text, cfg) {
 }
 
 function slflPrepareValueForCopy(value, cfg) {
+  var text;
+  var cleared;
+
   if (!cfg || cfg.clearTemplateSlots !== true) return slflClone(value);
+
   if (slflIsString(value)) return slflClearTemplateSlots(value, cfg);
+
+  if (value != null && slflListLength(value) == null && !(value instanceof Date)) {
+    text = String(value);
+    cleared = slflClearTemplateSlots(text, cfg);
+    if (cleared !== text) return cleared;
+  }
+
   return slflClone(value);
 }
 
