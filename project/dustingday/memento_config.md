@@ -16,7 +16,7 @@ Aktuelle Felder:
 - `InRecord`
   - Typ: Text
   - wird nach vorne in `DustingDay.Record` übernommen
-- `InTag`
+- `InTags`
   - Typ: Tag
 - `Date`
   - Typ: Datum/Zeit
@@ -80,7 +80,7 @@ Aktuelle Felder:
 Für erste Dustingday-Module gilt bei Einzel-Einträgen:
 
 - Notizfeld: `InNote`
-- Tagfeld: `InTag`
+- Tagfeld: `InTags`
 - Zeitfeld: `Datum` im aktuellen Eindosierungs-Prototyp, `Date` bleibt alter Teststand
 - Tagesrelation: `DayLinks`
 - Titel: `Titel`, optional
@@ -156,7 +156,7 @@ linkInputEntryToTarget({
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
       { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
-      { from: "InTag", to: "Tags", type: "tag" }
+      { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
 });
@@ -186,7 +186,7 @@ linkInputEntryToTarget({
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
       { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
-      { from: "InTag", to: "Tags", type: "tag" }
+      { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
 });
@@ -211,7 +211,7 @@ recieveInputEntryFromSource({
   processMap: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
     { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
-    { from: "InTag", to: "Tags", type: "tag" }
+    { from: "InTags", to: "Tags", type: "tag" }
   ]
 });
 ```
@@ -247,7 +247,7 @@ refreshTargetFromInputEntries({
   processMap: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
     { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
-    { from: "InTag", to: "Tags", type: "tag" }
+    { from: "InTags", to: "Tags", type: "tag" }
   ]
 });
 ```

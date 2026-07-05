@@ -16,10 +16,10 @@ Minimaler Eintrag:
 
 - `Datum/Zeit`
 - `innote`
-- `intag`
+- `InTags`
 - Relation zum Tages-Eintrag
 
-Aus der Uhrzeit entsteht die Row. Aus `innote` und `intag` entstehen Tags, Werte und gekoppelte Informationen.
+Aus der Uhrzeit entsteht die Row. Aus `innote` und `InTags` entstehen Tags, Werte und gekoppelte Informationen.
 
 Erster technischer Schritt ist ein Relation-Feld:
 
@@ -40,11 +40,11 @@ Damit kann ein Input-Eintrag dauerhaft seinen Tages-Eintrag halten. Da Memento-R
 ```text
 Eintrag 03:30
 innote: 40mg, #müde
-intag: mg 40
+InTags: mg 40
 
 Eintrag 05:02
 innote: stress3, tätigkeit: laufen
-intag: müde 3
+InTags: müde 3
 ```
 
 Wird ungefähr zu:
@@ -125,7 +125,7 @@ linkInputEntryToTarget({
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
       { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
-      { from: "InTag", to: "Tags", type: "tag" }
+      { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
 });
@@ -153,7 +153,7 @@ linkInputEntryToTarget({
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
       { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
-      { from: "InTag", to: "Tags", type: "tag" }
+      { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
 });
@@ -211,7 +211,7 @@ recieveInputEntryFromSource({
   processMap: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
     { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
-    { from: "InTag", to: "Tags", type: "tag" }
+    { from: "InTags", to: "Tags", type: "tag" }
   ]
 });
 ```
@@ -254,7 +254,7 @@ refreshTargetFromInputEntries({
   processMap: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
     { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
-    { from: "InTag", to: "Tags", type: "tag" }
+    { from: "InTags", to: "Tags", type: "tag" }
   ]
 });
 ```
@@ -272,7 +272,7 @@ refreshTargetFromInputEntries({
   processMap: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
     { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
-    { from: "InTag", to: "Tags", type: "tag" }
+    { from: "InTags", to: "Tags", type: "tag" }
   ]
 });
 ```
@@ -290,7 +290,7 @@ refreshTargetFromInputEntries({
   processMap: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
     { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
-    { from: "InTag", to: "Tags", type: "tag" }
+    { from: "InTags", to: "Tags", type: "tag" }
   ]
 });
 ```

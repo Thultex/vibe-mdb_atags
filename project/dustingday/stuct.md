@@ -10,7 +10,7 @@ Ziel der Struktur ist Alltagstauglichkeit: Symptome und Befinden schnell erfasse
 Einzeleintrag
   Datum/Zeit
   innote
-  intag
+  InTags
     |
     v
 Tages-Sammler
@@ -21,7 +21,7 @@ Tages-Sammler
     v
 Parser-Schicht
   liest innote
-  liest intag
+  liest InTags
   erkennt Tags, Werte, Paare
     |
     v
@@ -50,14 +50,14 @@ Felder:
 
 - `Datum/Zeit`: Anker für Tag und Row.
 - `innote`: freie Notiz, Tags, kurze Zustandswerte.
-- `intag`: explizite Tag-Wert-Kopplungen.
+- `InTags`: explizite Tag-Wert-Kopplungen.
 
 Beispiele:
 
 - `innote: 40mg, #müde`
-- `intag: mg 40`
+- `InTags: mg 40`
 - `innote: stress3, tätigkeit: laufen`
-- `intag: müde 3`
+- `InTags: müde 3`
 
 ## 2. Tages-Sammler
 
@@ -117,7 +117,7 @@ Funktionell wichtig:
 
 ## 4. Parser-Schicht
 
-Die Parser-Schicht verbindet `innote` und `intag`.
+Die Parser-Schicht verbindet `innote` und `InTags`.
 
 `innote` kann enthalten:
 
@@ -126,7 +126,7 @@ Die Parser-Schicht verbindet `innote` und `intag`.
 - kurze Werte wie `stress3`
 - Paare wie `tätigkeit: laufen`
 
-`intag` kann enthalten:
+`InTags` kann enthalten:
 
 - `mg 40`
 - `müde 3`
@@ -220,7 +220,7 @@ Das erste Modul sollte nur das können:
 Tages-Eintrag öffnen
   -> verknüpfte Einzeleinträge lesen
   -> Rows aus Zeit ableiten
-  -> InNote/InTag als Text verbinden
+  -> InNote/InTags als Text verbinden
   -> Tagesnotiz erzeugen
 ```
 
@@ -288,7 +288,7 @@ refreshTargetFromInputEntries()
 
 Danach:
 
-- `InTag` aus allen verlinkten Inputs sammeln
+- `InTags` aus allen verlinkten Inputs sammeln
 - Duplikate reduzieren
 - `DustingDay.Tags` setzen
 

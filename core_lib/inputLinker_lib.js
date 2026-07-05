@@ -50,7 +50,7 @@ linkInputEntryToTarget({
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
       { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
-      { from: "InTag", to: "Tags", type: "tag" }
+      { from: "InTags", to: "Tags", type: "tag" }
     ]
   }
 });
@@ -71,7 +71,7 @@ recieveInputEntryFromSource({
   processMap: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
     { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
-    { from: "InTag", to: "Tags", type: "tag" }
+    { from: "InTags", to: "Tags", type: "tag" }
   ]
 });
 
@@ -88,7 +88,7 @@ refreshTargetFromInputEntries({
   processMap: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
     { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
-    { from: "InTag", to: "Tags", type: "tag" }
+    { from: "InTags", to: "Tags", type: "tag" }
   ]
 });
 

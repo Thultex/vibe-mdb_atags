@@ -240,7 +240,7 @@ function testCreatesDayLinksSourceAndAppendsMappedFields() {
   var input = makeEntry({
     Date: "2020-02-02 14:35",
     InNote: "erste Zeile\nzweite bleibt",
-    InTag: ["müde", "stress"],
+    InTags: ["müde", "stress"],
     DayLinks: null
   });
 
@@ -254,7 +254,7 @@ function testCreatesDayLinksSourceAndAppendsMappedFields() {
     processAfterLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" },
-      { from: "InTag", to: "OutTags", type: "tag" }
+      { from: "InTags", to: "OutTags", type: "tag" }
     ]
   });
 
@@ -270,7 +270,7 @@ function testNewInputLinksOnlyByDefault() {
   var input = makeEntry({
     Date: "2020-02-02 14:35",
     InNote: "nur link",
-    InTag: ["müde"],
+    InTags: ["müde"],
     DayLinks: null
   });
 
@@ -283,7 +283,7 @@ function testNewInputLinksOnlyByDefault() {
     sourceDayLinkField: "DayLinks",
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" },
-      { from: "InTag", to: "OutTags", type: "tag" }
+      { from: "InTags", to: "OutTags", type: "tag" }
     ]
   });
 
@@ -301,7 +301,7 @@ function testEmptyRelationListDoesNotBlockNewLink() {
   var input = makeEntry({
     Date: "2020-02-02 14:35",
     InNote: "leer relation",
-    InTag: [],
+    InTags: [],
     DayLinks: [null]
   });
 
@@ -323,7 +323,7 @@ function testEmptyStringRelationListDoesNotBlockNewLink() {
   var input = makeEntry({
     Date: "2020-02-02 14:35",
     InNote: "leer string relation",
-    InTag: [],
+    InTags: [],
     DayLinks: [""]
   });
 
@@ -374,7 +374,7 @@ function testDoesNotDuplicateSameLineOrTags() {
   var input = makeEntry({
     Date: "2020-02-02 14:35",
     InNote: "erste Zeile",
-    InTag: ["müde", "stress"],
+    InTags: ["müde", "stress"],
     DayLinks: null
   });
 
@@ -388,7 +388,7 @@ function testDoesNotDuplicateSameLineOrTags() {
     processAfterLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" },
-      { from: "InTag", to: "OutTags", type: "tag" }
+      { from: "InTags", to: "OutTags", type: "tag" }
     ]
   });
 
@@ -513,7 +513,7 @@ function testSinceFirstUsesTargetDateAsZero() {
   var input = makeEntry({
     Date: "2020-02-02 16:05",
     InNote: "später",
-    InTag: [],
+    InTags: [],
     DayLinks: null
   });
 
@@ -543,7 +543,7 @@ function testRowSourceModeRealtimeSinceUsesTimeMarkerNames() {
   var input = makeEntry({
     Date: "2020-02-02 14:35",
     InNote: "nach start",
-    InTag: [],
+    InTags: [],
     DayLinks: null
   });
 
@@ -575,7 +575,7 @@ function testWrongTargetDateFieldOnlyBlocksInStrictMode() {
   var input = makeEntry({
     Date: "2020-02-02 14:35",
     InNote: "nicht erstellen",
-    InTag: [],
+    InTags: [],
     DayLinks: null,
     Debug: ""
   });
@@ -609,7 +609,7 @@ function testNonStrictTargetDateFieldAllowsCreate() {
   var input = makeEntry({
     Date: "2020-02-03 14:35",
     InNote: "erstellen erlaubt",
-    InTag: [],
+    InTags: [],
     DayLinks: null
   });
 
@@ -639,7 +639,7 @@ function testNewInputAddsMissingTagsToExistingDay() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "",
-    InTag: ["müde", "erfolg"],
+    InTags: ["müde", "erfolg"],
     DayLinks: null
   });
 
@@ -652,7 +652,7 @@ function testNewInputAddsMissingTagsToExistingDay() {
     sourceDayLinkField: "DayLinks",
     processAfterLink: true,
     map: [
-      { from: "InTag", to: "OutTags", type: "tag" }
+      { from: "InTags", to: "OutTags", type: "tag" }
     ]
   });
 
@@ -673,7 +673,7 @@ function testExistingFunctionalSourceDayLinkWinsOverDateSearch() {
   var input = makeEntry({
     Date: "2020-02-03 10:00",
     InNote: "nutzt link",
-    InTag: [],
+    InTags: [],
     DayLinks: linkedDay
   });
 
@@ -713,7 +713,7 @@ function testMismatchingSourceDayLinkFallsBackToMatchingDateByDefault() {
   var input = makeEntry({
     Date: "2020-02-03 10:00",
     InNote: "nutzt datum",
-    InTag: [],
+    InTags: [],
     DayLinks: linkedDay
   });
 
@@ -752,7 +752,7 @@ function testMismatchingSourceDayLinkDoesNotRewriteExistingRelationByDefault() {
   var input = makeEntry({
     Date: "2020-02-03 10:00",
     InNote: "alter link weg",
-    InTag: [],
+    InTags: [],
     DayLinks: oldDay
   });
 
@@ -789,7 +789,7 @@ function testBrokenSourceDayLinkFallsBackToDateSearch() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "datum fallback",
-    InTag: [],
+    InTags: [],
     DayLinks: brokenLink
   });
 
@@ -818,7 +818,7 @@ function testExistingSourceDayLinkPreventsNewDayCreationWhenTargetMissing() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "nicht neu erstellen",
-    InTag: [],
+    InTags: [],
     DayLinks: brokenLink,
     Debug: ""
   });
@@ -855,7 +855,7 @@ function testAlreadyLinkedInputCanAddNewMappedValuesOnRerun() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "neu",
-    InTag: ["alt", "neu"],
+    InTags: ["alt", "neu"],
     DayLinks: day
   });
 
@@ -869,7 +869,7 @@ function testAlreadyLinkedInputCanAddNewMappedValuesOnRerun() {
     processExistingLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" },
-      { from: "InTag", to: "OutTags", type: "tag" }
+      { from: "InTags", to: "OutTags", type: "tag" }
     ]
   });
 
@@ -888,7 +888,7 @@ function testAlreadyLinkedInputDoesNotRewriteRelationOnRerun() {
   var input = makeCountingSetEntry({
     Date: "2020-02-02 10:00",
     InNote: "neu",
-    InTag: [],
+    InTags: [],
     DayLinks: day
   });
 
@@ -921,7 +921,7 @@ function testExistingDayLinkDoesNotProcessTargetByDefault() {
   var input = makeCountingSetEntry({
     Date: "2020-02-02 10:00",
     InNote: "neu",
-    InTag: ["neu"],
+    InTags: ["neu"],
     DayLinks: day,
     Debug: "alter debug"
   });
@@ -938,7 +938,7 @@ function testExistingDayLinkDoesNotProcessTargetByDefault() {
     openTargetEntry: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" },
-      { from: "InTag", to: "OutTags", type: "tag" }
+      { from: "InTags", to: "OutTags", type: "tag" }
     ]
   });
 
@@ -972,7 +972,7 @@ function testAlreadyLinkedInputRecognizesRelationWrapperByDate() {
   var input = makeCountingSetEntry({
     Date: "2020-02-02 10:00",
     InNote: "wrapper link",
-    InTag: [],
+    InTags: [],
     DayLinks: dayWrapper
   });
 
@@ -1011,7 +1011,7 @@ function testExistingInputUpdatesTargetByDayIdWithoutRewritingRelation() {
   var input = makeCountingSetEntry({
     Date: "2020-02-02 10:00",
     InNote: "update per id",
-    InTag: ["idtag"],
+    InTags: ["idtag"],
     DayId: "day-real",
     DayLinks: staleDay
   });
@@ -1029,7 +1029,7 @@ function testExistingInputUpdatesTargetByDayIdWithoutRewritingRelation() {
       processMode: "append",
       processMap: [
         { from: "InNote", to: "OutNote", type: "string_rows" },
-        { from: "InTag", to: "OutTags", type: "tag" }
+        { from: "InTags", to: "OutTags", type: "tag" }
       ]
     }
   });
@@ -1058,7 +1058,7 @@ function testExistingInputRefreshesAgainBeforeOpeningTarget() {
   var input = makeCountingSetEntry({
     Date: "2020-02-02 10:00",
     InNote: "vor open",
-    InTag: [],
+    InTags: [],
     DayId: "day-open",
     DayLinks: day
   });
@@ -1099,7 +1099,7 @@ function testLinkedDeletedDayAllowsNewTargetCreation() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "neu zuordnen",
-    InTag: [],
+    InTags: [],
     DayLinks: deletedDay,
     Debug: ""
   });
@@ -1135,7 +1135,7 @@ function testRelationWithoutLinkMethodDoesNotSetEntryObjectByDefault() {
   var input = makeNoLinkEntry({
     Date: "2020-02-02 10:00",
     InNote: "nicht per set",
-    InTag: [],
+    InTags: [],
     DayLinks: null,
     Debug: ""
   });
@@ -1169,7 +1169,7 @@ function testInputLinkerSkipsMementoLinkingTriggerContextByDefault() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "nicht rekursiv",
-    InTag: [],
+    InTags: [],
     DayLinks: null,
     Debug: ""
   });
@@ -1204,7 +1204,7 @@ function testRecalcSourceAndTargetWhenConfigured() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "gleiches datum",
-    InTag: [],
+    InTags: [],
     DayLinks: null
   });
 
@@ -1237,7 +1237,7 @@ function testRunsPostEntryOnTargetWhenConfigured() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "post target",
-    InTag: [],
+    InTags: [],
     DayLinks: null
   });
 
@@ -1269,7 +1269,7 @@ function testSuccessfulRunClearsExistingSourceDebugField() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "debug clear",
-    InTag: [],
+    InTags: [],
     DayLinks: null,
     Debug: "alter fehler"
   });
@@ -1300,7 +1300,7 @@ function testRunsPostEntryOnSourceWhenConfigured() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "post source",
-    InTag: [],
+    InTags: [],
     DayLinks: null
   });
 
@@ -1333,7 +1333,7 @@ function testRunsNamedPostEntryFunctionWhenConfigured() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "post named",
-    InTag: [],
+    InTags: [],
     DayLinks: null
   });
 
@@ -1366,7 +1366,7 @@ function testPostEntryDoesNotLoseFreeTextInStringRowsTarget() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "neu",
-    InTag: [],
+    InTags: [],
     DayLinks: day
   });
 
@@ -1397,7 +1397,7 @@ function testPostEntryErrorIncludesFunctionAndMessage() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "post fail",
-    InTag: [],
+    InTags: [],
     DayLinks: null,
     Debug: ""
   });
@@ -1530,7 +1530,7 @@ function testWriteOnlyTargetFieldsDoNotProduceFalseReadErrors() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "write only",
-    InTag: ["tagx"],
+    InTags: ["tagx"],
     DayLinks: null
   });
 
@@ -1544,7 +1544,7 @@ function testWriteOnlyTargetFieldsDoNotProduceFalseReadErrors() {
     processAfterLink: true,
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" },
-      { from: "InTag", to: "OutTags", type: "tag" }
+      { from: "InTags", to: "OutTags", type: "tag" }
     ]
   });
 
@@ -1562,7 +1562,7 @@ function testNativeArrayLikeTagsAreUnpacked() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "",
-    InTag: makeNativeArrayLike(["alpha", "beta"]),
+    InTags: makeNativeArrayLike(["alpha", "beta"]),
     DayLinks: null
   });
 
@@ -1575,7 +1575,7 @@ function testNativeArrayLikeTagsAreUnpacked() {
     sourceDayLinkField: "DayLinks",
     processAfterLink: true,
     map: [
-      { from: "InTag", to: "OutTags", type: "tag" }
+      { from: "InTags", to: "OutTags", type: "tag" }
     ]
   });
 
@@ -1591,7 +1591,7 @@ function testArrayLikeTagsDoNotUseEntriesPairs() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "",
-    InTag: makeArrayLikeWithEntriesPairs(["asddfsa"]),
+    InTags: makeArrayLikeWithEntriesPairs(["asddfsa"]),
     DayLinks: null
   });
 
@@ -1604,7 +1604,7 @@ function testArrayLikeTagsDoNotUseEntriesPairs() {
     sourceDayLinkField: "DayLinks",
     processAfterLink: true,
     map: [
-      { from: "InTag", to: "OutTags", type: "tag" }
+      { from: "InTags", to: "OutTags", type: "tag" }
     ]
   });
 
@@ -1623,7 +1623,7 @@ function testSetThrowAfterWriteDoesNotLogFalseTargetErrorsByDefault() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "trotz throw geschrieben",
-    InTag: ["tagx"],
+    InTags: ["tagx"],
     DayLinks: null,
     Debug: ""
   });
@@ -1639,7 +1639,7 @@ function testSetThrowAfterWriteDoesNotLogFalseTargetErrorsByDefault() {
     sourceDebugField: "Debug",
     map: [
       { from: "InNote", to: "OutNote", type: "string_rows" },
-      { from: "InTag", to: "OutTags", type: "tag" }
+      { from: "InTags", to: "OutTags", type: "tag" }
     ]
   });
 
@@ -1653,7 +1653,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
   var input = makeEntry({
     Date: "",
     InNote: "",
-    InTag: [],
+    InTags: [],
     DayLinks: null,
     Debug: ""
   });
@@ -1698,7 +1698,7 @@ function testFindsExistingDayFromIteratorEntries() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "iterator day",
-    InTag: [],
+    InTags: [],
     DayLinks: null
   });
 
@@ -1731,7 +1731,7 @@ function testUsesPreviousDayBeforeFourOnlyWhenSameCalendarDayIsMissing() {
   var input = makeEntry({
     Date: "2020-02-03 03:30",
     InNote: "noch vortag",
-    InTag: [],
+    InTags: [],
     DayLinks: null
   });
 
@@ -1768,7 +1768,7 @@ function testBeforeFourPrefersSameCalendarDayOverPreviousDay() {
   var input = makeEntry({
     Date: "2020-02-03 03:30",
     InNote: "gleicher tag gewinnt",
-    InTag: [],
+    InTags: [],
     DayLinks: null
   });
 
@@ -1800,7 +1800,7 @@ function testAfterFourCreatesNextDustingDayWhenSameDayIsMissing() {
   var input = makeEntry({
     Date: "2020-02-03 04:10",
     InNote: "neuer tag",
-    InTag: [],
+    InTags: [],
     DayLinks: null
   });
 
@@ -1836,7 +1836,7 @@ function testDaySearchLimitRestrictsDateReuse() {
   var input = makeEntry({
     Date: "2020-02-02 15:00",
     InNote: "limit test",
-    InTag: [],
+    InTags: [],
     DayLinks: null
   });
 
@@ -1868,7 +1868,7 @@ function testRefreshDayLinksMatchingInputsAndAppends() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "day refresh",
-    InTag: ["tag1"],
+    InTags: ["tag1"],
     DayLinks: null
   });
 
@@ -1888,7 +1888,7 @@ function testRefreshDayLinksMatchingInputsAndAppends() {
     processMode: "append",
     processMap: [
       { from: "InNote", to: "OutNote", type: "string_rows" },
-      { from: "InTag", to: "OutTags", type: "tag" }
+      { from: "InTags", to: "OutTags", type: "tag" }
     ]
   });
 
@@ -1908,7 +1908,7 @@ function testRefreshDayAppendAllAllowsDuplicateRowsAndTags() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "doppelt",
-    InTag: ["tag1"],
+    InTags: ["tag1"],
     DayLinks: day
   });
 
@@ -1926,7 +1926,7 @@ function testRefreshDayAppendAllAllowsDuplicateRowsAndTags() {
     processMode: "append all",
     processMap: [
       { from: "InNote", to: "OutNote", type: "string_rows" },
-      { from: "InTag", to: "OutTags", type: "tag" }
+      { from: "InTags", to: "OutTags", type: "tag" }
     ]
   });
 
@@ -1949,7 +1949,7 @@ function testRefreshDaySkipsInputsLinkedToOtherDayByDefault() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "nicht stehlen",
-    InTag: ["tag1"],
+    InTags: ["tag1"],
     DayLinks: otherDay
   });
 
@@ -1968,7 +1968,7 @@ function testRefreshDaySkipsInputsLinkedToOtherDayByDefault() {
     processAllEntries: true,
     processMap: [
       { from: "InNote", to: "OutNote", type: "string_rows" },
-      { from: "InTag", to: "OutTags", type: "tag" }
+      { from: "InTags", to: "OutTags", type: "tag" }
     ]
   });
 
@@ -1987,7 +1987,7 @@ function testRefreshDayRebuildClearsMappedTargetsBeforeApplyingLinkedInputs() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "fresh",
-    InTag: ["freshTag"],
+    InTags: ["freshTag"],
     DayLinks: day
   });
 
@@ -2005,7 +2005,7 @@ function testRefreshDayRebuildClearsMappedTargetsBeforeApplyingLinkedInputs() {
     processMode: "rebuild",
     processMap: [
       { from: "InNote", to: "OutNote", type: "string_rows" },
-      { from: "InTag", to: "OutTags", type: "tag" }
+      { from: "InTags", to: "OutTags", type: "tag" }
     ]
   });
 
@@ -2026,7 +2026,7 @@ function testRefreshDayRebuildKeepsDistinctInputsWithSameVisibleEntryName() {
     Date: "2020-02-02 02:29",
     title: "Sonntag, 2. Februar 2020 02:29",
     InNote: "1. test1",
-    InTag: [],
+    InTags: [],
     DayLinks: day
   });
   var input2 = makeEntry({
@@ -2034,7 +2034,7 @@ function testRefreshDayRebuildKeepsDistinctInputsWithSameVisibleEntryName() {
     Date: "2020-02-02 02:29",
     title: "Sonntag, 2. Februar 2020 02:29",
     InNote: "2. test2",
-    InTag: [],
+    InTags: [],
     DayLinks: day
   });
   input1.title = "Sonntag, 2. Februar 2020 02:29";
@@ -2069,7 +2069,7 @@ function testRefreshDayRebuildKeepsFreeTextInStringRowsTarget() {
   var input = makeEntry({
     Date: "2020-02-02 11:00",
     InNote: "fresh",
-    InTag: [],
+    InTags: [],
     DayLinks: day
   });
 
@@ -2103,7 +2103,7 @@ function testRefreshDayRebuildKeepsFreeTextWhenSameTargetHasMixedMapTypes() {
     Date: "2020-02-02 11:00",
     InNote: "fresh row",
     ExtraNote: "fresh plain",
-    InTag: [],
+    InTags: [],
     DayLinks: day
   });
 
@@ -2143,7 +2143,7 @@ function testRefreshProcessAllKeepsDateMatchedInputWhenRelationWrapperDoesNotCom
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "wrapper match",
-    InTag: ["wrap"],
+    InTags: ["wrap"],
     DayLinks: relationWrapper
   });
 
@@ -2162,7 +2162,7 @@ function testRefreshProcessAllKeepsDateMatchedInputWhenRelationWrapperDoesNotCom
     processMode: "rebuild",
     processMap: [
       { from: "InNote", to: "OutNote", type: "string_rows" },
-      { from: "InTag", to: "OutTags", type: "tag" }
+      { from: "InTags", to: "OutTags", type: "tag" }
     ]
   });
 
@@ -2180,7 +2180,7 @@ function testRefreshDayCanProcessOneSourceEntry() {
   var input = makeEntry({
     Date: "2020-02-03 10:00",
     InNote: "direkt",
-    InTag: [],
+    InTags: [],
     DayLinks: null
   });
 
@@ -2214,7 +2214,7 @@ function testRefreshDayRunsPostEntryOnTargetWhenConfigured() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "post vom day",
-    InTag: [],
+    InTags: [],
     DayLinks: day
   });
 
@@ -2248,7 +2248,7 @@ function testRefreshCurrentTargetUsesCurrentEntry() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "current day",
-    InTag: [],
+    InTags: [],
     DayLinks: day
   });
 
@@ -2280,13 +2280,13 @@ function testRefreshCurrentTargetFromLinkedInputProcessesOnlyThatEntry() {
   var linkedInput = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "gelinkt",
-    InTag: ["a"],
+    InTags: ["a"],
     DayLinks: day
   });
   var otherInput = makeEntry({
     Date: "2020-02-02 11:00",
     InNote: "nicht anfassen",
-    InTag: ["b"],
+    InTags: ["b"],
     DayLinks: day
   });
 
@@ -2303,7 +2303,7 @@ function testRefreshCurrentTargetFromLinkedInputProcessesOnlyThatEntry() {
     postEntry: true,
     processMap: [
       { from: "InNote", to: "OutNote", type: "string_rows" },
-      { from: "InTag", to: "OutTags", type: "tag" }
+      { from: "InTags", to: "OutTags", type: "tag" }
     ]
   });
 
@@ -2323,7 +2323,7 @@ function testSuccessfulRefreshClearsExistingTargetDebugField() {
   var input = makeEntry({
     Date: "2020-02-02 10:00",
     InNote: "refresh debug",
-    InTag: [],
+    InTags: [],
     DayLinks: day
   });
 
