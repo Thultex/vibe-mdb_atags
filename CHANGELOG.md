@@ -75,6 +75,7 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Fix: `collectAtags_lib` v1.61 liest auch Slot-Werte mit Leerzeichen nach Doppelpunkt, z. B. `tag: _inhalt_`, und lässt gefüllte Slots nach leeren Slots gewinnen. `Input Linker` v0.75 ergänzt `mode: "prepend"`/`"prepend all"` für Text-Maps.
 - Fix: `Tag Pair Parser` v1.01 schreibt einfache Ganzzahl-Paare aus Tagfeldern kompakt ins Textfeld, z. B. `springen, 3` zu `springen3` und `fallen, -3` zu `fallen-3`; Dezimal- und kumulative Formen bleiben bei `name#wert`.
 - Fix: `syncLastFromLatest` v1.05 wendet `clearTemplateSlots` auch auf Java-/stringartige Memento-Textwerte an, z. B. `Testing: _safd_` zu `Testing: __`.
+- Feature: `Input Linker` v0.78 übernimmt `receiveConfig` jetzt auch in `recieveInputEntryFromSource()` und `refreshTargetFromInputEntries()`; die DustingDay-Beispiele bündeln Receive-/Process-Optionen dort einheitlich mit `processMode` als erstem Eintrag.
 - Fix: `Input Linker` v0.77 normalisiert `string_rows`-Input mit führendem Tagbar-Prefix; `| Testing: _4_` wird beim Linken als `2,5: Testing: _4_` in die Tages-Row geschrieben.
 - Doku: `Input Linker` v0.76 ergänzt `openTargetEntry: true` und `refreshBeforeOpen: true` in den DustingDay-Input-Beispielen, führt `InRecord -> Record` als `string_rows` weiter und nutzt in geänderten Kommentaren wieder Umlaute.
 - Feature: `Input Linker` v0.74 führt bei `openTargetEntry` direkt vor dem Öffnen optional nochmal den Receive-Refresh aus; Time Marker v1.37 trennt exakte Row-Dedupe per `mergeSameRowContents: true` vom Zusammenführen gleicher Zeitstempel per `mergeSameRows: true`, erkennt Boolean-Varianten aus Memento/Rhino robuster, dedupliziert bereits gemergte Segmente idempotent und entfernt Rows mit nur leeren Template-Slots.
@@ -99,7 +100,7 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Fix: `Input Linker` v0.46 erkennt bestehende Relationslinks robuster über Entry-ID und Name/Titel; das Zieldatum dient nur noch zur Tag-Plausibilisierung, nicht zur Gleichsetzung verschiedener Day-Einträge.
 - Fix: `Input Linker` v0.45 ueberspringt standardmaessig Memento-Linking-Trigger-Kontexte, damit programmgesteuertes Verlinken keinen zweiten rekursiven Linker-Lauf ausloest.
 - Fix: `Input Linker` v0.44 verknüpft Relation-Felder über `entry.link(field, entry)` und vermeidet `set(field, entryObj)`, da Memento `set()` für Link-to-Entry-Felder mit Entry-Namen/Strings dokumentiert.
-- *Versionen: sys 2.40, collectAtags_lib v1.61, Input Linker v0.77, libVersions v1.19, Time Marker v1.37, Tag Pair Parser v1.01, restoreAtags v2.05, Global Field Sync v1.03, Sync Last From Latest v1.05, Sequence Counter v1.05.*
+- *Versionen: sys 2.40, collectAtags_lib v1.61, Input Linker v0.78, libVersions v1.20, Time Marker v1.37, Tag Pair Parser v1.01, restoreAtags v2.05, Global Field Sync v1.03, Sync Last From Latest v1.05, Sequence Counter v1.05.*
 
 ### 2026-05-20 - (ca. 0,5h)
 

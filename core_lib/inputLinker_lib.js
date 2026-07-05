@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.77 (sys 2.40)
+#4 Input Linker Lib v0.78 (sys 2.40)
 ========================================
 
 Änderungen
+- recieveInputEntryFromSource() und refreshTargetFromInputEntries() können Receive-/Process-Optionen auch aus receiveConfig übernehmen
 - string_rows entfernt führende Tagbar-Prefixe wie "| " vor dem Row-Wrapping
 - string/text Maps können mit mode "prepend" nach vorne schreiben
 - openTargetEntry führt vor dem Öffnen optional nochmal den Receive-Refresh aus
@@ -44,10 +45,10 @@ linkInputEntryToTarget({
   daySearchLimit: 10,
   receiveAfterLink: true,
   receiveConfig: {
+    processMode: "append",
     rowSourceMode: "realtime",
     rowStepHours: 0.1,
     rowRoundMode: "round",
-    processMode: "append",
     postEntry: true,
     postEntryName: "PostEntry",
     recalcTarget: true,
@@ -65,21 +66,23 @@ recieveInputEntryFromSource({
   sourceDateField: "Datum",
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
-  rowSourceMode: "realtime",
-  rowStepHours: 0.1,
-  rowRoundMode: "round",
-  processMode: "append",
-  postEntry: true,
-  postEntryName: "PostEntry",
-  recalcTarget: true,
-  processMap: [
-    { from: "InNote", to: "Notiz", type: "string_rows" },
-    { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
-    { from: "InTags", to: "Tags", type: "tag" }
-  ]
+  receiveConfig: {
+    processMode: "append",
+    rowSourceMode: "realtime",
+    rowStepHours: 0.1,
+    rowRoundMode: "round",
+    postEntry: true,
+    postEntryName: "PostEntry",
+    recalcTarget: true,
+    processMap: [
+      { from: "InNote", to: "Notiz", type: "string_rows" },
+      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
+      { from: "InTags", to: "Tags", type: "tag" }
+    ]
+  }
 });
 
-// DustingDay: manuelle Reparatur/Auffrischung fuer den aktuellen Day
+// DustingDay: manuelle Reparatur/Auffrischung für den aktuellen Day
 refreshTargetFromInputEntries({
   inputLib: "DustingInput",
   sourceDateField: "Datum",
@@ -88,12 +91,14 @@ refreshTargetFromInputEntries({
   findMatchingEntries: true,
   linkNewEntries: true,
   processAllEntries: true,
-  processMode: "append",
-  processMap: [
-    { from: "InNote", to: "Notiz", type: "string_rows" },
-    { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
-    { from: "InTags", to: "Tags", type: "tag" }
-  ]
+  receiveConfig: {
+    processMode: "rebuild",
+    processMap: [
+      { from: "InNote", to: "Notiz", type: "string_rows" },
+      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
+      { from: "InTags", to: "Tags", type: "tag" }
+    ]
+  }
 });
 
 debugInputLinkerAccess({
@@ -106,7 +111,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.77";
+var DDL_VERSION = "0.78";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1728,6 +1733,22 @@ function ddlShallowCopyConfig(src) {
   return out;
 }
 
+function ddlApplyReceiveConfigDefaults(cfg) {
+  var receiveCfg;
+  var k;
+
+  if (!cfg || !cfg.receiveConfig) return cfg;
+
+  receiveCfg = cfg.receiveConfig;
+  for (k in receiveCfg) {
+    if (receiveCfg.hasOwnProperty(k) && typeof cfg[k] === "undefined") {
+      cfg[k] = receiveCfg[k];
+    }
+  }
+
+  return cfg;
+}
+
 function ddlReceiveAfterLink(src, target, cfg, result, errors) {
   var receiveCfg;
   var receiveResult;
@@ -2288,6 +2309,7 @@ function linkInputEntryToTarget(cfg) {
 
 function refreshTargetFromInputEntries(cfg) {
   cfg = cfg || {};
+  ddlApplyReceiveConfigDefaults(cfg);
 
   var errors = [];
   var target = cfg.targetEntry || cfg.entryObj || entry();
@@ -2399,6 +2421,7 @@ function ddlResolveLinkedInputEntry(cfg, target) {
 
 function recieveInputEntryFromSource(cfg) {
   cfg = cfg || {};
+  ddlApplyReceiveConfigDefaults(cfg);
 
   var target = cfg.targetEntry || cfg.entryObj || entry();
   var input = ddlResolveLinkedInputEntry(cfg, target);

@@ -120,10 +120,10 @@ linkInputEntryToTarget({
   daySearchLimit: 10,
   receiveAfterLink: true,
   receiveConfig: {
+    processMode: "append",
     rowSourceMode: "realtime",
     rowStepHours: 0.1,
     rowRoundMode: "round",
-    processMode: "append",
     postEntry: true,
     postEntryName: "PostEntry",
     recalcTarget: true,
@@ -151,10 +151,10 @@ linkInputEntryToTarget({
   debugReceive: true,
   receiveExistingLink: true,
   receiveConfig: {
+    processMode: "append",
     rowSourceMode: "realtime",
     rowStepHours: 0.1,
     rowRoundMode: "round",
-    processMode: "append",
     postEntry: true,
     postEntryName: "PostEntry",
     recalcTarget: true,
@@ -209,19 +209,21 @@ recieveInputEntryFromSource({
   sourceDateField: "Datum",
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
-  rowSourceMode: "realtime",
-  rowStepHours: 0.1,
-  rowRoundMode: "round",
-  processMode: "append",
-  postEntry: true,
-  postEntryName: "PostEntry",
-  recalcTarget: true,
-  targetDebugField: "Debug",
-  processMap: [
-    { from: "InNote", to: "Notiz", type: "string_rows" },
-    { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
-    { from: "InTags", to: "Tags", type: "tag" }
-  ]
+  receiveConfig: {
+    processMode: "append",
+    rowSourceMode: "realtime",
+    rowStepHours: 0.1,
+    rowRoundMode: "round",
+    postEntry: true,
+    postEntryName: "PostEntry",
+    recalcTarget: true,
+    targetDebugField: "Debug",
+    processMap: [
+      { from: "InNote", to: "Notiz", type: "string_rows" },
+      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
+      { from: "InTags", to: "Tags", type: "tag" }
+    ]
+  }
 });
 ```
 
@@ -251,20 +253,22 @@ refreshTargetFromInputEntries({
   sourceDateField: "Datum",
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
-  rowSourceMode: "realtime_since",
-  rowStepHours: 0.1,
-  rowRoundMode: "round",
   findMatchingEntries: true,
   linkNewEntries: true,
   processAllEntries: true,
-  processMode: "append",
-  recalcTarget: true,
-  targetDebugField: "Debug",
-  processMap: [
-    { from: "InNote", to: "Notiz", type: "string_rows" },
-    { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
-    { from: "InTags", to: "Tags", type: "tag" }
-  ]
+  receiveConfig: {
+    processMode: "append",
+    rowSourceMode: "realtime_since",
+    rowStepHours: 0.1,
+    rowRoundMode: "round",
+    recalcTarget: true,
+    targetDebugField: "Debug",
+    processMap: [
+      { from: "InNote", to: "Notiz", type: "string_rows" },
+      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
+      { from: "InTags", to: "Tags", type: "tag" }
+    ]
+  }
 });
 ```
 
@@ -277,12 +281,14 @@ refreshTargetFromInputEntries({
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
   processAllEntries: true,
-  processMode: "rebuild",
-  processMap: [
-    { from: "InNote", to: "Notiz", type: "string_rows" },
-    { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
-    { from: "InTags", to: "Tags", type: "tag" }
-  ]
+  receiveConfig: {
+    processMode: "rebuild",
+    processMap: [
+      { from: "InNote", to: "Notiz", type: "string_rows" },
+      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
+      { from: "InTags", to: "Tags", type: "tag" }
+    ]
+  }
 });
 ```
 
@@ -296,11 +302,14 @@ refreshTargetFromInputEntries({
   targetDateField: "Datum",
   sourceDayLinkField: "DayLinks",
   linkNewEntries: true,
-  processMap: [
-    { from: "InNote", to: "Notiz", type: "string_rows" },
-    { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
-    { from: "InTags", to: "Tags", type: "tag" }
-  ]
+  receiveConfig: {
+    processMode: "append",
+    processMap: [
+      { from: "InNote", to: "Notiz", type: "string_rows" },
+      { from: "InRecord", to: "Record", type: "string_rows", mode: "prepend" },
+      { from: "InTags", to: "Tags", type: "tag" }
+    ]
+  }
 });
 ```
 
@@ -392,8 +401,6 @@ function PostEntry(e) {
   return result;
 }
 ```
-
-
 
 
 
