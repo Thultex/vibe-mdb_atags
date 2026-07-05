@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.78 (sys 2.40)
+#4 Input Linker Lib v0.79 (sys 2.40)
 ========================================
 
 Änderungen
+- nach dem Linken wird versucht, versehentlich in den Papierkorb verschobene Source-/Target-Einträge wiederherzustellen
 - recieveInputEntryFromSource() und refreshTargetFromInputEntries() können Receive-/Process-Optionen auch aus receiveConfig übernehmen
 - string_rows entfernt führende Tagbar-Prefixe wie "| " vor dem Row-Wrapping
 - string/text Maps können mit mode "prepend" nach vorne schreiben
@@ -111,7 +112,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.78";
+var DDL_VERSION = "0.79";
 
 function getInputLinkerLibVersion() {
   return {
@@ -1109,6 +1110,59 @@ function ddlIsDeletedEntry(entryObj) {
   ]);
 }
 
+function ddlTryRestoreEntry(entryObj, errors, label) {
+  var methods = [
+    "restore",
+    "undelete",
+    "untrash",
+    "recover",
+    "restoreFromTrash",
+    "removeFromTrash"
+  ];
+  var i;
+  var name;
+
+  if (!entryObj || !ddlIsDeletedEntry(entryObj)) return true;
+
+  for (i = 0; i < methods.length; i++) {
+    name = methods[i];
+    try {
+      if (typeof entryObj[name] === "function") {
+        entryObj[name]();
+        return !ddlIsDeletedEntry(entryObj);
+      }
+    } catch (e0) {
+      if (errors) errors.push((label || "Eintrag") + " konnte nicht per " + name + "() aus dem Papierkorb geholt werden");
+      return false;
+    }
+  }
+
+  if (errors) errors.push((label || "Eintrag") + " liegt im Papierkorb; keine Restore-Methode am Entry-Objekt gefunden");
+  return false;
+}
+
+function ddlEnsureActiveAfterLink(src, target, result, errors) {
+  var ok = true;
+
+  if (src && ddlIsDeletedEntry(src)) {
+    if (ddlTryRestoreEntry(src, errors, "Source-Entry")) {
+      if (result && result.restored) result.restored.push("source");
+    } else {
+      ok = false;
+    }
+  }
+
+  if (target && ddlIsDeletedEntry(target)) {
+    if (ddlTryRestoreEntry(target, errors, "Target-Entry")) {
+      if (result && result.restored) result.restored.push("target");
+    } else {
+      ok = false;
+    }
+  }
+
+  return ok;
+}
+
 function ddlEntryId(entryObj) {
   if (!entryObj) return "";
 
@@ -1477,6 +1531,7 @@ function ddlSelectInputsForDay(target, targetDate, cfg, result, errors) {
         if (ddlLinkEntry(src, sourceDayLinkField, target, errors, cfg)) {
           result.linked++;
           linkedToTarget = true;
+          ddlEnsureActiveAfterLink(src, target, result, errors);
         }
       }
       ddlWriteSourceDayId(src, sourceDayIdField, target, errors, cfg);
@@ -1963,6 +2018,7 @@ function ddlDebugReceiveTrace(stage, src, target, cfg, result, errors) {
   lines.push("skipReason: " + (result && result.skipReason ? result.skipReason : ""));
   lines.push("created: " + !!(result && result.created));
   lines.push("linked: " + !!(result && result.linked));
+  lines.push("restored: " + (result && result.restored ? result.restored.join(",") : ""));
   lines.push("sourceDayLinkField: " + (cfg.sourceDayLinkField || "DayLinks"));
   lines.push("source DayLinks length: " + links.length);
   lines.push("source DayLink first: " + ddlDescribeValue(firstLink));
@@ -1980,6 +2036,7 @@ function ddlDebugReceiveTrace(stage, src, target, cfg, result, errors) {
     lines.push("receive appended: " + rr.appended.join(","));
     lines.push("receive tags: " + rr.tags.join(","));
     lines.push("receive postEntries: " + rr.postEntries.join(","));
+    lines.push("receive restored: " + (rr.restored ? rr.restored.join(",") : ""));
     lines.push("receive errors: " + rr.errors.join("; "));
   } else {
     lines.push("receive result: null");
@@ -2170,6 +2227,7 @@ function linkInputEntryToTarget(cfg) {
     tags: [],
     recalculated: [],
     postEntries: [],
+    restored: [],
     receiveResult: null,
     refreshBeforeOpenResult: null,
     openResult: { attempted: false, ok: false, target: "", method: "", error: "" },
@@ -2231,6 +2289,7 @@ function linkInputEntryToTarget(cfg) {
       ddlWriteSourceDayId(src, sourceDayIdField, target, errors, cfg);
       ddlReceiveAfterLink(src, target, cfg, result, errors);
       ddlRefreshBeforeOpen(src, target, cfg, result, errors);
+      ddlEnsureActiveAfterLink(src, target, result, errors);
       ddlOpenConfiguredTarget(target, cfg, result);
       result.skipped = true;
       result.skipReason = "existing_daylink_receive";
@@ -2290,13 +2349,16 @@ function linkInputEntryToTarget(cfg) {
 
   if (sourceDayLinkField) {
     result.linked = ddlLinkEntry(src, sourceDayLinkField, target, errors, cfg);
+    if (result.linked) ddlEnsureActiveAfterLink(src, target, result, errors);
   }
 
   if (result.linked) {
     ddlReceiveAfterLink(src, target, cfg, result, errors);
+    ddlEnsureActiveAfterLink(src, target, result, errors);
   }
 
   ddlRefreshBeforeOpen(src, target, cfg, result, errors);
+  ddlEnsureActiveAfterLink(src, target, result, errors);
   ddlOpenConfiguredTarget(target, cfg, result);
 
   result.skipped = true;
@@ -2330,6 +2392,7 @@ function refreshTargetFromInputEntries(cfg) {
     cleared: [],
     recalculated: [],
     postEntries: [],
+    restored: [],
     errors: errors
   };
 
