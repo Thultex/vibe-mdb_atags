@@ -13,6 +13,9 @@ Aktuelle Felder:
 - `InNote`
   - Typ: Text
   - mehrzeilig
+- `InRecord`
+  - Typ: Text
+  - wird nach vorne in `DustingDay.Record` übernommen
 - `InTag`
   - Typ: Tag
 - `Date`
@@ -152,6 +155,7 @@ linkInputEntryToTarget({
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
+      { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
       { from: "InTag", to: "Tags", type: "tag" }
     ]
   }
@@ -181,6 +185,7 @@ linkInputEntryToTarget({
     targetDebugField: "Debug",
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
+      { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
       { from: "InTag", to: "Tags", type: "tag" }
     ]
   }
@@ -205,6 +210,7 @@ recieveInputEntryFromSource({
   targetDebugField: "Debug",
   processMap: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
+    { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
     { from: "InTag", to: "Tags", type: "tag" }
   ]
 });
@@ -240,9 +246,9 @@ refreshTargetFromInputEntries({
   targetDebugField: "Debug",
   processMap: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
+    { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
     { from: "InTag", to: "Tags", type: "tag" }
   ]
 });
 ```
-
 

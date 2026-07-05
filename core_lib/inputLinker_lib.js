@@ -1,9 +1,10 @@
 /*
 ========================================
-#4 Input Linker Lib v0.74 (sys 2.30)
+#4 Input Linker Lib v0.75 (sys 2.30)
 ========================================
 
 Änderungen
+- string/text Maps koennen mit mode "prepend" nach vorne schreiben
 - openTargetEntry fuehrt vor dem Oeffnen optional nochmal den Receive-Refresh aus
 - sourceDayIdField speichert/liest eine stabile Ziel-ID, damit Updates ohne Relation-Rewrite verarbeitet werden koennen
 - Input-Dedupe nutzt nur noch Objekt-/ID-Identitaet, damit zeitgleiche Eintraege mit gleichem Titel nicht verschwinden
@@ -48,6 +49,7 @@ linkInputEntryToTarget({
     recalcTarget: true,
     processMap: [
       { from: "InNote", to: "Notiz", type: "string_rows" },
+      { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
       { from: "InTag", to: "Tags", type: "tag" }
     ]
   }
@@ -68,6 +70,7 @@ recieveInputEntryFromSource({
   recalcTarget: true,
   processMap: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
+    { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
     { from: "InTag", to: "Tags", type: "tag" }
   ]
 });
@@ -84,6 +87,7 @@ refreshTargetFromInputEntries({
   processMode: "append",
   processMap: [
     { from: "InNote", to: "Notiz", type: "string_rows" },
+    { from: "InRecord", to: "Record", type: "string", mode: "prepend" },
     { from: "InTag", to: "Tags", type: "tag" }
   ]
 });
@@ -98,7 +102,7 @@ debugInputLinkerAccess({
 
 var DDL_FILE = "inputLinker_lib.js";
 var DDL_NAME = "Input Linker";
-var DDL_VERSION = "0.74";
+var DDL_VERSION = "0.75";
 
 function getInputLinkerLibVersion() {
   return {
@@ -772,6 +776,23 @@ function ddlAppendLine(target, targetField, line, errors, cfg, unique) {
   return wrote;
 }
 
+function ddlPrependLine(target, targetField, line, errors, cfg, unique) {
+  var oldText = ddlSafeField(target, targetField, null, null);
+  var newText;
+  var wrote;
+
+  if (line == null || ddlTrim(line) === "") return false;
+  if (oldText == null) oldText = "";
+  oldText = String(oldText);
+
+  if (unique !== false && ddlLineExists(oldText, line)) return false;
+
+  newText = line;
+  if (ddlTrim(oldText) !== "") newText += "\n" + oldText;
+  wrote = ddlSafeSet(target, targetField, newText, errors, "Zielfeld konnte nicht geschrieben werden", cfg && cfg.strictWriteErrors === true);
+  return wrote;
+}
+
 function ddlAppendUniqueLine(target, targetField, line, errors, cfg) {
   return ddlAppendLine(target, targetField, line, errors, cfg, true);
 }
@@ -854,6 +875,8 @@ function ddlNormalizeProcessMode(mode) {
 
   if (s === "append new") return "append";
   if (s === "append_all" || s === "append-all" || s === "append all") return "append_all";
+  if (s === "prepend") return "prepend";
+  if (s === "prepend_all" || s === "prepend-all" || s === "prepend all") return "prepend_all";
   if (s === "rebuild") return "rebuild";
 
   return "append";
@@ -1478,7 +1501,7 @@ function ddlApplyMapFromSourceToDay(src, target, sourceDate, targetDate, cfg, re
 
     type = item.type || ddlInferType(value);
     mode = ddlNormalizeProcessMode(item.mode || cfg.processMode || cfg.mode);
-    unique = mode !== "append_all";
+    unique = mode !== "append_all" && mode !== "prepend_all";
 
     if (type === "tag") {
       if (ddlAppendTags(target, item.to, value, errors, cfg, unique)) result.tags.push(item.to);
@@ -1489,7 +1512,11 @@ function ddlApplyMapFromSourceToDay(src, target, sourceDate, targetDate, cfg, re
     if (!text) continue;
 
     line = type === "string_rows" ? (row ? row : "?") + ": " + text : text;
-    if (ddlAppendLine(target, item.to, line, errors, cfg, unique)) result.appended.push(item.to);
+    if (mode === "prepend" || mode === "prepend_all") {
+      if (ddlPrependLine(target, item.to, line, errors, cfg, unique)) result.appended.push(item.to);
+    } else if (ddlAppendLine(target, item.to, line, errors, cfg, unique)) {
+      result.appended.push(item.to);
+    }
   }
 }
 

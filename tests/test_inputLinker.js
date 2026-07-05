@@ -423,6 +423,87 @@ function testStringTypeAppendsPlainTextWithoutRowPrefix() {
   assertEquals("plain-string-no-row", day.field("PlainNote"), "plain text");
 }
 
+function testStringTypeCanPrependPlainText() {
+  var day = makeEntry({
+    Datum: "2020-02-02 14:35",
+    Record: "alter record"
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 14:35",
+    InRecord: "neuer record",
+    DayLinks: null
+  });
+
+  reset(input, [day]);
+
+  linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Datum",
+    sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
+    map: [
+      { from: "InRecord", to: "Record", type: "string", mode: "prepend" }
+    ]
+  });
+
+  assertEquals("plain-string-prepend", day.field("Record"), "neuer record\nalter record");
+}
+
+function testStringTypePrependKeepsUniqueByDefault() {
+  var day = makeEntry({
+    Datum: "2020-02-02 14:35",
+    Record: "gleicher record"
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 14:35",
+    InRecord: "gleicher record",
+    DayLinks: null
+  });
+
+  reset(input, [day]);
+
+  linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Datum",
+    sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
+    map: [
+      { from: "InRecord", to: "Record", type: "string", mode: "prepend" }
+    ]
+  });
+
+  assertEquals("plain-string-prepend-unique", day.field("Record"), "gleicher record");
+}
+
+function testStringTypeCanPrependAllPlainText() {
+  var day = makeEntry({
+    Datum: "2020-02-02 14:35",
+    Record: "gleicher record"
+  });
+  var input = makeEntry({
+    Date: "2020-02-02 14:35",
+    InRecord: "gleicher record",
+    DayLinks: null
+  });
+
+  reset(input, [day]);
+
+  linkInputEntryToTarget({
+    targetLib: "DustingDay",
+    sourceDateField: "Date",
+    targetDateField: "Datum",
+    sourceDayLinkField: "DayLinks",
+    processAfterLink: true,
+    map: [
+      { from: "InRecord", to: "Record", type: "string", mode: "prepend all" }
+    ]
+  });
+
+  assertEquals("plain-string-prepend-all", day.field("Record"), "gleicher record\ngleicher record");
+}
+
 function testSinceFirstUsesTargetDateAsZero() {
   var day = makeEntry({
     Datum: "2020-02-02 14:35",
@@ -1380,7 +1461,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-name missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.74") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.75") < 0) {
     fail("debug-linker-version missing");
   }
 
@@ -1392,7 +1473,7 @@ function testDebugDayLinkerAccessWritesDiagnostics() {
     fail("debug-linker-log missing");
   }
 
-  if (_logs.join("\n").indexOf("version: 0.74") < 0) {
+  if (_logs.join("\n").indexOf("version: 0.75") < 0) {
     fail("debug-linker-log-version missing");
   }
 
@@ -1595,7 +1676,7 @@ function testErrorDebugStartsWithFileVersionAndTime() {
     fail("error-debug-file-prefix missing");
   }
 
-  if (String(input.field("Debug")).indexOf("version: 0.74") < 0) {
+  if (String(input.field("Debug")).indexOf("version: 0.75") < 0) {
     fail("error-debug-version missing");
   }
 
@@ -2273,6 +2354,9 @@ testEmptyStringRelationListDoesNotBlockNewLink();
 testLinkOnlyDoesNotRequireMap();
 testDoesNotDuplicateSameLineOrTags();
 testStringTypeAppendsPlainTextWithoutRowPrefix();
+testStringTypeCanPrependPlainText();
+testStringTypePrependKeepsUniqueByDefault();
+testStringTypeCanPrependAllPlainText();
 testSinceFirstUsesTargetDateAsZero();
 testRowSourceModeRealtimeSinceUsesTimeMarkerNames();
 testWrongTargetDateFieldOnlyBlocksInStrictMode();
@@ -2324,6 +2408,3 @@ testRefreshCurrentTargetFromLinkedInputProcessesOnlyThatEntry();
 testSuccessfulRefreshClearsExistingTargetDebugField();
 
 WScript.Echo("OK");
-
-
-
