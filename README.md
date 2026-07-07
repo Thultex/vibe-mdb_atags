@@ -40,7 +40,7 @@ Freitext → strukturierte Daten → flexible Exporte.
 
 Bis vor der DustingDay-Phase lag der Schwerpunkt des Repos auf Dosis-/Eindosierungslogging: Einnahme, Dosis, Reihen/Spree, Stundenbezug und daraus abgeleitete ATAG-Auswertung.
 
-Mit `DustingDay` verschiebt sich das Hauptziel überwiegend zum Alltagstracking: kurze Inputs zu Befinden, Symptomen, Tätigkeiten, Erfolgen und hilfreichen Methoden werden über Tages-Einträge gesammelt. Dosis bleibt als Nebenfaktor möglich, ist aber nicht mehr der zentrale Taktgeber.
+Die DustingDay-Linker-Phase war ein Zwischenkonzept für Alltagstracking über getrennte Input- und Tages-Libraries. Dieses Konzept wird zugunsten von `DustMerger` zurückgestellt: kurze Einträge bleiben in einer Library und können bei zeitlicher Nähe in ältere Einträge gemerged werden. Dosis bleibt als Nebenfaktor möglich, ist aber nicht mehr der zentrale Taktgeber.
 
 - Tags + Werte extrahieren
 - Links / Mail / Tel erkennen
@@ -139,6 +139,11 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
   - `getNewestLibraryEntry()` / `findNewestEntry()`
   - `fields` oder `map`
   - optional `onlyIfEmpty`
+- `B10` `addons/2_syncing/dustMerger.js` (nahe Alltagseinträge zusammenführen)
+  - `dustMerge()` / `dustMerger()`
+  - merge den aktuellen neueren Eintrag in einen älteren Eintrag derselben Library
+  - `map` mit `append`, `prepend`, `replace`, `add`, `subtract`
+  - optional `skipField`, `blockMap`, `mergeJsonField`, `debugField`, `trashMergedEntry`, `openTargetEntry`
 
 **Workflow Add-ons**
 - `B5` `addons/3_workflow/floatingAverage.js` (gleitender Gruppen-Mittelwert)
@@ -180,6 +185,7 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
 - `tests/test_tagCleaner.js`
 - `tests/test_timeMarker.js`
 - `tests/test_inputLinker.js`
+- `tests/test_dustMerger.js`
 - `tests/test_syncLastFromLatest.js`
 - `tests/test_typedTextFields.js`
 - `tests/test_sequenceCounter.js`

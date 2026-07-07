@@ -1,9 +1,10 @@
 /*
 ========================================
-#1 collectAtags Lib v1.61 (sys 2.40)
+#1 collectAtags Lib v1.62 (sys 2.40)
 ========================================
 
 Changes
+- support positive/negative alias headers, e.g. `@@Gut/Schlecht(G): -Bad`
 - slot values allow spacing after colon, e.g. `tag: _inhalt_`
 - parse template slot values `_inhalt_` as string values and ignore empty `_`/`__`
 - parse quoted hash values after normal tag names, e.g. frage#"wer ist der coolste"
@@ -49,14 +50,14 @@ Changes
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.61",
+    version: "1.62",
     sysVersion: "2.40",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.61", "2.40", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.62", "2.40", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");
@@ -387,6 +388,23 @@ function collectAtags(cfg) {
     return out;
   }
 
+  function parsePositiveNegativeAliasName(raw) {
+    var parts = String(raw || "").split("/");
+    var positive;
+    var negative;
+
+    if (parts.length !== 2) return null;
+    positive = normalizeTagName(parts[0]);
+    negative = normalizeTagName(parts[1]);
+    if (!positive || !negative) return null;
+    if (!isAtagAliasNameToken(positive) || !isAtagAliasNameToken(negative)) return null;
+
+    return {
+      positive: positive,
+      negative: negative
+    };
+  }
+
   function buildAliasMapLegacy(text) {
     var map = {};
     var lines = String(text || "").split(/\r?\n/);
@@ -482,7 +500,9 @@ function collectAtags(cfg) {
       var m = aliasLine.match(/^([^\[(:(]+?)(?:\s*\(\s*([^)]+)\s*\))?(?:\s*\[\s*([^\]]+)\s*\])?(?::\s*(.*))?$/);
       if (!m) continue;
 
-      var baseName = normalizeTagName(m[1]);
+      var positiveNegativeName = parsePositiveNegativeAliasName(m[1]);
+      var baseName = positiveNegativeName ? positiveNegativeName.positive : normalizeTagName(m[1]);
+      var negativeName = positiveNegativeName ? positiveNegativeName.negative : "";
       var aliasHeaderInfo = parseAliasHeaderInfo(m[2] || "");
       var shortName = aliasHeaderInfo.shortName;
       var emojiAlias = aliasHeaderInfo.emoji;
@@ -493,6 +513,7 @@ function collectAtags(cfg) {
 
       registerAlias(baseName.toLowerCase(), {
         name: baseName,
+        negativeName: negativeName,
         shortName: shortName || baseName,
         emoji: emojiAlias,
         invert: false,
@@ -503,6 +524,7 @@ function collectAtags(cfg) {
       if (shortName && !isExcluded(shortName)) {
         registerAlias(shortName.toLowerCase(), {
           name: baseName,
+          negativeName: negativeName,
           shortName: shortName,
           emoji: emojiAlias,
           invert: false,
@@ -514,6 +536,7 @@ function collectAtags(cfg) {
       if (emojiAlias) {
         registerAlias(emojiAlias.toLowerCase(), {
           name: baseName,
+          negativeName: negativeName,
           shortName: shortName || baseName,
           emoji: emojiAlias,
           invert: false,
@@ -549,6 +572,7 @@ function collectAtags(cfg) {
 
         registerAlias(alias.toLowerCase(), {
           name: baseName,
+          negativeName: negativeName,
           shortName: shortName || baseName,
           emoji: emojiAlias,
           invert: invert,
@@ -740,6 +764,9 @@ function collectAtags(cfg) {
 
       norm = normalizeAttr(effectiveRaw);
       if (aliasInfo.invert) norm = invertNormalizedAttr(norm);
+      if (aliasInfo.negativeName && typeof norm.attrValue === "number" && norm.attrValue < 0) {
+        resolvedName = aliasInfo.negativeName;
+      }
 
       addItem(
         items, seen,

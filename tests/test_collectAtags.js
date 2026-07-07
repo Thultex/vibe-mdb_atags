@@ -271,6 +271,9 @@ assertDisplayName("alias-short-display", "@@SymptomA (sa): SymptomA, SymAlias\nS
 assertItem("alias-emoji-superscript", "@@Emotion (emo, $): feel\n$\u00B2", "Emotion", "+2", 2, null, null);
 assertItem("alias-emoji-tagbar-superscript", "@@Emotion (emo, $): feel\n| $\u00B2", "Emotion", "+2", 2, null, null);
 assertItem("alias-short-emoji-suffix-superscript", "@@Emotion (emo, $): feel\nemo$\u00B2", "Emotion", "+2", 2, null, null);
+assertItem("alias-positive-negative-positive", "@@Aufmerksam/Unaufmerksam(Aufm): -Unauf\nAufm2", "Aufmerksam", "+2", 2, null, null);
+assertItem("alias-positive-negative-negative", "@@Aufmerksam/Unaufmerksam(Aufm): -Unauf\nAufm-2", "Unaufmerksam", "-2", -2, null, null);
+assertItem("alias-positive-negative-inverted-short", "@@Aufmerksam/Unaufmerksam(Aufm): -Unauf\nUnauf2", "Unaufmerksam", "-2", -2, null, null);
 assertItemsWithOptions(
   "alias-duplicate-default-multi-targets",
   "@@Pos: x\n@@Neg: -x\nx2",

@@ -24,6 +24,18 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 
 ## Log
 
+### 2026-07-07 - (ca. 0,8h)
+
+- *Summary: DustingDay-Linker-Konzept zurückgestellt und DustMerger-Übergang begonnen.*
+- Change: Altes Projektmaterial unter `project/dustingday` entfernt; der aktuelle Übergang ist in `merger_plan.md` dokumentiert.
+- Feature: `addons/2_syncing/dustMerger.js` v0.01 ergänzt `dustMerge()`/`dustMerger()` als Sync-Addon, das den aktuellen neueren Eintrag in einen zeitlich nahen älteren Eintrag derselben Library merged.
+- Feature: DustMerger unterstützt `string`, `string_rows`, `tag` und `number` sowie Modi `append`, `prepend`, `replace`, `add` und `subtract`.
+- Feature: DustMerger kann Merge-Metadaten in `mergeJsonField` schreiben, den gemergten Quell-Eintrag optional in den Papierkorb verschieben und den Ziel-Eintrag öffnen.
+- Fix: DustMerger v0.02 überspringt Papierkorb-Einträge als Quelle und Ziel, nutzt bei gleichem Datum die Entry-ID als Tiebreaker und weist mit `trashAttempted` aus, ob `entry.trash()` angestoßen wurde.
+- Feature: DustMerger v0.03 ergänzt `debugField` und verhindert erneutes Mergen desselben Quell-Eintrags über `mergeJsonField`.
+- Tests: `tests/test_dustMerger.js` deckt Zielsuche, Row-Dedupe, Tag-Dedupe, Blockmap, Merge-JSON, Trash und Open ab.
+- Feature: `collectAtags_lib` v1.62 unterstützt Positiv/Negativ-Alias-Header wie `@@Aufmerksam/Unaufmerksam(Aufm): -Unauf`; negative Werte werden unter dem Negativnamen erfasst.
+
 ### 2026-06-20 - (ca. 0,5h)
 
 - *Summary: Dustingday-Projektstart, Memento-Konfiguration und erstes OutNote-Add-on.*
