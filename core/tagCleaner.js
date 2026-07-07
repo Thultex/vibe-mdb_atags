@@ -1,6 +1,6 @@
 /*
 ========================================
-A4 Tag Cleaner v1.44 (sys 2.40)
+A4 Tag Cleaner v1.47 (sys 2.40)
 ========================================
 
 Notes
@@ -13,6 +13,7 @@ Notes
 - Alias headers can convert emoji/symbol-only tokens back to long/short names.
 - Display options can override alias header defaults, including emoji prefix/suffix.
 - Reads the passive Alias field by default for alias display definitions.
+- Provides lean template slot clearing + compaction helpers for new entries.
 
 Example: clean the default note field "Notiz" and passively read "Alias"
 applyCleanTags();
@@ -26,13 +27,18 @@ applyCleanTags({
   formatValues: "keep"
 });
 
+Example: only clear template tags after creating a new entry
+cleanTemplateTags({
+  textField: "Notiz"
+});
+
 ========================================
 */
 
 function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
-    version: "1.44",
+    version: "1.47",
     sysVersion: "2.40",
     path: "core/tagCleaner.js"
   };
@@ -73,6 +79,17 @@ function isTagCleanerNumberValue(s) {
 
 function isTagCleanerTimestampLine(line) {
   return /^\s*\d+(?:[.,]\d+)?\s*:/.test(String(line || ""));
+}
+
+function splitTagCleanerTimestampLine(line) {
+  var m = String(line || "").match(/^(\s*)(\d+(?:[.,]\d+)?)(\s*:\s*)(.*)$/);
+  if (!m) return null;
+  return {
+    indent: m[1] || "",
+    label: m[2] || "",
+    separator: m[3] || ": ",
+    content: trimAtagLibString(m[4] || "")
+  };
 }
 
 function readTagCleanerBarLine(line, singleBarExclusive) {
@@ -994,6 +1011,141 @@ function makeTagCleanerTextWithOptions(sourceText, cfg) {
   return body.join("\n");
 }
 
+function isTagCleanerTemplateSlotLine(line, cfg) {
+  var marker = cfg && cfg.templateSlotMarker != null ? String(cfg.templateSlotMarker) : "_";
+  var escaped = marker.replace(/([\\^$.*+?()[\]{}|])/g, "\\$1");
+  var re = new RegExp("^#?[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\\-]*\\s*(?:::|:|#)\\s*" + escaped + "{1,2}\\s*$");
+  var parts = String(line || "").split(/\s*[;,]\s*/);
+  var i;
+  var part;
+
+  for (i = 0; i < parts.length; i++) {
+    part = trimAtagLibString(parts[i] || "");
+    if (!part) continue;
+    if (!re.test(part)) return false;
+  }
+
+  return trimAtagLibString(line) !== "";
+}
+
+function tagCleanerTemplateSlotKey(line, cfg) {
+  var marker = cfg && cfg.templateSlotMarker != null ? String(cfg.templateSlotMarker) : "_";
+  var escaped = marker.replace(/([\\^$.*+?()[\]{}|])/g, "\\$1");
+  var re = new RegExp("^#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\\-]*)\\s*(?:::|:|#)\\s*" + escaped + "{1,2}\\s*$");
+  var parts = String(line || "").split(/\s*[;,]\s*/);
+  var keys = [];
+  var i;
+  var part;
+  var m;
+
+  for (i = 0; i < parts.length; i++) {
+    part = trimAtagLibString(parts[i] || "");
+    if (!part) continue;
+    m = part.match(re);
+    if (!m) return "";
+    keys.push(String(m[1] || "").toLowerCase());
+  }
+
+  return keys.length ? keys.join(";") : "";
+}
+
+function tagCleanerPreparedRowValue(line) {
+  var m = String(line || "").match(/^\s*(\d+(?:[.,]\d+)?)\s*:/);
+  if (!m) return null;
+  return Number(String(m[1]).replace(",", "."));
+}
+
+function sortTagCleanerPreparedRows(lines) {
+  var rows = [];
+  var other = [];
+  var i;
+  var value;
+
+  for (i = 0; i < lines.length; i++) {
+    value = tagCleanerPreparedRowValue(lines[i]);
+    if (value == null || isNaN(value)) other.push(lines[i]);
+    else rows.push({ value: value, index: i, line: lines[i] });
+  }
+
+  rows.sort(function(a, b) {
+    if (a.value !== b.value) return a.value - b.value;
+    return a.index - b.index;
+  });
+
+  lines = [];
+  for (i = 0; i < rows.length; i++) lines.push(rows[i].line);
+  for (i = 0; i < other.length; i++) lines.push(other[i]);
+  return lines;
+}
+
+function clearTagCleanerTemplateSlots(line, cfg) {
+  var marker = cfg && cfg.templateSlotMarker != null ? String(cfg.templateSlotMarker) : "_";
+  var escaped = marker.replace(/([\\^$.*+?()[\]{}|])/g, "\\$1");
+  var slot = new RegExp("((?:::|:|#)\\s*)" + escaped + "[^" + escaped + "\\r\\n]*" + escaped, "g");
+
+  return String(line || "").replace(slot, "$1" + marker + marker);
+}
+
+function compactTagCleanerTemplateText(sourceText, cfg) {
+  cfg = cfg || {};
+
+  var lines = splitTagCleanerLines(sourceText);
+  var out = [];
+  var removeRowPrefix = cfg.removeRowPrefix !== false;
+  var clearTemplateSlots = cfg.clearTemplateSlots !== false;
+  var sortRows = cfg.sortRows !== false;
+  var i;
+  var line;
+  var row;
+  var content;
+  var cleanedContent;
+  var cleanedLine;
+  var templateKey;
+  var seenTemplateKeys = {};
+
+  function pushPreparedLine(preparedLine) {
+    if (isTagCleanerTemplateSlotLine(preparedLine, cfg)) {
+      templateKey = tagCleanerTemplateSlotKey(preparedLine, cfg);
+      if (templateKey) {
+        if (seenTemplateKeys[templateKey]) return;
+        seenTemplateKeys[templateKey] = 1;
+      }
+    }
+    out.push(preparedLine);
+  }
+
+  for (i = 0; i < lines.length; i++) {
+    line = String(lines[i] || "");
+    row = splitTagCleanerTimestampLine(line);
+    content = row ? row.content : trimAtagLibString(line);
+    cleanedContent = clearTemplateSlots ? clearTagCleanerTemplateSlots(content, cfg) : content;
+
+    if (row && !content) continue;
+    if (row && removeRowPrefix && isTagCleanerTemplateSlotLine(cleanedContent, cfg)) {
+      pushPreparedLine(cleanedContent);
+      continue;
+    }
+    if (row && removeRowPrefix && cfg.removeAllRowPrefixes === true) {
+      pushPreparedLine(cleanedContent);
+      continue;
+    }
+    if (row) {
+      pushPreparedLine(row.indent + row.label + row.separator + cleanedContent);
+      continue;
+    }
+
+    cleanedLine = clearTemplateSlots ? clearTagCleanerTemplateSlots(line, cfg) : line;
+    pushPreparedLine(cleanedLine);
+  }
+
+  if (sortRows) out = sortTagCleanerPreparedRows(out);
+  return out.join("\n");
+}
+
+function prepareTagCleanerTemplateText(sourceText, cfg) {
+  return compactTagCleanerTemplateText(sourceText, cfg);
+}
+
 function applyTagCleaner(cfg) {
   cfg = cfg || {};
   if (cfg.enabled === false) return "";
@@ -1025,6 +1177,35 @@ function applyTagCleaner(cfg) {
   out = makeTagCleanerTextWithOptions(sourceText == null ? "" : String(sourceText), cfg);
   entryObj.set(targetField, out);
   return out;
+}
+
+function applyTagCleanerTemplatePrep(cfg) {
+  cfg = cfg || {};
+  if (cfg.enabled === false) return "";
+
+  var entryObj = cfg.entryObj || (typeof entry === "function" ? entry() : null);
+  var sourceField = cfg.sourceTextField || cfg.textField;
+  var targetField = cfg.targetTextField || sourceField;
+  var sourceText;
+  var out;
+
+  if (!entryObj || !sourceField || !targetField) return "";
+  sourceText = entryObj.field(sourceField);
+  out = compactTagCleanerTemplateText(sourceText == null ? "" : String(sourceText), cfg);
+  entryObj.set(targetField, out);
+  return out;
+}
+
+function compactTagCleanerTemplates(cfg) {
+  return applyTagCleanerTemplatePrep(cfg);
+}
+
+function cleanTemplateTags(cfg) {
+  return applyTagCleanerTemplatePrep(cfg);
+}
+
+function cleanTemplates(cfg) {
+  return cleanTemplateTags(cfg);
 }
 
 function applyCleanTags(cfg) {

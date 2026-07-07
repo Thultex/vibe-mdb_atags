@@ -109,6 +109,10 @@ function testMergesCurrentIntoOlderEntry() {
   assertEquals("source-trashed", newer._trashed, true);
   assertSame("opened", _opened, older);
   assertEquals("merge-json-has-title", String(older.field("Merge Json")).indexOf("\"title\":\"neu\"") >= 0, true);
+  assertEquals("source-stop-written", String(newer.field("Merge Json")).indexOf("\"stop\":true") >= 0, true);
+  assertEquals("source-stop-target", String(newer.field("Merge Json")).indexOf("\"mergedIntoId\":\"old\"") >= 0, true);
+  assertEquals("source-stop-trash-attempted", String(newer.field("Merge Json")).indexOf("\"trashAttempted\":true") >= 0, true);
+  assertEquals("source-stop-trashed", String(newer.field("Merge Json")).indexOf("\"trashed\":true") >= 0, true);
 }
 
 function testDoesNotDuplicateExactRows() {
@@ -136,6 +140,34 @@ function testDoesNotDuplicateExactRows() {
   assertEquals("not-merged", result.merged, false);
   assertEquals("note-unchanged", older.field("Notiz"), "11: test2");
   assertEquals("source-not-trashed", newer._trashed, false);
+}
+
+function testRealtimeSinceRowsAreShiftedToTargetDate() {
+  var newer = makeEntry({
+    id: "new",
+    Datum: "2026-07-07 11:00",
+    Notiz: "0: start\n0,5: next"
+  });
+  var older = makeEntry({
+    id: "old",
+    Datum: "2026-07-07 09:30",
+    Notiz: "9,5: old"
+  });
+  _entries = [newer, older];
+
+  var result = dustMerge({
+    fieldDate: "Datum",
+    rowSourceMode: "realtime_since",
+    rowStepHours: 0.5,
+    trashMergedEntry: false,
+    openTargetEntry: false,
+    map: [
+      { name: "Notiz", mode: "append", datatype: "string_rows" }
+    ]
+  });
+
+  assertEquals("relative-row-merged", result.merged, true);
+  assertEquals("relative-row-note", older.field("Notiz"), "9,5: old\n1,5: start\n2: next");
 }
 
 function testBlockMapStopsMergeWhenTargetFieldHasContent() {
@@ -247,53 +279,56 @@ function testEqualDatesUseIdAsOlderTieBreaker() {
   assertEquals("equal-date-note", older.field("Notiz"), "old\n11: new");
 }
 
-function testTrashedSourceIsNotMerged() {
+function testSourceStopJsonSkipsCurrentEntry() {
   var newer = makeEntry({
     id: "new",
     Datum: "2026-07-07 11:00",
-    Notiz: "new"
+    Notiz: "new",
+    "Merge Json": "[{\"id\":\"new\",\"time\":\"2026-07-07T11:00:00\",\"title\":\"\",\"fields\":1,\"stop\":true,\"mergedIntoId\":\"old\"}]"
   });
   var older = makeEntry({
     id: "old",
     Datum: "2026-07-07 10:00",
     Notiz: "old"
   });
-  newer._trashed = true;
   _entries = [newer, older];
 
   var result = dustMerge({
     fieldDate: "Datum",
+    mergeJsonField: "Merge Json",
     map: [
       { name: "Notiz", mode: "append", datatype: "string_rows" }
     ]
   });
 
-  assertEquals("trashed-source-not-merged", result.merged, false);
-  assertEquals("trashed-source-error", result.errors[0], "Aktueller Eintrag ist im Papierkorb");
-  assertEquals("trashed-source-note-unchanged", older.field("Notiz"), "old");
+  assertEquals("source-stop-not-merged", result.merged, false);
+  assertEquals("source-stop-flag", result.sourceStopped, true);
+  assertEquals("source-stop-note-unchanged", older.field("Notiz"), "old");
 }
 
-function testTrashedTargetIsSkipped() {
+function testStoppedCandidateDoesNotCountAgainstSearchLimit() {
   var newer = makeEntry({
     id: "new",
     Datum: "2026-07-07 11:00",
     Notiz: "new"
   });
-  var trashedOlder = makeEntry({
+  var stoppedOlder = makeEntry({
     id: "old1",
     Datum: "2026-07-07 10:30",
-    Notiz: "trashed"
+    Notiz: "stopped",
+    "Merge Json": "[{\"id\":\"old1\",\"time\":\"2026-07-07T10:30:00\",\"title\":\"\",\"fields\":1,\"stop\":true,\"mergedIntoId\":\"older\"}]"
   });
   var activeOlder = makeEntry({
     id: "old2",
     Datum: "2026-07-07 10:00",
     Notiz: "active"
   });
-  trashedOlder._trashed = true;
-  _entries = [newer, trashedOlder, activeOlder];
+  _entries = [newer, stoppedOlder, activeOlder];
 
   var result = dustMerge({
     fieldDate: "Datum",
+    mergeJsonField: "Merge Json",
+    searchLimit: 1,
     trashMergedEntry: false,
     openTargetEntry: false,
     map: [
@@ -301,9 +336,9 @@ function testTrashedTargetIsSkipped() {
     ]
   });
 
-  assertEquals("trashed-target-merged-active", result.merged, true);
-  assertSame("trashed-target-skipped", result.targetEntry, activeOlder);
-  assertEquals("trashed-target-note-unchanged", trashedOlder.field("Notiz"), "trashed");
+  assertEquals("stopped-target-merged-active", result.merged, true);
+  assertSame("stopped-target-skipped", result.targetEntry, activeOlder);
+  assertEquals("stopped-target-note-unchanged", stoppedOlder.field("Notiz"), "stopped");
   assertEquals("active-target-note", activeOlder.field("Notiz"), "active\n11: new");
 }
 
@@ -336,6 +371,71 @@ function testAlreadyMergedSourceIsSkippedByMergeJson() {
   assertEquals("already-merged-note-unchanged", older.field("Notiz"), "old");
 }
 
+function testForceMergeFieldIgnoresAlreadyMergedJson() {
+  var newer = makeEntry({
+    id: "new",
+    Datum: "2026-07-07 11:00",
+    Notiz: "newer text",
+    "Merge Json": "[{\"id\":\"new\",\"time\":\"2026-07-07T11:00:00\",\"title\":\"\",\"fields\":1,\"stop\":true,\"mergedIntoId\":\"old\"}]",
+    "Merge erzwingen": true
+  });
+  var older = makeEntry({
+    id: "old",
+    Datum: "2026-07-07 10:00",
+    Notiz: "old",
+    "Merge Json": "[{\"id\":\"new\",\"time\":\"2026-07-07T11:00:00\",\"title\":\"\",\"fields\":1}]"
+  });
+  _entries = [newer, older];
+
+  var result = dustMerge({
+    fieldDate: "Datum",
+    mergeJsonField: "Merge Json",
+    forceMergeField: "Merge erzwingen",
+    trashMergedEntry: false,
+    openTargetEntry: false,
+    map: [
+      { name: "Notiz", mode: "append", datatype: "string_rows" }
+    ]
+  });
+
+  assertEquals("force-merge-enabled", result.forceMerge, true);
+  assertEquals("force-merge-not-already", result.alreadyMerged, false);
+  assertEquals("force-merge-not-stopped", result.sourceStopped, false);
+  assertEquals("force-merge-merged", result.merged, true);
+  assertEquals("force-merge-note", older.field("Notiz"), "old\n11: newer text");
+}
+
+function testForceMergeFieldAppendsExistingRowsAgain() {
+  var newer = makeEntry({
+    id: "new",
+    Datum: "2026-07-07 11:00",
+    Notiz: "11: nochmal",
+    "Merge Json": "[{\"id\":\"new\",\"time\":\"2026-07-07T11:00:00\",\"title\":\"\",\"fields\":1,\"stop\":true,\"mergedIntoId\":\"old\"}]",
+    "Merge erzwingen": true
+  });
+  var older = makeEntry({
+    id: "old",
+    Datum: "2026-07-07 10:00",
+    Notiz: "old\n11: nochmal",
+    "Merge Json": "[{\"id\":\"new\",\"time\":\"2026-07-07T11:00:00\",\"title\":\"\",\"fields\":1}]"
+  });
+  _entries = [newer, older];
+
+  var result = dustMerge({
+    fieldDate: "Datum",
+    mergeJsonField: "Merge Json",
+    forceMergeField: "Merge erzwingen",
+    trashMergedEntry: false,
+    openTargetEntry: false,
+    map: [
+      { name: "Notiz", mode: "append", datatype: "string_rows" }
+    ]
+  });
+
+  assertEquals("force-existing-row-merged", result.merged, true);
+  assertEquals("force-existing-row-note", older.field("Notiz"), "old\n11: nochmal\n11: nochmal");
+}
+
 function testDebugFieldWritesStatusToSourceEntry() {
   var newer = makeEntry({
     id: "new",
@@ -366,13 +466,16 @@ function testDebugFieldWritesStatusToSourceEntry() {
 
 testMergesCurrentIntoOlderEntry();
 testDoesNotDuplicateExactRows();
+testRealtimeSinceRowsAreShiftedToTargetDate();
 testBlockMapStopsMergeWhenTargetFieldHasContent();
 testDayStartAndWindowMustMatch();
 testSkipFieldStopsMergeOnSourceEntry();
 testEqualDatesUseIdAsOlderTieBreaker();
-testTrashedSourceIsNotMerged();
-testTrashedTargetIsSkipped();
+testSourceStopJsonSkipsCurrentEntry();
+testStoppedCandidateDoesNotCountAgainstSearchLimit();
 testAlreadyMergedSourceIsSkippedByMergeJson();
+testForceMergeFieldIgnoresAlreadyMergedJson();
+testForceMergeFieldAppendsExistingRowsAgain();
 testDebugFieldWritesStatusToSourceEntry();
 
 WScript.Echo("test_dustMerger ok");

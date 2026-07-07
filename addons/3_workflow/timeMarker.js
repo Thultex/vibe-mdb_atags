@@ -1,9 +1,10 @@
 /*
 ========================================
-B7 Time Marker v1.37 (sys 2.40)
+B7 Time Marker v1.38 (sys 2.40)
 ========================================
 
 Änderungen
+- `clearTimeMarkerRows()` entfernt Row-Prefixe oder setzt sie auf den aktuellen Marker zurueck, ohne Template-Inhalte zu interpretieren
 - `mergeSameRowContents` entfernt identische Row-Inhalte getrennt vor `mergeSameRows`
 - `mergeSameRows` bleibt mit `mergeSameRowContents` idempotent und verdoppelt bereits zusammengefasste Segmente nicht erneut
 - Rows mit nur leeren Template-Slots wie `Testing: __` gelten als leer und werden entfernt
@@ -45,6 +46,13 @@ Anwendung in AfterEntry zum Bereinigen ohne neuen leeren Marker
 
 cleanupTimeMarker({
   targetTextField: "Notiz",
+});
+
+Vorlagen vor dem Tag-Cleaner von alten Row-Markern befreien
+
+clearTimeMarkerRows({
+  targetTextField: "Notiz",
+  mode: "remove"
 });
 */
 
@@ -504,6 +512,76 @@ function buildTimeBlockText(timeLines, otherLines) {
   if (!otherLines.length) return timeLines.join("\n");
 
   return timeLines.join("\n") + "\n\n" + otherLines.join("\n");
+}
+
+function clearTimeMarkerRowsText(text, cfg) {
+  cfg = cfg || {};
+
+  var raw = splitTimeMarkerLines(text);
+  var out = [];
+  var mode = String(cfg.mode || cfg.rowMode || "remove").toLowerCase();
+  var label = cfg.hourLabel;
+  var i;
+  var line;
+  var parts;
+  var content;
+
+  if (mode === "reset" && (label == null || label === "")) {
+    label = formatHourLabel(stepHoursValue(
+      cfg.rawHours,
+      cfg.stepHours != null ? cfg.stepHours : 0.5,
+      cfg.roundMode || "round"
+    ));
+  }
+
+  for (i = 0; i < raw.length; i++) {
+    line = String(raw[i]);
+    parts = parseTimestampParts(line);
+
+    if (!parts) {
+      out.push(line);
+      continue;
+    }
+
+    content = String(parts.text || "").replace(/^\s+|\s+$/g, "");
+    if (isBlankTimeMarkerText(content)) continue;
+
+    if (mode === "reset" && label != null && label !== "") {
+      out.push(String(label) + ": " + content);
+    } else {
+      out.push(content);
+    }
+  }
+
+  return normalizeTimeMarkerText(out.join("\n"));
+}
+
+function clearTimeMarkerRows(cfg) {
+  cfg = cfg || {};
+
+  var e = cfg.entryObj || entry();
+  var targetTextField = resolveTimeMarkerTextField(cfg);
+  var text;
+  var rawHours;
+  var newText;
+
+  if (!e || !targetTextField) return false;
+
+  text = e.field(targetTextField);
+  if (text == null) text = "";
+  text = String(text);
+
+  rawHours = getSourceHours(e, cfg);
+  newText = clearTimeMarkerRowsText(text, {
+    mode: cfg.mode || cfg.rowMode || "remove",
+    hourLabel: cfg.hourLabel,
+    rawHours: rawHours,
+    stepHours: cfg.stepHours,
+    roundMode: cfg.roundMode
+  });
+
+  if (newText !== text) e.set(targetTextField, newText);
+  return newText !== text;
 }
 
 function arrangeTimeMarkerRows(text, cfg) {

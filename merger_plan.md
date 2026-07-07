@@ -7,7 +7,7 @@ Das alte DustingDay-Konzept mit separater Input- und Day-Sammlung wird abgelöst
 ## Übergang
 
 1. Altes Projektmaterial unter `project/dustingday` entfernen.
-2. `inputLinker_lib.js` vorerst im Core belassen, aber nicht mehr als DustingDay-Hauptpfad weiterentwickeln.
+2. `inputLinker_lib.js` aus der Core-Lib-Schiene entfernen; historische Hinweise bleiben nur im Changelog/Error-Notes.
 3. Neues Sync-Addon `addons/2_syncing/dustMerger.js` erstellen.
 4. Tests für den Merger ergänzen.
 5. README auf den neuen DustMerger-Pfad aktualisieren.
@@ -15,13 +15,16 @@ Das alte DustingDay-Konzept mit separater Input- und Day-Sammlung wird abgelöst
 ## DustMerger Grundlogik
 
 - Der aktuelle Eintrag ist der Merge-Auslöser.
-- Es werden die letzten `searchLimit` Einträge derselben Library nach Datum geprüft.
+- Es werden die letzten `searchLimit` nicht bereits gemergten Einträge derselben Library nach Datum geprüft.
 - Ist ein älterer Eintrag am gleichen Dusting-Tag und höchstens `mergeWindowHours` Stunden vor dem aktuellen Eintrag, wird der aktuelle Eintrag in diesen älteren Eintrag gemerged.
 - Der Dusting-Tag kann mit `dayStartHour` verschoben werden.
 - Ein optionales Hakenfeld (`skipField`) kann den Merge für den aktuellen Eintrag unterbinden.
-- Einträge im Papierkorb werden weder als Quelle noch als Ziel gemerged.
+- Ein optionales Override-Feld (`forceMergeField`) kann einen normalen neuen Merge erzwingen, auch wenn der aktuelle Eintrag im eigenen oder Ziel-JSON schon als gemerged vermerkt ist. Das Ziel bleibt der letzte valide ältere Eintrag, nicht zwingend der alte JSON-Verweis.
+- Einträge, die im eigenen `mergeJsonField` einen Stop-Marker tragen, werden als Quelle und Ziel übersprungen. Diese übersprungenen Einträge zählen nicht gegen `searchLimit`.
 - Nach erfolgreichem Merge kann der aktuelle, neuere Eintrag optional in den Papierkorb verschoben werden.
+- Der Stop-Marker im Quell-JSON enthält zusätzlich den letzten Trash-Status (`trashAttempted`, `trashed`). Ein separates Flag-Feld ist dafür nicht nötig.
 - Der ältere Ziel-Eintrag kann optional geöffnet werden.
+- Für `string_rows` kann `rowSourceMode: "realtime_since"` relative Quell-Rows auf das Ziel-Datum umrechnen. Dadurch wird ein `0:` aus einem neueren Quell-Eintrag nach dem Merge z. B. zu `1,5:`, wenn der Ziel-Eintrag 1,5 Stunden früher liegt.
 
 ## Map
 
@@ -67,7 +70,7 @@ Unterstützte `datatype`-Werte:
 
 ## Blockmap
 
-`mergeJsonField` verhindert, dass derselbe Quell-Eintrag erneut in denselben Ziel-Eintrag gemerged wird. Geprüft wird bevorzugt die Quell-ID, sonst der Quell-Zeitstempel.
+`mergeJsonField` erfüllt zwei Aufgaben: Im Ziel verhindert es, dass derselbe Quell-Eintrag erneut in denselben Ziel-Eintrag gemerged wird. Im Quell-Eintrag wird nach erfolgreichem Merge zusätzlich ein Stop-Marker geschrieben; dadurch wird dieser Eintrag bei späteren Suchläufen übersprungen, auch wenn Mementos Papierkorbstatus nicht zuverlässig lesbar ist.
 
 `debugField` ist optional und schreibt den letzten Merger-Status in den aktuellen Quell-Eintrag.
 

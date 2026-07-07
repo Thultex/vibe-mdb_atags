@@ -1,6 +1,6 @@
 /*
 ========================================
-A1 Lib Versions v1.29 (sys 2.40)
+A1 Lib Versions v1.30 (sys 2.40)
 ========================================
 
 Notes
@@ -8,11 +8,11 @@ Notes
 - Shared remote-library version registry.
 - Load before optional lib files to collect registered versions.
 - Each lib can still expose its own get...Version function.
+- inputLinker_lib is no longer part of the core lib check.
 - Current libs:
   - helpers_lib v2.11 (sys 2.40)
-  - collectAtags_lib v1.61 (sys 2.40)
+  - collectAtags_lib v1.62 (sys 2.40)
   - exportAtags_lib v1.83 (sys 2.40)
-  - inputLinker_lib v0.88 (sys 2.40, optional)
 
 ========================================
 */
@@ -35,7 +35,7 @@ var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERS
 function getLibVersionsVersion() {
   return {
     name: "libVersions",
-    version: "1.29",
+    version: "1.30",
     sysVersion: "2.40",
     path: "core/_checkLibs.js"
   };
@@ -43,9 +43,8 @@ function getLibVersionsVersion() {
 
 var ATAG_EXPECTED_LIBS = [
   { name: "helpers_lib", version: "2.11", getter: "getHelpersLibVersion", path: "core_lib/helpers_lib.js" },
-  { name: "collectAtags_lib", version: "1.61", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
-  { name: "exportAtags_lib", version: "1.83", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" },
-  { name: "inputLinker_lib", version: "0.88", getter: "getInputLinkerLibVersion", path: "core_lib/inputLinker_lib.js", optional: true }
+  { name: "collectAtags_lib", version: "1.62", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
+  { name: "exportAtags_lib", version: "1.83", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" }
 ];
 
 function getExpectedAtagLibs() {
@@ -85,10 +84,6 @@ function callExpectedAtagLibGetter(name) {
   if (key === "exportAtags_lib") {
     if (typeof getExportAtagsLibVersion !== "function") return null;
     return getExportAtagsLibVersion();
-  }
-  if (key === "inputLinker_lib") {
-    if (typeof getInputLinkerLibVersion !== "function") return null;
-    return getInputLinkerLibVersion();
   }
   return null;
 }

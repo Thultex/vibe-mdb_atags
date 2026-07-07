@@ -103,12 +103,7 @@ Ziel-Felder
 - `#1` `core_lib/collectAtags_lib.js`
 - `#2` `core_lib/exportAtags_lib.js`
 - `#3` `core_lib/helpers_lib.js`
-- `#4` `core_lib/inputLinker_lib.js` (optional; Input Linker)
-  - `linkInputEntryToTarget()`
-  - `refreshTargetFromInputEntries()`
-  - `debugInputLinkerAccess()`
-
-Empfohlene Lade-Reihenfolge: `helpers_lib`, dann `collectAtags_lib`, dann `exportAtags_lib`, optional `inputLinker_lib`. `core/tagCleaner.js` nutzt ebenfalls `helpers_lib`.
+Empfohlene Lade-Reihenfolge: `helpers_lib`, dann `collectAtags_lib`, dann `exportAtags_lib`. `core/tagCleaner.js` nutzt ebenfalls `helpers_lib`.
 Optional vorher `core/_checkLibs.js` laden; dann koennen die erwarteten Remote-Libs ueber `checkAtagLibVersions({ checkAccess: true, verbose: true })` geprueft werden. Die aktuelle statische Uebersicht liegt in `core_lib/Z_LIB_VERSIONS.md`.
 Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportAtags()` nutzt, muss danach zusaetzlich `core/helpers.js` geladen werden. Diese Datei nutzt `core_lib/helpers_lib.js`.
 
@@ -120,6 +115,8 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
 - `A4` `core/tagCleaner.js` (reine Notiz-/Tagleisten-Normalisierung)
   - `makeTagCleanerText()`
   - `makeTagCleanerTextWithOptions()`
+  - `prepareTagCleanerTemplateText()` fuer Vorlage-/Template-Vorbereitung neuer Eintraege
+  - `cleanTemplateTags()` als schlanker Wrapper: Template-Slots leeren und gleiche Template-Variablen zusammenfassen
   - `applyCleanTags()` als kurzer Memento-Wrapper; ohne Optionen nutzt er `Notiz` und liest `Alias` passiv mit
   - `applyTagCleaner()` als optionaler Memento-Wrapper
 
@@ -143,7 +140,9 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
   - `dustMerge()` / `dustMerger()`
   - merge den aktuellen neueren Eintrag in einen älteren Eintrag derselben Library
   - `map` mit `append`, `prepend`, `replace`, `add`, `subtract`
-  - optional `skipField`, `blockMap`, `mergeJsonField`, `debugField`, `trashMergedEntry`, `openTargetEntry`
+  - `rowSourceMode: "realtime_since"` rechnet relative Quell-Rows beim Merge auf das Ziel-Datum um, z. B. `0:` im Quell-Eintrag zu `1,5:` im älteren Ziel-Eintrag
+  - `mergeJsonField` schreibt Ziel-Historie und einen Stop-Marker im gemergten Quell-Eintrag inklusive letztem Trash-Status
+  - optional `skipField`, `forceMergeField`, `blockMap`, `debugField`, `trashMergedEntry`, `openTargetEntry`
 
 **Workflow Add-ons**
 - `B5` `addons/3_workflow/floatingAverage.js` (gleitender Gruppen-Mittelwert)
@@ -154,6 +153,7 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
   - optional nur aktueller Eintrag ueber `currentEntry`
 - `B7` `addons/3_workflow/timeMarker.js` (Zeitmarker fuer Textfelder)
   - `appendTimeMarker()`
+  - `clearTimeMarkerRows()`
   - optionales Stundenlimit ueber `maxHours` (Default: `30`)
 **Integration Add-ons**
 - `B8` `addons/6_integration/obsidianLinker.js` (Memento-zu-Obsidian Advanced URI)
@@ -184,7 +184,6 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
 - `tests/test_tagPairParser.js`
 - `tests/test_tagCleaner.js`
 - `tests/test_timeMarker.js`
-- `tests/test_inputLinker.js`
 - `tests/test_dustMerger.js`
 - `tests/test_syncLastFromLatest.js`
 - `tests/test_typedTextFields.js`
@@ -384,6 +383,43 @@ Notiz nachher:
 Ablenkung²
 ```
 
+Vorlage-/Template-Vorbereitung ist ein eigener Schritt fuer neu erstellte Eintraege. Diese Funktion gehoert bewusst zum Tag Cleaner, nicht zum TimeMarker oder Sync.
+
+```js
+clearTimeMarkerRows({
+  targetTextField: "Notiz",
+  mode: "remove"
+});
+
+applyTagCleanerTemplatePrep({
+  textField: "Notiz"
+});
+
+// Schlanker Alias fuer genau diesen Tag-Cleaner-Teil:
+cleanTemplateTags({
+  textField: "Notiz"
+});
+```
+
+Beispiel vorher:
+
+```text
+1: Laufen:_2 km_
+1: Testing:_77_
+1: Testing:_4_
+3: normaler Inhalt
+```
+
+Beispiel nachher:
+
+```text
+Laufen:__
+Testing:__
+3: normaler Inhalt
+```
+
+Dabei entfernt `clearTimeMarkerRows()` zuerst nur die alten Row-Marker. Danach leert `cleanTemplateTags()` Template-Slots wie `Mal_sehen:_2 km_` zu `Mal_sehen:__` und entfernt gleiche leere Template-Variablen, damit jede Vorlage nur einmal bleibt. Der normale Clean-Vorgang ueber `applyTagCleaner()`/`applyCleanTags()` leert Template-Slots bewusst nicht. Normale Inhalt-Rows behalten ihren Zeitprefix, wenn sie nicht vorher ueber `clearTimeMarkerRows()` entfernt wurden. Mit `removeAllRowPrefixes: true` kann das Entfernen aller Row-Prefixe direkt in der Template-Prep bewusst aktiviert werden. `sortRows` ist standardmaessig aktiv und sortiert vorhandene Row-Prefixe numerisch; bei absoluten Markern wird vorausgesetzt, dass Folgetag-1-Uhr bereits als `25:` vorliegt.
+
 Optionen:
 
 - `tagBarPosition: "bottom"` setzt die Tagleiste ans Ende (Standard)
@@ -512,6 +548,7 @@ Fügt Zeitmarker wie `2:` oder `30,5:` in ein Textfeld ein und gruppiert sie bei
 - `cleanupTimeMarker()` ist fuer `AfterEntry()` gedacht, ersetzt `: Text` wie `appendTimeMarker()`, erzeugt aber keinen neuen leeren Marker
 - `cleanupTimeMarker()` entfernt leere Marker wie `:` oder `3: ` und gibt `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
 - `cleanupTimeMarker({ mergeSameRows: true })` fuehrt gleiche Row-Marker zusammen, z. B. `19: hallo` + `19: das ist spannend` zu `19: hallo; das ist spannend`
+- `clearTimeMarkerRows()` entfernt Row-Prefixe aus einem Feld oder setzt sie mit `mode: "reset"` auf den aktuellen Marker zurueck; Template-Inhalte werden dabei nicht interpretiert
 - `targetTextField` ist der normale Feldparameter; `textField` bleibt nur als Alias kompatibel
 
 Kurzbeispiele:
@@ -547,6 +584,18 @@ Anwendung in `AfterEntry()` zum Bereinigen ohne neuen leeren Marker:
 cleanupTimeMarker({
   targetTextField: "Notiz",
   mergeSameRows: true
+});
+
+clearTimeMarkerRows({
+  targetTextField: "Notiz",
+  mode: "remove"
+});
+
+clearTimeMarkerRows({
+  targetTextField: "Notiz",
+  sourceMode: "hours",
+  sourceHoursField: "Stunden",
+  mode: "reset"
 });
 ```
 

@@ -9,7 +9,6 @@ eval(read("core\\_checkLibs.js"));
 eval(read("core_lib\\helpers_lib.js"));
 eval(read("core_lib\\collectAtags_lib.js"));
 eval(read("core_lib\\exportAtags_lib.js"));
-eval(read("core_lib\\inputLinker_lib.js"));
 eval(read("core\\tagCleaner.js"));
 eval(read("core\\helpers.js"));
 
@@ -33,7 +32,7 @@ function log(msg) {
   _logs.push(String(msg));
 }
 
-assertEquals("libVersions-own-version", getLibVersionsVersion().version, "1.29");
+assertEquals("libVersions-own-version", getLibVersionsVersion().version, "1.30");
 assertEquals("helpers-lib-own-version", getHelpersLibVersion().version, "2.11");
 assertEquals("helpers-lib-sys-version", getHelpersLibVersion().sysVersion, "2.40");
 assertEquals("collect-lib-own-version", getCollectAtagsLibVersion().version, "1.62");
@@ -48,16 +47,15 @@ var result = checkAtagLibVersions({
 
 assertTrue("all-loaded", result.ok);
 assertEquals("export-lib-map-version", result.map.exportAtags_lib.version, "1.83");
-assertEquals("linker-lib-own-version", getInputLinkerLibVersion().version, "0.88");
-assertEquals("linker-lib-map-version", result.map.inputLinker_lib.version, "0.88");
-assertEquals("access-count", result.access.length, 4);
+assertEquals("collect-lib-map-version", result.map.collectAtags_lib.version, "1.62");
+assertEquals("access-count", result.access.length, 3);
 
 var nonLib = checkLibVersions({ names: ["libVersions", "tagCleaner", "helpers"], requireAll: false });
 assertEquals("non-lib-not-listed", nonLib.libs.length, 0);
 
 var textResult = checkAtagLibVersions({ checkAccess: true, asText: true });
 assertTrue("text-result-has-export", textResult.indexOf("exportAtags_lib v1.83") !== -1);
-assertTrue("text-result-has-linker", textResult.indexOf("inputLinker_lib v0.88") !== -1);
+assertTrue("text-result-has-collect", textResult.indexOf("collectAtags_lib v1.62") !== -1);
 
 var missing = checkLibVersions({ names: ["missing_lib"] });
 assertEquals("missing-detected", missing.missing[0], "missing_lib");
@@ -74,72 +72,72 @@ assertEquals("soft-access-missing-listed", softAccessMissing.optionalAccessMissi
 getHelpersLibVersion = savedGetHelpersLibVersion;
 
 var savedRegistry = ATAG_LIB_VERSIONS;
-var savedGetInputLinkerLibVersion = getInputLinkerLibVersion;
+var savedGetCollectAtagsLibVersion = getCollectAtagsLibVersion;
 ATAG_LIB_VERSIONS = {};
-getInputLinkerLibVersion = function() {
+getCollectAtagsLibVersion = function() {
   return {
-    name: "inputLinker_lib",
-    version: "0.39",
+    name: "collectAtags_lib",
+    version: "1.39",
     sysVersion: "2.40",
-    path: "core_lib/inputLinker_lib.js"
+    path: "core_lib/collectAtags_lib.js"
   };
 };
-var getterOnlyOldOptional = checkAtagLibVersions({ names: ["inputLinker_lib"], checkAccess: true, requireAll: false, asText: false });
-assertEquals("getter-only-old-optional-no-optional-missing", getterOnlyOldOptional.optionalMissing.length, 0);
-assertEquals("getter-only-old-optional-map-version", getterOnlyOldOptional.map.inputLinker_lib.version, "0.39");
-assertEquals("getter-only-old-optional-mismatch", getterOnlyOldOptional.versionMismatch[0], "inputLinker_lib expected 0.88 got 0.39");
-getInputLinkerLibVersion = savedGetInputLinkerLibVersion;
+var getterOnlyOldOptional = checkAtagLibVersions({ names: ["collectAtags_lib"], checkAccess: true, requireAll: false, asText: false });
+assertEquals("getter-only-old-no-optional-missing", getterOnlyOldOptional.optionalMissing.length, 0);
+assertEquals("getter-only-old-map-version", getterOnlyOldOptional.map.collectAtags_lib.version, "1.39");
+assertEquals("getter-only-old-mismatch", getterOnlyOldOptional.versionMismatch[0], "collectAtags_lib expected 1.62 got 1.39");
+getCollectAtagsLibVersion = savedGetCollectAtagsLibVersion;
 ATAG_LIB_VERSIONS = savedRegistry;
 
 savedRegistry = ATAG_LIB_VERSIONS;
 ATAG_LIB_VERSIONS = {};
-registerAtagLibVersion("inputLinker_lib", "0.39", "2.40", "core_lib/inputLinker_lib.js", true);
-var registryOnlyOldOptional = checkAtagLibVersions({ names: ["inputLinker_lib"], requireAll: false, asText: false });
-assertEquals("registry-only-old-optional-mismatch", registryOnlyOldOptional.versionMismatch[0], "inputLinker_lib expected 0.88 got 0.39");
+registerAtagLibVersion("collectAtags_lib", "1.39", "2.40", "core_lib/collectAtags_lib.js");
+var registryOnlyOldOptional = checkAtagLibVersions({ names: ["collectAtags_lib"], requireAll: false, asText: false });
+assertEquals("registry-only-old-mismatch", registryOnlyOldOptional.versionMismatch[0], "collectAtags_lib expected 1.62 got 1.39");
 ATAG_LIB_VERSIONS = {};
-registerAtagLibVersion("inputLinker_lib", "0.99", "2.40", "core_lib/inputLinker_lib.js", true);
-var registryOnlyNewerOptional = checkAtagLibVersions({ names: ["inputLinker_lib"], requireAll: false, asText: false });
+registerAtagLibVersion("collectAtags_lib", "1.99", "2.40", "core_lib/collectAtags_lib.js");
+var registryOnlyNewerOptional = checkAtagLibVersions({ names: ["collectAtags_lib"], requireAll: false, asText: false });
 assertTrue("registry-only-newer-ok", registryOnlyNewerOptional.ok);
 assertEquals("registry-only-newer-no-mismatch", registryOnlyNewerOptional.versionMismatch.length, 0);
 ATAG_LIB_VERSIONS = {};
-registerAtagLibVersion("inputLinker_lib", "1.00", "2.40", "core_lib/inputLinker_lib.js", true);
-var registryOnlyMajorOptional = checkAtagLibVersions({ names: ["inputLinker_lib"], requireAll: false, asText: false });
-assertEquals("registry-only-major-optional-mismatch", registryOnlyMajorOptional.versionMismatch[0], "inputLinker_lib expected major 0 got major 1 (0.88 vs 1.00)");
+registerAtagLibVersion("collectAtags_lib", "2.00", "2.40", "core_lib/collectAtags_lib.js");
+var registryOnlyMajorOptional = checkAtagLibVersions({ names: ["collectAtags_lib"], requireAll: false, asText: false });
+assertEquals("registry-only-major-mismatch", registryOnlyMajorOptional.versionMismatch[0], "collectAtags_lib expected major 1 got major 2 (1.62 vs 2.00)");
 ATAG_LIB_VERSIONS = savedRegistry;
 
 savedRegistry = ATAG_LIB_VERSIONS;
-savedGetInputLinkerLibVersion = getInputLinkerLibVersion;
+savedGetCollectAtagsLibVersion = getCollectAtagsLibVersion;
 ATAG_LIB_VERSIONS = {};
-getInputLinkerLibVersion = function() {
+getCollectAtagsLibVersion = function() {
   return {
-    name: "inputLinker_lib",
-    version: "0.99",
+    name: "collectAtags_lib",
+    version: "1.99",
     sysVersion: "2.40",
-    path: "core_lib/inputLinker_lib.js"
+    path: "core_lib/collectAtags_lib.js"
   };
 };
-var newerOptional = checkAtagLibVersions({ names: ["inputLinker_lib"], checkAccess: true, requireAll: false, asText: false });
+var newerOptional = checkAtagLibVersions({ names: ["collectAtags_lib"], checkAccess: true, requireAll: false, asText: false });
 assertTrue("newer-version-ok", newerOptional.ok);
 assertEquals("newer-version-no-mismatch", newerOptional.versionMismatch.length, 0);
-getInputLinkerLibVersion = function() {
+getCollectAtagsLibVersion = function() {
   return {
-    name: "inputLinker_lib",
-    version: "0.99",
+    name: "collectAtags_lib",
+    version: "1.99",
     sysVersion: "2.29",
-    path: "core_lib/inputLinker_lib.js"
+    path: "core_lib/collectAtags_lib.js"
   };
 };
-var newerWrongSys = checkAtagLibVersions({ names: ["inputLinker_lib"], checkAccess: true, requireAll: false, asText: false });
-assertEquals("newer-wrong-sys-mismatch", newerWrongSys.versionMismatch[0], "inputLinker_lib expected sys 2.40 got sys 2.29");
-getInputLinkerLibVersion = savedGetInputLinkerLibVersion;
+var newerWrongSys = checkAtagLibVersions({ names: ["collectAtags_lib"], checkAccess: true, requireAll: false, asText: false });
+assertEquals("newer-wrong-sys-mismatch", newerWrongSys.versionMismatch[0], "collectAtags_lib expected sys 2.40 got sys 2.29");
+getCollectAtagsLibVersion = savedGetCollectAtagsLibVersion;
 ATAG_LIB_VERSIONS = savedRegistry;
 
 var allVersionsText = checkAtagLibVersions({ checkAccess: true, requireAll: false, allVersions: true, asText: true });
 assertTrue("all-versions-text-has-helpers", allVersionsText.indexOf("helpers_lib v2.11") !== -1);
-assertTrue("all-versions-text-has-linker", allVersionsText.indexOf("inputLinker_lib v0.88") !== -1);
+assertTrue("all-versions-text-has-collect", allVersionsText.indexOf("collectAtags_lib v1.62") !== -1);
 
 checkAtagLibVersions({ checkAccess: true, verbose: true });
-assertTrue("verbose-log-written", _logs.join("\n").indexOf("inputLinker_lib v0.88") !== -1);
+assertTrue("verbose-log-written", _logs.join("\n").indexOf("collectAtags_lib v1.62") !== -1);
 
 var savedExpectedLibs = ATAG_EXPECTED_LIBS;
 ATAG_EXPECTED_LIBS = undefined;

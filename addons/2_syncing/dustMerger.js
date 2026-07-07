@@ -1,12 +1,19 @@
 /*
 ========================================
-B10 Dust Merger v0.03 (sys 2.40)
+B10 Dust Merger v0.09 (sys 2.40)
 ========================================
 
 Changes
+- forceMergeField appends string_rows even when rows already exist
+- add timestamp, target id and unchanged fields to debug output
+- store latest trash status in source-side merge stop marker
+- add forceMergeField overwrite for intentional re-merge
+- add rowSourceMode realtime_since for row labels relative to target date
+- write a source-side stop marker after successful merge
+- skip entries with source-side stop markers before counting searchLimit
+- use merge-json stop markers instead of trash state for merge exclusion
 - add debugField and skip already merged source entries via merge log
 - parse own merge log without requiring JSON.parse
-- skip trashed entries as source and target
 - expose trashAttempted when source trashing is requested
 - use entry id as tie-breaker for equal merge dates
 - add optional skipField/blockField checkbox guard on the current entry
@@ -25,7 +32,9 @@ dustMerge({
   debugField: "Debug",
   searchLimit: 5,
   mergeWindowHours: 4,
+  rowSourceMode: "realtime",
   skipField: "Nicht mergen",
+  forceMergeField: "Merge erzwingen",
   trashMergedEntry: true,
   openTargetEntry: true,
   map: [
@@ -41,7 +50,7 @@ dustMerge({
 ========================================
 */
 
-var DUST_MERGER_VERSION = "0.03";
+var DUST_MERGER_VERSION = "0.09";
 
 function dmTrim(s) {
   return String(s == null ? "" : s).replace(/^\s+|\s+$/g, "");
@@ -181,57 +190,6 @@ function dmSameEntry(a, b) {
   return !!(aid && bid && aid === bid);
 }
 
-function dmEntryFlag(entryObj, names) {
-  var i;
-  var name;
-  var value;
-
-  if (!entryObj) return false;
-
-  for (i = 0; i < names.length; i++) {
-    name = names[i];
-
-    try {
-      if (typeof entryObj[name] === "function") {
-        value = entryObj[name]();
-        if (value === true || String(value).toLowerCase() === "true") return true;
-      }
-    } catch (e0) {}
-
-    try {
-      value = entryObj[name];
-      if (value === true || String(value).toLowerCase() === "true") return true;
-    } catch (e1) {}
-
-    try {
-      if (typeof entryObj.field === "function") {
-        value = entryObj.field(name);
-        if (value === true || String(value).toLowerCase() === "true") return true;
-      }
-    } catch (e2) {}
-  }
-
-  return false;
-}
-
-function dmIsTrashedEntry(entryObj) {
-  try {
-    if (entryObj && entryObj.deleted === true) return true;
-  } catch (e0) {}
-
-  return dmEntryFlag(entryObj, [
-    "deleted",
-    "isDeleted",
-    "removed",
-    "isRemoved",
-    "_trashed",
-    "trashed",
-    "isTrashed",
-    "inTrash",
-    "isInTrash"
-  ]);
-}
-
 function dmToDate(val) {
   var d;
   var s;
@@ -297,17 +255,33 @@ function dmFormatHours(hours) {
   return s;
 }
 
-function dmRowLabel(sourceDate, cfg) {
+function dmRowLabel(sourceDate, targetDate, cfg, rowOffsetHours) {
   var hours;
+  var mode = String(cfg.rowSourceMode || cfg.sourceMode || "realtime").toLowerCase();
 
   if (!sourceDate) return "";
-  hours = sourceDate.getHours() + sourceDate.getMinutes() / 60 + sourceDate.getSeconds() / 3600;
+  if (mode === "realtime_since" || mode === "since" || mode === "relative") {
+    if (!targetDate) return "";
+    hours = (sourceDate.getTime() - targetDate.getTime()) / 3600000;
+    hours += Number(rowOffsetHours || 0);
+  } else {
+    hours = sourceDate.getHours() + sourceDate.getMinutes() / 60 + sourceDate.getSeconds() / 3600;
+  }
   hours = dmStepHours(hours, cfg.rowStepHours == null ? 0.5 : cfg.rowStepHours, cfg.rowRoundMode || "round");
   return dmFormatHours(hours);
 }
 
 function dmLooksLikeRow(line) {
   return /^\s*-?\d+(?:[,.]\d+)?\s*:/.test(String(line || ""));
+}
+
+function dmSplitRowLine(line) {
+  var m = String(line || "").match(/^\s*(-?\d+(?:[,.]\d+)?)\s*:\s*(.*)$/);
+  if (!m) return null;
+  return {
+    value: Number(String(m[1]).replace(",", ".")),
+    content: dmTrim(m[2])
+  };
 }
 
 function dmTextLines(text) {
@@ -409,18 +383,32 @@ function dmMergeString(targetEntry, sourceEntry, fieldName, mode) {
   return dmSafeSet(targetEntry, fieldName, nextText);
 }
 
-function dmMergeStringRows(targetEntry, sourceEntry, fieldName, mode, sourceDate, cfg) {
+function dmMergeStringRows(targetEntry, sourceEntry, fieldName, mode, sourceDate, targetDate, cfg, forceMerge) {
   var current = dmTextLines(dmSafeField(targetEntry, fieldName));
   var source = dmTextLines(dmSafeField(sourceEntry, fieldName));
-  var label = dmRowLabel(sourceDate, cfg);
+  var sourceMode = String(cfg.rowSourceMode || cfg.sourceMode || "realtime").toLowerCase();
+  var label = dmRowLabel(sourceDate, targetDate, cfg, 0);
   var changed = false;
   var i;
   var line;
+  var row;
 
   for (i = 0; i < source.length; i++) {
-    line = dmLooksLikeRow(source[i]) ? source[i] : label + ": " + source[i];
-    if (mode === "prepend") changed = dmPrependUniqueLine(current, line) || changed;
-    else changed = dmAppendUniqueLine(current, line) || changed;
+    row = dmSplitRowLine(source[i]);
+    if (row && (sourceMode === "realtime_since" || sourceMode === "since" || sourceMode === "relative")) {
+      line = dmRowLabel(sourceDate, targetDate, cfg, row.value) + ": " + row.content;
+    } else {
+      line = row ? source[i] : label + ": " + source[i];
+    }
+    if (forceMerge) {
+      if (mode === "prepend") current.unshift(line);
+      else current.push(line);
+      changed = true;
+    } else if (mode === "prepend") {
+      changed = dmPrependUniqueLine(current, line) || changed;
+    } else {
+      changed = dmAppendUniqueLine(current, line) || changed;
+    }
   }
 
   if (changed) dmSafeSet(targetEntry, fieldName, dmJoinText(current));
@@ -566,7 +554,7 @@ function dmFindTargetEntry(currentEntry, currentDate, entries, cfg) {
   for (i = 0; i < sorted.length; i++) {
     candidate = sorted[i];
     if (dmSameEntry(candidate, currentEntry)) continue;
-    if (dmIsTrashedEntry(candidate)) continue;
+    if (dmEntryHasMergeStop(candidate, cfg)) continue;
     if (searchLimit >= 0 && checked >= searchLimit) break;
     checked++;
 
@@ -589,6 +577,12 @@ function dmReadMergeLog(targetEntry, fieldName) {
   var re;
   var m;
   var out = [];
+  var objText;
+  var idMatch;
+  var timeMatch;
+  var stopMatch;
+  var mergedIntoIdMatch;
+  var fieldsMatch;
 
   if (!fieldName) return [];
   raw = dmSafeField(targetEntry, fieldName);
@@ -598,11 +592,20 @@ function dmReadMergeLog(targetEntry, fieldName) {
     parsed = JSON.parse(text);
     return dmIsArray(parsed) ? parsed : [];
   } catch (e) {
-    re = /\{[^{}]*"id"\s*:\s*"([^"]*)"[^{}]*"time"\s*:\s*"([^"]*)"[^{}]*\}/g;
+    re = /\{[^{}]*\}/g;
     while ((m = re.exec(text)) !== null) {
+      objText = m[0];
+      idMatch = objText.match(/"id"\s*:\s*"([^"]*)"/);
+      timeMatch = objText.match(/"time"\s*:\s*"([^"]*)"/);
+      stopMatch = objText.match(/"stop"\s*:\s*(true|false|"true"|"false")/);
+      mergedIntoIdMatch = objText.match(/"mergedIntoId"\s*:\s*"([^"]*)"/);
+      fieldsMatch = objText.match(/"fields"\s*:\s*(-?\d+(?:\.\d+)?)/);
       out.push({
-        id: m[1],
-        time: m[2]
+        id: idMatch ? idMatch[1] : "",
+        time: timeMatch ? timeMatch[1] : "",
+        stop: stopMatch ? String(stopMatch[1]).replace(/"/g, "") === "true" : false,
+        mergedIntoId: mergedIntoIdMatch ? mergedIntoIdMatch[1] : "",
+        fields: fieldsMatch ? Number(fieldsMatch[1]) : 0
       });
     }
     return out;
@@ -638,6 +641,61 @@ function dmAlreadyMerged(targetEntry, sourceEntry, cfg) {
   return false;
 }
 
+function dmEntryHasMergeStop(entryObj, cfg) {
+  var fieldName = cfg.mergeJsonField || cfg.mergeLogField || "";
+  var logItems;
+  var i;
+  var item;
+
+  if (!fieldName) return false;
+  logItems = dmReadMergeLog(entryObj, fieldName);
+  for (i = 0; i < logItems.length; i++) {
+    item = logItems[i] || {};
+    if (item.stop === true || String(item.stop || "").toLowerCase() === "true") return true;
+  }
+  return false;
+}
+
+function dmWriteSourceStopLog(sourceEntry, targetEntry, changedCount, cfg, result) {
+  var fieldName = cfg.mergeJsonField || cfg.mergeLogField || "";
+  var titleField = cfg.titleField || "";
+  var sourceIdentity;
+  var targetDate;
+  var logItems;
+  var targetId;
+  var item;
+  var i;
+
+  if (!fieldName || changedCount <= 0) return false;
+
+  sourceIdentity = dmSourceMergeIdentity(sourceEntry, cfg);
+  targetDate = dmToDate(dmSafeField(targetEntry, cfg.fieldDate || "Datum"));
+  targetId = dmEntryId(targetEntry);
+  logItems = dmReadMergeLog(sourceEntry, fieldName);
+
+  item = {
+    id: sourceIdentity.id,
+    time: sourceIdentity.time,
+    title: titleField ? String(dmSafeField(sourceEntry, titleField) || "") : "",
+    fields: changedCount,
+    stop: true,
+    mergedIntoId: targetId,
+    mergedIntoTime: dmDateIsoLike(targetDate),
+    trashAttempted: result ? result.trashAttempted === true : false,
+    trashed: result ? result.trashed === true : false
+  };
+
+  for (i = 0; i < logItems.length; i++) {
+    if (logItems[i] && logItems[i].stop === true) {
+      logItems[i] = item;
+      return dmSafeSet(sourceEntry, fieldName, dmStringifyMergeLog(logItems));
+    }
+  }
+
+  logItems.push(item);
+  return dmSafeSet(sourceEntry, fieldName, dmStringifyMergeLog(logItems));
+}
+
 function dmWriteDebug(entryObj, cfg, result, stage) {
   var fieldName = cfg.debugField || cfg.debug || "";
   var lines;
@@ -645,11 +703,17 @@ function dmWriteDebug(entryObj, cfg, result, stage) {
   if (!fieldName) return false;
   lines = [
     "DustMerger v" + DUST_MERGER_VERSION,
+    "time: " + dmDebugTimestamp(new Date()),
     "stage: " + String(stage || ""),
     "merged: " + result.merged,
     "alreadyMerged: " + result.alreadyMerged,
+    "sourceStopped: " + result.sourceStopped,
+    "forceMerge: " + result.forceMerge,
+    "targetId: " + dmEntryId(result.targetEntry),
     "changed: " + result.changed.join(", "),
+    "unchanged: " + result.unchanged.join(", "),
     "blocked: " + result.blocked.join(", "),
+    "stopWritten: " + result.stopWritten,
     "trashed: " + result.trashed,
     "trashAttempted: " + result.trashAttempted,
     "errors: " + result.errors.join(" | ")
@@ -660,6 +724,16 @@ function dmWriteDebug(entryObj, cfg, result, stage) {
 function dmPad2(n) {
   n = Number(n);
   return n < 10 ? "0" + n : String(n);
+}
+
+function dmDebugTimestamp(dateObj) {
+  dateObj = dateObj || new Date();
+  return "[" +
+    dmPad2(dateObj.getDate()) + "." +
+    dmPad2(dateObj.getMonth() + 1) + "." +
+    dmPad2(dateObj.getFullYear() % 100) + " " +
+    dmPad2(dateObj.getHours()) + ":" +
+    dmPad2(dateObj.getMinutes()) + "]";
 }
 
 function dmDateIsoLike(dateObj) {
@@ -694,12 +768,16 @@ function dmStringifyMergeLog(items) {
 
   for (i = 0; i < items.length; i++) {
     item = items[i] || {};
-    parts.push(
-      "{\"id\":\"" + dmJsonEscape(item.id) +
+    parts.push("{\"id\":\"" + dmJsonEscape(item.id) +
       "\",\"time\":\"" + dmJsonEscape(item.time) +
       "\",\"title\":\"" + dmJsonEscape(item.title) +
-      "\",\"fields\":" + Number(item.fields || 0) + "}"
-    );
+      "\",\"fields\":" + Number(item.fields || 0) +
+      (item.stop === true ? ",\"stop\":true" : "") +
+      (item.mergedIntoId != null && item.mergedIntoId !== "" ? ",\"mergedIntoId\":\"" + dmJsonEscape(item.mergedIntoId) + "\"" : "") +
+      (item.mergedIntoTime != null && item.mergedIntoTime !== "" ? ",\"mergedIntoTime\":\"" + dmJsonEscape(item.mergedIntoTime) + "\"" : "") +
+      (item.trashAttempted === true ? ",\"trashAttempted\":true" : "") +
+      (item.trashed === true ? ",\"trashed\":true" : "") +
+      "}");
   }
   return "[" + parts.join(",") + "]";
 }
@@ -754,14 +832,19 @@ function dmOpenEntry(entryObj) {
 
 function dmTrashEntry(entryObj) {
   if (!entryObj) return false;
-  if (dmIsTrashedEntry(entryObj)) return true;
   try {
     if (typeof entryObj.trash === "function") {
       entryObj.trash();
-      return dmIsTrashedEntry(entryObj) || true;
+      return true;
     }
   } catch (e) {}
   return false;
+}
+
+function dmForceMergeEnabled(entryObj, cfg) {
+  var fieldName = cfg.forceMergeField || cfg.overwriteMergeField || cfg.forceField || "";
+  if (!fieldName) return false;
+  return dmIsTruthyValue(dmSafeField(entryObj, fieldName));
 }
 
 function dustMerge(cfg) {
@@ -772,6 +855,7 @@ function dustMerge(cfg) {
   var currentDate = dmToDate(dmSafeField(currentEntry, fieldDate));
   var libraryObj = cfg.libraryObj || cfg.libObj || dmSafeLib(currentEntry);
   var entries = cfg.entries ? dmToArray(cfg.entries) : dmSafeEntries(libraryObj);
+  var forceMerge;
   var targetEntry;
   var map = dmNormalizeMap(cfg.map || cfg.processMap);
   var result = {
@@ -780,8 +864,12 @@ function dustMerge(cfg) {
     targetEntry: null,
     merged: false,
     alreadyMerged: false,
+    sourceStopped: false,
+    forceMerge: false,
     changed: [],
+    unchanged: [],
     blocked: [],
+    stopWritten: false,
     trashed: false,
     trashAttempted: false,
     opened: false,
@@ -796,9 +884,11 @@ function dustMerge(cfg) {
     dmWriteDebug(currentEntry, cfg, result, "missing_source");
     return result;
   }
-  if (dmIsTrashedEntry(currentEntry)) {
-    result.errors.push("Aktueller Eintrag ist im Papierkorb");
-    dmWriteDebug(currentEntry, cfg, result, "source_trashed");
+  forceMerge = dmForceMergeEnabled(currentEntry, cfg);
+  result.forceMerge = forceMerge;
+  if (!forceMerge && dmEntryHasMergeStop(currentEntry, cfg)) {
+    result.sourceStopped = true;
+    dmWriteDebug(currentEntry, cfg, result, "source_stop");
     return result;
   }
   if (!currentDate) {
@@ -813,8 +903,8 @@ function dustMerge(cfg) {
   }
 
   targetEntry = cfg.targetEntry || dmFindTargetEntry(currentEntry, currentDate, entries, cfg);
-  if (targetEntry && dmIsTrashedEntry(targetEntry)) {
-    result.errors.push("Ziel-Eintrag ist im Papierkorb");
+  if (targetEntry && dmEntryHasMergeStop(targetEntry, cfg)) {
+    result.errors.push("Ziel-Eintrag ist bereits als Merge-Quelle markiert");
     targetEntry = null;
   }
   result.targetEntry = targetEntry;
@@ -823,7 +913,7 @@ function dustMerge(cfg) {
     return result;
   }
 
-  if (dmAlreadyMerged(targetEntry, currentEntry, cfg)) {
+  if (!forceMerge && dmAlreadyMerged(targetEntry, currentEntry, cfg)) {
     result.alreadyMerged = true;
     dmWriteDebug(currentEntry, cfg, result, "already_merged");
     return result;
@@ -841,7 +931,7 @@ function dustMerge(cfg) {
     if (item.datatype === "tag" || item.datatype === "tags") {
       changed = dmMergeTags(targetEntry, currentEntry, item.name, item.mode);
     } else if (item.datatype === "string_rows" || item.datatype === "rows") {
-      changed = dmMergeStringRows(targetEntry, currentEntry, item.name, item.mode, currentDate, cfg);
+      changed = dmMergeStringRows(targetEntry, currentEntry, item.name, item.mode, currentDate, dmToDate(dmSafeField(targetEntry, cfg.targetDateField || fieldDate)), cfg, forceMerge);
     } else if (item.datatype === "number" || item.datatype === "int" || item.datatype === "real") {
       changed = dmMergeNumber(targetEntry, currentEntry, item.name, item.mode);
     } else {
@@ -849,6 +939,7 @@ function dustMerge(cfg) {
     }
 
     if (changed) result.changed.push(item.name);
+    else result.unchanged.push(item.name);
   }
 
   result.merged = result.changed.length > 0;
@@ -858,6 +949,10 @@ function dustMerge(cfg) {
     result.trashAttempted = true;
     result.trashed = dmTrashEntry(currentEntry);
     if (!result.trashed) result.errors.push("Quell-Eintrag konnte nicht in den Papierkorb verschoben werden");
+  }
+  result.stopWritten = dmWriteSourceStopLog(currentEntry, targetEntry, result.changed.length, cfg, result);
+  if (result.merged && (cfg.mergeJsonField || cfg.mergeLogField) && !result.stopWritten) {
+    result.errors.push("Stop-Marker konnte nicht in den Quell-Eintrag geschrieben werden");
   }
 
   if (result.merged && cfg.openTargetEntry !== false) {

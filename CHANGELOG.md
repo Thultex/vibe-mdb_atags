@@ -33,8 +33,15 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Feature: DustMerger kann Merge-Metadaten in `mergeJsonField` schreiben, den gemergten Quell-Eintrag optional in den Papierkorb verschieben und den Ziel-Eintrag öffnen.
 - Fix: DustMerger v0.02 überspringt Papierkorb-Einträge als Quelle und Ziel, nutzt bei gleichem Datum die Entry-ID als Tiebreaker und weist mit `trashAttempted` aus, ob `entry.trash()` angestoßen wurde.
 - Feature: DustMerger v0.03 ergänzt `debugField` und verhindert erneutes Mergen desselben Quell-Eintrags über `mergeJsonField`.
+- Change: DustMerger v0.04 nutzt einen Stop-Marker im eigenen `mergeJsonField` als Merge-Ausschluss; übersprungene Stop-Einträge zählen nicht gegen `searchLimit`, während Papierkorb-Verschieben weiter nur per `entry.trash()` angestoßen wird.
+- Feature: DustMerger v0.05 ergänzt `rowSourceMode: "realtime_since"` für relative Quell-Rows beim Merge.
+- Feature: DustMerger v0.06 ergänzt `forceMergeField`/`overwriteMergeField`, um einen normalen Merge bewusst erneut zu erzwingen, auch wenn Source-Stop oder Ziel-Historie bereits einen früheren Merge vermerken.
+- Change: DustMerger v0.07 schreibt den letzten Trash-Status direkt in den Source-Stop-Marker statt in ein separates Flag-Feld.
+- Change: DustMerger v0.08 ergänzt Zeitstempel, Ziel-ID und unveränderte Felder im Debug; v0.09 lässt `forceMergeField` `string_rows` trotz bereits vorhandener Row erneut anhängen.
+- Feature: Tag Cleaner v1.47 ergänzt `prepareTagCleanerTemplateText()`/`applyTagCleanerTemplatePrep()` für neue Einträge; Template-Slots werden zuerst geleert, gleiche leere Template-Variablen danach entfernt, `sortRows` ist standardmäßig aktiv.
 - Tests: `tests/test_dustMerger.js` deckt Zielsuche, Row-Dedupe, Tag-Dedupe, Blockmap, Merge-JSON, Trash und Open ab.
 - Feature: `collectAtags_lib` v1.62 unterstützt Positiv/Negativ-Alias-Header wie `@@Aufmerksam/Unaufmerksam(Aufm): -Unauf`; negative Werte werden unter dem Negativnamen erfasst.
+- Change: `inputLinker_lib` aus der Core-Lib-Schiene entfernt; `core/_checkLibs.js` v1.30, `Z_LIB_VERSIONS.md`, README und LibVersions-Tests erwarten nur noch `helpers_lib`, `collectAtags_lib` und `exportAtags_lib`.
 
 ### 2026-06-20 - (ca. 0,5h)
 

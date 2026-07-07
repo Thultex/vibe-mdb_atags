@@ -471,6 +471,54 @@ assertEquals(
   "tag\u00B2\n\n| stress\u00B3"
 );
 
+assertEquals(
+  "template-prep-removes-template-row-prefix-and-dedupes",
+  prepareTagCleanerTemplateText("1: Mal_sehen:__\n1: Mal_sehen:__\n1: Mal_sehen:__"),
+  "Mal_sehen:__"
+);
+
+assertEquals(
+  "template-prep-clears-filled-template-slots-before-dedupe",
+  prepareTagCleanerTemplateText("1: Testing:_4_\n2: Testing:_77_\nTesting:__"),
+  "Testing:__"
+);
+
+assertEquals(
+  "template-prep-keeps-different-template-variables",
+  prepareTagCleanerTemplateText("1: Testing:_4_\n2: Laufen:_2 km_"),
+  "Testing:__\nLaufen:__"
+);
+
+assertEquals(
+  "template-prep-keeps-non-template-row-prefix-by-default",
+  prepareTagCleanerTemplateText("1: Inhalt\n1: Mal_sehen:__"),
+  "1: Inhalt\nMal_sehen:__"
+);
+
+assertEquals(
+  "template-prep-can-remove-all-row-prefixes",
+  prepareTagCleanerTemplateText("1: Inhalt\n2: Mal_sehen:__", { removeAllRowPrefixes: true }),
+  "Inhalt\nMal_sehen:__"
+);
+
+assertEquals(
+  "template-prep-sorts-rows-by-default",
+  prepareTagCleanerTemplateText("3: drittes\n1: erstes\n2: zweites\nText"),
+  "1: erstes\n2: zweites\n3: drittes\nText"
+);
+
+assertEquals(
+  "template-prep-can-disable-row-sort",
+  prepareTagCleanerTemplateText("3: drittes\n1: erstes\nText", { sortRows: false }),
+  "3: drittes\n1: erstes\nText"
+);
+
+assertEquals(
+  "normal-cleaner-does-not-clear-template-slots",
+  makeTagCleanerText("Testing:_77_\nNormal3"),
+  "Testing:_77_\nNormal\u00B3"
+);
+
 var entryObj = makeEntry({
   Note: "emo2\n| stress activityc"
 });
@@ -514,5 +562,27 @@ applyCleanTags({
 
 assertEquals("apply-clean-tags-default-passive-alias-field", defaultAliasEntryObj.field("Notiz"), "0: Ablenkung\u00B2\n\nAblenkung\u00B2");
 assertEquals("apply-clean-tags-default-passive-alias-unchanged", defaultAliasEntryObj.field("Alias"), "@@Ablenkung (ab+): bei");
+
+var templatePrepEntryObj = makeEntry({
+  Note: "1: Mal_sehen:_ja_\n1: Mal_sehen:__"
+});
+
+applyTagCleanerTemplatePrep({
+  entryObj: templatePrepEntryObj,
+  textField: "Note"
+});
+
+assertEquals("apply-template-prep", templatePrepEntryObj.field("Note"), "Mal_sehen:__");
+
+var compactTemplateEntryObj = makeEntry({
+  Note: "Testing:_4_\nTesting:_77_\nLaufen:_2 km_"
+});
+
+cleanTemplateTags({
+  entryObj: compactTemplateEntryObj,
+  textField: "Note"
+});
+
+assertEquals("clean-template-tags-wrapper", compactTemplateEntryObj.field("Note"), "Testing:__\nLaufen:__");
 
 WScript.Echo("OK");

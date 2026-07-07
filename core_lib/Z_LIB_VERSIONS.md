@@ -7,7 +7,6 @@ Aktuelle Library-Dateien und Versionen:
 | #1 collectAtags_lib | 1.62 | 2.40 | `core_lib/collectAtags_lib.js` |
 | #2 exportAtags_lib | 1.83 | 2.40 | `core_lib/exportAtags_lib.js` |
 | #3 helpers_lib | 2.11 | 2.40 | `core_lib/helpers_lib.js` |
-| #4 inputLinker_lib | 0.88 | 2.40 | `core_lib/inputLinker_lib.js` |
 
 ## Checker
 
@@ -15,7 +14,7 @@ Aktuelle Library-Dateien und Versionen:
 
 | Name | Version | Sys | Pfad |
 | --- | ---: | ---: | --- |
-| A1 libVersions | 1.29 | 2.40 | `core/_checkLibs.js` |
+| A1 libVersions | 1.30 | 2.40 | `core/_checkLibs.js` |
 
 ## Zugehoerige Memento-Dateien
 
@@ -31,8 +30,7 @@ Empfohlene Lade-Reihenfolge:
 2. `core_lib/helpers_lib.js`
 3. `core_lib/collectAtags_lib.js`
 4. `core_lib/exportAtags_lib.js`
-5. `core_lib/inputLinker_lib.js` optional, wenn Library-Einträge verlinkt/aggregiert werden sollen
-6. `core/helpers.js` nur wenn Memento-Wrapper wie `applyTags` gebraucht werden
+5. `core/helpers.js` nur wenn Memento-Wrapper wie `applyTags` gebraucht werden
 
 `core/tagCleaner.js` ist ein Core-Modul, keine externe Lib. Es hat eine eigene `getTagCleanerVersion()`-Funktion, wird aber nicht von `checkLibVersions()` als Remote-Lib erwartet.
 `core/helpers.js` ist ebenfalls keine externe Lib. Es enthaelt Memento-Wrapper wie `applyTags`, `bulkApplyTags` und `bulkExportAtags`, nutzt `core_lib/helpers_lib.js` und wird deshalb nicht in `checkLibVersions()` registriert.
@@ -57,7 +55,7 @@ Als Textausgabe:
 
 ```js
 checkLibVersions({
-  names: ["helpers_lib", "collectAtags_lib", "exportAtags_lib", "inputLinker_lib"],
+  names: ["helpers_lib", "collectAtags_lib", "exportAtags_lib"],
   asText: true
 });
 ```
