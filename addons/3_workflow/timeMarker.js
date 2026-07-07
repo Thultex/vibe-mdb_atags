@@ -51,7 +51,7 @@ cleanupTimeMarker({
 Vorlagen vor dem Tag-Cleaner von alten Row-Markern befreien
 
 clearTimeMarkerRows({
-  targetTextField: "Notiz",
+  fields: ["Notiz"],
   mode: "remove"
 });
 */
@@ -561,9 +561,32 @@ function clearTimeMarkerRows(cfg) {
 
   var e = cfg.entryObj || entry();
   var targetTextField = resolveTimeMarkerTextField(cfg);
+  var fields = cfg.fields;
   var text;
   var rawHours;
   var newText;
+  var results;
+  var i;
+  var fieldCfg;
+  var key;
+
+  if (fields && Object.prototype.toString.call(fields) !== "[object Array]") fields = [fields];
+  if (fields && fields.length) {
+    results = {};
+    for (i = 0; i < fields.length; i++) {
+      if (!fields[i]) continue;
+      fieldCfg = {};
+      for (key in cfg) {
+        if (cfg.hasOwnProperty(key) && key !== "fields" && key !== "targetTextField" && key !== "textField") {
+          fieldCfg[key] = cfg[key];
+        }
+      }
+      fieldCfg.entryObj = e;
+      fieldCfg.targetTextField = fields[i];
+      results[fields[i]] = clearTimeMarkerRows(fieldCfg);
+    }
+    return results;
+  }
 
   if (!e || !targetTextField) return false;
 

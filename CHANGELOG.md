@@ -38,7 +38,8 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Feature: DustMerger v0.06 ergänzt `forceMergeField`/`overwriteMergeField`, um einen normalen Merge bewusst erneut zu erzwingen, auch wenn Source-Stop oder Ziel-Historie bereits einen früheren Merge vermerken.
 - Change: DustMerger v0.07 schreibt den letzten Trash-Status direkt in den Source-Stop-Marker statt in ein separates Flag-Feld.
 - Change: DustMerger v0.08 ergänzt Zeitstempel, Ziel-ID und unveränderte Felder im Debug; v0.09 lässt `forceMergeField` `string_rows` trotz bereits vorhandener Row erneut anhängen.
-- Feature: Tag Cleaner v1.47 ergänzt `prepareTagCleanerTemplateText()`/`applyTagCleanerTemplatePrep()` für neue Einträge; Template-Slots werden zuerst geleert, gleiche leere Template-Variablen danach entfernt, `sortRows` ist standardmäßig aktiv.
+- Feature: Tag Cleaner v1.47 ergänzt `prepareTagCleanerTemplateText()`/`applyTagCleanerTemplatePrep()` für neue Einträge; Template-Slots werden zuerst geleert, gleiche leere Template-Variablen danach entfernt.
+- Change: Tag Cleaner v1.48 ergänzt `cleanTags()` als kurzen Alias für `applyCleanTags()`, unterstützt `fields` für mehrere Felder und sortiert Row-Blöcke im normalen Clean-Vorgang standardmäßig; `cleanTemplateTags()` sortiert nur noch explizit mit `sortRows: true`.
 - Tests: `tests/test_dustMerger.js` deckt Zielsuche, Row-Dedupe, Tag-Dedupe, Blockmap, Merge-JSON, Trash und Open ab.
 - Feature: `collectAtags_lib` v1.62 unterstützt Positiv/Negativ-Alias-Header wie `@@Aufmerksam/Unaufmerksam(Aufm): -Unauf`; negative Werte werden unter dem Negativnamen erfasst.
 - Change: `inputLinker_lib` aus der Core-Lib-Schiene entfernt; `core/_checkLibs.js` v1.30, `Z_LIB_VERSIONS.md`, README und LibVersions-Tests erwarten nur noch `helpers_lib`, `collectAtags_lib` und `exportAtags_lib`.

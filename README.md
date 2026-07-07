@@ -117,7 +117,7 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
   - `makeTagCleanerTextWithOptions()`
   - `prepareTagCleanerTemplateText()` fuer Vorlage-/Template-Vorbereitung neuer Eintraege
   - `cleanTemplateTags()` als schlanker Wrapper: Template-Slots leeren und gleiche Template-Variablen zusammenfassen
-  - `applyCleanTags()` als kurzer Memento-Wrapper; ohne Optionen nutzt er `Notiz` und liest `Alias` passiv mit
+  - `cleanTags()` / `applyCleanTags()` als kurzer Memento-Wrapper; ohne Optionen nutzt er `Notiz`, liest `Alias` passiv mit und sortiert Row-Bloecke standardmaessig
   - `applyTagCleaner()` als optionaler Memento-Wrapper
 
 **Tagging Add-ons**
@@ -363,10 +363,12 @@ e.set("Notiz", cleaned);
 Kurzer Memento-Wrapper mit passivem Alias-Feld:
 
 ```js
-applyCleanTags();
+cleanTags({
+  fields: ["Notiz"]
+});
 ```
 
-Dabei wird `Notiz` gecleant und `Alias` nur gelesen. Beispiel:
+Dabei wird `Notiz` gecleant, `Alias` nur gelesen und Row-Bloecke werden standardmaessig sortiert. Beispiel:
 
 ```text
 Alias:
@@ -387,17 +389,17 @@ Vorlage-/Template-Vorbereitung ist ein eigener Schritt fuer neu erstellte Eintra
 
 ```js
 clearTimeMarkerRows({
-  targetTextField: "Notiz",
+  fields: ["Notiz"],
   mode: "remove"
 });
 
 applyTagCleanerTemplatePrep({
-  textField: "Notiz"
+  fields: ["Notiz"]
 });
 
 // Schlanker Alias fuer genau diesen Tag-Cleaner-Teil:
 cleanTemplateTags({
-  textField: "Notiz"
+  fields: ["Notiz"]
 });
 ```
 
@@ -418,7 +420,7 @@ Testing:__
 3: normaler Inhalt
 ```
 
-Dabei entfernt `clearTimeMarkerRows()` zuerst nur die alten Row-Marker. Danach leert `cleanTemplateTags()` Template-Slots wie `Mal_sehen:_2 km_` zu `Mal_sehen:__` und entfernt gleiche leere Template-Variablen, damit jede Vorlage nur einmal bleibt. Der normale Clean-Vorgang ueber `applyTagCleaner()`/`applyCleanTags()` leert Template-Slots bewusst nicht. Normale Inhalt-Rows behalten ihren Zeitprefix, wenn sie nicht vorher ueber `clearTimeMarkerRows()` entfernt wurden. Mit `removeAllRowPrefixes: true` kann das Entfernen aller Row-Prefixe direkt in der Template-Prep bewusst aktiviert werden. `sortRows` ist standardmaessig aktiv und sortiert vorhandene Row-Prefixe numerisch; bei absoluten Markern wird vorausgesetzt, dass Folgetag-1-Uhr bereits als `25:` vorliegt.
+Dabei entfernt `clearTimeMarkerRows()` zuerst nur die alten Row-Marker. Danach leert `cleanTemplateTags()` Template-Slots wie `Mal_sehen:_2 km_` zu `Mal_sehen:__` und entfernt gleiche leere Template-Variablen, damit jede Vorlage nur einmal bleibt. Der normale Clean-Vorgang ueber `applyTagCleaner()`/`cleanTags()` leert Template-Slots bewusst nicht. Normale Inhalt-Rows behalten ihren Zeitprefix, wenn sie nicht vorher ueber `clearTimeMarkerRows()` entfernt wurden. Mit `removeAllRowPrefixes: true` kann das Entfernen aller Row-Prefixe direkt in der Template-Prep bewusst aktiviert werden. `sortRows` gehoert zum normalen Clean-Vorgang und ist dort standardmaessig aktiv; bei absoluten Markern wird vorausgesetzt, dass Folgetag-1-Uhr bereits als `25:` vorliegt.
 
 Optionen:
 
@@ -432,6 +434,7 @@ Optionen:
 - `formatValues: "min"` lässt `+` bei positiven Zahlen weg
 - `formatValues: "max"` erzwingt `+` bei positiven Zahlen
 - `formatValues: "none"` lässt Werttags unverändert
+- `sortRows: true` sortiert Row-Bloecke im normalen Clean-Vorgang numerisch (Standard); `false` behaelt die Reihenfolge
 - `aliasText` oder `aliasTextFields` liefert Aliasdefinitionen fuer Anzeigenamen, z. B. `@@Emotion (emo, 😃): Gefuehl`; `applyCleanTags()` liest ohne Angabe standardmaessig das passive Feld `Alias`
 - Das zu cleanende Feld wird nicht automatisch als Aliasquelle genutzt; dafuer muss es explizit in `aliasTextFields` stehen
 - `cleanerTagText: "long" | "short" | "none"` waehlt Langname, Kurzname oder nur Symbol fuer bekannte Alias-Tags
@@ -587,12 +590,12 @@ cleanupTimeMarker({
 });
 
 clearTimeMarkerRows({
-  targetTextField: "Notiz",
+  fields: ["Notiz"],
   mode: "remove"
 });
 
 clearTimeMarkerRows({
-  targetTextField: "Notiz",
+  fields: ["Notiz"],
   sourceMode: "hours",
   sourceHoursField: "Stunden",
   mode: "reset"

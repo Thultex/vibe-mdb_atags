@@ -658,6 +658,23 @@ function testClearTimeMarkerRowsCanResetRowsToCurrentMarker() {
   assertEquals("clear-time-marker-rows-reset", entryObj.field("Note"), "4: alt\n4: alt");
 }
 
+function testClearTimeMarkerRowsSupportsFields() {
+  var entryObj = makeEntry({
+    Note: "1: Mal_sehen:__",
+    Record: "2: Plan:__"
+  });
+
+  var changed = clearTimeMarkerRows({
+    entryObj: entryObj,
+    fields: ["Note", "Record"]
+  });
+
+  assertEquals("clear-time-marker-rows-fields-note", entryObj.field("Note"), "Mal_sehen:__");
+  assertEquals("clear-time-marker-rows-fields-record", entryObj.field("Record"), "Plan:__");
+  assertEquals("clear-time-marker-rows-fields-result-note", changed.Note, true);
+  assertEquals("clear-time-marker-rows-fields-result-record", changed.Record, true);
+}
+
 testInlineInsertForSingleTextLine();
 testAppendReturnsFalseWithoutSourceAndNoMarkers();
 testAppendReturnsTrueWithoutSourceWhenMarkersExist();
@@ -696,5 +713,6 @@ testCleanupRemovesExactDuplicateRowsWithoutMergingSameTimestamps();
 testCleanupReturnsFalseWhenNoMarkersRemain();
 testClearTimeMarkerRowsRemovesRowPrefixesOnly();
 testClearTimeMarkerRowsCanResetRowsToCurrentMarker();
+testClearTimeMarkerRowsSupportsFields();
 
 print("OK");

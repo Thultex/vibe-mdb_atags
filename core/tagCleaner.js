@@ -1,6 +1,6 @@
 /*
 ========================================
-A4 Tag Cleaner v1.47 (sys 2.40)
+A4 Tag Cleaner v1.48 (sys 2.40)
 ========================================
 
 Notes
@@ -16,11 +16,11 @@ Notes
 - Provides lean template slot clearing + compaction helpers for new entries.
 
 Example: clean the default note field "Notiz" and passively read "Alias"
-applyCleanTags();
+cleanTags();
 
 Example: clean a custom field with options
-applyCleanTags({
-  textField: "Notiz",
+cleanTags({
+  fields: ["Notiz"],
   aliasTextFields: ["Alias"],
   tagBarPosition: "time_top",
   tagBarSpacing: "blank",
@@ -29,7 +29,7 @@ applyCleanTags({
 
 Example: only clear template tags after creating a new entry
 cleanTemplateTags({
-  textField: "Notiz"
+  fields: ["Notiz"]
 });
 
 ========================================
@@ -38,7 +38,7 @@ cleanTemplateTags({
 function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
-    version: "1.47",
+    version: "1.48",
     sysVersion: "2.40",
     path: "core/tagCleaner.js"
   };
@@ -987,6 +987,7 @@ function makeTagCleanerTextWithOptions(sourceText, cfg) {
   }
 
   while (body.length && trimAtagLibString(body[body.length - 1]) === "") body.pop();
+  if (cfg.sortRows !== false) body = sortTagCleanerPreparedRows(body);
   sortTagCleanerTokens(barTokens);
 
   if ((tagBarPosition === "auto" || tagBarPosition === "time_top" || tagBarPosition === "timestamps_top") && hasTimestampLine) {
@@ -1056,26 +1057,33 @@ function tagCleanerPreparedRowValue(line) {
 }
 
 function sortTagCleanerPreparedRows(lines) {
+  var out = [];
   var rows = [];
-  var other = [];
   var i;
   var value;
 
-  for (i = 0; i < lines.length; i++) {
-    value = tagCleanerPreparedRowValue(lines[i]);
-    if (value == null || isNaN(value)) other.push(lines[i]);
-    else rows.push({ value: value, index: i, line: lines[i] });
+  function flushRows() {
+    var j;
+    rows.sort(function(a, b) {
+      if (a.value !== b.value) return a.value - b.value;
+      return a.index - b.index;
+    });
+    for (j = 0; j < rows.length; j++) out.push(rows[j].line);
+    rows = [];
   }
 
-  rows.sort(function(a, b) {
-    if (a.value !== b.value) return a.value - b.value;
-    return a.index - b.index;
-  });
+  for (i = 0; i < lines.length; i++) {
+    value = tagCleanerPreparedRowValue(lines[i]);
+    if (value == null || isNaN(value)) {
+      flushRows();
+      out.push(lines[i]);
+    } else {
+      rows.push({ value: value, index: i, line: lines[i] });
+    }
+  }
 
-  lines = [];
-  for (i = 0; i < rows.length; i++) lines.push(rows[i].line);
-  for (i = 0; i < other.length; i++) lines.push(other[i]);
-  return lines;
+  flushRows();
+  return out;
 }
 
 function clearTagCleanerTemplateSlots(line, cfg) {
@@ -1093,7 +1101,7 @@ function compactTagCleanerTemplateText(sourceText, cfg) {
   var out = [];
   var removeRowPrefix = cfg.removeRowPrefix !== false;
   var clearTemplateSlots = cfg.clearTemplateSlots !== false;
-  var sortRows = cfg.sortRows !== false;
+  var sortRows = cfg.sortRows === true;
   var i;
   var line;
   var row;
@@ -1153,11 +1161,33 @@ function applyTagCleaner(cfg) {
   var entryObj = cfg.entryObj || (typeof entry === "function" ? entry() : null);
   var sourceField = cfg.sourceTextField || cfg.textField;
   var targetField = cfg.targetTextField || sourceField;
+  var fields = cfg.fields;
   var sourceText;
   var out;
   var aliasParts;
   var aliasFields;
   var i;
+  var results;
+  var fieldCfg;
+  var key;
+
+  if (fields && Object.prototype.toString.call(fields) !== "[object Array]") fields = [fields];
+  if (fields && fields.length) {
+    results = {};
+    for (i = 0; i < fields.length; i++) {
+      if (!fields[i]) continue;
+      fieldCfg = {};
+      for (key in cfg) {
+        if (cfg.hasOwnProperty(key) && key !== "fields" && key !== "sourceTextField" && key !== "targetTextField" && key !== "textField") {
+          fieldCfg[key] = cfg[key];
+        }
+      }
+      fieldCfg.entryObj = entryObj;
+      fieldCfg.textField = fields[i];
+      results[fields[i]] = applyTagCleaner(fieldCfg);
+    }
+    return results;
+  }
 
   if (!entryObj || !sourceField || !targetField) return "";
 
@@ -1186,8 +1216,31 @@ function applyTagCleanerTemplatePrep(cfg) {
   var entryObj = cfg.entryObj || (typeof entry === "function" ? entry() : null);
   var sourceField = cfg.sourceTextField || cfg.textField;
   var targetField = cfg.targetTextField || sourceField;
+  var fields = cfg.fields;
   var sourceText;
   var out;
+  var results;
+  var i;
+  var fieldCfg;
+  var key;
+
+  if (fields && Object.prototype.toString.call(fields) !== "[object Array]") fields = [fields];
+  if (fields && fields.length) {
+    results = {};
+    for (i = 0; i < fields.length; i++) {
+      if (!fields[i]) continue;
+      fieldCfg = {};
+      for (key in cfg) {
+        if (cfg.hasOwnProperty(key) && key !== "fields" && key !== "sourceTextField" && key !== "targetTextField" && key !== "textField") {
+          fieldCfg[key] = cfg[key];
+        }
+      }
+      fieldCfg.entryObj = entryObj;
+      fieldCfg.textField = fields[i];
+      results[fields[i]] = applyTagCleanerTemplatePrep(fieldCfg);
+    }
+    return results;
+  }
 
   if (!entryObj || !sourceField || !targetField) return "";
   sourceText = entryObj.field(sourceField);
@@ -1210,8 +1263,12 @@ function cleanTemplates(cfg) {
 
 function applyCleanTags(cfg) {
   cfg = cfg || {};
-  if (!cfg.textField && !cfg.sourceTextField) cfg.textField = "Notiz";
+  if (!cfg.fields && !cfg.textField && !cfg.sourceTextField) cfg.textField = "Notiz";
   return applyTagCleaner(cfg);
+}
+
+function cleanTags(cfg) {
+  return applyCleanTags(cfg);
 }
 
 function bulkApplyTagCleaner(cfg) {

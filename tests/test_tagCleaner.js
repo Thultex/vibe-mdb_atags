@@ -502,14 +502,26 @@ assertEquals(
 );
 
 assertEquals(
-  "template-prep-sorts-rows-by-default",
+  "template-prep-keeps-row-order-by-default",
   prepareTagCleanerTemplateText("3: drittes\n1: erstes\n2: zweites\nText"),
+  "3: drittes\n1: erstes\n2: zweites\nText"
+);
+
+assertEquals(
+  "template-prep-can-sort-rows-explicitly",
+  prepareTagCleanerTemplateText("3: drittes\n1: erstes\n2: zweites\nText", { sortRows: true }),
   "1: erstes\n2: zweites\n3: drittes\nText"
 );
 
 assertEquals(
-  "template-prep-can-disable-row-sort",
-  prepareTagCleanerTemplateText("3: drittes\n1: erstes\nText", { sortRows: false }),
+  "normal-cleaner-sorts-row-blocks-by-default",
+  makeTagCleanerText("3: drittes\n1: erstes\n2: zweites\n\nText"),
+  "1: erstes\n2: zweites\n3: drittes\n\nText"
+);
+
+assertEquals(
+  "normal-cleaner-can-disable-row-sort",
+  makeTagCleanerTextWithOptions("3: drittes\n1: erstes\nText", { sortRows: false }),
   "3: drittes\n1: erstes\nText"
 );
 
@@ -563,6 +575,20 @@ applyCleanTags({
 assertEquals("apply-clean-tags-default-passive-alias-field", defaultAliasEntryObj.field("Notiz"), "0: Ablenkung\u00B2\n\nAblenkung\u00B2");
 assertEquals("apply-clean-tags-default-passive-alias-unchanged", defaultAliasEntryObj.field("Alias"), "@@Ablenkung (ab+): bei");
 
+var cleanTagsFieldsEntryObj = makeEntry({
+  Alias: "",
+  Note: "2: zweites\n1: erstes",
+  Record: "Test3"
+});
+
+cleanTags({
+  entryObj: cleanTagsFieldsEntryObj,
+  fields: ["Note", "Record"]
+});
+
+assertEquals("clean-tags-fields-note", cleanTagsFieldsEntryObj.field("Note"), "1: erstes\n2: zweites");
+assertEquals("clean-tags-fields-record", cleanTagsFieldsEntryObj.field("Record"), "Test\u00B3");
+
 var templatePrepEntryObj = makeEntry({
   Note: "1: Mal_sehen:_ja_\n1: Mal_sehen:__"
 });
@@ -575,14 +601,16 @@ applyTagCleanerTemplatePrep({
 assertEquals("apply-template-prep", templatePrepEntryObj.field("Note"), "Mal_sehen:__");
 
 var compactTemplateEntryObj = makeEntry({
-  Note: "Testing:_4_\nTesting:_77_\nLaufen:_2 km_"
+  Note: "Testing:_4_\nTesting:_77_\nLaufen:_2 km_",
+  Record: "Plan:_alt_\nPlan:__"
 });
 
 cleanTemplateTags({
   entryObj: compactTemplateEntryObj,
-  textField: "Note"
+  fields: ["Note", "Record"]
 });
 
 assertEquals("clean-template-tags-wrapper", compactTemplateEntryObj.field("Note"), "Testing:__\nLaufen:__");
+assertEquals("clean-template-tags-fields-wrapper", compactTemplateEntryObj.field("Record"), "Plan:__");
 
 WScript.Echo("OK");
