@@ -1,6 +1,6 @@
 /*
 ========================================
-A3 restoreAtags v2.08 (sys 2.40)
+A3 restoreAtags v2.09 (sys 2.40)
 ========================================
 
 Notes:
@@ -19,6 +19,7 @@ Notes:
 - bulkRestoreAtags is a legacy wrapper
 - alias brackets are reserved for categories, not restore mappings
 - mapped and auto restore share one target-write helper
+- category child lists in JSON can be restored as aggregated parent values
 
 Examples:
 
@@ -383,6 +384,94 @@ function selectRestoreValue(val, valueMode, force_type) {
   return n / nums.length;
 }
 
+function computeRestoreAggregate(values, mode) {
+  var m = String(mode == null ? "avg" : mode).toLowerCase();
+  var i;
+  var sum;
+  var best;
+  var d;
+  var sorted;
+  var mid;
+
+  if (!values || !values.length) return null;
+  if (m === "add") m = "sum";
+  if (m === "count" || m === "amount") return values.length;
+  if (m === "first") return values[0];
+  if (m === "last") return values[values.length - 1];
+  if (m === "min") {
+    best = values[0];
+    for (i = 1; i < values.length; i++) if (values[i] < best) best = values[i];
+    return best;
+  }
+  if (m === "max") {
+    best = values[0];
+    for (i = 1; i < values.length; i++) if (values[i] > best) best = values[i];
+    return best;
+  }
+  if (m === "max_abs" || m === "maxabs") {
+    best = values[0];
+    for (i = 1; i < values.length; i++) {
+      d = Math.abs(values[i]) - Math.abs(best);
+      if (d > 0 || (d === 0 && values[i] > best)) best = values[i];
+    }
+    return best;
+  }
+  if (m === "min_abs" || m === "minabs") {
+    best = values[0];
+    for (i = 1; i < values.length; i++) {
+      d = Math.abs(values[i]) - Math.abs(best);
+      if (d < 0 || (d === 0 && values[i] > best)) best = values[i];
+    }
+    return best;
+  }
+  if (m === "median") {
+    sorted = values.slice(0);
+    sorted.sort(function(a, b) { return a - b; });
+    mid = Math.floor(sorted.length / 2);
+    if (sorted.length % 2) return sorted[mid];
+    return (sorted[mid - 1] + sorted[mid]) / 2;
+  }
+
+  sum = 0;
+  for (i = 0; i < values.length; i++) sum += values[i];
+  if (m === "sum") return sum;
+  return sum / values.length;
+}
+
+function selectRestoreObjectValue(obj, key, valueMode, force_type, cfg) {
+  var raw = obj ? obj[key] : null;
+  var children;
+  var nums = [];
+  var childMode;
+  var parentMode;
+  var i;
+  var child;
+  var childVal;
+  var n;
+
+  if (force_type !== "list" && isRestoreListLike(raw) && !isRestoreString(raw)) {
+    children = restoreToArray(raw);
+    childMode = cfg && cfg.categoryChildValueMode != null ? cfg.categoryChildValueMode :
+      (cfg && cfg.categoryRowAggregateMode != null ? cfg.categoryRowAggregateMode :
+        (cfg && cfg.categoryChildAggregateMode != null ? cfg.categoryChildAggregateMode :
+          (cfg && cfg.rowAggregateMode != null ? cfg.rowAggregateMode : valueMode)));
+    parentMode = cfg && cfg.categoryAggregateMode != null ? cfg.categoryAggregateMode :
+      (cfg && cfg.categoryValueMode != null ? cfg.categoryValueMode : "avg");
+
+    for (i = 0; i < children.length; i++) {
+      child = normalizeRestoreTagName(children[i]);
+      if (!child || !obj || !obj.hasOwnProperty(child)) continue;
+      childVal = selectRestoreValue(obj[child], childMode, null);
+      n = toRestoreNumber(childVal);
+      if (n != null) nums.push(n);
+    }
+
+    if (nums.length) return computeRestoreAggregate(nums, parentMode);
+  }
+
+  return selectRestoreValue(raw, valueMode, force_type);
+}
+
 function parseRestoreAggregateText(val) {
   var s;
   var m;
@@ -579,7 +668,7 @@ function restoreMappedAtags(entryObj, obj, mappings, clearFirst, valueMode, cfg)
 
   for (i = 0; i < mappings.length; i++) {
     m = mappings[i];
-    val = selectRestoreValue(obj[m.tagName], m.valueMode || valueMode, m.force_type);
+    val = selectRestoreObjectValue(obj, m.tagName, m.valueMode || valueMode, m.force_type, cfg);
     if (val == null) continue;
     restoreWriteTarget(
       entryObj,
@@ -608,7 +697,7 @@ function restoreAutoAtags(entryObj, obj, cfg) {
 
   for (key in obj) {
     try {
-      val = selectRestoreValue(obj[key], cfg.valueMode, cfg.force_type);
+      val = selectRestoreObjectValue(obj, key, cfg.valueMode, cfg.force_type, cfg);
       if (val == null) continue;
 
       isList = isListLikeValue(val);
@@ -671,7 +760,7 @@ function restoreAtagsForEntry(entryObj, cfg, clearMappedFields) {
   if (!entryObj) return;
 
   if (cfg.debugField) cfg._debugLines = [];
-  restoreDebugPush(cfg, "restoreAtags v2.08");
+  restoreDebugPush(cfg, "restoreAtags v2.09");
   restoreDebugPush(cfg, "sourceField: " + cfg.sourceField);
   restoreFieldNameMap(cfg);
   restoreDebugPush(cfg, "known fields: " + (cfg._fieldNameCount == null ? "unknown" : String(cfg._fieldNameCount)));
@@ -693,7 +782,7 @@ function restoreAtagsForEntry(entryObj, cfg, clearMappedFields) {
 
   // ===== EINZELTAG =====
   if (cfg.tagName) {
-    val = selectRestoreValue(obj[cfg.tagName], cfg.valueMode, cfg.force_type);
+    val = selectRestoreObjectValue(obj, cfg.tagName, cfg.valueMode, cfg.force_type, cfg);
     if (val == null) {
       restoreDebugPush(cfg, "single missing: " + cfg.tagName);
       restoreDebugFlush(entryObj, cfg);

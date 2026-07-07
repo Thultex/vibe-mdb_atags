@@ -497,6 +497,7 @@ Die Restore-Funktionen sind das dritte Add-on/Utility im Stack und werden aus hi
 - `restoreAtags()` für Einzel-, Auto- oder Gruppen-Restore aus einem JSON-Feld
 - ohne `entryObj`, `currentEntry`, `entries`, `entryGroup` oder `group` arbeitet `restoreAtags()` auf dem aktuellen Eintrag
 - direkte Zuordnungen per `map`, `fields` oder `mappings`, z. B. `"emo - Emotion"`
+- Kategorie-Listen im JSON koennen direkt als aggregierte Parent-Werte wiederhergestellt werden, z. B. `{"help":["ActivityA"],"ActivityA":2}` mit `map: { help: "HelpScore" }` schreibt `2`
 - Alias-Zeilen werden nicht als Restore-Feldzuordnung gelesen; Restore-Ziele laufen ueber `map`, `fields` oder `mappings`
 - direkte Zuordnungen sind standardmaessig exklusiv; mit `additional: true` laeuft danach zusaetzlich der Suffix-Auto-Restore
 - fuer Gruppen kann `restoreAtags()` `entries`, `entryGroup` oder `group` nehmen; Gruppen koennen ein Array oder ein Objekt mit `.entries()` sein
@@ -517,6 +518,15 @@ restoreAtags({
     info: { field: "Info", force_type: "text" }
   },
   valueMode: "median"
+});
+
+restoreAtags({
+  sourceField: "Atag Json",
+  map: {
+    help: "HelpScore"
+  },
+  categoryRowAggregateMode: "max",
+  categoryAggregateMode: "avg"
 });
 
 restoreAtags({

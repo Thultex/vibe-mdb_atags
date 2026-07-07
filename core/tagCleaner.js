@@ -1,6 +1,6 @@
 /*
 ========================================
-A4 Tag Cleaner v1.48 (sys 2.40)
+A4 Tag Cleaner v1.49 (sys 2.40)
 ========================================
 
 Notes
@@ -38,7 +38,7 @@ cleanTemplateTags({
 function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
-    version: "1.48",
+    version: "1.49",
     sysVersion: "2.40",
     path: "core/tagCleaner.js"
   };
@@ -167,7 +167,14 @@ function normalizeTagCleanerStringValue(raw) {
     return s;
   }
 
+  if (/^_[^_\r\n]+_$/.test(s)) return s.substring(1, s.length - 1);
+
   return s.replace(/,+$/g, "");
+}
+
+function isTagCleanerEmptyTemplateValue(raw) {
+  var s = trimAtagLibString(raw);
+  return s === "_" || s === "__";
 }
 
 function isTagCleanerFormatValueDirectiveLine(line) {
@@ -564,7 +571,7 @@ function cleanTagCleanerToken(token, bareAsHash, positiveSignMode) {
   if (m) return m[1] + tagCleanerTagSuffix();
   m = s.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*::\s*(.+)$/);
   if (m) {
-    if (normalizeTagCleanerStringValue(m[2]) === "_") return "";
+    if (isTagCleanerEmptyTemplateValue(m[2])) return "";
     if (isTagCleanerNumberValue(normalizeTagCleanerStringValue(m[2]))) {
       return m[1] + tagCleanerSuperscript(normalizeTagCleanerStringValue(m[2]), positiveSignMode);
     }
@@ -572,7 +579,7 @@ function cleanTagCleanerToken(token, bareAsHash, positiveSignMode) {
   }
   m = s.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:\s*(.+)$/);
   if (m) {
-    if (normalizeTagCleanerStringValue(m[2]) === "_") return "";
+    if (isTagCleanerEmptyTemplateValue(m[2])) return "";
     if (isTagCleanerNumberValue(normalizeTagCleanerStringValue(m[2]))) {
       return m[1] + tagCleanerSuperscript(normalizeTagCleanerStringValue(m[2]), positiveSignMode);
     }
@@ -658,17 +665,35 @@ function splitTagCleanerBarTokens(text) {
   var token = "";
   var inSingle = false;
   var inDouble = false;
+  var inTemplateSlot = false;
   var i;
   var ch;
   var isSeparator;
 
+  function hasClosingTemplateSlot(startIndex) {
+    var next = s.indexOf("_", startIndex + 1);
+    var inner;
+    if (next < 0) return false;
+    inner = s.substring(startIndex + 1, next);
+    if (/\r|\n/.test(inner)) return false;
+    if (/(^|[\s,;])#?[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*\s*(?:::|:|#)/.test(inner)) return false;
+    return true;
+  }
+
   for (i = 0; i < s.length; i++) {
     ch = s.charAt(i);
-    if (ch === "'" && !inDouble) inSingle = !inSingle;
-    else if (ch === '"' && !inSingle) inDouble = !inDouble;
+    if (ch === "'" && !inDouble && !inTemplateSlot) inSingle = !inSingle;
+    else if (ch === '"' && !inSingle && !inTemplateSlot) inDouble = !inDouble;
+    else if (ch === "_" && !inSingle && !inDouble) {
+      if (inTemplateSlot) {
+        inTemplateSlot = false;
+      } else if (/(?:::|:|#)\s*$/.test(token) && hasClosingTemplateSlot(i)) {
+        inTemplateSlot = true;
+      }
+    }
 
     isSeparator = /\s/.test(ch) || (ch === "," && !(/\d/.test(s.charAt(i - 1)) && /\d/.test(s.charAt(i + 1))));
-    if (isSeparator && !inSingle && !inDouble) {
+    if (isSeparator && !inSingle && !inDouble && !inTemplateSlot) {
       if (token) out.push(token);
       token = "";
     } else {

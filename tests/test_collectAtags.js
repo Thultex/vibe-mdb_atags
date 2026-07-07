@@ -237,6 +237,10 @@ assertItem("colon-spaced-slot-string-value", "Laufen: _2 km_", "Laufen", "2 km",
 assertItem("colon-explicit-slot-string-value", "Laufen::_2 km_", "Laufen", "2 km", "2 km", null, null);
 assertItem("colon-explicit-spaced-slot-string-value", "Laufen:: _2 km_", "Laufen", "2 km", "2 km", null, null);
 assertItem("hash-slot-string-value", "Laufen#_2 km_", "Laufen", "2 km", "2 km", null, null);
+assertItem("colon-slot-negative-number-value", "3: Mal_sehen:_-8_", "Mal_sehen", "-8", -8, 3, null);
+assertItem("colon-slot-positive-number-value", "3: Mal_sehen:_+8_", "Mal_sehen", "+8", 8, 3, null);
+assertItem("colon-slot-null-value", "3: Mal_sehen:_00_", "Mal_sehen", "00", null, 3, null);
+assertItem("colon-slot-cumulative-value", "3: Mal_sehen:_++_", "Mal_sehen", "++", 2, 3, null);
 assertItem("colon-empty-slot-before-filled-slot", "Testing: __\nTesting: _safd_", "Testing", "safd", "safd", null, null);
 assertMissing("colon-normal-text-not-tag", "text: inhalt", "text");
 assertItem("inverted-tag-value", "inhalt(:tag)", "tag", "inhalt", "inhalt", null, null);

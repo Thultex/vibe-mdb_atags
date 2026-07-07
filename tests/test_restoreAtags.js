@@ -522,6 +522,88 @@ function testAutoRestoreAveragesDisplayAggregateTextByDefault() {
   assertEqual("auto-display-aggregate-text-default-avg", entryObj.field("Testing_"), 12);
 }
 
+function testRestoreCategoryAggregateJsonValue() {
+  var entryObj = makeEntry({
+    "Atag Json": "{\"Body\":-3,\"SymptomA\":3}"
+  });
+
+  restoreAtags({
+    entryObj: entryObj,
+    sourceField: "Atag Json",
+    map: {
+      Body: "BodyScore"
+    }
+  });
+
+  assertEqual("restore-category-aggregate-json-value", entryObj.field("BodyScore"), -3);
+}
+
+function testRestoreCategoryChildListAsAggregateValue() {
+  var entryObj = makeEntry({
+    "Atag Json": "{\"ActivityA\":2,\"help\":[\"ActivityA\"]}"
+  });
+
+  restoreAtags({
+    entryObj: entryObj,
+    sourceField: "Atag Json",
+    map: {
+      help: "HelpScore"
+    }
+  });
+
+  assertEqual("restore-category-child-list-map-aggregate", entryObj.field("HelpScore"), 2);
+}
+
+function testAutoRestoreCategoryChildListAsAggregateValue() {
+  var entryObj = makeEntry({
+    "Atag Json": "{\"ActivityA\":2,\"ActivityB\":4,\"help\":[\"ActivityA\",\"ActivityB\"]}"
+  });
+
+  restoreAtags({
+    entryObj: entryObj,
+    sourceField: "Atag Json",
+    targetFields: ["help_", "ActivityA_", "ActivityB_"]
+  });
+
+  assertEqual("restore-category-child-list-auto-aggregate", entryObj.field("help_"), 3);
+  assertEqual("restore-category-child-list-auto-child-a", entryObj.field("ActivityA_"), 2);
+  assertEqual("restore-category-child-list-auto-child-b", entryObj.field("ActivityB_"), 4);
+}
+
+function testRestoreCategoryChildListUsesRowLikeAggregationOptions() {
+  var entryObj = makeEntry({
+    "Atag Json": "{\"ActivityA\":[1,5],\"ActivityB\":[2,4],\"help\":[\"ActivityA\",\"ActivityB\"]}"
+  });
+
+  restoreAtags({
+    entryObj: entryObj,
+    sourceField: "Atag Json",
+    map: {
+      help: "HelpScore"
+    },
+    categoryRowAggregateMode: "max",
+    categoryAggregateMode: "avg"
+  });
+
+  assertEqual("restore-category-row-like-aggregation", entryObj.field("HelpScore"), 4.5);
+}
+
+function testRestoreCategoryChildListCanStayList() {
+  var entryObj = makeEntry({
+    "Atag Json": "{\"ActivityA\":2,\"help\":[\"ActivityA\"]}"
+  });
+
+  restoreAtags({
+    entryObj: entryObj,
+    sourceField: "Atag Json",
+    map: {
+      help: { field: "HelpChildren", force_type: "list" }
+    }
+  });
+
+  assertArray("restore-category-child-list-force-list", entryObj.field("HelpChildren"), ["ActivityA"]);
+}
+
 function testAggregateTextValueModesAreConfigurable() {
   var firstEntry = makeEntry({
     Json: "{\"emo\":\"2 [3, 1]\"}"
@@ -743,6 +825,11 @@ testSelectRestoreValueAveragesJavaListLikeArrayByDefault();
 testSelectRestoreValueIgnoresStringsForNumericModes();
 testAutoRestoreAveragesAggregateTextByDefault();
 testAutoRestoreAveragesDisplayAggregateTextByDefault();
+testRestoreCategoryAggregateJsonValue();
+testRestoreCategoryChildListAsAggregateValue();
+testAutoRestoreCategoryChildListAsAggregateValue();
+testRestoreCategoryChildListUsesRowLikeAggregationOptions();
+testRestoreCategoryChildListCanStayList();
 testAggregateTextValueModesAreConfigurable();
 testMappingValueModeOverridesGlobalMode();
 testRealFieldMappingFromJsonNumber();

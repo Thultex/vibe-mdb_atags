@@ -277,6 +277,12 @@ assertEquals(
 );
 
 assertEquals(
+  "tagbar-template-slot-values-use-normal-value-parser",
+  makeTagCleanerText("Text\n| Mal_sehen:_-8_ Plus:_+8_ Null:_00_ Kum:_++_ Info:_2 km_ Empty:__"),
+  "Text\n\n| Kum\u207A\u207A Mal_sehen\u207B\u2078 Null\u2070\u2070 Plus\u207A\u2078, Info:2 km"
+);
+
+assertEquals(
   "simple-hash-tags-become-tag-suffix",
   makeTagCleanerText("essen# #essen\n| essen# #essen"),
   "essen\u02E3 essen\u02E3\n\n| essen\u02E3"
