@@ -1,9 +1,11 @@
 /*
 ========================================
-B10 Dust Merger v0.09 (sys 2.40)
+B10 Dust Merger v0.10 (sys 2.40)
 ========================================
 
 Changes
+- skip empty template slots when merging string_rows
+- add cross-midnight target grace and source-side attempt status log
 - forceMergeField appends string_rows even when rows already exist
 - add timestamp, target id and unchanged fields to debug output
 - store latest trash status in source-side merge stop marker
@@ -50,7 +52,7 @@ dustMerge({
 ========================================
 */
 
-var DUST_MERGER_VERSION = "0.09";
+var DUST_MERGER_VERSION = "0.10";
 
 function dmTrim(s) {
   return String(s == null ? "" : s).replace(/^\s+|\s+$/g, "");
@@ -232,6 +234,44 @@ function dmDayKey(dateObj, dayStartHour) {
   return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
 }
 
+function dmDayStart(dateObj, dayStartHour) {
+  var d;
+
+  if (!dateObj) return null;
+  d = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), Number(dayStartHour || 0), 0, 0, 0);
+  if (dateObj.getTime() < d.getTime()) d.setDate(d.getDate() - 1);
+  return d;
+}
+
+function dmPreviousDayGraceMatches(candidateDate, currentDate, dayStartHour, windowHours) {
+  var currentStart;
+  var previousKeyDate;
+  var candidateToBoundaryHours;
+  var currentFromBoundaryHours;
+  var deltaHours;
+
+  if (!candidateDate || !currentDate) return false;
+  windowHours = Number(windowHours);
+  if (isNaN(windowHours) || windowHours < 0) return false;
+
+  currentStart = dmDayStart(currentDate, dayStartHour);
+  if (!currentStart) return false;
+
+  previousKeyDate = new Date(currentStart.getTime());
+  previousKeyDate.setDate(previousKeyDate.getDate() - 1);
+  if (dmDayKey(candidateDate, dayStartHour) !== dmDayKey(previousKeyDate, dayStartHour)) return false;
+
+  candidateToBoundaryHours = (currentStart.getTime() - candidateDate.getTime()) / 3600000;
+  currentFromBoundaryHours = (currentDate.getTime() - currentStart.getTime()) / 3600000;
+  deltaHours = (currentDate.getTime() - candidateDate.getTime()) / 3600000;
+  return candidateToBoundaryHours >= 0 &&
+    currentFromBoundaryHours >= 0 &&
+    deltaHours >= 0 &&
+    candidateToBoundaryHours <= windowHours &&
+    currentFromBoundaryHours <= windowHours &&
+    deltaHours <= windowHours;
+}
+
 function dmStepHours(hours, step, roundMode) {
   var inv;
 
@@ -282,6 +322,20 @@ function dmSplitRowLine(line) {
     value: Number(String(m[1]).replace(",", ".")),
     content: dmTrim(m[2])
   };
+}
+
+function dmIsEmptyTemplateSlotLine(line) {
+  var row = dmSplitRowLine(line);
+  var text = row ? row.content : dmTrim(line);
+  var parts = text.split(/\s*[;,]\s*/);
+  var re = /^#?[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*\s*(?:::|:|#)\s*_{1,2}\s*$/;
+  var i;
+
+  if (!parts.length) return false;
+  for (i = 0; i < parts.length; i++) {
+    if (!re.test(dmTrim(parts[i]))) return false;
+  }
+  return true;
 }
 
 function dmTextLines(text) {
@@ -394,6 +448,7 @@ function dmMergeStringRows(targetEntry, sourceEntry, fieldName, mode, sourceDate
   var row;
 
   for (i = 0; i < source.length; i++) {
+    if (dmIsEmptyTemplateSlotLine(source[i])) continue;
     row = dmSplitRowLine(source[i]);
     if (row && (sourceMode === "realtime_since" || sourceMode === "since" || sourceMode === "relative")) {
       line = dmRowLabel(sourceDate, targetDate, cfg, row.value) + ": " + row.content;
@@ -561,9 +616,9 @@ function dmFindTargetEntry(currentEntry, currentDate, entries, cfg) {
     candidateDate = dmToDate(dmSafeField(candidate, fieldDate));
     if (!candidateDate) continue;
     if (!dmCandidateIsOlderByDateOrId(candidate, currentEntry, candidateDate, currentDate)) continue;
-    if (dmDayKey(candidateDate, dayStartHour) !== currentKey) continue;
-
     deltaHours = (currentDate.getTime() - candidateDate.getTime()) / 3600000;
+    if (dmDayKey(candidateDate, dayStartHour) !== currentKey &&
+      !dmPreviousDayGraceMatches(candidateDate, currentDate, dayStartHour, windowHours)) continue;
     if (deltaHours >= 0 && deltaHours <= windowHours) return candidate;
   }
 
@@ -583,6 +638,7 @@ function dmReadMergeLog(targetEntry, fieldName) {
   var stopMatch;
   var mergedIntoIdMatch;
   var fieldsMatch;
+  var statusMatch;
 
   if (!fieldName) return [];
   raw = dmSafeField(targetEntry, fieldName);
@@ -600,9 +656,11 @@ function dmReadMergeLog(targetEntry, fieldName) {
       stopMatch = objText.match(/"stop"\s*:\s*(true|false|"true"|"false")/);
       mergedIntoIdMatch = objText.match(/"mergedIntoId"\s*:\s*"([^"]*)"/);
       fieldsMatch = objText.match(/"fields"\s*:\s*(-?\d+(?:\.\d+)?)/);
+      statusMatch = objText.match(/"status"\s*:\s*"([^"]*)"/);
       out.push({
         id: idMatch ? idMatch[1] : "",
         time: timeMatch ? timeMatch[1] : "",
+        status: statusMatch ? statusMatch[1] : "",
         stop: stopMatch ? String(stopMatch[1]).replace(/"/g, "") === "true" : false,
         mergedIntoId: mergedIntoIdMatch ? mergedIntoIdMatch[1] : "",
         fields: fieldsMatch ? Number(fieldsMatch[1]) : 0
@@ -677,6 +735,7 @@ function dmWriteSourceStopLog(sourceEntry, targetEntry, changedCount, cfg, resul
     id: sourceIdentity.id,
     time: sourceIdentity.time,
     title: titleField ? String(dmSafeField(sourceEntry, titleField) || "") : "",
+    status: "merged",
     fields: changedCount,
     stop: true,
     mergedIntoId: targetId,
@@ -693,6 +752,37 @@ function dmWriteSourceStopLog(sourceEntry, targetEntry, changedCount, cfg, resul
   }
 
   logItems.push(item);
+  return dmSafeSet(sourceEntry, fieldName, dmStringifyMergeLog(logItems));
+}
+
+function dmWriteSourceAttemptLog(sourceEntry, cfg, result, status) {
+  var fieldName = cfg.mergeJsonField || cfg.mergeLogField || "";
+  var titleField = cfg.titleField || "";
+  var sourceIdentity;
+  var logItems;
+  var item;
+  var i;
+
+  if (!fieldName || !sourceEntry) return false;
+
+  sourceIdentity = dmSourceMergeIdentity(sourceEntry, cfg);
+  logItems = dmReadMergeLog(sourceEntry, fieldName);
+  item = {
+    id: sourceIdentity.id,
+    time: sourceIdentity.time,
+    title: titleField ? String(dmSafeField(sourceEntry, titleField) || "") : "",
+    status: String(status || "no_merge"),
+    fields: result && result.changed ? result.changed.length : 0
+  };
+
+  for (i = 0; i < logItems.length; i++) {
+    if ((item.id && String(logItems[i].id || "") === item.id) || (!item.id && String(logItems[i].time || "") === item.time)) {
+      logItems[i] = item;
+      return dmSafeSet(sourceEntry, fieldName, dmStringifyMergeLog(logItems));
+    }
+  }
+
+  logItems.unshift(item);
   return dmSafeSet(sourceEntry, fieldName, dmStringifyMergeLog(logItems));
 }
 
@@ -771,6 +861,7 @@ function dmStringifyMergeLog(items) {
     parts.push("{\"id\":\"" + dmJsonEscape(item.id) +
       "\",\"time\":\"" + dmJsonEscape(item.time) +
       "\",\"title\":\"" + dmJsonEscape(item.title) +
+      (item.status != null && item.status !== "" ? "\",\"status\":\"" + dmJsonEscape(item.status) : "") +
       "\",\"fields\":" + Number(item.fields || 0) +
       (item.stop === true ? ",\"stop\":true" : "") +
       (item.mergedIntoId != null && item.mergedIntoId !== "" ? ",\"mergedIntoId\":\"" + dmJsonEscape(item.mergedIntoId) + "\"" : "") +
@@ -909,6 +1000,7 @@ function dustMerge(cfg) {
   }
   result.targetEntry = targetEntry;
   if (!targetEntry) {
+    dmWriteSourceAttemptLog(currentEntry, cfg, result, "no_target");
     dmWriteDebug(currentEntry, cfg, result, "no_target");
     return result;
   }

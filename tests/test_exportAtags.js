@@ -211,7 +211,7 @@ assertEqual(
   entryObj.field("Tree"),
   "Body -2  \n" +
   "\u251c\u2500\u2500 BodySafe 1  \n" +
-  "\u2514\u2500\u2500 \u208BSymptomA -2"
+  "\u2514\u2500\u2500 \u208BSymptomA 2"
 );
 
 entryObj = makeEntry({ Note: "@@@emo-: -aua\naua+2" });
@@ -226,7 +226,7 @@ assertEqual(
   "tree-category-trailing-minus-flips-after-aggregate",
   entryObj.field("Tree"),
   "emo 2  \n" +
-  "\u2514\u2500\u2500 \u208Baua -2"
+  "\u2514\u2500\u2500 \u208Baua 2"
 );
 
 entryObj = makeEntry({ Note: "@@SymptomA (SA):  sa\n@@@Body: -SymptomA\nsa2" });
@@ -241,7 +241,7 @@ assertEqual(
   "tree-category-negative-long-child-with-separate-alias",
   entryObj.field("Tree"),
   "Body -2  \n" +
-  "\u2514\u2500\u2500 \u208BSymptomA -2"
+  "\u2514\u2500\u2500 \u208BSymptomA 2"
 );
 
 entryObj = makeEntry({ Note: "@@SymptomA (SA):  sa\n@@@Body: -SymptomA\nsa\u00B2" });
@@ -255,7 +255,7 @@ assertEqual(
   "tree-category-default-max-abs-negative-long-child-with-superscript-alias",
   entryObj.field("Tree"),
   "Body -2  \n" +
-  "\u2514\u2500\u2500 \u208BSymptomA -2"
+  "\u2514\u2500\u2500 \u208BSymptomA 2"
 );
 
 entryObj = makeEntry({ Note: "@@@Body: -SymptomA, BodySafe\nSymptomA\u00B2 BodySafe1" });
@@ -270,7 +270,23 @@ assertEqual(
   entryObj.field("Tree"),
   "Body -2  \n" +
   "\u251c\u2500\u2500 BodySafe 1  \n" +
-  "\u2514\u2500\u2500 \u208BSymptomA -2"
+  "\u2514\u2500\u2500 \u208BSymptomA 2"
+);
+
+entryObj = makeEntry({ Note: "@@@K\u00F6rper: -Kieferspannung, -Kopfschmerz, -Nackenschmerz\n1: Kieferspannung1\n2: Kieferspannung1\n3: Kieferspannung1\nKopfschmerz2 Nackenschmerz2" });
+applyTags({
+  entryObj: entryObj,
+  textFields: ["Note"],
+  targetField: "Tree",
+  targetFieldType: "tree_md"
+});
+assertEqual(
+  "tree-category-negative-children-display-own-sign",
+  entryObj.field("Tree"),
+  "K\u00F6rper -2  \n" +
+  "\u251c\u2500\u2500 \u208BKieferspannung 1 [3]  \n" +
+  "\u251c\u2500\u2500 \u208BKopfschmerz 2  \n" +
+  "\u2514\u2500\u2500 \u208BNackenschmerz 2"
 );
 
 entryObj = makeEntry({ Note: "@@@Body: -SymptomA, BodySafe\nSymptomA\u00B2 BodySafe1" });
@@ -287,7 +303,7 @@ assertEqual(
   entryObj.field("MD"),
   "BodySafe: +1  \n" +
   "SymptomA: +2  \n" +
-  "Body: -2 - [BodySafe: 1, \u208BSymptomA: -2]"
+  "Body: -2 - [BodySafe: 1, \u208BSymptomA: 2]"
 );
 
 entryObj = makeEntry({ Note: "@@SymptomA (SA):  sa\n@@@Body: -SymptomA\n| sa\u00B2" });
@@ -302,7 +318,7 @@ assertEqual(
   "tree-category-negative-long-child-with-readable-superscript-alias",
   entryObj.field("Tree"),
   "Body -2  \n" +
-  "\u2514\u2500\u2500 \u208BSymptomA -2"
+  "\u2514\u2500\u2500 \u208BSymptomA 2"
 );
 
 entryObj = makeEntry({});
@@ -324,7 +340,7 @@ assertEqual(
   entryObj.field("Tree"),
   "Body -2  \n" +
   "\u251c\u2500\u2500 BodySafe 1  \n" +
-  "\u2514\u2500\u2500 \u208BSymptomA -2"
+  "\u2514\u2500\u2500 \u208BSymptomA 2"
 );
 
 entryObj = makeEntry({});

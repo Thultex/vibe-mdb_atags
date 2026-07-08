@@ -1,9 +1,10 @@
 /*
 ========================================
-#2 exportAtags Lib v1.83 (sys 2.40)
+#2 exportAtags Lib v1.84 (sys 2.40)
 ========================================
 
 Notes:
+- negated category children keep their own displayed value; sign applies only to category aggregation
 - Exports: tags, text, md, tree_md, rows_md, rows_html, json
 - tree_md supports Unicode default and ASCII fallback
 - tree_md child values use the same aggregate summaries as md
@@ -74,14 +75,14 @@ applyTags({
 function getExportAtagsLibVersion() {
   return {
     name: "exportAtags_lib",
-    version: "1.83",
+    version: "1.84",
     sysVersion: "2.40",
     path: "core_lib/exportAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("exportAtags_lib", "1.83", "2.40", "core_lib/exportAtags_lib.js");
+  registerAtagLibVersion("exportAtags_lib", "1.84", "2.40", "core_lib/exportAtags_lib.js");
 }
 function atagCategoryAggregateMode(cfg, context) {
   if (cfg && cfg.categoryAggregateMode !== undefined) return cfg.categoryAggregateMode;
@@ -202,6 +203,7 @@ function atagValueIndexList(index, name) {
 
 function collectAtagCategoryChildValues(items, childNames, cfg, categoryItem, valueIndex) {
   var valuesByChild = {};
+  var displayValuesByChild = {};
   var out = [];
   var childSet = {};
   var childOrder = [];
@@ -213,8 +215,11 @@ function collectAtagCategoryChildValues(items, childNames, cfg, categoryItem, va
   var name;
   var key;
   var num;
+  var displayNum;
   var vals;
+  var displayVals;
   var agg;
+  var displayAgg;
   var list;
   var li;
 
@@ -236,9 +241,12 @@ function collectAtagCategoryChildValues(items, childNames, cfg, categoryItem, va
       it = list[li];
       num = toNumberIfPossible(it.attrValue);
       if (num == null) continue;
+      displayNum = num;
       if (childSigns[key] === -1) num = -num;
       if (!valuesByChild[key]) valuesByChild[key] = [];
+      if (!displayValuesByChild[key]) displayValuesByChild[key] = [];
       valuesByChild[key].push(num);
+      displayValuesByChild[key].push(displayNum);
       if (itemHasDecimalValue(it)) childHasDecimal[key] = true;
     }
   }
@@ -246,12 +254,15 @@ function collectAtagCategoryChildValues(items, childNames, cfg, categoryItem, va
   for (i = 0; i < childOrder.length; i++) {
     key = childOrder[i];
     vals = valuesByChild[key] || [];
+    displayVals = displayValuesByChild[key] || [];
     if (!vals.length) continue;
     agg = computeAggregate(vals, mode);
+    displayAgg = computeAggregate(displayVals, mode);
     if (agg == null) continue;
     out.push({
       name: childSet[key],
       value: agg,
+      displayValue: displayAgg,
       hasDecimal: !!childHasDecimal[key],
       sign: childSigns[key] === -1 ? -1 : 1
     });
@@ -276,7 +287,7 @@ function formatAtagCategorySummary(item, items, cfg, context, valueIndex) {
   for (i = 0; i < values.length; i++) {
     nums.push(values[i].value);
     names.push(values[i].name);
-    detailParts.push(formatAtagCategoryChildDetail(values[i].name, values[i].sign, values[i].value, decimals, values[i].hasDecimal));
+    detailParts.push(formatAtagCategoryChildDetail(values[i].name, values[i].sign, values[i].displayValue, decimals, values[i].hasDecimal));
     if (values[i].hasDecimal) forceDecimal = true;
   }
 
@@ -1059,7 +1070,7 @@ function buildAtagTreeMarkdown(items, cfg) {
 
     if (!showValues) return label;
 
-    summary = collectAtagValueSummary(name, items, cfg, "tree", sign, valueIndex);
+    summary = collectAtagValueSummary(name, items, cfg, "tree", null, valueIndex);
     if (!summary || !summary.text) return label;
 
     return atagCategoryChildNamePrefix(sign) + label + " " + summary.text;

@@ -1,9 +1,10 @@
 /*
 ========================================
-A4 Tag Cleaner v1.49 (sys 2.40)
+A4 Tag Cleaner v1.50 (sys 2.40)
 ========================================
 
 Notes
+- remove unused legacy wrappers; keep documented cleaner entrypoints.
 - core tag cleaner module.
 - Details live in README.md and CHANGELOG.md.
 - Supports cumulative +/-, 00/null and zero-decimal tag forms.
@@ -38,7 +39,7 @@ cleanTemplateTags({
 function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
-    version: "1.49",
+    version: "1.50",
     sysVersion: "2.40",
     path: "core/tagCleaner.js"
   };
@@ -1274,16 +1275,8 @@ function applyTagCleanerTemplatePrep(cfg) {
   return out;
 }
 
-function compactTagCleanerTemplates(cfg) {
-  return applyTagCleanerTemplatePrep(cfg);
-}
-
 function cleanTemplateTags(cfg) {
   return applyTagCleanerTemplatePrep(cfg);
-}
-
-function cleanTemplates(cfg) {
-  return cleanTemplateTags(cfg);
 }
 
 function applyCleanTags(cfg) {
@@ -1294,27 +1287,4 @@ function applyCleanTags(cfg) {
 
 function cleanTags(cfg) {
   return applyCleanTags(cfg);
-}
-
-function bulkApplyTagCleaner(cfg) {
-  cfg = cfg || {};
-  if (cfg.enabled === false) return [];
-  if (typeof lib !== "function") return [];
-
-  var all = lib().entries();
-  var results = [];
-  var i;
-  var bulkCfg;
-  var key;
-
-  for (i = 0; i < all.length; i++) {
-    bulkCfg = {};
-    for (key in cfg) {
-      if (cfg.hasOwnProperty(key)) bulkCfg[key] = cfg[key];
-    }
-    bulkCfg.entryObj = all[i];
-    results.push(applyTagCleaner(bulkCfg));
-  }
-
-  return results;
 }

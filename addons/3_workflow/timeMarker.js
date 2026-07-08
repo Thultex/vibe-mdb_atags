@@ -1,9 +1,10 @@
 /*
 ========================================
-B7 Time Marker v1.38 (sys 2.40)
+B7 Time Marker v1.39 (sys 2.40)
 ========================================
 
 Änderungen
+- Entfernt alten Alias `cleanupTimeMarkerPlaceholders`.
 - `clearTimeMarkerRows()` entfernt Row-Prefixe oder setzt sie auf den aktuellen Marker zurueck, ohne Template-Inhalte zu interpretieren
 - `mergeSameRowContents` entfernt identische Row-Inhalte getrennt vor `mergeSameRows`
 - `mergeSameRows` bleibt mit `mergeSameRowContents` idempotent und verdoppelt bereits zusammengefasste Segmente nicht erneut
@@ -765,5 +766,3 @@ function cleanupTimeMarker(cfg) {
   if (newText !== text) e.set(targetTextField, newText);
   return hasTimestampLines(newText);
 }
-
-var cleanupTimeMarkerPlaceholders = cleanupTimeMarker;

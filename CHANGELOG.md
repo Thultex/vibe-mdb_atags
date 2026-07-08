@@ -24,6 +24,15 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 
 ## Log
 
+### 2026-07-08 - (ca. 0,8h)
+
+- *Summary: Offene GitHub-Issues #68, #67, #60 und #65 abgearbeitet.*
+- Fix: DustMerger v0.10 berücksichtigt nahe Ziel-Einträge über Mitternacht innerhalb der Merge-Karenz und schreibt bei `no_target` einen nicht blockierenden `status: "no_target"` in das Source-`mergeJsonField`.
+- Fix: DustMerger v0.10 überspringt leere Template-Slots beim `string_rows`-Merge, damit Vorlagen wie `Mal_sehen:__` nicht als leere Rows im Ziel landen.
+- Fix: `exportAtags_lib` v1.84 zeigt negierte Kategorie-Kinder mit ihrem eigenen Wert an; das invertierte Vorzeichen wirkt erst bei der Kategorie-Aggregation.
+- Change: Tag Cleaner v1.50 entfernt ungenutzte Legacy-Wrapper (`compactTagCleanerTemplates()`, `cleanTemplates()`, `bulkApplyTagCleaner()`); dokumentierte Einstiege wie `cleanTags()` und `cleanTemplateTags()` bleiben.
+- Change: Time Marker v1.39 entfernt den alten Alias `cleanupTimeMarkerPlaceholders`; `cleanupTimeMarker()` bleibt der einzige aktuelle Einstieg.
+
 ### 2026-07-07 - (ca. 0,8h)
 
 - *Summary: DustingDay-Linker-Konzept zurückgestellt und DustMerger-Übergang begonnen.*

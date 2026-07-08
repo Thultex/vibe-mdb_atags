@@ -142,6 +142,32 @@ function testDoesNotDuplicateExactRows() {
   assertEquals("source-not-trashed", newer._trashed, false);
 }
 
+function testDoesNotMergeEmptyTemplateRows() {
+  var newer = makeEntry({
+    id: "new",
+    Datum: "2026-07-07 11:00",
+    Notiz: "1: Mal_sehen:__\nMal_sehen:__\nText:_ja_"
+  });
+  var older = makeEntry({
+    id: "old",
+    Datum: "2026-07-07 10:00",
+    Notiz: "old"
+  });
+  _entries = [newer, older];
+
+  var result = dustMerge({
+    fieldDate: "Datum",
+    trashMergedEntry: false,
+    openTargetEntry: false,
+    map: [
+      { name: "Notiz", mode: "append", datatype: "string_rows" }
+    ]
+  });
+
+  assertEquals("empty-template-merged", result.merged, true);
+  assertEquals("empty-template-note", older.field("Notiz"), "old\n11: Text:_ja_");
+}
+
 function testRealtimeSinceRowsAreShiftedToTargetDate() {
   var newer = makeEntry({
     id: "new",
@@ -223,6 +249,40 @@ function testDayStartAndWindowMustMatch() {
 
   assertEquals("same-dusting-day-merged", result.merged, true);
   assertEquals("note", older.field("Notiz"), "old\n3: new");
+}
+
+function testPreviousDayGraceCanMergeAcrossMidnight() {
+  var newer = makeEntry({
+    id: "new",
+    Datum: "2026-07-08 00:15",
+    Notiz: "new"
+  });
+  var tooOld = makeEntry({
+    id: "old1",
+    Datum: "2026-07-07 19:15",
+    Notiz: "too old"
+  });
+  var older = makeEntry({
+    id: "old2",
+    Datum: "2026-07-07 20:29",
+    Notiz: "old"
+  });
+  _entries = [newer, tooOld, older];
+
+  var result = dustMerge({
+    fieldDate: "Datum",
+    mergeWindowHours: 4,
+    trashMergedEntry: false,
+    openTargetEntry: false,
+    map: [
+      { name: "Notiz", mode: "append", datatype: "string_rows" }
+    ]
+  });
+
+  assertEquals("midnight-grace-merged", result.merged, true);
+  assertSame("midnight-grace-target", result.targetEntry, older);
+  assertEquals("midnight-grace-note", older.field("Notiz"), "old\n0,5: new");
+  assertEquals("midnight-grace-too-old-unchanged", tooOld.field("Notiz"), "too old");
 }
 
 function testSkipFieldStopsMergeOnSourceEntry() {
@@ -464,11 +524,37 @@ function testDebugFieldWritesStatusToSourceEntry() {
   assertEquals("debug-has-stage", String(newer.field("Debug")).indexOf("stage: merged") >= 0, true);
 }
 
+function testNoTargetWritesSourceAttemptStatus() {
+  var newer = makeEntry({
+    id: "new",
+    Datum: "2026-07-08 00:15",
+    Notiz: "new",
+    "Merge Json": ""
+  });
+  _entries = [newer];
+
+  var result = dustMerge({
+    fieldDate: "Datum",
+    mergeJsonField: "Merge Json",
+    trashMergedEntry: false,
+    openTargetEntry: false,
+    map: [
+      { name: "Notiz", mode: "append", datatype: "string_rows" }
+    ]
+  });
+
+  assertEquals("no-target-not-merged", result.merged, false);
+  assertEquals("no-target-status", String(newer.field("Merge Json")).indexOf("\"status\":\"no_target\"") >= 0, true);
+  assertEquals("no-target-not-stop", String(newer.field("Merge Json")).indexOf("\"stop\":true") < 0, true);
+}
+
 testMergesCurrentIntoOlderEntry();
 testDoesNotDuplicateExactRows();
+testDoesNotMergeEmptyTemplateRows();
 testRealtimeSinceRowsAreShiftedToTargetDate();
 testBlockMapStopsMergeWhenTargetFieldHasContent();
 testDayStartAndWindowMustMatch();
+testPreviousDayGraceCanMergeAcrossMidnight();
 testSkipFieldStopsMergeOnSourceEntry();
 testEqualDatesUseIdAsOlderTieBreaker();
 testSourceStopJsonSkipsCurrentEntry();
@@ -477,5 +563,6 @@ testAlreadyMergedSourceIsSkippedByMergeJson();
 testForceMergeFieldIgnoresAlreadyMergedJson();
 testForceMergeFieldAppendsExistingRowsAgain();
 testDebugFieldWritesStatusToSourceEntry();
+testNoTargetWritesSourceAttemptStatus();
 
 WScript.Echo("test_dustMerger ok");
