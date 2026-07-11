@@ -29,7 +29,7 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Change: `RUN_LIB_CHECK` ist in `core/_checkLibs.js` standardmaessig `true`, damit der Versionscheck beim Laden direkt laeuft.
 - Change: Text-/Verbose-Ausgabe von `checkAtagLibVersions()` beginnt mit `System Version X.XX: X Mismatches, X Missing`; registrierte Plugin-Mismatches zaehlen dort mit und werden unten als `VERSION MISMATCH ...` ausgegeben.
 - Fix: Auch spaeter per `registerAtagLibVersion()` registrierte bekannte Plugin-Mismatches werden direkt geloggt.
-- Feature: `@@@Kategorie::` erkennt `@@/Negativ:` als normales Child `Negativ` mit negativem Kategorie-Vorzeichen.
+- Feature: `collectAtags_lib` v1.64 erkennt in `@@@Kategorie::` die Form `@@/Negativ:` als normales Child `Negativ` mit negativem Kategorie-Vorzeichen.
 - Change: `core/_checkLibs.js` v1.31 listet im Standard weiter nur die Remote-Core-Libs, gibt aber Versions-/Sys-Mismatches registrierter bekannter Addons/Plugins in `versionMismatch` und der Text-/Verbose-Ausgabe aus.
 - Fix: Fehlende optionale Addons/Plugins werden bei `checkAtagLibVersions()` nicht als Missing ausgegeben.
 - Tests/Doku: LibVersions-Regressionen, README und `Z_LIB_VERSIONS.md` angepasst.

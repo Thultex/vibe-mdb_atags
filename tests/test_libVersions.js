@@ -46,7 +46,7 @@ function log(msg) {
 assertEquals("libVersions-own-version", getLibVersionsVersion().version, "1.31");
 assertEquals("helpers-lib-own-version", getHelpersLibVersion().version, "2.11");
 assertEquals("helpers-lib-sys-version", getHelpersLibVersion().sysVersion, "2.40");
-assertEquals("collect-lib-own-version", getCollectAtagsLibVersion().version, "1.63");
+assertEquals("collect-lib-own-version", getCollectAtagsLibVersion().version, "1.64");
 assertEquals("export-lib-own-version", getExportAtagsLibVersion().version, "1.84");
 assertEquals("tag-cleaner-own-version", getTagCleanerVersion().version, "1.50");
 assertEquals("helpers-own-version", getHelpersVersion().version, "1.02");
@@ -58,7 +58,7 @@ var result = checkAtagLibVersions({
 
 assertTrue("all-loaded", result.ok);
 assertEquals("export-lib-map-version", result.map.exportAtags_lib.version, "1.84");
-assertEquals("collect-lib-map-version", result.map.collectAtags_lib.version, "1.63");
+assertEquals("collect-lib-map-version", result.map.collectAtags_lib.version, "1.64");
 assertEquals("access-count", result.access.length, 3);
 
 var nonLib = checkLibVersions({ names: ["libVersions", "tagCleaner", "helpers"], requireAll: false });
@@ -67,7 +67,7 @@ assertEquals("non-lib-not-listed", nonLib.libs.length, 0);
 var textResult = checkAtagLibVersions({ checkAccess: true, asText: true });
 assertTrue("text-result-starts-with-summary", textResult.indexOf("System Version 2.40: 0 Mismatches, 0 Missing") === 0);
 assertTrue("text-result-has-export", textResult.indexOf("exportAtags_lib v1.84") !== -1);
-assertTrue("text-result-has-collect", textResult.indexOf("collectAtags_lib v1.63") !== -1);
+assertTrue("text-result-has-collect", textResult.indexOf("collectAtags_lib v1.64") !== -1);
 assertTrue("text-result-hides-optional-loaded", textResult.indexOf("tagCleaner v1.50") < 0);
 
 var missing = checkLibVersions({ names: ["missing_lib"] });
@@ -98,7 +98,7 @@ getCollectAtagsLibVersion = function() {
 var getterOnlyOldOptional = checkAtagLibVersions({ names: ["collectAtags_lib"], checkAccess: true, requireAll: false, asText: false });
 assertEquals("getter-only-old-no-optional-missing", getterOnlyOldOptional.optionalMissing.length, 0);
 assertEquals("getter-only-old-map-version", getterOnlyOldOptional.map.collectAtags_lib.version, "1.39");
-assertEquals("getter-only-old-mismatch", getterOnlyOldOptional.versionMismatch[0], "collectAtags_lib expected 1.63 got 1.39");
+assertEquals("getter-only-old-mismatch", getterOnlyOldOptional.versionMismatch[0], "collectAtags_lib expected 1.64 got 1.39");
 getCollectAtagsLibVersion = savedGetCollectAtagsLibVersion;
 ATAG_LIB_VERSIONS = savedRegistry;
 
@@ -106,7 +106,7 @@ savedRegistry = ATAG_LIB_VERSIONS;
 ATAG_LIB_VERSIONS = {};
 registerAtagLibVersion("collectAtags_lib", "1.39", "2.40", "core_lib/collectAtags_lib.js");
 var registryOnlyOldOptional = checkAtagLibVersions({ names: ["collectAtags_lib"], requireAll: false, asText: false });
-assertEquals("registry-only-old-mismatch", registryOnlyOldOptional.versionMismatch[0], "collectAtags_lib expected 1.63 got 1.39");
+assertEquals("registry-only-old-mismatch", registryOnlyOldOptional.versionMismatch[0], "collectAtags_lib expected 1.64 got 1.39");
 ATAG_LIB_VERSIONS = {};
 registerAtagLibVersion("collectAtags_lib", "1.99", "2.40", "core_lib/collectAtags_lib.js");
 var registryOnlyNewerOptional = checkAtagLibVersions({ names: ["collectAtags_lib"], requireAll: false, asText: false });
@@ -115,7 +115,7 @@ assertEquals("registry-only-newer-no-mismatch", registryOnlyNewerOptional.versio
 ATAG_LIB_VERSIONS = {};
 registerAtagLibVersion("collectAtags_lib", "2.00", "2.40", "core_lib/collectAtags_lib.js");
 var registryOnlyMajorOptional = checkAtagLibVersions({ names: ["collectAtags_lib"], requireAll: false, asText: false });
-assertEquals("registry-only-major-mismatch", registryOnlyMajorOptional.versionMismatch[0], "collectAtags_lib expected major 1 got major 2 (1.63 vs 2.00)");
+assertEquals("registry-only-major-mismatch", registryOnlyMajorOptional.versionMismatch[0], "collectAtags_lib expected major 1 got major 2 (1.64 vs 2.00)");
 ATAG_LIB_VERSIONS = savedRegistry;
 
 savedRegistry = ATAG_LIB_VERSIONS;
@@ -166,10 +166,10 @@ ATAG_LIB_VERSIONS = savedRegistry;
 
 var allVersionsText = checkAtagLibVersions({ checkAccess: true, requireAll: false, allVersions: true, asText: true });
 assertTrue("all-versions-text-has-helpers", allVersionsText.indexOf("helpers_lib v2.11") !== -1);
-assertTrue("all-versions-text-has-collect", allVersionsText.indexOf("collectAtags_lib v1.63") !== -1);
+assertTrue("all-versions-text-has-collect", allVersionsText.indexOf("collectAtags_lib v1.64") !== -1);
 
 checkAtagLibVersions({ checkAccess: true, verbose: true });
-assertTrue("verbose-log-written", _logs.join("\n").indexOf("collectAtags_lib v1.63") !== -1);
+assertTrue("verbose-log-written", _logs.join("\n").indexOf("collectAtags_lib v1.64") !== -1);
 
 var savedExpectedLibs = ATAG_EXPECTED_LIBS;
 ATAG_EXPECTED_LIBS = undefined;

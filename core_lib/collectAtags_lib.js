@@ -1,9 +1,10 @@
 /*
 ========================================
-#1 collectAtags Lib v1.63 (sys 2.40)
+#1 collectAtags Lib v1.64 (sys 2.40)
 ========================================
 
 Changes
+- direct category blocks treat `@@/Negative:` as child `Negative` with negative category sign
 - category aliases can use `@@@Category::` to collect direct alias lines below as fixed children
 - support positive/negative alias headers, e.g. `@@Gut/Schlecht(G): -Bad`
 - slot values allow spacing after colon, e.g. `tag: _inhalt_`
@@ -51,14 +52,14 @@ Changes
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.63",
+    version: "1.64",
     sysVersion: "2.40",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.63", "2.40", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.64", "2.40", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");
