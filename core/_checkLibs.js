@@ -14,7 +14,7 @@ Notes
 - inputLinker_lib is no longer part of the core lib check.
 - Current libs:
   - helpers_lib v2.11 (sys 2.40)
-  - collectAtags_lib v1.64 (sys 2.40)
+  - collectAtags_lib v1.65 (sys 2.40)
   - exportAtags_lib v1.84 (sys 2.40)
 
 ========================================
@@ -36,7 +36,7 @@ function getLibVersionsVersion() {
 
 var ATAG_EXPECTED_LIBS = [
   { name: "helpers_lib", version: "2.11", getter: "getHelpersLibVersion", path: "core_lib/helpers_lib.js" },
-  { name: "collectAtags_lib", version: "1.64", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
+  { name: "collectAtags_lib", version: "1.65", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
   { name: "exportAtags_lib", version: "1.84", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" }
 ];
 
@@ -48,7 +48,7 @@ var ATAG_EXPECTED_OPTIONAL_LIBS = [
   { name: "tagPairParser", version: "1.01", path: "addons/1_tagging/tagPairParser.js", optional: true },
   { name: "globalFieldSync", version: "1.03", path: "addons/2_syncing/globalFieldSync.js", optional: true },
   { name: "syncLastFromLatest", version: "1.05", path: "addons/2_syncing/syncLastFromLatest.js", optional: true },
-  { name: "dustMerger", version: "0.11", path: "addons/2_syncing/dustMerger.js", optional: true },
+  { name: "dustMerger", version: "0.12", path: "addons/2_syncing/dustMerger.js", optional: true },
   { name: "floatingAverage", version: "1.00", path: "addons/3_workflow/floatingAverage.js", optional: true },
   { name: "sequenceCounter", version: "1.05", path: "addons/3_workflow/sequenceCounter.js", optional: true },
   { name: "timeMarker", version: "1.39", path: "addons/3_workflow/timeMarker.js", optional: true },

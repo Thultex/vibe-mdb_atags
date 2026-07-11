@@ -1,6 +1,6 @@
 /*
 ========================================
-#1 collectAtags Lib v1.64 (sys 2.40)
+#1 collectAtags Lib v1.65 (sys 2.40)
 ========================================
 
 Changes
@@ -52,14 +52,14 @@ Changes
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.64",
+    version: "1.65",
     sysVersion: "2.40",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.64", "2.40", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.65", "2.40", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");
@@ -847,12 +847,15 @@ function collectAtags(cfg) {
     var norm;
     var effectiveRaw;
 
+    if (/^\//.test(String(name || ""))) return;
+
     for (ai = 0; ai < aliases.length; ai++) {
       aliasInfo = aliases[ai];
       resolvedName = aliasInfo.name;
       effectiveRaw = aliasInfo.fixedRaw != null ? aliasInfo.fixedRaw : raw;
 
       if (!resolvedName || isExcluded(resolvedName)) continue;
+      if (/^\//.test(String(resolvedName || ""))) continue;
       if (skipTemplates && /^\/\//.test(String(effectiveRaw || ""))) continue;
       if (skipTemplates) {
         effectiveRaw = normalizeTemplateSlotAttr(effectiveRaw);
@@ -1290,7 +1293,7 @@ function collectAtags(cfg) {
       }
 
       // template slot values allow spacing after : / ::
-      var rxColonSlotValue = /(^|[\s\n\r])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:{1,2}\s*(_[^_\r\n]+_)/g;
+      var rxColonSlotValue = /(^|[\s\n\r\/])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:{1,2}\s*(_[^_\r\n]+_)/g;
       var mslot;
       while ((mslot = rxColonSlotValue.exec(parseLine)) !== null) {
         if (isInsideAtagQuoteState(quoteState, mslot.index)) continue;
@@ -1298,7 +1301,7 @@ function collectAtags(cfg) {
       }
 
       // colon: gfk: 1,4 / tag:inhalt / tag:: inhalt
-      var rxColon = /(^|[\s\n\r])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:(?:"([^"]*)"|(_[^_\r\n]+_)|([^:\s,;.!?()\[\]{}]+))/g;
+      var rxColon = /(^|[\s\n\r\/])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:(?:"([^"]*)"|(_[^_\r\n]+_)|([^:\s,;.!?()\[\]{}]+))/g;
       var m1;
       while ((m1 = rxColon.exec(parseLine)) !== null) {
         var name1 = m1[2];
@@ -1310,14 +1313,14 @@ function collectAtags(cfg) {
         addParsedTagValue(name1, raw1, items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw);
       }
 
-      var rxColonSpacedValue = /(^|[\s\n\r])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:\s*(?:"([^"]*)"|([+\-]?\d+(?:[.,]\d+)?|\++|-+))(?=$|[\s,;.!?()\[\]{}])/g;
+      var rxColonSpacedValue = /(^|[\s\n\r\/])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:\s*(?:"([^"]*)"|([+\-]?\d+(?:[.,]\d+)?|\++|-+))(?=$|[\s,;.!?()\[\]{}])/g;
       while ((m1 = rxColonSpacedValue.exec(parseLine)) !== null) {
         raw1 = m1[3] != null && m1[3] !== "" ? m1[3] : (m1[4] || "");
         if (isInsideAtagQuoteState(quoteState, m1.index)) continue;
         addParsedTagValue(m1[2] || "", raw1, items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw);
       }
 
-      var rxColonExplicit = /(^|[\s\n\r])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*::\s*(?:"([^"]*)"|(_[^_\r\n]+_)|([^\r\n,;.!?()\[\]{}]+))/g;
+      var rxColonExplicit = /(^|[\s\n\r\/])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*::\s*(?:"([^"]*)"|(_[^_\r\n]+_)|([^\r\n,;.!?()\[\]{}]+))/g;
       while ((m1 = rxColonExplicit.exec(parseLine)) !== null) {
         raw1 = m1[3] != null && m1[3] !== "" ? m1[3] : (m1[4] != null && m1[4] !== "" ? m1[4] : (m1[5] || ""));
         raw1 = trimAtagString(raw1);
@@ -1326,7 +1329,7 @@ function collectAtags(cfg) {
       }
 
       // explicit tag with quoted hash value: frage#'text value' / frage#"text value"
-      var rxHashQuotedValue = /(^|[\s\n\r])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#(?:'([^']*)'|"([^"]*)")/g;
+      var rxHashQuotedValue = /(^|[\s\n\r\/])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#(?:'([^']*)'|"([^"]*)")/g;
       var mhq;
       while ((mhq = rxHashQuotedValue.exec(parseLine)) !== null) {
         var nameHQ = mhq[2];
@@ -1345,7 +1348,7 @@ function collectAtags(cfg) {
       }
 
       // explicit tag with hash and value: test#string / test#5,
-      var rxHashValue = /(^|[\s\n\r])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#(_[^_\r\n]+_|[^\s]+)/g;
+      var rxHashValue = /(^|[\s\n\r\/])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#(_[^_\r\n]+_|[^\s]+)/g;
       var mh;
       while ((mh = rxHashValue.exec(parseLine)) !== null) {
         var nameH = mh[2];
@@ -1367,7 +1370,7 @@ function collectAtags(cfg) {
       }
 
       // name + number: emo3 / emo+1,3 / emo-12,32
-      var rxNum = /(^|[\s,;.!?()\[\]{}])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)(\+{2,}\d*|-{2,}\d*|[+\-]?\d+(?:[.,]\d+)?|\++|-+)(?=$|[\s,;.!?()\[\]{}])/g;
+      var rxNum = /(^|[\s,;.!?()\[\]{}\/])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)(\+{2,}\d*|-{2,}\d*|[+\-]?\d+(?:[.,]\d+)?|\++|-+)(?=$|[\s,;.!?()\[\]{}])/g;
       var mn;
       while ((mn = rxNum.exec(parseLine)) !== null) {
         var nameN = mn[2];
@@ -1417,7 +1420,7 @@ function collectAtags(cfg) {
       }
 
       // name + superscript value: emo² / tag⁻⁰³ / stuff⁺⁺
-      var rxEmojiSupNum = /(^|[\s,;.!\(\)\[\]{}])([^\s,;.!\(\)\[\]{}]+?)([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B\u207F]+)(?=$|[\s,;.!\(\)\[\]{}])/g;
+      var rxEmojiSupNum = /(^|[\s,;.!\(\)\[\]{}\/])([^\s,;.!\(\)\[\]{}]+?)([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B\u207F]+)(?=$|[\s,;.!\(\)\[\]{}])/g;
       var mesup;
       while ((mesup = rxEmojiSupNum.exec(parseLine)) !== null) {
         var nameEmojiSup = resolveAtagEmojiDisplayToken(mesup[2] || "", aliasMap);
@@ -1435,7 +1438,7 @@ function collectAtags(cfg) {
         );
       }
 
-      var rxSupNum = /(^|[\s,;.!?()\[\]{}])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B\u207F]+)(?=$|[\s,;.!?()\[\]{}])/g;
+      var rxSupNum = /(^|[\s,;.!?()\[\]{}\/])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B\u207F]+)(?=$|[\s,;.!?()\[\]{}])/g;
       var msup;
       while ((msup = rxSupNum.exec(parseLine)) !== null) {
         var nameSup = msup[2];
@@ -1454,7 +1457,7 @@ function collectAtags(cfg) {
       }
 
       // explicit simple tags only: #tag or tag#
-      var rxSimpleTag = /(^|[\s,;.!?()\[\]{}])#([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)(?=$|[\s,;.!?()\[\]{}])|(^|[\s,;.!?()\[\]{}])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#(?=$|[\s,;.!?()\[\]{}])/g;
+      var rxSimpleTag = /(^|[\s,;.!?()\[\]{}\/])#([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)(?=$|[\s,;.!?()\[\]{}])|(^|[\s,;.!?()\[\]{}\/])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#(?=$|[\s,;.!?()\[\]{}])/g;
       var ms;
       while ((ms = rxSimpleTag.exec(parseLine)) !== null) {
         var nameS = ms[2] || ms[4] || "";

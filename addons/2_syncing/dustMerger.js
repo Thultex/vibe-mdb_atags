@@ -1,6 +1,6 @@
 /*
 ========================================
-B10 Dust Merger v0.11 (sys 2.40)
+B10 Dust Merger v0.12 (sys 2.40)
 ========================================
 
 Changes
@@ -54,11 +54,11 @@ dustMerge({
 
 /*
 ========================================
-B10 Dust Merger v0.11 (sys 2.40)
+B10 Dust Merger v0.12 (sys 2.40)
 ========================================
 */
 
-var DUST_MERGER_VERSION = "0.11";
+var DUST_MERGER_VERSION = "0.12";
 
 function dmTrim(s) {
   return String(s == null ? "" : s).replace(/^\s+|\s+$/g, "");
@@ -251,9 +251,9 @@ function dmDayStart(dateObj, dayStartHour) {
 
 function dmPreviousDayGraceMatches(candidateDate, currentDate, dayStartHour, windowHours) {
   var currentStart;
+  var previousStart;
   var previousKeyDate;
-  var candidateToBoundaryHours;
-  var currentFromBoundaryHours;
+  var currentFromPreviousStartHours;
   var deltaHours;
 
   if (!candidateDate || !currentDate) return false;
@@ -267,14 +267,13 @@ function dmPreviousDayGraceMatches(candidateDate, currentDate, dayStartHour, win
   previousKeyDate.setDate(previousKeyDate.getDate() - 1);
   if (dmDayKey(candidateDate, dayStartHour) !== dmDayKey(previousKeyDate, dayStartHour)) return false;
 
-  candidateToBoundaryHours = (currentStart.getTime() - candidateDate.getTime()) / 3600000;
-  currentFromBoundaryHours = (currentDate.getTime() - currentStart.getTime()) / 3600000;
+  previousStart = new Date(currentStart.getTime());
+  previousStart.setDate(previousStart.getDate() - 1);
+  currentFromPreviousStartHours = (currentDate.getTime() - previousStart.getTime()) / 3600000;
   deltaHours = (currentDate.getTime() - candidateDate.getTime()) / 3600000;
-  return candidateToBoundaryHours >= 0 &&
-    currentFromBoundaryHours >= 0 &&
+  return currentFromPreviousStartHours >= 0 &&
     deltaHours >= 0 &&
-    candidateToBoundaryHours <= windowHours &&
-    currentFromBoundaryHours <= windowHours &&
+    currentFromPreviousStartHours <= windowHours &&
     deltaHours <= windowHours;
 }
 

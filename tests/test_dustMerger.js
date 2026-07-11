@@ -251,7 +251,7 @@ function testDayStartAndWindowMustMatch() {
   assertEquals("note", older.field("Notiz"), "old\n3: new");
 }
 
-function testPreviousDayGraceCanMergeAcrossMidnight() {
+function testPreviousDayGraceCanMergeAcrossMidnightWithTwentyEightHourWindow() {
   var newer = makeEntry({
     id: "new",
     Datum: "2026-07-08 00:15",
@@ -271,7 +271,7 @@ function testPreviousDayGraceCanMergeAcrossMidnight() {
 
   var result = dustMerge({
     fieldDate: "Datum",
-    mergeWindowHours: 4,
+    mergeWindowHours: 28,
     trashMergedEntry: false,
     openTargetEntry: false,
     map: [
@@ -283,6 +283,33 @@ function testPreviousDayGraceCanMergeAcrossMidnight() {
   assertSame("midnight-grace-target", result.targetEntry, older);
   assertEquals("midnight-grace-note", older.field("Notiz"), "old\n0,5: new");
   assertEquals("midnight-grace-too-old-unchanged", tooOld.field("Notiz"), "too old");
+}
+
+function testPreviousDayGraceIsMeasuredFromPreviousDayStart() {
+  var newer = makeEntry({
+    id: "new",
+    Datum: "2026-07-12 12:25",
+    Notiz: "new"
+  });
+  var older = makeEntry({
+    id: "old",
+    Datum: "2026-07-11 09:18",
+    Notiz: "old"
+  });
+  _entries = [newer, older];
+
+  var result = dustMerge({
+    fieldDate: "Datum",
+    mergeWindowHours: 28,
+    trashMergedEntry: false,
+    openTargetEntry: false,
+    map: [
+      { name: "Notiz", mode: "append", datatype: "string_rows" }
+    ]
+  });
+
+  assertEquals("previous-day-start-window-not-merged", result.merged, false);
+  assertEquals("previous-day-start-window-note-unchanged", older.field("Notiz"), "old");
 }
 
 function testSkipFieldStopsMergeOnSourceEntry() {
@@ -611,7 +638,8 @@ testDoesNotMergeEmptyTemplateRows();
 testRealtimeSinceRowsAreShiftedToTargetDate();
 testBlockMapStopsMergeWhenTargetFieldHasContent();
 testDayStartAndWindowMustMatch();
-testPreviousDayGraceCanMergeAcrossMidnight();
+testPreviousDayGraceCanMergeAcrossMidnightWithTwentyEightHourWindow();
+testPreviousDayGraceIsMeasuredFromPreviousDayStart();
 testSkipFieldStopsMergeOnSourceEntry();
 testEqualDatesUseIdAsOlderTieBreaker();
 testSourceStopJsonSkipsCurrentEntry();
