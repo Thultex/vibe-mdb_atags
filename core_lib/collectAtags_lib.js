@@ -426,6 +426,17 @@ function collectAtags(cfg) {
     };
   }
 
+  function parseNegativeOnlyAliasName(raw) {
+    var parts = String(raw || "").split("/");
+    var negative;
+
+    if (parts.length !== 2) return "";
+    if (trimAtagString(parts[0]) !== "") return "";
+    negative = normalizeTagName(parts[1]);
+    if (!negative || !isAtagAliasNameToken(negative)) return "";
+    return negative;
+  }
+
   function buildAliasMapLegacy(text) {
     var map = {};
     var lines = splitAtagLines(text);
@@ -496,7 +507,6 @@ function collectAtags(cfg) {
 
     function parseDirectCategoryChildName(rawName) {
       var positiveNegativeName = parsePositiveNegativeAliasName(rawName);
-      var parts;
       var negativeName;
       var childName;
 
@@ -504,12 +514,9 @@ function collectAtags(cfg) {
         return { name: positiveNegativeName.positive, sign: 1 };
       }
 
-      parts = String(rawName || "").split("/");
-      if (parts.length === 2 && trimAtagString(parts[0]) === "") {
-        negativeName = normalizeTagName(parts[1]);
-        if (negativeName && !isExcluded(negativeName) && isAtagAliasNameToken(negativeName)) {
-          return { name: negativeName, sign: -1 };
-        }
+      negativeName = parseNegativeOnlyAliasName(rawName);
+      if (negativeName && !isExcluded(negativeName)) {
+        return { name: negativeName, sign: -1 };
       }
 
       childName = normalizeTagName(rawName);
@@ -590,7 +597,8 @@ function collectAtags(cfg) {
       if (!m) continue;
 
       var positiveNegativeName = parsePositiveNegativeAliasName(m[1]);
-      var baseName = positiveNegativeName ? positiveNegativeName.positive : normalizeTagName(m[1]);
+      var negativeOnlyName = parseNegativeOnlyAliasName(m[1]);
+      var baseName = positiveNegativeName ? positiveNegativeName.positive : (negativeOnlyName || normalizeTagName(m[1]));
       var negativeName = positiveNegativeName ? positiveNegativeName.negative : "";
       var aliasHeaderInfo = parseAliasHeaderInfo(m[2] || "");
       var shortName = aliasHeaderInfo.shortName;

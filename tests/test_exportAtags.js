@@ -869,6 +869,45 @@ applyTags({
 });
 assertArray("apply-tags-no-category-from-only-alias", entryObj.field("Tags"), []);
 
+entryObj = makeEntry({ Note: "@@@Kategorie::\n@@/Inhaltnegativ:\nInhaltnegativ2" });
+applyTags({
+  entryObj: entryObj,
+  textFields: ["Note"],
+  targetField: "Tags",
+  targetFieldType: "tags",
+  mergeWithExistingTags: false
+});
+assertArray("apply-tags-direct-negative-child-no-slash-name", entryObj.field("Tags"), ["@Kategorie", "Inhaltnegativ"]);
+
+entryObj = makeEntry({ Note: "@@@Kategorie::\n@@/Inhaltnegativ:\nInhaltnegativ2" });
+applyTags({
+  entryObj: entryObj,
+  textFields: ["Note"],
+  targetField: "MD",
+  targetFieldType: "md",
+  cat_display_values: "all"
+});
+assertEqual(
+  "apply-md-direct-negative-child-no-slash-name",
+  entryObj.field("MD"),
+  "Inhaltnegativ: +2  \n" +
+  "Kategorie: -2 - [\u208BInhaltnegativ: 2]"
+);
+
+entryObj = makeEntry({ Note: "@@@Kategorie::\n@@/Inhaltnegativ:\nInhaltnegativ2" });
+applyTags({
+  entryObj: entryObj,
+  textFields: ["Note"],
+  targetField: "Tree",
+  targetFieldType: "tree_md"
+});
+assertEqual(
+  "apply-tree-direct-negative-child",
+  entryObj.field("Tree"),
+  "Kategorie -2  \n" +
+  "\u2514\u2500\u2500 \u208BInhaltnegativ 2"
+);
+
 
 entryObj = makeEntry({});
 exportAtags({
