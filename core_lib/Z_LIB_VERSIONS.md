@@ -14,9 +14,9 @@ Aktuelle Library-Dateien und Versionen:
 
 | Name | Version | Sys | Pfad |
 | --- | ---: | ---: | --- |
-| A1 libVersions | 1.40 | 2.50 | `core/_checkLibs.js` |
+| A1 libVersions | 1.41 | 2.50 | `core/_checkLibs.js` |
 
-Optionale Plugins/Addons koennen sich beim Laden per `registerAtagLibVersion(name, version, sysVersion, path, true)` registrieren und in `ATAG_EXPECTED_OPTIONAL_LIBS` einen `getter` besitzen. Missing-Meldungen ueber fehlende Getter/Module werden ueber `SHOW_REMOTE_MISSING` und `SHOW_LOCAL_MISSING` gesteuert; geladene optionale Plugins mit alter oder falscher Version werden als `VERSION LOCAL: ...` ausgegeben.
+Optionale Plugins/Addons koennen sich beim Laden per `registerAtagLibVersion(name, version, sysVersion, path, true)` registrieren und in `ATAG_EXPECTED_OPTIONAL_LIBS` einen `getter` besitzen. Mismatch- und Missing-Meldungen ueber fehlende Getter/Module werden getrennt ueber `SHOW_REMOTE_MISSMATCHES`, `SHOW_LOCAL_MISSMATCHES`, `SHOW_REMOTE_MISSING` und `SHOW_LOCAL_MISSING` gesteuert.
 
 ## Zugehoerige Memento-Dateien
 

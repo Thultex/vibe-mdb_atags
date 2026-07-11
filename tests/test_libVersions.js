@@ -58,7 +58,7 @@ function log(msg) {
   _logs.push(String(msg));
 }
 
-assertEquals("libVersions-own-version", getLibVersionsVersion().version, "1.40");
+assertEquals("libVersions-own-version", getLibVersionsVersion().version, "1.41");
 assertEquals("helpers-lib-own-version", getHelpersLibVersion().version, "2.11");
 assertEquals("helpers-lib-sys-version", getHelpersLibVersion().sysVersion, "2.50");
 assertEquals("collect-lib-own-version", getCollectAtagsLibVersion().version, "1.65");
@@ -95,7 +95,7 @@ assertTrue("text-result-has-export", textResult.indexOf("exportAtags_lib v1.84")
 assertTrue("text-result-has-collect", textResult.indexOf("collectAtags_lib v1.65") !== -1);
 assertTrue("text-result-has-local-tag-cleaner", textResult.indexOf("LOCAL tagCleaner v1.51") !== -1);
 assertTrue("text-result-has-local-dust-merger", textResult.indexOf("LOCAL dustMerger v0.13") !== -1);
-assertTrue("text-result-ends-with-blank-line", /\n$/.test(textResult));
+assertTrue("text-result-ends-with-blank-line", /\n\n$/.test(textResult));
 
 var hiddenLocalText = checkAtagLibVersions({ checkAccess: true, asText: true, showLocalVersions: false });
 assertTrue("hidden-local-summary-keeps-count", hiddenLocalText.indexOf("System Version 2.50 (ok, 3 libs, 16 local)") === 0);
@@ -201,6 +201,23 @@ getCollectAtagsLibVersion = savedGetCollectAtagsLibVersion;
 ATAG_LIB_VERSIONS = savedRegistry;
 
 savedRegistry = ATAG_LIB_VERSIONS;
+savedGetCollectAtagsLibVersion = getCollectAtagsLibVersion;
+ATAG_LIB_VERSIONS = {};
+getCollectAtagsLibVersion = function() {
+  return {
+    name: "collectAtags_lib",
+    version: "1.39",
+    sysVersion: "2.50",
+    path: "core_lib/collectAtags_lib.js"
+  };
+};
+var hiddenRemoteMissmatchText = checkAtagLibVersions({ names: ["collectAtags_lib"], checkAccess: true, asText: true, showRemoteMissmatches: false });
+assertTrue("hidden-remote-missmatch-summary-ok", hiddenRemoteMissmatchText.indexOf("System Version 2.50 (ok, 1 libs, 16 local)") === 0);
+assertTrue("hidden-remote-missmatch-line-hidden", hiddenRemoteMissmatchText.indexOf("VERSION REM: collectAtags_lib expected 1.65 got 1.39") < 0);
+getCollectAtagsLibVersion = savedGetCollectAtagsLibVersion;
+ATAG_LIB_VERSIONS = savedRegistry;
+
+savedRegistry = ATAG_LIB_VERSIONS;
 var savedGetTagCleanerVersion = getTagCleanerVersion;
 ATAG_LIB_VERSIONS = {};
 getTagCleanerVersion = function() {
@@ -219,6 +236,65 @@ getTagCleanerVersion = savedGetTagCleanerVersion;
 ATAG_LIB_VERSIONS = savedRegistry;
 
 savedRegistry = ATAG_LIB_VERSIONS;
+savedGetTagCleanerVersion = getTagCleanerVersion;
+ATAG_LIB_VERSIONS = {};
+getTagCleanerVersion = function() {
+  return {
+    name: "tagCleaner",
+    version: "1.50",
+    sysVersion: "2.50",
+    path: "core/tagCleaner.js"
+  };
+};
+var hiddenLocalMissmatchText = checkAtagLibVersions({ checkAccess: true, asText: true, showLocalMissmatches: false });
+assertTrue("hidden-local-missmatch-summary-ok", hiddenLocalMissmatchText.indexOf("System Version 2.50 (ok, 3 libs, 16 local)") === 0);
+assertTrue("hidden-local-missmatch-line-hidden", hiddenLocalMissmatchText.indexOf("VERSION LOCAL: tagCleaner expected 1.51 got 1.50") < 0);
+getTagCleanerVersion = savedGetTagCleanerVersion;
+ATAG_LIB_VERSIONS = savedRegistry;
+
+savedRegistry = ATAG_LIB_VERSIONS;
+savedGetCollectAtagsLibVersion = getCollectAtagsLibVersion;
+savedGetHelpersLibVersion = getHelpersLibVersion;
+savedGetTagCleanerVersion = getTagCleanerVersion;
+savedGetTimeMarkerVersionForMissingOptions = getTimeMarkerVersion;
+ATAG_LIB_VERSIONS = {};
+getCollectAtagsLibVersion = function() {
+  return {
+    name: "collectAtags_lib",
+    version: "1.39",
+    sysVersion: "2.50",
+    path: "core_lib/collectAtags_lib.js"
+  };
+};
+getTagCleanerVersion = function() {
+  return {
+    name: "tagCleaner",
+    version: "1.50",
+    sysVersion: "2.50",
+    path: "core/tagCleaner.js"
+  };
+};
+getHelpersLibVersion = undefined;
+getTimeMarkerVersion = undefined;
+var mixedOrderText = checkAtagLibVersions({ names: ["collectAtags_lib", "helpers_lib"], checkAccess: true, asText: true, showLocalMissing: true });
+var mixedVersionRemIndex = mixedOrderText.indexOf("VERSION REM: collectAtags_lib expected 1.65 got 1.39");
+var mixedMissingRemIndex = mixedOrderText.indexOf("MISSING REM: #3 Helpers Lib (core_lib)");
+var mixedVersionLocalIndex = mixedOrderText.indexOf("VERSION LOCAL: tagCleaner expected 1.51 got 1.50");
+var mixedMissingLocalIndex = mixedOrderText.indexOf("MISSING LOCAL: B7 Time Marker (3_workflow)");
+assertTrue("mixed-order-version-rem-present", mixedVersionRemIndex !== -1);
+assertTrue("mixed-order-missing-rem-present", mixedMissingRemIndex !== -1);
+assertTrue("mixed-order-version-local-present", mixedVersionLocalIndex !== -1);
+assertTrue("mixed-order-missing-local-present", mixedMissingLocalIndex !== -1);
+assertTrue("mixed-order-version-rem-before-missing-rem", mixedVersionRemIndex < mixedMissingRemIndex);
+assertTrue("mixed-order-missing-rem-before-version-local", mixedMissingRemIndex < mixedVersionLocalIndex);
+assertTrue("mixed-order-version-local-before-missing-local", mixedVersionLocalIndex < mixedMissingLocalIndex);
+getCollectAtagsLibVersion = savedGetCollectAtagsLibVersion;
+getHelpersLibVersion = savedGetHelpersLibVersion;
+getTagCleanerVersion = savedGetTagCleanerVersion;
+getTimeMarkerVersion = savedGetTimeMarkerVersionForMissingOptions;
+ATAG_LIB_VERSIONS = savedRegistry;
+
+savedRegistry = ATAG_LIB_VERSIONS;
 ATAG_LIB_VERSIONS = {};
 registerAtagLibVersion("tagCleaner", "1.50", "2.50", "core/tagCleaner.js");
 var optionalPluginMismatch = checkAtagLibVersions({ checkAccess: true, asText: false });
@@ -230,7 +306,7 @@ var optionalPluginMismatchText = checkAtagLibVersions({ checkAccess: true, asTex
 assertTrue("optional-plugin-mismatch-text-summary", optionalPluginMismatchText.indexOf("System Version 2.50 (missmatch, 1 local)") === 0);
 assertTrue("optional-plugin-mismatch-text-visible", optionalPluginMismatchText.indexOf("VERSION LOCAL: tagCleaner expected 1.51 got 1.50") !== -1);
 assertTrue("optional-plugin-mismatch-text-listed-as-local", optionalPluginMismatchText.indexOf("LOCAL tagCleaner v1.50") !== -1);
-assertTrue("optional-plugin-mismatch-text-ends-with-blank-line", /\n$/.test(optionalPluginMismatchText));
+assertTrue("optional-plugin-mismatch-text-ends-with-blank-line", /\n\n$/.test(optionalPluginMismatchText));
 assertTrue("optional-plugin-mismatch-register-log-visible", _logs.join("\n").indexOf("VERSION LOCAL: tagCleaner expected 1.51 got 1.50") >= 0);
 ATAG_LIB_VERSIONS = {};
 _logs = [];
