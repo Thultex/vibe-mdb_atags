@@ -24,6 +24,17 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 
 ## Log
 
+### 2026-07-11 - (ca. 0,2h)
+
+- Fix: DustMerger v0.11 nutzt standardmäßig `mergeWindowHours: 28`, sodass Einträge vom Vortag bis 04:00 Uhr des Folgetags gemerged werden können.
+- Fix: DustMerger wertet reine `status: "no_target"`-/`status: "no_merge"`-Attempt-Logs nicht mehr als bereits gemerged.
+- Tests: Regressionen für `no_target`-Retry und 28h-Default-Karenz ergänzt.
+
+### 2026-07-11 - (ca. 0,2h)
+
+- Change: Header-Regel ergänzt; Script-Dateien mit Usage-/Beispielblock bekommen nach dem ersten Kommentar einen zweiten kurzen Kopier-Header, damit ab dort ein lauffähiger Script-Block inklusive Versionskopf kopiert werden kann.
+- Doku: `CONTRIBUTING.md` beschreibt den zweiten Kopier-Header als generelle Regel.
+
 ### 2026-07-08 - (ca. 0,8h)
 
 - *Summary: Offene GitHub-Issues #68, #67, #60 und #65 abgearbeitet.*

@@ -57,6 +57,12 @@ clearTimeMarkerRows({
 });
 */
 
+/*
+========================================
+B7 Time Marker v1.39 (sys 2.40)
+========================================
+*/
+
 function toDateSafe(v) {
   if (v == null || v === "") return null;
 

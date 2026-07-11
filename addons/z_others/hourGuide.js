@@ -81,6 +81,12 @@ Zwischenstriche werden beim Rendern automatisch ergaenzt.
 }
 */
 
+/*
+========================================
+C3 Hour Guide v1.30 (sys 2.40)
+========================================
+*/
+
 function hourGuideToNumber(val) {
   var n;
   if (val == null || val === "") return null;

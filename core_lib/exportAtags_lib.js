@@ -71,6 +71,12 @@ applyTags({
 });
 */
 
+/*
+========================================
+#2 exportAtags Lib v1.84 (sys 2.40)
+========================================
+*/
+
 // ===== TEXT =====
 function getExportAtagsLibVersion() {
   return {

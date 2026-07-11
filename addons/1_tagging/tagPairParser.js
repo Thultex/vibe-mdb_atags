@@ -22,6 +22,11 @@ bulkApplyTagPairParser({
   targetTextField: "Notiz"
 });
 
+*/
+
+/*
+========================================
+B2 Tag Pair Parser v1.01 (sys 2.40)
 ========================================
 */
 

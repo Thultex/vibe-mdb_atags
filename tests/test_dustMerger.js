@@ -548,6 +548,63 @@ function testNoTargetWritesSourceAttemptStatus() {
   assertEquals("no-target-not-stop", String(newer.field("Merge Json")).indexOf("\"stop\":true") < 0, true);
 }
 
+function testNoTargetAttemptDoesNotBlockLaterMerge() {
+  var newer = makeEntry({
+    id: "new",
+    Datum: "2026-07-08 00:15",
+    Notiz: "new",
+    "Merge Json": "[{\"id\":\"new\",\"time\":\"2026-07-08T00:15:00\",\"title\":\"\",\"status\":\"no_target\",\"fields\":0}]"
+  });
+  var older = makeEntry({
+    id: "old",
+    Datum: "2026-07-07 23:00",
+    Notiz: "old",
+    "Merge Json": "[{\"id\":\"new\",\"time\":\"2026-07-08T00:15:00\",\"title\":\"\",\"status\":\"no_target\",\"fields\":0}]"
+  });
+  _entries = [newer, older];
+
+  var result = dustMerge({
+    fieldDate: "Datum",
+    mergeJsonField: "Merge Json",
+    trashMergedEntry: false,
+    openTargetEntry: false,
+    map: [
+      { name: "Notiz", mode: "append", datatype: "string_rows" }
+    ]
+  });
+
+  assertEquals("no-target-later-not-already", result.alreadyMerged, false);
+  assertEquals("no-target-later-merged", result.merged, true);
+  assertEquals("no-target-later-note", older.field("Notiz"), "old\n0,5: new");
+}
+
+function testDefaultTwentyEightHourGraceMergesPreviousDateUntilFour() {
+  var newer = makeEntry({
+    id: "new",
+    Datum: "2026-07-12 04:00",
+    Notiz: "new"
+  });
+  var earlyPreviousDay = makeEntry({
+    id: "old",
+    Datum: "2026-07-11 00:00",
+    Notiz: "old"
+  });
+  _entries = [newer, earlyPreviousDay];
+
+  var result = dustMerge({
+    fieldDate: "Datum",
+    trashMergedEntry: false,
+    openTargetEntry: false,
+    map: [
+      { name: "Notiz", mode: "append", datatype: "string_rows" }
+    ]
+  });
+
+  assertEquals("default-28h-grace-merged", result.merged, true);
+  assertSame("default-28h-grace-target", result.targetEntry, earlyPreviousDay);
+  assertEquals("default-28h-grace-note", earlyPreviousDay.field("Notiz"), "old\n4: new");
+}
+
 testMergesCurrentIntoOlderEntry();
 testDoesNotDuplicateExactRows();
 testDoesNotMergeEmptyTemplateRows();
@@ -564,5 +621,7 @@ testForceMergeFieldIgnoresAlreadyMergedJson();
 testForceMergeFieldAppendsExistingRowsAgain();
 testDebugFieldWritesStatusToSourceEntry();
 testNoTargetWritesSourceAttemptStatus();
+testNoTargetAttemptDoesNotBlockLaterMerge();
+testDefaultTwentyEightHourGraceMergesPreviousDateUntilFour();
 
 WScript.Echo("test_dustMerger ok");

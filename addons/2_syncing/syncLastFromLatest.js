@@ -37,6 +37,12 @@ var newest = getNewestLibraryEntry();
 if (newest) applyHourGuide({ entryObj: newest });
 */
 
+/*
+========================================
+B4 Sync Last From Latest v1.05 (sys 2.40)
+========================================
+*/
+
 function slflTrim(s) {
   return String(s || "").replace(/^\s+|\s+$/g, "");
 }

@@ -116,7 +116,8 @@ Pflege-Regeln für diese Headerform:
 
 - Die erste Zeile bleibt ein klassischer Blockkommentar `/*`.
 - Darunter stehen immer Titelzeile, Versionszeile und die schließende Linie aus `=` in derselben Grundform.
-- `========================================`-Linien werden nur im Titelblock oben verwendet, nicht in der Mitte des Kommentars und nicht als Abschluss direkt vor `*/`.
+- `========================================`-Linien stehen im Titelblock oben. Wenn der erste Kopfkommentar Beispiele oder Usage-Code enthält, folgt direkt nach dem schließenden `*/` ein zweiter kurzer Kopier-Header mit derselben Modulzeile, damit ab dort ein lauffähiger Script-Block inklusive Header kopiert werden kann.
+- Der erste Kopfkommentar endet nach dem letzten Beispiel direkt mit `*/`; dort keine zusätzliche Abschluss-Trennerzeile setzen.
 - Die Modulbezeichnung im Header muss zum tatsächlichen Dateizweck passen, zum Beispiel `collectAtags`, `exportAtags` oder `Atag Helpers`.
 - Nach der Versionszeile folgt ein Leerblock und dann mindestens der Abschnitt `Änderungen`.
 - Wenn die Datei bereits weitere Blöcke wie `Anwendung`, `Beispiele` oder ähnliche Dokumentationsabschnitte hat, bleiben diese erhalten und werden bei Bedarf mit gepflegt.
@@ -125,6 +126,17 @@ Pflege-Regeln für diese Headerform:
 - Beispiele in `Anwendung` oder `Beispiele` werden angepasst, wenn sich Signatur, typische Nutzung oder unterstützte Formen geändert haben.
 - Neue oder geänderte Konfigurationsoptionen werden in den jeweiligen Usage-/Beispielblöcken der betroffenen Datei mit korrigiert, damit kopierbare Beispiele aktuell bleiben.
 - In Script-Dateiheadern keine `//`-Zeilenkommentare innerhalb von `/* ... */` verwenden. Memento kann solche Header beim Kopieren oder Einbinden fehlerhaft auswerten. Beispiele im Blockkommentar als normalen Text oder reine Codezeilen ohne `//` schreiben.
+- Der zweite Kopier-Header enthält keine Beispiele und keine Änderungsliste, nur:
+
+```js
+/*
+========================================
+A4 Tag Cleaner v1.50 (sys 2.40)
+========================================
+*/
+```
+
+- Dateien ohne Beispiele im ersten Kommentar brauchen keinen zweiten Kopier-Header.
 - Wenn ein Header stark gewachsen ist, wird er gekürzt, aber nicht in ein neues freies Format umgebaut.
 - Ziel ist Konsistenz zwischen den Dateien, nicht perfekte Einheitlichkeit auf Kosten der vorhandenen Struktur.
 

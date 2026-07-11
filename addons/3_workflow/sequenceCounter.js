@@ -30,6 +30,11 @@ updateSequenceSpree({
   biasedSpreeCount: 2
 });
 
+*/
+
+/*
+========================================
+B6 Sequence Counter v1.05 (sys 2.40)
 ========================================
 */
 

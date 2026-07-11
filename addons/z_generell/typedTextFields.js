@@ -20,6 +20,11 @@ syncTypedTextFields(selectedEntries(), {
   dryRun: false
 });
 
+*/
+
+/*
+========================================
+C2 Typed Text Fields v1.00 (sys 2.40)
 ========================================
 */
 

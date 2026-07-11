@@ -1,9 +1,10 @@
 /*
 ========================================
-B10 Dust Merger v0.10 (sys 2.40)
+B10 Dust Merger v0.11 (sys 2.40)
 ========================================
 
 Changes
+- default merge window is 28 hours; no_target attempt logs do not count as already merged
 - skip empty template slots when merging string_rows
 - add cross-midnight target grace and source-side attempt status log
 - forceMergeField appends string_rows even when rows already exist
@@ -33,7 +34,7 @@ dustMerge({
   mergeJsonField: "Merge Json",
   debugField: "Debug",
   searchLimit: 5,
-  mergeWindowHours: 4,
+  mergeWindowHours: 28,
   rowSourceMode: "realtime",
   skipField: "Nicht mergen",
   forceMergeField: "Merge erzwingen",
@@ -49,10 +50,15 @@ dustMerge({
   ]
 });
 
+*/
+
+/*
+========================================
+B10 Dust Merger v0.11 (sys 2.40)
 ========================================
 */
 
-var DUST_MERGER_VERSION = "0.10";
+var DUST_MERGER_VERSION = "0.11";
 
 function dmTrim(s) {
   return String(s == null ? "" : s).replace(/^\s+|\s+$/g, "");
@@ -596,7 +602,7 @@ function dmCandidateIsOlderByDateOrId(candidate, currentEntry, candidateDate, cu
 function dmFindTargetEntry(currentEntry, currentDate, entries, cfg) {
   var fieldDate = cfg.fieldDate || "Datum";
   var dayStartHour = Number(cfg.dayStartHour || 0);
-  var windowHours = Number(cfg.mergeWindowHours == null ? 4 : cfg.mergeWindowHours);
+  var windowHours = Number(cfg.mergeWindowHours == null ? 28 : cfg.mergeWindowHours);
   var searchLimit = Number(cfg.searchLimit == null ? 5 : cfg.searchLimit);
   var currentKey = dmDayKey(currentDate, dayStartHour);
   var sorted = dmSortByDateDesc(entries, fieldDate);
@@ -692,6 +698,8 @@ function dmAlreadyMerged(targetEntry, sourceEntry, cfg) {
 
   for (i = 0; i < logItems.length; i++) {
     item = logItems[i] || {};
+    if (String(item.status || "").toLowerCase() === "no_target") continue;
+    if (String(item.status || "").toLowerCase() === "no_merge") continue;
     if (identity.id && String(item.id || "") === identity.id) return true;
     if (!identity.id && identity.time && String(item.time || "") === identity.time) return true;
   }
