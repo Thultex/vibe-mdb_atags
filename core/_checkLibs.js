@@ -1,9 +1,12 @@
 /*
 ========================================
-A1 Lib Versions v1.30 (sys 2.40)
+A1 Lib Versions v1.31 (sys 2.40)
 ========================================
 
 Notes
+- Text output starts with a system summary line.
+- RUN_LIB_CHECK defaults to true for an immediate verbose startup check.
+- Standard report lists only remote core libs, but registered known addons are checked for version mismatches.
 - Reports major version mismatches even when loaded versions are newer.
 - Shared remote-library version registry.
 - Load before optional lib files to collect registered versions.
@@ -18,24 +21,14 @@ Notes
 */
 
 
-var RUN_LIB_CHECK = false;
-
-if (RUN_LIB_CHECK) {
-  var libCheck = checkAtagLibVersions({
-    checkAccess: true,
-    requireAll: false,
-    allVersions: true,
-    verbose: true
-  });
-}
-
 var ATAG_SYS_VERSION = typeof ATAG_SYS_VERSION !== "undefined" ? ATAG_SYS_VERSION : "2.40";
 var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERSIONS : {};
+var RUN_LIB_CHECK = typeof RUN_LIB_CHECK !== "undefined" ? RUN_LIB_CHECK : true;
 
 function getLibVersionsVersion() {
   return {
     name: "libVersions",
-    version: "1.30",
+    version: "1.31",
     sysVersion: "2.40",
     path: "core/_checkLibs.js"
   };
@@ -47,10 +40,35 @@ var ATAG_EXPECTED_LIBS = [
   { name: "exportAtags_lib", version: "1.84", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" }
 ];
 
+var ATAG_EXPECTED_OPTIONAL_LIBS = [
+  { name: "libVersions", version: "1.31", getter: "getLibVersionsVersion", path: "core/_checkLibs.js", optional: true },
+  { name: "helpers", version: "1.02", getter: "getHelpersVersion", path: "core/helpers.js", optional: true },
+  { name: "tagCleaner", version: "1.50", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
+  { name: "restoreAtags", version: "2.09", path: "core/restoreAtags.js", optional: true },
+  { name: "tagPairParser", version: "1.01", path: "addons/1_tagging/tagPairParser.js", optional: true },
+  { name: "globalFieldSync", version: "1.03", path: "addons/2_syncing/globalFieldSync.js", optional: true },
+  { name: "syncLastFromLatest", version: "1.05", path: "addons/2_syncing/syncLastFromLatest.js", optional: true },
+  { name: "dustMerger", version: "0.11", path: "addons/2_syncing/dustMerger.js", optional: true },
+  { name: "floatingAverage", version: "1.00", path: "addons/3_workflow/floatingAverage.js", optional: true },
+  { name: "sequenceCounter", version: "1.05", path: "addons/3_workflow/sequenceCounter.js", optional: true },
+  { name: "timeMarker", version: "1.39", path: "addons/3_workflow/timeMarker.js", optional: true },
+  { name: "obsidianLinker", version: "1.16", path: "addons/6_integration/obsidianLinker.js", optional: true },
+  { name: "wikiLinker", version: "1.00", path: "addons/6_integration/wikiLinker.js", optional: true },
+  { name: "multiChoiceHelpers", version: "1.01", path: "addons/z_generell/multiChoiceHelpers.js", optional: true },
+  { name: "typedTextFields", version: "1.00", path: "addons/z_generell/typedTextFields.js", optional: true },
+  { name: "hourGuide", version: "1.30", path: "addons/z_others/hourGuide.js", optional: true }
+];
+
 function getExpectedAtagLibs() {
   if (typeof ATAG_EXPECTED_LIBS === "undefined" || !ATAG_EXPECTED_LIBS) return [];
   if (Object.prototype.toString.call(ATAG_EXPECTED_LIBS) !== "[object Array]") return [];
   return ATAG_EXPECTED_LIBS;
+}
+
+function getExpectedAtagOptionalLibs() {
+  if (typeof ATAG_EXPECTED_OPTIONAL_LIBS === "undefined" || !ATAG_EXPECTED_OPTIONAL_LIBS) return [];
+  if (Object.prototype.toString.call(ATAG_EXPECTED_OPTIONAL_LIBS) !== "[object Array]") return [];
+  return ATAG_EXPECTED_OPTIONAL_LIBS;
 }
 
 function getExpectedAtagLibNames() {
@@ -71,6 +89,20 @@ function getExpectedAtagLibInfo(name) {
   return null;
 }
 
+function getExpectedAtagOptionalLibInfo(name) {
+  var key = String(name || "");
+  var i;
+  var expected = getExpectedAtagOptionalLibs();
+  for (i = 0; i < expected.length; i++) {
+    if (expected[i].name === key) return expected[i];
+  }
+  return null;
+}
+
+function getExpectedAtagAnyLibInfo(name) {
+  return getExpectedAtagLibInfo(name) || getExpectedAtagOptionalLibInfo(name);
+}
+
 function callExpectedAtagLibGetter(name) {
   var key = String(name || "");
   if (key === "helpers_lib") {
@@ -84,6 +116,18 @@ function callExpectedAtagLibGetter(name) {
   if (key === "exportAtags_lib") {
     if (typeof getExportAtagsLibVersion !== "function") return null;
     return getExportAtagsLibVersion();
+  }
+  if (key === "libVersions") {
+    if (typeof getLibVersionsVersion !== "function") return null;
+    return getLibVersionsVersion();
+  }
+  if (key === "helpers") {
+    if (typeof getHelpersVersion !== "function") return null;
+    return getHelpersVersion();
+  }
+  if (key === "tagCleaner") {
+    if (typeof getTagCleanerVersion !== "function") return null;
+    return getTagCleanerVersion();
   }
   return null;
 }
@@ -100,6 +144,7 @@ function registerAtagLibVersion(name, version, sysVersion, path, optional) {
     optional: optional === true
   };
 
+  logAtagRegisteredVersionMismatch(ATAG_LIB_VERSIONS[key]);
   return ATAG_LIB_VERSIONS[key];
 }
 
@@ -183,6 +228,23 @@ function addAtagVersionMismatch(list, text) {
     if (String(list[i] || "") === String(text)) return;
   }
   list.push(text);
+}
+
+function logAtagRegisteredVersionMismatch(info) {
+  var expected;
+  var text;
+
+  if (!info || !info.name) return;
+  expected = getExpectedAtagOptionalLibInfo(info.name) || null;
+  if (!expected) return;
+  text = atagVersionMismatchText(info.name, expected, info);
+  if (!text) return;
+  if (typeof log === "function") {
+    log(
+      "System Version " + ATAG_SYS_VERSION + ": 1 Mismatches, 0 Missing\n" +
+      "VERSION MISMATCH " + text
+    );
+  }
 }
 
 function checkLibVersions(cfg) {
@@ -272,11 +334,16 @@ function checkAtagLibVersions(cfg) {
   var name;
   var text;
   var expected = getExpectedAtagLibs();
+  var optionalExpected = getExpectedAtagOptionalLibs();
+  var checkOptionalRegistered = cfg.checkOptionalRegistered !== false && cfg.remoteOnly !== true;
 
   if (allVersions) names = getExpectedAtagLibNames();
   if (Object.prototype.toString.call(names) !== "[object Array]") names = [names];
   for (i = 0; i < expected.length; i++) {
     if (expected[i].optional === true) optionalNames.push(expected[i].name);
+  }
+  for (i = 0; i < optionalExpected.length; i++) {
+    optionalNames.push(optionalExpected[i].name);
   }
   result = checkLibVersions({
     names: names,
@@ -287,16 +354,25 @@ function checkAtagLibVersions(cfg) {
 
   for (i = 0; i < names.length; i++) {
     name = String(names[i] || "");
-    info = getExpectedAtagLibInfo(name);
+    info = getExpectedAtagAnyLibInfo(name);
     if (!info || !result.map[name]) continue;
     text = atagVersionMismatchText(name, info, result.map[name]);
     addAtagVersionMismatch(versionMismatch, text);
   }
 
+  if (checkOptionalRegistered) {
+    for (i = 0; i < optionalExpected.length; i++) {
+      name = optionalExpected[i].name;
+      if (!ATAG_LIB_VERSIONS[name]) continue;
+      text = atagVersionMismatchText(name, optionalExpected[i], ATAG_LIB_VERSIONS[name]);
+      addAtagVersionMismatch(versionMismatch, text);
+    }
+  }
+
   if (accessCheck) {
     for (i = 0; i < names.length; i++) {
       name = String(names[i] || "");
-      info = getExpectedAtagLibInfo(name);
+      info = getExpectedAtagAnyLibInfo(name);
       if (!info) continue;
       got = callExpectedAtagLibGetter(name);
       if (!got) {
@@ -332,6 +408,11 @@ function checkAtagLibVersions(cfg) {
 
   if (asText || verbose) {
     var lines = [];
+    lines.push(
+      "System Version " + ATAG_SYS_VERSION + ": " +
+      versionMismatch.length + " Mismatches, " +
+      (result.missing.length + accessMissing.length) + " Missing"
+    );
     for (i = 0; i < result.libs.length; i++) {
       lines.push(result.libs[i].name + " v" + result.libs[i].version + " (sys " + result.libs[i].sysVersion + ")");
     }
@@ -347,4 +428,13 @@ function checkAtagLibVersions(cfg) {
   }
 
   return result;
+}
+
+if (RUN_LIB_CHECK) {
+  var libCheck = checkAtagLibVersions({
+    checkAccess: true,
+    requireAll: false,
+    allVersions: true,
+    verbose: true
+  });
 }

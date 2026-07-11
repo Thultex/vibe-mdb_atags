@@ -1,11 +1,24 @@
 var fso = new ActiveXObject("Scripting.FileSystemObject");
 var scriptDir = fso.GetParentFolderName(WScript.ScriptFullName);
+var _logs = [];
+var ATAG_LIB_VERSIONS = {
+  tagCleaner: {
+    name: "tagCleaner",
+    version: "1.49",
+    sysVersion: "2.40",
+    path: "core/tagCleaner.js",
+    optional: true
+  }
+};
 
 function read(relPath) {
   return fso.OpenTextFile(fso.BuildPath(scriptDir, "..\\" + relPath), 1).ReadAll();
 }
 
 eval(read("core\\_checkLibs.js"));
+assertTrue("autorun-plugin-mismatch-summary", _logs.join("\n").indexOf("System Version 2.40: 1 Mismatches, 0 Missing") >= 0);
+assertTrue("autorun-plugin-mismatch-visible", _logs.join("\n").indexOf("VERSION MISMATCH tagCleaner expected 1.50 got 1.49") >= 0);
+ATAG_LIB_VERSIONS = {};
 eval(read("core_lib\\helpers_lib.js"));
 eval(read("core_lib\\collectAtags_lib.js"));
 eval(read("core_lib\\exportAtags_lib.js"));
@@ -26,13 +39,11 @@ function assertTrue(label, value) {
   if (!value) fail(label + ": expected truthy value");
 }
 
-var _logs = [];
-
 function log(msg) {
   _logs.push(String(msg));
 }
 
-assertEquals("libVersions-own-version", getLibVersionsVersion().version, "1.30");
+assertEquals("libVersions-own-version", getLibVersionsVersion().version, "1.31");
 assertEquals("helpers-lib-own-version", getHelpersLibVersion().version, "2.11");
 assertEquals("helpers-lib-sys-version", getHelpersLibVersion().sysVersion, "2.40");
 assertEquals("collect-lib-own-version", getCollectAtagsLibVersion().version, "1.63");
@@ -54,8 +65,10 @@ var nonLib = checkLibVersions({ names: ["libVersions", "tagCleaner", "helpers"],
 assertEquals("non-lib-not-listed", nonLib.libs.length, 0);
 
 var textResult = checkAtagLibVersions({ checkAccess: true, asText: true });
+assertTrue("text-result-starts-with-summary", textResult.indexOf("System Version 2.40: 0 Mismatches, 0 Missing") === 0);
 assertTrue("text-result-has-export", textResult.indexOf("exportAtags_lib v1.84") !== -1);
 assertTrue("text-result-has-collect", textResult.indexOf("collectAtags_lib v1.63") !== -1);
+assertTrue("text-result-hides-optional-loaded", textResult.indexOf("tagCleaner v1.50") < 0);
 
 var missing = checkLibVersions({ names: ["missing_lib"] });
 assertEquals("missing-detected", missing.missing[0], "missing_lib");
@@ -130,6 +143,25 @@ getCollectAtagsLibVersion = function() {
 var newerWrongSys = checkAtagLibVersions({ names: ["collectAtags_lib"], checkAccess: true, requireAll: false, asText: false });
 assertEquals("newer-wrong-sys-mismatch", newerWrongSys.versionMismatch[0], "collectAtags_lib expected sys 2.40 got sys 2.29");
 getCollectAtagsLibVersion = savedGetCollectAtagsLibVersion;
+ATAG_LIB_VERSIONS = savedRegistry;
+
+savedRegistry = ATAG_LIB_VERSIONS;
+ATAG_LIB_VERSIONS = {};
+registerAtagLibVersion("tagCleaner", "1.49", "2.40", "core/tagCleaner.js");
+var optionalPluginMismatch = checkAtagLibVersions({ checkAccess: true, asText: false });
+assertEquals("optional-plugin-mismatch", optionalPluginMismatch.versionMismatch[0], "tagCleaner expected 1.50 got 1.49");
+assertEquals("optional-plugin-not-listed", optionalPluginMismatch.map.tagCleaner, undefined);
+assertEquals("optional-plugin-no-missing", optionalPluginMismatch.missing.length, 0);
+assertEquals("optional-plugin-no-optional-missing", optionalPluginMismatch.optionalMissing.length, 0);
+var optionalPluginMismatchText = checkAtagLibVersions({ checkAccess: true, asText: true });
+assertTrue("optional-plugin-mismatch-text-summary", optionalPluginMismatchText.indexOf("System Version 2.40: 1 Mismatches, 0 Missing") === 0);
+assertTrue("optional-plugin-mismatch-text-visible", optionalPluginMismatchText.indexOf("VERSION MISMATCH tagCleaner expected 1.50 got 1.49") !== -1);
+assertTrue("optional-plugin-mismatch-text-not-listed-as-lib", optionalPluginMismatchText.indexOf("tagCleaner v1.49") < 0);
+assertTrue("optional-plugin-mismatch-register-log-visible", _logs.join("\n").indexOf("VERSION MISMATCH tagCleaner expected 1.50 got 1.49") >= 0);
+ATAG_LIB_VERSIONS = {};
+registerAtagLibVersion("tagCleaner", "1.50", "2.40", "core/tagCleaner.js");
+var optionalPluginCurrent = checkAtagLibVersions({ checkAccess: true, asText: false });
+assertEquals("optional-plugin-current-no-mismatch", optionalPluginCurrent.versionMismatch.length, 0);
 ATAG_LIB_VERSIONS = savedRegistry;
 
 var allVersionsText = checkAtagLibVersions({ checkAccess: true, requireAll: false, allVersions: true, asText: true });

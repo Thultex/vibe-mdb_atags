@@ -104,7 +104,7 @@ Ziel-Felder
 - `#2` `core_lib/exportAtags_lib.js`
 - `#3` `core_lib/helpers_lib.js`
 Empfohlene Lade-Reihenfolge: `helpers_lib`, dann `collectAtags_lib`, dann `exportAtags_lib`. `core/tagCleaner.js` nutzt ebenfalls `helpers_lib`.
-Optional vorher `core/_checkLibs.js` laden; dann koennen die erwarteten Remote-Libs ueber `checkAtagLibVersions({ checkAccess: true, verbose: true })` geprueft werden. Die aktuelle statische Uebersicht liegt in `core_lib/Z_LIB_VERSIONS.md`.
+Optional vorher `core/_checkLibs.js` laden; dann koennen die erwarteten Remote-Libs ueber `checkAtagLibVersions({ checkAccess: true, verbose: true })` geprueft werden. Die Text-/Verbose-Ausgabe beginnt mit `System Version X.XX: X Mismatches, X Missing`. Standardmaessig werden nur diese Remote-Libs ausgegeben; registrierte bekannte Addons/Plugins werden aber bei Versions-Mismatches in `versionMismatch` und der Text-/Verbose-Ausgabe mitgemeldet, ohne fehlende optionale Plugins zu melden. Die aktuelle statische Uebersicht liegt in `core_lib/Z_LIB_VERSIONS.md`.
 Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportAtags()` nutzt, muss danach zusaetzlich `core/helpers.js` geladen werden. Diese Datei nutzt `core_lib/helpers_lib.js`.
 
 **Core**

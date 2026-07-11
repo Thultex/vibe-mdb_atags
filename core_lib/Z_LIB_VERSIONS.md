@@ -14,7 +14,7 @@ Aktuelle Library-Dateien und Versionen:
 
 | Name | Version | Sys | Pfad |
 | --- | ---: | ---: | --- |
-| A1 libVersions | 1.30 | 2.40 | `core/_checkLibs.js` |
+| A1 libVersions | 1.31 | 2.40 | `core/_checkLibs.js` |
 
 ## Zugehoerige Memento-Dateien
 
@@ -36,6 +36,8 @@ Empfohlene Lade-Reihenfolge:
 `core/helpers.js` ist ebenfalls keine externe Lib. Es enthaelt Memento-Wrapper wie `applyTags`, `bulkApplyTags` und `bulkExportAtags`, nutzt `core_lib/helpers_lib.js` und wird deshalb nicht in `checkLibVersions()` registriert.
 
 Zur Laufzeit kann `checkLibVersions()` die geladenen Remote-Libs pruefen. Jede Remote-Lib bietet ausserdem eine eigene `get...Version()`-Funktion; die zugehoerigen Core-/Memento-Dateien haben eigene Versionsfunktionen, werden aber nicht in der Remote-Lib-Registry gefuehrt.
+
+`checkAtagLibVersions()` listet im Standardreport nur die erwarteten Remote-Core-Libs. Die Text-/Verbose-Ausgabe beginnt mit `System Version X.XX: X Mismatches, X Missing`. Bekannte optionale Addons/Plugins werden nicht als fehlend gemeldet und nicht automatisch in `libs`/Text aufgenommen; wenn sie aber per `registerAtagLibVersion()` registriert sind, werden Versions- und Sys-Mismatches in `versionMismatch` und in der Text-/Verbose-Ausgabe gemeldet. Bei spaeterer Registrierung wird ein bekannter Plugin-Mismatch direkt geloggt.
 
 ## Beispiel
 

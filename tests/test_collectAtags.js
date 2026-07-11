@@ -340,6 +340,10 @@ assertCategoryTag("cat-alias-fixed-negative-long-child-with-readable-superscript
 assertCategoryTag("cat-alias-children-are-not-aliases", "@@@help: ActivityA, ActivityB\n@@ActivityA (Sp): play\nplay2", "help", ["ActivityA"], "help");
 assertCategoryTag("cat-alias-direct-children-from-following-alias-lines", "@@@Kategorie::\n@@Gef\u00FChl (emo-): \"gutf\u00FChlen\", -\"schlechtf\u00FChlen\"\n\n@@laufen (lau):\nemo2", "Kategorie", ["Gef\u00FChl"], "Kategorie");
 assertCategoryTag("cat-alias-direct-children-stop-at-blank", ["@@@Kategorie::", "@@Gef\u00FChl (emo-): \"gutf\u00FChlen\"", "", "@@laufen (lau):", "emo2 lau2"].join("\n"), "Kategorie", ["Gef\u00FChl"], "Kategorie");
+assertCategoryTag("cat-alias-direct-negative-child-from-slash-name", "@@@Kategorie::\n@@/Inhaltnegativ:\nInhaltnegativ2", "Kategorie", ["Inhaltnegativ"], "Kategorie");
+assertCategorySigns("cat-alias-direct-negative-child-from-slash-name-sign", "@@@Kategorie::\n@@/Inhaltnegativ:\nInhaltnegativ2", "Kategorie", { inhaltnegativ: -1 });
+assertItem("cat-alias-direct-negative-child-normal-tag-name", "@@@Kategorie::\n@@/Inhaltnegativ:\nInhaltnegativ2", "Inhaltnegativ", "+2", 2, null, null);
+assertMissing("cat-alias-direct-negative-child-no-slash-tag-name", "@@@Kategorie::\n@@/Inhaltnegativ:\nInhaltnegativ2", "/Inhaltnegativ");
 assertCategoryTag("alias-category-line-without-prefix", "tag1 (tg1)[self]: 3\ntag2 (tg2)[self]: 3\ntg1# tg2#", "self", ["tag1", "tag2"], "self");
 assertItem("alias-fixed-bare", "@@SymptomA (SA): sa, SymptomAlias1\n#SymptomAlias", "SymptomA", "+1", 1, null, null);
 assertItem("alias-fixed-overrides-value", "@@SymptomA (SA): sa, SymptomAlias1\nSymptomAlias3", "SymptomA", "+1", 1, null, null);

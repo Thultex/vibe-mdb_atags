@@ -493,11 +493,33 @@ function collectAtags(cfg) {
       map[key] = info;
     }
 
+    function parseDirectCategoryChildName(rawName) {
+      var positiveNegativeName = parsePositiveNegativeAliasName(rawName);
+      var parts;
+      var negativeName;
+      var childName;
+
+      if (positiveNegativeName) {
+        return { name: positiveNegativeName.positive, sign: 1 };
+      }
+
+      parts = String(rawName || "").split("/");
+      if (parts.length === 2 && trimAtagString(parts[0]) === "") {
+        negativeName = normalizeTagName(parts[1]);
+        if (negativeName && !isExcluded(negativeName) && isAtagAliasNameToken(negativeName)) {
+          return { name: negativeName, sign: -1 };
+        }
+      }
+
+      childName = normalizeTagName(rawName);
+      if (!childName || isExcluded(childName)) return null;
+      return { name: childName, sign: 1 };
+    }
+
     function directCategoryChildFromLine(rawLine) {
       var childLine = trimAtagString(rawLine);
       var mChild;
-      var positiveNegativeName;
-      var childName;
+      var childInfo;
 
       if (!childLine || /^@@@/.test(childLine)) return "";
       if (/^@@/.test(childLine)) {
@@ -508,10 +530,8 @@ function collectAtags(cfg) {
 
       mChild = childLine.match(/^([^\[(:(]+?)(?:\s*\(\s*([^)]+)\s*\))?(?:\s*\[\s*([^\]]+)\s*\])?(?::\s*(.*))?$/);
       if (!mChild) return "";
-      positiveNegativeName = parsePositiveNegativeAliasName(mChild[1]);
-      childName = positiveNegativeName ? positiveNegativeName.positive : normalizeTagName(mChild[1]);
-      if (!childName || isExcluded(childName)) return "";
-      return childName;
+      childInfo = parseDirectCategoryChildName(mChild[1]);
+      return childInfo || "";
     }
 
     for (var i = 0; i < lines.length; i++) {
