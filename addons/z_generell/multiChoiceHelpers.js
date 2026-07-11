@@ -1,6 +1,6 @@
 /*
 ========================================
-C1 Multi Choice Helpers v1.01 (sys 2.40)
+C1 Multi Choice Helpers v1.02 (sys 2.50)
 ========================================
 
 Changes
@@ -25,9 +25,22 @@ multiChoiceRemove({
 
 /*
 ========================================
-C1 Multi Choice Helpers v1.01 (sys 2.40)
+C1 Multi Choice Helpers v1.02 (sys 2.50)
 ========================================
 */
+
+function getMultiChoiceHelpersVersion() {
+  return {
+    name: "multiChoiceHelpers",
+    version: "1.02",
+    sysVersion: "2.50",
+    path: "addons/z_generell/multiChoiceHelpers.js"
+  };
+}
+
+if (typeof registerAtagLibVersion === "function") {
+  registerAtagLibVersion("multiChoiceHelpers", "1.02", "2.50", "addons/z_generell/multiChoiceHelpers.js", true);
+}
 
 function multiChoiceIsArray(val) {
   return Object.prototype.toString.call(val) === "[object Array]";

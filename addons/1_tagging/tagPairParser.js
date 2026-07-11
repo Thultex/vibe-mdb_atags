@@ -1,6 +1,6 @@
 /*
 ========================================
-B2 Tag Pair Parser v1.01 (sys 2.40)
+B2 Tag Pair Parser v1.02 (sys 2.50)
 ========================================
 
 Änderungen
@@ -26,9 +26,22 @@ bulkApplyTagPairParser({
 
 /*
 ========================================
-B2 Tag Pair Parser v1.01 (sys 2.40)
+B2 Tag Pair Parser v1.02 (sys 2.50)
 ========================================
 */
+
+function getTagPairParserVersion() {
+  return {
+    name: "tagPairParser",
+    version: "1.02",
+    sysVersion: "2.50",
+    path: "addons/1_tagging/tagPairParser.js"
+  };
+}
+
+if (typeof registerAtagLibVersion === "function") {
+  registerAtagLibVersion("tagPairParser", "1.02", "2.50", "addons/1_tagging/tagPairParser.js", true);
+}
 
 function trimTagPairValue(val) {
   if (val == null) return "";

@@ -1,6 +1,6 @@
 /*
 ========================================
-A2 Atag Helpers v1.02 (sys 2.40)
+A2 Atag Helpers v1.03 (sys 2.50)
 ========================================
 
 Notes
@@ -14,14 +14,18 @@ Notes
 function getHelpersVersion() {
   return {
     name: "helpers",
-    version: "1.02",
-    sysVersion: "2.40",
+    version: "1.03",
+    sysVersion: "2.50",
     path: "core/helpers.js"
   };
 }
 
 function getHelpersMemVersion() {
   return getHelpersVersion();
+}
+
+if (typeof registerAtagLibVersion === "function") {
+  registerAtagLibVersion("helpers", "1.03", "2.50", "core/helpers.js", true);
 }
 
 function exportAtagsFromCfg(cfg, entryObj, result) {

@@ -1,6 +1,6 @@
 /*
 ========================================
-A4 Tag Cleaner v1.50 (sys 2.40)
+A4 Tag Cleaner v1.51 (sys 2.50)
 ========================================
 
 Notes
@@ -37,17 +37,21 @@ cleanTemplateTags({
 
 /*
 ========================================
-A4 Tag Cleaner v1.50 (sys 2.40)
+A4 Tag Cleaner v1.51 (sys 2.50)
 ========================================
 */
 
 function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
-    version: "1.50",
-    sysVersion: "2.40",
+    version: "1.51",
+    sysVersion: "2.50",
     path: "core/tagCleaner.js"
   };
+}
+
+if (typeof registerAtagLibVersion === "function") {
+  registerAtagLibVersion("tagCleaner", "1.51", "2.50", "core/tagCleaner.js", true);
 }
 
 function splitTagCleanerLines(text) {

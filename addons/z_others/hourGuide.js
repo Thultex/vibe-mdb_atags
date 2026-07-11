@@ -1,6 +1,6 @@
 /*
 ========================================
-C3 Hour Guide v1.30 (sys 2.40)
+C3 Hour Guide v1.31 (sys 2.50)
 ========================================
 
 Changes
@@ -83,9 +83,22 @@ Zwischenstriche werden beim Rendern automatisch ergaenzt.
 
 /*
 ========================================
-C3 Hour Guide v1.30 (sys 2.40)
+C3 Hour Guide v1.31 (sys 2.50)
 ========================================
 */
+
+function getHourGuideVersion() {
+  return {
+    name: "hourGuide",
+    version: "1.31",
+    sysVersion: "2.50",
+    path: "addons/z_others/hourGuide.js"
+  };
+}
+
+if (typeof registerAtagLibVersion === "function") {
+  registerAtagLibVersion("hourGuide", "1.31", "2.50", "addons/z_others/hourGuide.js", true);
+}
 
 function hourGuideToNumber(val) {
   var n;

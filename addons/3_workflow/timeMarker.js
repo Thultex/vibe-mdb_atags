@@ -1,6 +1,6 @@
 /*
 ========================================
-B7 Time Marker v1.39 (sys 2.40)
+B7 Time Marker v1.40 (sys 2.50)
 ========================================
 
 Änderungen
@@ -59,9 +59,22 @@ clearTimeMarkerRows({
 
 /*
 ========================================
-B7 Time Marker v1.39 (sys 2.40)
+B7 Time Marker v1.40 (sys 2.50)
 ========================================
 */
+
+function getTimeMarkerVersion() {
+  return {
+    name: "timeMarker",
+    version: "1.40",
+    sysVersion: "2.50",
+    path: "addons/3_workflow/timeMarker.js"
+  };
+}
+
+if (typeof registerAtagLibVersion === "function") {
+  registerAtagLibVersion("timeMarker", "1.40", "2.50", "addons/3_workflow/timeMarker.js", true);
+}
 
 function toDateSafe(v) {
   if (v == null || v === "") return null;

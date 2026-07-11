@@ -1,11 +1,11 @@
 /*
 ========================================
-A1 Lib Versions v1.31 (sys 2.40)
+A1 Lib Versions v1.40 (sys 2.50)
 ========================================
 
 Notes
-- Text output starts with a system summary line.
-- RUN_LIB_CHECK defaults to true for an immediate verbose startup check.
+- Text output starts with `System Version X.XX (ok, X libs, X local)` or a missmatch/missing summary and ends with a blank line.
+- RUN_LIB_CHECK is a visible top-level switch for the immediate verbose startup check.
 - Standard report lists only remote core libs, but registered known addons are checked for version mismatches.
 - Reports major version mismatches even when loaded versions are newer.
 - Shared remote-library version registry.
@@ -13,50 +13,55 @@ Notes
 - Each lib can still expose its own get...Version function.
 - inputLinker_lib is no longer part of the core lib check.
 - Current libs:
-  - helpers_lib v2.11 (sys 2.40)
-  - collectAtags_lib v1.65 (sys 2.40)
-  - exportAtags_lib v1.84 (sys 2.40)
+  - helpers_lib v2.11 (sys 2.50)
+  - collectAtags_lib v1.65 (sys 2.50)
+  - exportAtags_lib v1.84 (sys 2.50)
 
 ========================================
 */
 
 
-var ATAG_SYS_VERSION = typeof ATAG_SYS_VERSION !== "undefined" ? ATAG_SYS_VERSION : "2.40";
+var RUN_LIB_CHECK = true;
+var SHOW_REMOTE_VERSIONS = true;
+var SHOW_LOCAL_VERSIONS = true;
+var SHOW_REMOTE_MISSING = true;
+var SHOW_LOCAL_MISSING = true;
+
+var ATAG_SYS_VERSION = "2.50";
 var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERSIONS : {};
-var RUN_LIB_CHECK = typeof RUN_LIB_CHECK !== "undefined" ? RUN_LIB_CHECK : true;
 
 function getLibVersionsVersion() {
   return {
     name: "libVersions",
-    version: "1.31",
-    sysVersion: "2.40",
+    version: "1.40",
+    sysVersion: "2.50",
     path: "core/_checkLibs.js"
   };
 }
 
 var ATAG_EXPECTED_LIBS = [
-  { name: "helpers_lib", version: "2.11", getter: "getHelpersLibVersion", path: "core_lib/helpers_lib.js" },
-  { name: "collectAtags_lib", version: "1.65", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
-  { name: "exportAtags_lib", version: "1.84", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" }
+  { id: "#3", title: "Helpers Lib", area: "core_lib", name: "helpers_lib", version: "2.11", getter: "getHelpersLibVersion", path: "core_lib/helpers_lib.js" },
+  { id: "#1", title: "Collect Atags Lib", area: "core_lib", name: "collectAtags_lib", version: "1.65", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
+  { id: "#2", title: "Export Atags Lib", area: "core_lib", name: "exportAtags_lib", version: "1.84", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" }
 ];
 
 var ATAG_EXPECTED_OPTIONAL_LIBS = [
-  { name: "libVersions", version: "1.31", getter: "getLibVersionsVersion", path: "core/_checkLibs.js", optional: true },
-  { name: "helpers", version: "1.02", getter: "getHelpersVersion", path: "core/helpers.js", optional: true },
-  { name: "tagCleaner", version: "1.50", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
-  { name: "restoreAtags", version: "2.09", path: "core/restoreAtags.js", optional: true },
-  { name: "tagPairParser", version: "1.01", path: "addons/1_tagging/tagPairParser.js", optional: true },
-  { name: "globalFieldSync", version: "1.03", path: "addons/2_syncing/globalFieldSync.js", optional: true },
-  { name: "syncLastFromLatest", version: "1.05", path: "addons/2_syncing/syncLastFromLatest.js", optional: true },
-  { name: "dustMerger", version: "0.12", path: "addons/2_syncing/dustMerger.js", optional: true },
-  { name: "floatingAverage", version: "1.00", path: "addons/3_workflow/floatingAverage.js", optional: true },
-  { name: "sequenceCounter", version: "1.05", path: "addons/3_workflow/sequenceCounter.js", optional: true },
-  { name: "timeMarker", version: "1.39", path: "addons/3_workflow/timeMarker.js", optional: true },
-  { name: "obsidianLinker", version: "1.16", path: "addons/6_integration/obsidianLinker.js", optional: true },
-  { name: "wikiLinker", version: "1.00", path: "addons/6_integration/wikiLinker.js", optional: true },
-  { name: "multiChoiceHelpers", version: "1.01", path: "addons/z_generell/multiChoiceHelpers.js", optional: true },
-  { name: "typedTextFields", version: "1.00", path: "addons/z_generell/typedTextFields.js", optional: true },
-  { name: "hourGuide", version: "1.30", path: "addons/z_others/hourGuide.js", optional: true }
+  { id: "A1", title: "Lib Versions", area: "core", name: "libVersions", version: "1.40", getter: "getLibVersionsVersion", path: "core/_checkLibs.js", optional: true },
+  { id: "A2", title: "Atag Helpers", area: "core", name: "helpers", version: "1.03", getter: "getHelpersVersion", path: "core/helpers.js", optional: true },
+  { id: "A3", title: "Restore Atags", area: "core", name: "restoreAtags", version: "2.10", getter: "getRestoreAtagsVersion", path: "core/restoreAtags.js", optional: true },
+  { id: "A4", title: "Tag Cleaner", area: "core", name: "tagCleaner", version: "1.51", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
+  { id: "B2", title: "Tag Pair Parser", area: "1_tagging", name: "tagPairParser", version: "1.02", getter: "getTagPairParserVersion", path: "addons/1_tagging/tagPairParser.js", optional: true },
+  { id: "B3", title: "Global Field Sync", area: "2_syncing", name: "globalFieldSync", version: "1.04", getter: "getGlobalFieldSyncVersion", path: "addons/2_syncing/globalFieldSync.js", optional: true },
+  { id: "B4", title: "Sync Last From Latest", area: "2_syncing", name: "syncLastFromLatest", version: "1.06", getter: "getSyncLastFromLatestVersion", path: "addons/2_syncing/syncLastFromLatest.js", optional: true },
+  { id: "B5", title: "Floating Average", area: "3_workflow", name: "floatingAverage", version: "1.01", getter: "getFloatingAverageVersion", path: "addons/3_workflow/floatingAverage.js", optional: true },
+  { id: "B6", title: "Sequence Counter", area: "3_workflow", name: "sequenceCounter", version: "1.06", getter: "getSequenceCounterVersion", path: "addons/3_workflow/sequenceCounter.js", optional: true },
+  { id: "B7", title: "Time Marker", area: "3_workflow", name: "timeMarker", version: "1.40", getter: "getTimeMarkerVersion", path: "addons/3_workflow/timeMarker.js", optional: true },
+  { id: "B8", title: "Obsidian Linker", area: "6_integration", name: "obsidianLinker", version: "1.17", getter: "getObsidianLinkerVersion", path: "addons/6_integration/obsidianLinker.js", optional: true },
+  { id: "B9", title: "Wiki Linker", area: "6_integration", name: "wikiLinker", version: "1.01", getter: "getWikiLinkerVersion", path: "addons/6_integration/wikiLinker.js", optional: true },
+  { id: "B10", title: "Dust Merger", area: "2_syncing", name: "dustMerger", version: "0.13", getter: "getDustMergerVersion", path: "addons/2_syncing/dustMerger.js", optional: true },
+  { id: "C1", title: "Multi Choice Helpers", area: "z_generell", name: "multiChoiceHelpers", version: "1.02", getter: "getMultiChoiceHelpersVersion", path: "addons/z_generell/multiChoiceHelpers.js", optional: true },
+  { id: "C2", title: "Typed Text Fields", area: "z_generell", name: "typedTextFields", version: "1.01", getter: "getTypedTextFieldsVersion", path: "addons/z_generell/typedTextFields.js", optional: true },
+  { id: "C3", title: "Hour Guide", area: "z_others", name: "hourGuide", version: "1.31", getter: "getHourGuideVersion", path: "addons/z_others/hourGuide.js", optional: true }
 ];
 
 function getExpectedAtagLibs() {
@@ -105,31 +110,21 @@ function getExpectedAtagAnyLibInfo(name) {
 
 function callExpectedAtagLibGetter(name) {
   var key = String(name || "");
-  if (key === "helpers_lib") {
-    if (typeof getHelpersLibVersion !== "function") return null;
-    return getHelpersLibVersion();
+  var info = getExpectedAtagAnyLibInfo(key);
+  var getterName = info && info.getter ? String(info.getter || "") : "";
+  var getterFn;
+
+  if (!getterName) return null;
+  if (!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(getterName)) return null;
+
+  try {
+    getterFn = eval(getterName);
+  } catch (e) {
+    getterFn = null;
   }
-  if (key === "collectAtags_lib") {
-    if (typeof getCollectAtagsLibVersion !== "function") return null;
-    return getCollectAtagsLibVersion();
-  }
-  if (key === "exportAtags_lib") {
-    if (typeof getExportAtagsLibVersion !== "function") return null;
-    return getExportAtagsLibVersion();
-  }
-  if (key === "libVersions") {
-    if (typeof getLibVersionsVersion !== "function") return null;
-    return getLibVersionsVersion();
-  }
-  if (key === "helpers") {
-    if (typeof getHelpersVersion !== "function") return null;
-    return getHelpersVersion();
-  }
-  if (key === "tagCleaner") {
-    if (typeof getTagCleanerVersion !== "function") return null;
-    return getTagCleanerVersion();
-  }
-  return null;
+
+  if (typeof getterFn !== "function") return null;
+  return getterFn();
 }
 
 function registerAtagLibVersion(name, version, sysVersion, path, optional) {
@@ -230,6 +225,66 @@ function addAtagVersionMismatch(list, text) {
   list.push(text);
 }
 
+function sortAtagVersionList(list) {
+  list.sort(function(a, b) {
+    var aa = String(a.name || "").toLowerCase();
+    var bb = String(b.name || "").toLowerCase();
+    if (aa < bb) return -1;
+    if (aa > bb) return 1;
+    return 0;
+  });
+}
+
+function atagVersionLine(info, prefix) {
+  return String(prefix || "") + info.name + " v" + info.version + " (sys " + info.sysVersion + ")";
+}
+
+function atagDisplayName(name) {
+  var info = getExpectedAtagAnyLibInfo(name);
+  if (!info) return String(name || "");
+  if (info.id && info.title && info.area) return info.id + " " + info.title + " (" + info.area + ")";
+  if (info.id && info.title) return info.id + " " + info.title;
+  return String(info.name || name || "");
+}
+
+function atagCheckOptions(cfg) {
+  return {
+    showRemoteVersions: cfg.showRemoteVersions !== false && SHOW_REMOTE_VERSIONS !== false,
+    showLocalVersions: cfg.showLocalVersions !== false && SHOW_LOCAL_VERSIONS !== false,
+    showRemoteMissing: cfg.showRemoteMissing !== false && SHOW_REMOTE_MISSING !== false,
+    showLocalMissing: cfg.showLocalMissing !== false && SHOW_LOCAL_MISSING !== false
+  };
+}
+
+function addAtagLocalLoaded(loaded, items, info) {
+  var name = info && info.name ? String(info.name || "") : "";
+  if (!name || loaded[name]) return false;
+  loaded[name] = true;
+  items.push(info);
+  return true;
+}
+
+function atagLibCheckSummaryLine(libMismatchCount, localMismatchCount, missingCount, libCount, localCount) {
+  var status = "";
+  var counts = [];
+
+  if (libMismatchCount === 0 && localMismatchCount === 0 && missingCount === 0) {
+    return "System Version " + ATAG_SYS_VERSION + " (ok, " + libCount + " libs, " + localCount + " local)";
+  } else if ((libMismatchCount > 0 || localMismatchCount > 0) && missingCount > 0) {
+    status = "missmatch/missing";
+  } else if (libMismatchCount > 0 || localMismatchCount > 0) {
+    status = "missmatch";
+  } else {
+    status = "missing";
+  }
+
+  if (libMismatchCount > 0) counts.push(libMismatchCount + " libs");
+  if (localMismatchCount > 0) counts.push(localMismatchCount + " local");
+  if (missingCount > 0) counts.push(missingCount + " missing");
+
+  return "System Version " + ATAG_SYS_VERSION + " (" + status + ", " + counts.join(", ") + ")";
+}
+
 function logAtagRegisteredVersionMismatch(info) {
   var expected;
   var text;
@@ -241,8 +296,8 @@ function logAtagRegisteredVersionMismatch(info) {
   if (!text) return;
   if (typeof log === "function") {
     log(
-      "System Version " + ATAG_SYS_VERSION + ": 1 Mismatches, 0 Missing\n" +
-      "VERSION MISMATCH " + text
+      atagLibCheckSummaryLine(0, 1, 0, 0, 1) + "\n" +
+      "VERSION LOCAL: " + text + "\n"
     );
   }
 }
@@ -297,9 +352,9 @@ function checkLibVersions(cfg) {
     for (i = 0; i < out.length; i++) {
       lines.push(out[i].name + " v" + out[i].version + " (sys " + out[i].sysVersion + ")");
     }
-    for (i = 0; i < missing.length; i++) lines.push("MISSING " + missing[i]);
-    for (i = 0; i < optionalMissing.length; i++) lines.push("OPTIONAL MISSING " + optionalMissing[i]);
-    text = lines.join("\n");
+    for (i = 0; i < missing.length; i++) lines.push("MISSING REM: " + atagDisplayName(missing[i]));
+    for (i = 0; i < optionalMissing.length; i++) lines.push("MISSING REM: " + atagDisplayName(optionalMissing[i]));
+    text = lines.join("\n") + "\n";
     if (verbose && typeof log === "function") log(text);
     if (asText) return text;
   }
@@ -328,11 +383,17 @@ function checkAtagLibVersions(cfg) {
   var accessMissing = [];
   var optionalAccessMissing = [];
   var versionMismatch = [];
+  var libVersionMismatch = [];
+  var localVersionMismatch = [];
+  var localLoaded = {};
+  var localLoadedItems = [];
+  var localMissing = [];
   var info;
   var got;
   var i;
   var name;
   var text;
+  var options = atagCheckOptions(cfg);
   var expected = getExpectedAtagLibs();
   var optionalExpected = getExpectedAtagOptionalLibs();
   var checkOptionalRegistered = cfg.checkOptionalRegistered !== false && cfg.remoteOnly !== true;
@@ -358,14 +419,22 @@ function checkAtagLibVersions(cfg) {
     if (!info || !result.map[name]) continue;
     text = atagVersionMismatchText(name, info, result.map[name]);
     addAtagVersionMismatch(versionMismatch, text);
+    if (info.optional === true) addAtagVersionMismatch(localVersionMismatch, text);
+    else addAtagVersionMismatch(libVersionMismatch, text);
   }
 
   if (checkOptionalRegistered) {
     for (i = 0; i < optionalExpected.length; i++) {
       name = optionalExpected[i].name;
-      if (!ATAG_LIB_VERSIONS[name]) continue;
-      text = atagVersionMismatchText(name, optionalExpected[i], ATAG_LIB_VERSIONS[name]);
+      got = ATAG_LIB_VERSIONS[name] || callExpectedAtagLibGetter(name);
+      if (!got) {
+        if (options.showLocalMissing) localMissing.push(name);
+        continue;
+      }
+      addAtagLocalLoaded(localLoaded, localLoadedItems, got);
+      text = atagVersionMismatchText(name, optionalExpected[i], got);
       addAtagVersionMismatch(versionMismatch, text);
+      addAtagVersionMismatch(localVersionMismatch, text);
     }
   }
 
@@ -377,11 +446,11 @@ function checkAtagLibVersions(cfg) {
       got = callExpectedAtagLibGetter(name);
       if (!got) {
         if (info.optional === true) {
-          optionalAccessMissing.push(name);
+          if (options.showRemoteMissing) optionalAccessMissing.push(name);
           continue;
         }
-        if (requireAll) accessMissing.push(name);
-        else optionalAccessMissing.push(name);
+        if (requireAll && options.showRemoteMissing) accessMissing.push(name);
+        else if (options.showRemoteMissing) optionalAccessMissing.push(name);
         continue;
       }
       access.push(got);
@@ -390,6 +459,8 @@ function checkAtagLibVersions(cfg) {
       result.optionalMissing = removeAtagListValue(result.optionalMissing, name);
       text = atagVersionMismatchText(name, info, got);
       addAtagVersionMismatch(versionMismatch, text);
+      if (info.optional === true) addAtagVersionMismatch(localVersionMismatch, text);
+      else addAtagVersionMismatch(libVersionMismatch, text);
     }
   }
 
@@ -397,31 +468,47 @@ function checkAtagLibVersions(cfg) {
   result.accessMissing = accessMissing;
   result.optionalAccessMissing = optionalAccessMissing;
   result.versionMismatch = versionMismatch;
-  result.ok = result.ok && accessMissing.length === 0 && versionMismatch.length === 0;
-  result.libs.sort(function(a, b) {
-    var aa = String(a.name || "").toLowerCase();
-    var bb = String(b.name || "").toLowerCase();
-    if (aa < bb) return -1;
-    if (aa > bb) return 1;
-    return 0;
-  });
+  result.libVersionMismatch = libVersionMismatch;
+  result.localVersionMismatch = localVersionMismatch;
+  result.localLoadedCount = localLoadedItems.length;
+  result.local = localLoadedItems;
+  result.localMissing = localMissing;
+  if (!options.showRemoteMissing) result.missing = [];
+  result.ok = result.ok && accessMissing.length === 0 && localMissing.length === 0 && versionMismatch.length === 0;
+  sortAtagVersionList(result.libs);
+  sortAtagVersionList(result.local);
 
   if (asText || verbose) {
     var lines = [];
-    lines.push(
-      "System Version " + ATAG_SYS_VERSION + ": " +
-      versionMismatch.length + " Mismatches, " +
-      (result.missing.length + accessMissing.length) + " Missing"
-    );
-    for (i = 0; i < result.libs.length; i++) {
-      lines.push(result.libs[i].name + " v" + result.libs[i].version + " (sys " + result.libs[i].sysVersion + ")");
+    var missingCount = result.missing.length + accessMissing.length + localMissing.length;
+    lines.push(atagLibCheckSummaryLine(
+      libVersionMismatch.length,
+      localVersionMismatch.length,
+      missingCount,
+      result.libs.length,
+      result.localLoadedCount
+    ));
+    if (options.showRemoteVersions) {
+      for (i = 0; i < result.libs.length; i++) {
+        lines.push(atagVersionLine(result.libs[i], ""));
+      }
     }
-    for (i = 0; i < result.missing.length; i++) lines.push("MISSING " + result.missing[i]);
-    for (i = 0; i < result.optionalMissing.length; i++) lines.push("OPTIONAL MISSING " + result.optionalMissing[i]);
-    for (i = 0; i < accessMissing.length; i++) lines.push("NOT CALLABLE " + accessMissing[i]);
-    for (i = 0; i < optionalAccessMissing.length; i++) lines.push("OPTIONAL NOT CALLABLE " + optionalAccessMissing[i]);
-    for (i = 0; i < versionMismatch.length; i++) lines.push("VERSION MISMATCH " + versionMismatch[i]);
-    text = lines.join("\n");
+    if (options.showLocalVersions) {
+      for (i = 0; i < result.local.length; i++) {
+        lines.push(atagVersionLine(result.local[i], "LOCAL "));
+      }
+    }
+    if (options.showRemoteMissing) {
+      for (i = 0; i < result.missing.length; i++) lines.push("MISSING REM: " + atagDisplayName(result.missing[i]));
+      for (i = 0; i < accessMissing.length; i++) lines.push("MISSING REM: " + atagDisplayName(accessMissing[i]));
+      for (i = 0; i < optionalAccessMissing.length; i++) lines.push("MISSING REM: " + atagDisplayName(optionalAccessMissing[i]));
+    }
+    if (options.showLocalMissing) {
+      for (i = 0; i < localMissing.length; i++) lines.push("MISSING LOCAL: " + atagDisplayName(localMissing[i]));
+    }
+    for (i = 0; i < libVersionMismatch.length; i++) lines.push("VERSION REM: " + libVersionMismatch[i]);
+    for (i = 0; i < localVersionMismatch.length; i++) lines.push("VERSION LOCAL: " + localVersionMismatch[i]);
+    text = lines.join("\n") + "\n";
     result.text = text;
     if (verbose && typeof log === "function") log(text);
     if (asText) return text;

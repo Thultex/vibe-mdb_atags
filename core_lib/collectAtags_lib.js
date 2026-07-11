@@ -1,6 +1,6 @@
 /*
 ========================================
-#1 collectAtags Lib v1.65 (sys 2.40)
+#1 collectAtags Lib v1.65 (sys 2.50)
 ========================================
 
 Changes
@@ -53,13 +53,13 @@ function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
     version: "1.65",
-    sysVersion: "2.40",
+    sysVersion: "2.50",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.65", "2.40", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.65", "2.50", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");

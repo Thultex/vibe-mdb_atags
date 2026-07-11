@@ -48,6 +48,9 @@ Regeln:
 - Der Block `Änderungen` enthält kurze, konkrete Punkte mit Wirkung.
 - Die Systemversion `sys 2.21` bleibt unverändert, solange sich nur das einzelne Modul ändert.
 - Die Kennung vor dem Namen ist Pflicht: `A` fuer Core, `B` fuer Addons, `C` fuer geloeste eigenstaendige Module. Die Nummer folgt der dokumentierten Repo-Reihenfolge.
+- Jedes zentrale Script und jedes optionale Plugin/Add-on stellt eine `get...Version()`-Funktion bereit, z. B. `getDustMergerVersion()`, die `{ name, version, sysVersion, path }` zurückgibt.
+- Jedes optionale Plugin/Add-on registriert sich direkt nach der `get...Version()`-Funktion, wenn `registerAtagLibVersion` verfügbar ist: `registerAtagLibVersion(name, version, sysVersion, path, true)`.
+- Bekannte optionale Plugins/Add-ons werden in `core/_checkLibs.js` mit `getter` in `ATAG_EXPECTED_OPTIONAL_LIBS` geführt. `_checkLibs` ruft diese Getter generisch auf; keine neuen hartcodierten Sonderfälle anlegen.
 
 ## Aktuelle Form Der Dateiheader
 
@@ -131,7 +134,7 @@ Pflege-Regeln für diese Headerform:
 ```js
 /*
 ========================================
-A4 Tag Cleaner v1.50 (sys 2.40)
+A4 Tag Cleaner v1.50 (sys 2.50)
 ========================================
 */
 ```

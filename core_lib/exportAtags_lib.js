@@ -1,6 +1,6 @@
 /*
 ========================================
-#2 exportAtags Lib v1.84 (sys 2.40)
+#2 exportAtags Lib v1.84 (sys 2.50)
 ========================================
 
 Notes:
@@ -73,7 +73,7 @@ applyTags({
 
 /*
 ========================================
-#2 exportAtags Lib v1.84 (sys 2.40)
+#2 exportAtags Lib v1.84 (sys 2.50)
 ========================================
 */
 
@@ -82,13 +82,13 @@ function getExportAtagsLibVersion() {
   return {
     name: "exportAtags_lib",
     version: "1.84",
-    sysVersion: "2.40",
+    sysVersion: "2.50",
     path: "core_lib/exportAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("exportAtags_lib", "1.84", "2.40", "core_lib/exportAtags_lib.js");
+  registerAtagLibVersion("exportAtags_lib", "1.84", "2.50", "core_lib/exportAtags_lib.js");
 }
 function atagCategoryAggregateMode(cfg, context) {
   if (cfg && cfg.categoryAggregateMode !== undefined) return cfg.categoryAggregateMode;

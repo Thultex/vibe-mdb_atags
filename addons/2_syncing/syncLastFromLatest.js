@@ -1,6 +1,6 @@
 /*
 ========================================
-B4 Sync Last From Latest v1.05 (sys 2.40)
+B4 Sync Last From Latest v1.06 (sys 2.50)
 ========================================
 
 Changes
@@ -39,9 +39,22 @@ if (newest) applyHourGuide({ entryObj: newest });
 
 /*
 ========================================
-B4 Sync Last From Latest v1.05 (sys 2.40)
+B4 Sync Last From Latest v1.06 (sys 2.50)
 ========================================
 */
+
+function getSyncLastFromLatestVersion() {
+  return {
+    name: "syncLastFromLatest",
+    version: "1.06",
+    sysVersion: "2.50",
+    path: "addons/2_syncing/syncLastFromLatest.js"
+  };
+}
+
+if (typeof registerAtagLibVersion === "function") {
+  registerAtagLibVersion("syncLastFromLatest", "1.06", "2.50", "addons/2_syncing/syncLastFromLatest.js", true);
+}
 
 function slflTrim(s) {
   return String(s || "").replace(/^\s+|\s+$/g, "");

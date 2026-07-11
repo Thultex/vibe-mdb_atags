@@ -1,6 +1,6 @@
 /*
 ========================================
-B10 Dust Merger v0.12 (sys 2.40)
+B10 Dust Merger v0.13 (sys 2.50)
 ========================================
 
 Changes
@@ -54,11 +54,24 @@ dustMerge({
 
 /*
 ========================================
-B10 Dust Merger v0.12 (sys 2.40)
+B10 Dust Merger v0.13 (sys 2.50)
 ========================================
 */
 
-var DUST_MERGER_VERSION = "0.12";
+var DUST_MERGER_VERSION = "0.13";
+
+function getDustMergerVersion() {
+  return {
+    name: "dustMerger",
+    version: DUST_MERGER_VERSION,
+    sysVersion: "2.50",
+    path: "addons/2_syncing/dustMerger.js"
+  };
+}
+
+if (typeof registerAtagLibVersion === "function") {
+  registerAtagLibVersion("dustMerger", DUST_MERGER_VERSION, "2.50", "addons/2_syncing/dustMerger.js", true);
+}
 
 function dmTrim(s) {
   return String(s == null ? "" : s).replace(/^\s+|\s+$/g, "");

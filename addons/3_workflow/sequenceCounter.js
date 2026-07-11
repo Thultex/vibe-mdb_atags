@@ -1,6 +1,6 @@
 /*
 ========================================
-B6 Sequence Counter v1.05 (sys 2.40)
+B6 Sequence Counter v1.06 (sys 2.50)
 ========================================
 
 Changes
@@ -34,9 +34,22 @@ updateSequenceSpree({
 
 /*
 ========================================
-B6 Sequence Counter v1.05 (sys 2.40)
+B6 Sequence Counter v1.06 (sys 2.50)
 ========================================
 */
+
+function getSequenceCounterVersion() {
+  return {
+    name: "sequenceCounter",
+    version: "1.06",
+    sysVersion: "2.50",
+    path: "addons/3_workflow/sequenceCounter.js"
+  };
+}
+
+if (typeof registerAtagLibVersion === "function") {
+  registerAtagLibVersion("sequenceCounter", "1.06", "2.50", "addons/3_workflow/sequenceCounter.js", true);
+}
 
 function sequenceTrim(s) {
   return String(s || "").replace(/^\s+|\s+$/g, "");

@@ -1,6 +1,6 @@
 /*
 ========================================
-B3 Global Field Sync v1.03 (sys 2.40)
+B3 Global Field Sync v1.04 (sys 2.50)
 ========================================
 
 Changes
@@ -36,9 +36,22 @@ syncFieldAll({
 
 /*
 ========================================
-B3 Global Field Sync v1.03 (sys 2.40)
+B3 Global Field Sync v1.04 (sys 2.50)
 ========================================
 */
+
+function getGlobalFieldSyncVersion() {
+  return {
+    name: "globalFieldSync",
+    version: "1.04",
+    sysVersion: "2.50",
+    path: "addons/2_syncing/globalFieldSync.js"
+  };
+}
+
+if (typeof registerAtagLibVersion === "function") {
+  registerAtagLibVersion("globalFieldSync", "1.04", "2.50", "addons/2_syncing/globalFieldSync.js", true);
+}
 
 function syncIsArray(val) {
   return Object.prototype.toString.call(val) === "[object Array]";

@@ -1,6 +1,6 @@
 /*
 ========================================
-B5 Floating Average v1.00 (sys 2.40)
+B5 Floating Average v1.01 (sys 2.50)
 ========================================
 
 Changes
@@ -27,9 +27,22 @@ updateAverage({
 
 /*
 ========================================
-B5 Floating Average v1.00 (sys 2.40)
+B5 Floating Average v1.01 (sys 2.50)
 ========================================
 */
+
+function getFloatingAverageVersion() {
+  return {
+    name: "floatingAverage",
+    version: "1.01",
+    sysVersion: "2.50",
+    path: "addons/3_workflow/floatingAverage.js"
+  };
+}
+
+if (typeof registerAtagLibVersion === "function") {
+  registerAtagLibVersion("floatingAverage", "1.01", "2.50", "addons/3_workflow/floatingAverage.js", true);
+}
 
 function floatingTrim(s) {
   return String(s || "").replace(/^\s+|\s+$/g, "");

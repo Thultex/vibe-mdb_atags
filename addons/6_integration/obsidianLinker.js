@@ -1,6 +1,6 @@
 /*
 ========================================
-B8 Obsidian Linker v1.16 (sys 2.40)
+B8 Obsidian Linker v1.17 (sys 2.50)
 ========================================
 
 Changes
@@ -43,9 +43,22 @@ makeObsidianMementoUri({
 
 /*
 ========================================
-B8 Obsidian Linker v1.16 (sys 2.40)
+B8 Obsidian Linker v1.17 (sys 2.50)
 ========================================
 */
+
+function getObsidianLinkerVersion() {
+  return {
+    name: "obsidianLinker",
+    version: "1.17",
+    sysVersion: "2.50",
+    path: "addons/6_integration/obsidianLinker.js"
+  };
+}
+
+if (typeof registerAtagLibVersion === "function") {
+  registerAtagLibVersion("obsidianLinker", "1.17", "2.50", "addons/6_integration/obsidianLinker.js", true);
+}
 
 function obsTrim(s) {
   return String(s || "").replace(/^\s+|\s+$/g, "");

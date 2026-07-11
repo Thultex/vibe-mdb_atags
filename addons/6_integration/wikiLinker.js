@@ -1,6 +1,6 @@
 /*
 ========================================
-B9 Wiki Linker v1.00 (sys 2.40)
+B9 Wiki Linker v1.01 (sys 2.50)
 ========================================
 
 Changes
@@ -20,9 +20,22 @@ applyWikiLinker({
 
 /*
 ========================================
-B9 Wiki Linker v1.00 (sys 2.40)
+B9 Wiki Linker v1.01 (sys 2.50)
 ========================================
 */
+
+function getWikiLinkerVersion() {
+  return {
+    name: "wikiLinker",
+    version: "1.01",
+    sysVersion: "2.50",
+    path: "addons/6_integration/wikiLinker.js"
+  };
+}
+
+if (typeof registerAtagLibVersion === "function") {
+  registerAtagLibVersion("wikiLinker", "1.01", "2.50", "addons/6_integration/wikiLinker.js", true);
+}
 
 function wikiLinkerTrim(s) {
   return String(s || "").replace(/^\s+|\s+$/g, "");

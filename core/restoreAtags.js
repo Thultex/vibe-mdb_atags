@@ -1,6 +1,6 @@
 /*
 ========================================
-A3 restoreAtags v2.09 (sys 2.40)
+A3 restoreAtags v2.10 (sys 2.50)
 ========================================
 
 Notes:
@@ -56,9 +56,22 @@ restoreAtags({
 
 /*
 ========================================
-A3 restoreAtags v2.09 (sys 2.40)
+A3 restoreAtags v2.10 (sys 2.50)
 ========================================
 */
+
+function getRestoreAtagsVersion() {
+  return {
+    name: "restoreAtags",
+    version: "2.10",
+    sysVersion: "2.50",
+    path: "core/restoreAtags.js"
+  };
+}
+
+if (typeof registerAtagLibVersion === "function") {
+  registerAtagLibVersion("restoreAtags", "2.10", "2.50", "core/restoreAtags.js", true);
+}
 
 // ===== HELPERS =====
 function parseListValue(val) {
@@ -765,7 +778,7 @@ function restoreAtagsForEntry(entryObj, cfg, clearMappedFields) {
   if (!entryObj) return;
 
   if (cfg.debugField) cfg._debugLines = [];
-  restoreDebugPush(cfg, "restoreAtags v2.09");
+  restoreDebugPush(cfg, "restoreAtags v2.10");
   restoreDebugPush(cfg, "sourceField: " + cfg.sourceField);
   restoreFieldNameMap(cfg);
   restoreDebugPush(cfg, "known fields: " + (cfg._fieldNameCount == null ? "unknown" : String(cfg._fieldNameCount)));

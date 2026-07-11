@@ -1,6 +1,6 @@
 /*
 ========================================
-C2 Typed Text Fields v1.00 (sys 2.40)
+C2 Typed Text Fields v1.01 (sys 2.50)
 ========================================
 
 Changes
@@ -24,9 +24,22 @@ syncTypedTextFields(selectedEntries(), {
 
 /*
 ========================================
-C2 Typed Text Fields v1.00 (sys 2.40)
+C2 Typed Text Fields v1.01 (sys 2.50)
 ========================================
 */
+
+function getTypedTextFieldsVersion() {
+  return {
+    name: "typedTextFields",
+    version: "1.01",
+    sysVersion: "2.50",
+    path: "addons/z_generell/typedTextFields.js"
+  };
+}
+
+if (typeof registerAtagLibVersion === "function") {
+  registerAtagLibVersion("typedTextFields", "1.01", "2.50", "addons/z_generell/typedTextFields.js", true);
+}
 
 function typedTextIsArray(val) {
   return Object.prototype.toString.call(val) === "[object Array]";

@@ -27,10 +27,21 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 ### 2026-07-11 - (ca. 0,2h)
 
 - Change: `RUN_LIB_CHECK` ist in `core/_checkLibs.js` standardmaessig `true`, damit der Versionscheck beim Laden direkt laeuft.
-- Change: Text-/Verbose-Ausgabe von `checkAtagLibVersions()` beginnt mit `System Version X.XX: X Mismatches, X Missing`; registrierte Plugin-Mismatches zaehlen dort mit und werden unten als `VERSION MISMATCH ...` ausgegeben.
+- Change: Text-/Verbose-Ausgabe von `checkAtagLibVersions()` beginnt mit `System Version X.XX (ok, X libs, X local)` oder einer `missmatch`-/`missing`-Summary; Mismatches werden unten als `VERSION REM: ...` oder `VERSION LOCAL: ...` ausgegeben.
 - Fix: Auch spaeter per `registerAtagLibVersion()` registrierte bekannte Plugin-Mismatches werden direkt geloggt.
+- Change: `_checkLibs` v1.33 schliesst Text-/Verbose-Ausgaben mit einer Leerzeile ab.
+- Fix: `_checkLibs` v1.34 setzt die Ziel-`ATAG_SYS_VERSION` selbst auf `2.50`, statt ein zuvor von alten Libs gesetztes globales `ATAG_SYS_VERSION` zu uebernehmen.
+- Fix: `_checkLibs` v1.35 erkennt lokale Mismatches auch ueber vorhandene `get...Version()`-Getter, wenn ein altes lokales Plugin/Add-on sich noch nicht per Registry registriert.
+- Change: `_checkLibs` v1.36 formatiert die Summary als `System Version X.XX (ok, X libs, X local)` bzw. mit Detailteil `-> Missmatches: X libs, X local; Missing: X`.
+- Change: `_checkLibs` v1.37 gibt geladene bekannte lokale Module als `LOCAL ...` aus.
+- Change: `_checkLibs` v1.38 setzt `var RUN_LIB_CHECK = true;` sichtbar an den Dateianfang, damit ein normaler Run die Prüfung direkt ausgibt.
+- Change: `_checkLibs` v1.40 fasst Options-, Sortier- und Ausgabe-Helfer zusammen; Getter-basierte Missing-Meldungen laufen getrennt ueber `SHOW_REMOTE_MISSING` und `SHOW_LOCAL_MISSING`.
+- Change: `_checkLibs` Summary ist bei Befunden kompakt, z. B. `System Version 2.50 (missmatch/missing, 2 libs, 2 local, 13 missing)`; nur bei `ok` werden alle geladenen Counts gezeigt.
+- Change: Systemversion auf `sys 2.50` angehoben; alle bekannten lokalen Plugins/Addons mit neuem Versions-Getter wurden auf eigene Patch-Versionen nachgezogen und in `Z_LIB_VERSIONS.md` aufgefuehrt.
 - Fix: `collectAtags_lib` v1.65 behandelt `/` vor Tags als Trenner; `/Tag2` und `/Tag#` werden als `Tag` erkannt, aber nie inklusive `/` gespeichert.
 - Fix: DustMerger v0.12 misst das 28h-Vortagsfenster ab 00:00 Uhr des Vortags; Einträge vom Vortag werden damit standardmaessig nur bis 04:00 Uhr des Folgetags gemerged.
+- Fix: DustMerger v0.13 registriert sich per `registerAtagLibVersion()` und stellt `getDustMergerVersion()` bereit, sodass `_checkLibs` alte Merger-Versionen sichtbar als Mismatch meldet.
+- Change: `_checkLibs` v1.32 ruft Versions-Getter aus `ATAG_EXPECTED_OPTIONAL_LIBS` generisch auf; bekannte optionale Plugins/Addons registrieren sich jetzt beim Laden selbst.
 - Feature: `collectAtags_lib` v1.64 erkennt in `@@@Kategorie::` die Form `@@/Negativ:` als normales Child `Negativ` mit negativem Kategorie-Vorzeichen.
 - Change: `core/_checkLibs.js` v1.31 listet im Standard weiter nur die Remote-Core-Libs, gibt aber Versions-/Sys-Mismatches registrierter bekannter Addons/Plugins in `versionMismatch` und der Text-/Verbose-Ausgabe aus.
 - Fix: Fehlende optionale Addons/Plugins werden bei `checkAtagLibVersions()` nicht als Missing ausgegeben.

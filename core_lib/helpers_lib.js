@@ -1,6 +1,6 @@
 /*
 ========================================
-#3 Atag Helpers Lib v2.11 (sys 2.40)
+#3 Atag Helpers Lib v2.11 (sys 2.50)
 ========================================
 
 Changes
@@ -18,7 +18,7 @@ Changes
 */
 
 // ===== SYSTEM =====
-var ATAG_SYS_VERSION = "2.40";
+var ATAG_SYS_VERSION = "2.50";
 
 function getHelpersLibVersion() {
   return {
