@@ -795,6 +795,8 @@ Kumulative `+`/`-`-Tags wie `tag+`, `tag++`, `tag--` und `tag++2` werden in Row-
 @@SymptomA (SA): sa, SymptomAlias1
 @@@self (sf)
 @@@help: ActivityA, ActivityB, ActivityC
+@@@Vital::
+@@SymptomA (SA): sa
 tag1 (tg1)[self, help]: 3
 tag2 (tg2)[self]: 3
 ```
@@ -808,6 +810,7 @@ tag2 (tg2)[self]: 3
 - Doppelte Aliasnamen behalten standardmaessig die letzte Definition; mit `multiAliasTargets: true` erzeugt ein Alias mehrere Ziel-Tags, z. B. `@@Pos: x` und `@@Neg: -x` machen aus `x2` `Pos+2` und `Neg-2`
 - Kategorie-Aliase werden mit `@@@` definiert, z. B. `@@@self (sf)`
 - `@@@help: ActivityA, ActivityB, ActivityC` setzt die rechte Seite direkt als Kategorie-Kinder, nicht als Aliase
+- `@@@Vital::` sammelt die direkt folgenden Alias-Zeilen, solange die nächste Zeile mit `@@` beginnt; die Alias-Namen werden als feste Kategorie-Kinder genutzt
 - Feste Kategorie-Kinder koennen mit `-` negiert werden, z. B. `@@@Body: -SymptomA`; Alias- und Kurznamen werden dabei auf den Langnamen aufgeloest
 - Kategorien werden nur im Alias-Bereich mit `[...]` festgelegt
 - Kategorie-Tags enthalten ihre Untertags als Liste, z. B. `self` enthält `tag1, tag2`

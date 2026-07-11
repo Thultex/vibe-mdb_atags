@@ -1,9 +1,10 @@
 /*
 ========================================
-#1 collectAtags Lib v1.62 (sys 2.40)
+#1 collectAtags Lib v1.63 (sys 2.40)
 ========================================
 
 Changes
+- category aliases can use `@@@Category::` to collect direct alias lines below as fixed children
 - support positive/negative alias headers, e.g. `@@Gut/Schlecht(G): -Bad`
 - slot values allow spacing after colon, e.g. `tag: _inhalt_`
 - parse template slot values `_inhalt_` as string values and ignore empty `_`/`__`
@@ -50,14 +51,14 @@ Changes
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.62",
+    version: "1.63",
     sysVersion: "2.40",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.62", "2.40", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.63", "2.40", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");
@@ -78,6 +79,25 @@ function buildAtagQuoteState(str) {
   }
 
   return state;
+}
+
+function splitAtagLines(text) {
+  var s = String(text == null ? "" : text);
+  var out = [];
+  var start = 0;
+  var i;
+  var code;
+
+  for (i = 0; i < s.length; i++) {
+    code = s.charCodeAt(i);
+    if (code !== 10 && code !== 13) continue;
+    out.push(s.substring(start, i));
+    if (code === 13 && i + 1 < s.length && s.charCodeAt(i + 1) === 10) i++;
+    start = i + 1;
+  }
+
+  out.push(s.substring(start));
+  return out;
 }
 
 function isInsideAtagQuoteState(state, pos) {
@@ -407,7 +427,7 @@ function collectAtags(cfg) {
 
   function buildAliasMapLegacy(text) {
     var map = {};
-    var lines = String(text || "").split(/\r?\n/);
+    var lines = splitAtagLines(text);
 
     for (var i = 0; i < lines.length; i++) {
       var line = trimAtagString(lines[i]);
@@ -461,7 +481,7 @@ function collectAtags(cfg) {
     map._fixedChildCats = {};
     map._fixedChildCatSigns = {};
     map._multiAliasTargets = {};
-    var lines = String(text || "").split(/\r?\n/);
+    var lines = splitAtagLines(text);
     var categoryAliasDefs = [];
 
     function registerAlias(key, info) {
@@ -473,20 +493,68 @@ function collectAtags(cfg) {
       map[key] = info;
     }
 
+    function directCategoryChildFromLine(rawLine) {
+      var childLine = trimAtagString(rawLine);
+      var mChild;
+      var positiveNegativeName;
+      var childName;
+
+      if (!childLine || /^@@@/.test(childLine)) return "";
+      if (/^@@/.test(childLine)) {
+        childLine = childLine.replace(/^@@\s*/, "");
+      } else if (!isAliasDeclarationLine(childLine)) {
+        return "";
+      }
+
+      mChild = childLine.match(/^([^\[(:(]+?)(?:\s*\(\s*([^)]+)\s*\))?(?:\s*\[\s*([^\]]+)\s*\])?(?::\s*(.*))?$/);
+      if (!mChild) return "";
+      positiveNegativeName = parsePositiveNegativeAliasName(mChild[1]);
+      childName = positiveNegativeName ? positiveNegativeName.positive : normalizeTagName(mChild[1]);
+      if (!childName || isExcluded(childName)) return "";
+      return childName;
+    }
+
     for (var i = 0; i < lines.length; i++) {
       var line = trimAtagString(lines[i]);
       var aliasLine = line;
       var hasAliasPrefix = /^@@/.test(line);
+      var directCatAliasMatch;
       var catAliasMatch;
+
+      directCatAliasMatch = line.match(/^@@@\s*([^(:]+?)(?:\s*\(\s*([^)]+)\s*\))?\s*::\s*$/);
+      if (directCatAliasMatch) {
+        var directCatAliasName = normalizeCategoryAliasName(directCatAliasMatch[1]);
+        var directCatChildren = [];
+        var dk;
+        var directCatChild;
+
+        for (dk = i + 1; dk < lines.length; dk++) {
+          if (!/^@@/.test(trimAtagString(lines[dk]))) break;
+          if (/^@@@/.test(trimAtagString(lines[dk]))) break;
+          directCatChild = directCategoryChildFromLine(lines[dk]);
+          if (!directCatChild) break;
+          directCatChildren.push(directCatChild);
+        }
+
+        categoryAliasDefs.push({
+          name: directCatAliasName.name,
+          sign: directCatAliasName.sign,
+          shortName: parseAliasHeaderInfo(directCatAliasMatch[2] || "").shortName,
+          children: directCatChildren
+        });
+        continue;
+      }
 
       catAliasMatch = line.match(/^@@@\s*([^(:]+?)(?:\s*\(\s*([^)]+)\s*\))?(?:\s*:\s*(.*))?$/);
       if (catAliasMatch) {
         var catAliasName = normalizeCategoryAliasName(catAliasMatch[1]);
+        var catChildren = normalizeCategoryChildList(catAliasMatch[3] || "");
+
         categoryAliasDefs.push({
           name: catAliasName.name,
           sign: catAliasName.sign,
           shortName: parseAliasHeaderInfo(catAliasMatch[2] || "").shortName,
-          children: normalizeCategoryChildList(catAliasMatch[3] || "")
+          children: catChildren
         });
         continue;
       }
@@ -1112,7 +1180,7 @@ function collectAtags(cfg) {
     var str = cachedTexts[li];
     if (!str) continue;
 
-    var lines = str.split(/\r?\n/);
+    var lines = splitAtagLines(str);
     var lastRowValue = null;
     var lastRowUnit = null;
     var lastRowRaw = null;

@@ -26,6 +26,11 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 
 ### 2026-07-11 - (ca. 0,2h)
 
+- Feature: `collectAtags_lib` v1.63 ergänzt `@@@Kategorie::`; direkt folgende `@@`-Aliaszeilen werden als feste Kategorie-Kinder übernommen, bis die nächste Zeile nicht mehr mit `@@` beginnt.
+- Test: Regressionen für `@@@Kategorie::` und gequotete Alias-Tokens ergänzt; gequotete Tokens bleiben im Cleaner unverändert.
+
+### 2026-07-11 - (ca. 0,2h)
+
 - Fix: DustMerger v0.11 nutzt standardmäßig `mergeWindowHours: 28`, sodass Einträge vom Vortag bis 04:00 Uhr des Folgetags gemerged werden können.
 - Fix: DustMerger wertet reine `status: "no_target"`-/`status: "no_merge"`-Attempt-Logs nicht mehr als bereits gemerged.
 - Tests: Regressionen für `no_target`-Retry und 28h-Default-Karenz ergänzt.

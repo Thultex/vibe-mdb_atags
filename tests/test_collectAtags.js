@@ -338,6 +338,8 @@ assertCategoryTag("cat-alias-fixed-negative-long-child-with-superscript-alias", 
 assertCategorySigns("cat-alias-fixed-negative-long-child-with-superscript-alias-sign", "@@SymptomA (SA):  sa\n@@@Body: -SymptomA\nsa\u00B2", "Body", { symptoma: -1 });
 assertCategoryTag("cat-alias-fixed-negative-long-child-with-readable-superscript-alias", "@@SymptomA (SA):  sa\n@@@Body: -SymptomA\n| sa\u00B2", "Body", ["SymptomA"], "Body");
 assertCategoryTag("cat-alias-children-are-not-aliases", "@@@help: ActivityA, ActivityB\n@@ActivityA (Sp): play\nplay2", "help", ["ActivityA"], "help");
+assertCategoryTag("cat-alias-direct-children-from-following-alias-lines", "@@@Kategorie::\n@@Gef\u00FChl (emo-): \"gutf\u00FChlen\", -\"schlechtf\u00FChlen\"\n\n@@laufen (lau):\nemo2", "Kategorie", ["Gef\u00FChl"], "Kategorie");
+assertCategoryTag("cat-alias-direct-children-stop-at-blank", ["@@@Kategorie::", "@@Gef\u00FChl (emo-): \"gutf\u00FChlen\"", "", "@@laufen (lau):", "emo2 lau2"].join("\n"), "Kategorie", ["Gef\u00FChl"], "Kategorie");
 assertCategoryTag("alias-category-line-without-prefix", "tag1 (tg1)[self]: 3\ntag2 (tg2)[self]: 3\ntg1# tg2#", "self", ["tag1", "tag2"], "self");
 assertItem("alias-fixed-bare", "@@SymptomA (SA): sa, SymptomAlias1\n#SymptomAlias", "SymptomA", "+1", 1, null, null);
 assertItem("alias-fixed-overrides-value", "@@SymptomA (SA): sa, SymptomAlias1\nSymptomAlias3", "SymptomA", "+1", 1, null, null);

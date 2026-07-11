@@ -11,7 +11,7 @@ Notes
 - inputLinker_lib is no longer part of the core lib check.
 - Current libs:
   - helpers_lib v2.11 (sys 2.40)
-  - collectAtags_lib v1.62 (sys 2.40)
+  - collectAtags_lib v1.63 (sys 2.40)
   - exportAtags_lib v1.84 (sys 2.40)
 
 ========================================
@@ -43,7 +43,7 @@ function getLibVersionsVersion() {
 
 var ATAG_EXPECTED_LIBS = [
   { name: "helpers_lib", version: "2.11", getter: "getHelpersLibVersion", path: "core_lib/helpers_lib.js" },
-  { name: "collectAtags_lib", version: "1.62", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
+  { name: "collectAtags_lib", version: "1.63", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
   { name: "exportAtags_lib", version: "1.84", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" }
 ];
 

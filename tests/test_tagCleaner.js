@@ -133,6 +133,14 @@ assertEquals(
 );
 
 assertEquals(
+  "alias-display-quoted-alias-tokens-stay-unchanged",
+  makeTagCleanerTextWithOptions("goodfeel2 badfeel3 Feeling4 emo5", {
+    aliasText: "@@Feeling (emo-): \"goodfeel\", -\"badfeel\""
+  }),
+  "goodfeel\u00B2 badfeel\u00B3 emo\u2074 emo\u2075"
+);
+
+assertEquals(
   "alias-display-header-long",
   makeTagCleanerTextWithOptions("emo2 Emotion3 feel4", {
     aliasText: "@@Emotion (emo+): feel"
