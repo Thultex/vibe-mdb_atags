@@ -104,12 +104,12 @@ Ziel-Felder
 - `#2` `core_lib/exportAtags_lib.js`
 - `#3` `core_lib/helpers_lib.js`
 Empfohlene Lade-Reihenfolge: `helpers_lib`, dann `collectAtags_lib`, dann `exportAtags_lib`. `core/tagCleaner.js` nutzt ebenfalls `helpers_lib`.
-Optional vorher `core/_checkLibs.js` laden; dann koennen die erwarteten Remote-Libs ueber `checkAtagLibVersions({ checkAccess: true, verbose: true })` geprueft werden. Die Text-/Verbose-Ausgabe beginnt bei sauberem Stand mit `System Version X.XX (ok, X libs, X local)`. Bei Befunden ist die erste Zeile kompakt, z. B. `System Version X.XX (missmatch/missing, X libs, X local, X missing)`. Die Ausgabe endet mit einer Leerzeile. Standardmaessig werden Remote-Libs und geladene bekannte lokale Module als `LOCAL ...` ausgegeben. Die Schalter `SHOW_REMOTE_VERSIONS`, `SHOW_LOCAL_VERSIONS`, `SHOW_REMOTE_MISSMATCHES`, `SHOW_LOCAL_MISSMATCHES`, `SHOW_REMOTE_MISSING`, `SHOW_LOCAL_MISSING`, `SHOW_CURRENT_CONFIG` und `GET_CURRENT_CONFIG` steuern Versionlisten, Mismatches, Missing-Meldungen und Config-Ausgabe getrennt; dieselben Optionen koennen im Aufruf ueberschrieben werden. `SHOW_CURRENT_CONFIG` gibt einen direkt kopierbaren `getLibsVersionsConfig()`-Block aus. Wenn eine lokale Funktion `getLibsVersionsConfig()` vorhanden ist, wird sie automatisch genutzt; dort nicht genannte Remote-/Local-Module werden nicht geprueft und nicht als Missing gemeldet. `RUN_LIB_CHECK` steht oben in `core/_checkLibs.js` als sichtbarer Schalter und ist standardmaessig `true`, damit ein normaler Run die Prüfung direkt ausgibt. Die aktuelle statische Uebersicht liegt in `core_lib/Z_LIB_VERSIONS.md`.
+Optional vorher `core/_checkVersions.js` laden; dann koennen die erwarteten Remote-Libs ueber `checkAtagLibVersions({ checkAccess: true, verbose: true })` geprueft werden. Die Text-/Verbose-Ausgabe beginnt bei sauberem Stand mit `System vX.XX (ok, X rm, X local)`. Bei Befunden ist die erste Zeile kompakt, z. B. `System vX.XX (config/match/miss, X rm, X missing - no config!)`. Die Ausgabe endet mit einer Leerzeile. Standardmaessig werden Remote-Libs ausgegeben; geladene bekannte lokale Module werden gezaehlt und geprueft, aber nicht als `LOCAL ...` Versionsliste angezeigt. Die Schalter `SHOW_REMOTE_VERSIONS`, `SHOW_LOCAL_VERSIONS`, `SHOW_REMOTE_MISSMATCHES`, `SHOW_LOCAL_MISSMATCHES`, `SHOW_REMOTE_MISSING`, `SHOW_LOCAL_MISSING`, `SHOW_CURRENT_CONFIG` und `GET_CURRENT_CONFIG` steuern Versionlisten, Mismatches, Missing-Meldungen und Config-Ausgabe getrennt; dieselben Optionen koennen im Aufruf ueberschrieben werden. `SHOW_CURRENT_CONFIG` gibt einen direkt kopierbaren `getLibsVersionsConfig()`-Block aus. Wenn eine lokale Funktion `getLibsVersionsConfig()` vorhanden ist, wird sie automatisch genutzt; dort nicht genannte Remote-/Local-Module werden nicht geprueft und nicht als Missing gemeldet. Ist `GET_CURRENT_CONFIG` aktiv und keine lokale Config vorhanden, meldet die Summary `config` und `no config!`. `RUN_LIB_CHECK` steht oben in `core/_checkVersions.js` als sichtbarer Schalter und ist standardmaessig `true`, damit ein normaler Run die Prüfung direkt ausgibt. Die aktuelle statische Uebersicht liegt in `core_lib/Z_LIB_VERSIONS.md`.
 Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportAtags()` nutzt, muss danach zusaetzlich `core/helpers.js` geladen werden. Diese Datei nutzt `core_lib/helpers_lib.js`.
 
 **Core**
 
-- `A1` `core/_checkLibs.js` (Versions-Checker, keine Remote-Lib)
+- `A1` `core/_checkVersions.js` (Check Versions, keine Remote-Lib)
 - `A2` `core/helpers.js` (Memento-Wrapper fuer Lib-Funktionen, keine Remote-Lib; nutzt `core_lib/helpers_lib.js`)
 - `A3` `core/restoreAtags.js`
 - `A4` `core/tagCleaner.js` (reine Notiz-/Tagleisten-Normalisierung)
@@ -142,7 +142,8 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
   - `map` mit `append`, `prepend`, `replace`, `add`, `subtract`
   - `rowSourceMode: "realtime_since"` rechnet relative Quell-Rows beim Merge auf das Ziel-Datum um, z. B. `0:` im Quell-Eintrag zu `1,5:` im älteren Ziel-Eintrag
   - `mergeJsonField` schreibt Ziel-Historie und einen Stop-Marker im gemergten Quell-Eintrag inklusive letztem Trash-Status
-  - optional `skipField`, `forceMergeField`, `blockMap`, `debugField`, `trashMergedEntry`, `openTargetEntry`
+  - optional `skipField`, `forceMergeField`, `blockMap`, `statusField`, `mergeCountField`, `mergeCountNoJson`, `debugField`, `trashMergedEntry`, `openTargetEntry`
+  - `statusField` wird auf dem geprueften Eintrag aktualisiert; `mergeCountField` wird auf dem Ziel-Eintrag aus dessen Merge-JSON gezaehlt, ausser `mergeCountNoJson: true` erzwingt den Fallback
 
 **Workflow Add-ons**
 - `B5` `addons/3_workflow/floatingAverage.js` (gleitender Gruppen-Mittelwert)

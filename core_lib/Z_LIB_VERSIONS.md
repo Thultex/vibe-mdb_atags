@@ -10,11 +10,11 @@ Aktuelle Library-Dateien und Versionen:
 
 ## Checker
 
-`core/_checkLibs.js` ist keine Remote-Lib, sondern der Versions-Checker.
+`core/_checkVersions.js` ist keine Remote-Lib, sondern der Versions-Checker.
 
 | Name | Version | Sys | Pfad |
 | --- | ---: | ---: | --- |
-| A1 libVersions | 1.47 | 2.50 | `core/_checkLibs.js` |
+| A1 Check Versions | 1.50 | 2.50 | `core/_checkVersions.js` |
 
 Optionale Plugins/Addons koennen sich beim Laden per `registerAtagLibVersion(name, version, sysVersion, path, true)` registrieren und in `ATAG_EXPECTED_OPTIONAL_LIBS` einen `getter` besitzen. Mismatch- und Missing-Meldungen ueber fehlende Getter/Module werden getrennt ueber `SHOW_REMOTE_MISSMATCHES`, `SHOW_LOCAL_MISSMATCHES`, `SHOW_REMOTE_MISSING` und `SHOW_LOCAL_MISSING` gesteuert.
 
@@ -26,7 +26,7 @@ Diese Dateien gehoeren funktionell zur Lib-Nutzung, sind aber keine externen Rem
 | --- | ---: | ---: | --- | --- |
 | A2 helpers | 1.03 | 2.50 | `core/helpers.js` | Memento-Wrapper fuer `applyTags`, `bulkApplyTags` und `bulkExportAtags`; nutzt `core_lib/helpers_lib.js` |
 | A3 restoreAtags | 2.10 | 2.50 | `core/restoreAtags.js` | Restore aus Atag-JSON in Felder |
-| A4 tagCleaner | 1.51 | 2.50 | `core/tagCleaner.js` | Cleaner-/Alias-Memento-Wrapper |
+| A4 tagCleaner | 1.53 | 2.50 | `core/tagCleaner.js` | Cleaner-/Alias-Memento-Wrapper |
 | B2 tagPairParser | 1.02 | 2.50 | `addons/1_tagging/tagPairParser.js` | Tag-Paare aus Tag-Feldern |
 | B3 globalFieldSync | 1.04 | 2.50 | `addons/2_syncing/globalFieldSync.js` | Feld-Sync innerhalb einer Library |
 | B4 syncLastFromLatest | 1.07 | 2.50 | `addons/2_syncing/syncLastFromLatest.js` | Felder vom neuesten Eintrag uebernehmen |
@@ -35,14 +35,14 @@ Diese Dateien gehoeren funktionell zur Lib-Nutzung, sind aber keine externen Rem
 | B7 timeMarker | 1.40 | 2.50 | `addons/3_workflow/timeMarker.js` | Zeitmarker in Textfeldern |
 | B8 obsidianLinker | 1.17 | 2.50 | `addons/6_integration/obsidianLinker.js` | Memento-/Obsidian-Linking |
 | B9 wikiLinker | 1.01 | 2.50 | `addons/6_integration/wikiLinker.js` | Wikipedia-Suchlinks |
-| B10 dustMerger | 0.13 | 2.50 | `addons/2_syncing/dustMerger.js` | Zeitnahes Mergen von Eintraegen |
+| B10 dustMerger | 0.16 | 2.50 | `addons/2_syncing/dustMerger.js` | Zeitnahes Mergen von Eintraegen |
 | C1 multiChoiceHelpers | 1.02 | 2.50 | `addons/z_generell/multiChoiceHelpers.js` | Multi-Choice-Helfer |
 | C2 typedTextFields | 1.01 | 2.50 | `addons/z_generell/typedTextFields.js` | Typisierte Textfeld-Sync-Helfer |
 | C3 hourGuide | 1.31 | 2.50 | `addons/z_others/hourGuide.js` | Stundenhilfe-Rendering |
 
 Empfohlene Lade-Reihenfolge:
 
-1. `core/_checkLibs.js` fuer `checkAtagLibVersions()` und `checkLibVersions()`
+1. `core/_checkVersions.js` fuer `checkAtagLibVersions()` und `checkLibVersions()`
 2. `core_lib/helpers_lib.js`
 3. `core_lib/collectAtags_lib.js`
 4. `core_lib/exportAtags_lib.js`
@@ -53,7 +53,7 @@ Empfohlene Lade-Reihenfolge:
 
 Zur Laufzeit kann `checkLibVersions()` die geladenen Remote-Libs pruefen. Jede Remote-Lib bietet ausserdem eine eigene `get...Version()`-Funktion; die zugehoerigen Core-/Memento-Dateien haben eigene Versionsfunktionen, werden aber nicht in der Remote-Lib-Registry gefuehrt.
 
-`checkAtagLibVersions()` listet im Standardreport die erwarteten Remote-Core-Libs und darunter geladene bekannte lokale Module als `LOCAL ...`. Die Text-/Verbose-Ausgabe beginnt bei sauberem Stand mit `System Version X.XX (ok, X libs, X local)`. Bei Befunden ist die erste Zeile kompakt, z. B. `System Version X.XX (missmatch, X libs, X local)`, `System Version X.XX (missing, X missing)` oder kombiniert `missmatch/missing`. Die Ausgabe endet mit einer Leerzeile. Bekannte optionale Addons/Plugins werden per Registry oder `get...Version()`-Getter geprüft; Versions- und Sys-Mismatches erscheinen in `versionMismatch` und in der Text-/Verbose-Ausgabe. Missing-Meldungen fuer Remote-/Local-Getter haengen an `SHOW_REMOTE_MISSING` und `SHOW_LOCAL_MISSING`. Bei spaeterer Registrierung wird ein bekannter Plugin-Mismatch direkt geloggt.
+`checkAtagLibVersions()` listet im Standardreport die erwarteten Remote-Core-Libs und darunter geladene bekannte lokale Module als `LOCAL ...`. Die Text-/Verbose-Ausgabe beginnt bei sauberem Stand mit `System vX.XX (ok, X rm, X local)`. Bei Befunden ist die erste Zeile kompakt, z. B. `System vX.XX (config/match/miss, X rm, X missing - no config!)`. Die Ausgabe endet mit einer Leerzeile. Bekannte optionale Addons/Plugins werden per Registry oder `get...Version()`-Getter geprüft; Versions- und Sys-Mismatches erscheinen in `versionMismatch` und in der Text-/Verbose-Ausgabe. Missing-Meldungen fuer Remote-/Local-Getter haengen an `SHOW_REMOTE_MISSING` und `SHOW_LOCAL_MISSING`. Bei spaeterer Registrierung wird ein bekannter Plugin-Mismatch direkt geloggt.
 
 ## Beispiel
 

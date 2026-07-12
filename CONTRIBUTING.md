@@ -50,7 +50,7 @@ Regeln:
 - Die Kennung vor dem Namen ist Pflicht: `A` fuer Core, `B` fuer Addons, `C` fuer geloeste eigenstaendige Module. Die Nummer folgt der dokumentierten Repo-Reihenfolge.
 - Jedes zentrale Script und jedes optionale Plugin/Add-on stellt eine `get...Version()`-Funktion bereit, z. B. `getDustMergerVersion()`, die `{ name, version, sysVersion, path }` zurückgibt.
 - Jedes optionale Plugin/Add-on registriert sich direkt nach der `get...Version()`-Funktion, wenn `registerAtagLibVersion` verfügbar ist: `registerAtagLibVersion(name, version, sysVersion, path, true)`.
-- Bekannte optionale Plugins/Add-ons werden in `core/_checkLibs.js` mit `getter` in `ATAG_EXPECTED_OPTIONAL_LIBS` geführt. `_checkLibs` ruft diese Getter generisch auf; keine neuen hartcodierten Sonderfälle anlegen.
+- Bekannte optionale Plugins/Add-ons werden in `core/_checkVersions.js` mit `getter` in `ATAG_EXPECTED_OPTIONAL_LIBS` geführt. `_checkVersions` ruft diese Getter generisch auf; keine neuen hartcodierten Sonderfälle anlegen.
 
 ## Aktuelle Form Der Dateiheader
 
@@ -153,10 +153,10 @@ Das bedeutet:
 - Nur die Datei bekommt einen Versionssprung, die tatsächlich geändert wurde.
 - Wenn mehrere Module geändert werden, wird jede betroffene Datei separat angehoben.
 - Remote-nutzbare Libs liegen in `core_lib/` und nutzen Header-Kennungen `#1`, `#2`, ... . Sie bieten eine eigene `get...Version()`-Funktion und registrieren sich bei geladenem `registerAtagLibVersion()`.
-- `core/_checkLibs.js` ist der Checker/Loader, keine Remote-Lib; `checkAtagLibVersions({ checkAccess: true })` prueft die erwarteten Remote-Libs und ihre aufrufbaren Versionsfunktionen.
+- `core/_checkVersions.js` ist der Checker/Loader, keine Remote-Lib; `checkAtagLibVersions({ checkAccess: true })` prueft die erwarteten Remote-Libs und ihre aufrufbaren Versionsfunktionen.
 - `core/helpers.js` gehoert funktionell zur Lib-Nutzung, bleibt aber Memento-spezifisch, verweist auf `core_lib/helpers_lib.js` und wird nicht in `checkLibVersions()` registriert.
 - `core/tagCleaner.js` ist ein Core-Modul, keine Remote-Lib. Es hat eine eigene Versionsfunktion, steht aber nicht in der Remote-Lib-Registry.
-- Wenn eine Remote-Lib-Version steigt, `core/_checkLibs.js`, `core_lib/Z_LIB_VERSIONS.md` und die Versionstests mitpruefen.
+- Wenn eine Remote-Lib-Version steigt, `core/_checkVersions.js`, `core_lib/Z_LIB_VERSIONS.md` und die Versionstests mitpruefen.
 
 Beispiele:
 

@@ -1,6 +1,6 @@
 /*
 ========================================
-A4 Tag Cleaner v1.51 (sys 2.50)
+A4 Tag Cleaner v1.53 (sys 2.50)
 ========================================
 
 Notes
@@ -37,21 +37,21 @@ cleanTemplateTags({
 
 /*
 ========================================
-A4 Tag Cleaner v1.51 (sys 2.50)
+A4 Tag Cleaner v1.53 (sys 2.50)
 ========================================
 */
 
 function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
-    version: "1.51",
+    version: "1.53",
     sysVersion: "2.50",
     path: "core/tagCleaner.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("tagCleaner", "1.51", "2.50", "core/tagCleaner.js", true);
+  registerAtagLibVersion("tagCleaner", "1.53", "2.50", "core/tagCleaner.js", true);
 }
 
 function splitTagCleanerLines(text) {
@@ -299,6 +299,20 @@ function parseTagCleanerAliasHeader(raw) {
   return out;
 }
 
+function normalizeTagCleanerAliasDisplayName(raw) {
+  var name = trimAtagLibString(raw).replace(/\s+/g, "_").replace(/^_+|_+$/g, "");
+  var slash;
+
+  if (name.charAt(0) === "/") {
+    name = name.substring(1);
+  } else if (name.indexOf("/") >= 0) {
+    slash = name.split("/");
+    name = slash[0] || slash[1] || "";
+  }
+
+  return name.replace(/^_+|_+$/g, "");
+}
+
 function buildTagCleanerAliasDisplayMap(text) {
   var map = {};
   var lines = splitTagCleanerLines(text);
@@ -321,7 +335,7 @@ function buildTagCleanerAliasDisplayMap(text) {
     if (/^@@@/.test(line)) continue;
     m = line.match(/^@@\s*([^\[(:(]+?)(?:\s*\(\s*([^)]+)\s*\))?(?:\s*\[[^\]]+\])?(?::\s*(.*))?$/);
     if (!m) continue;
-    name = trimAtagLibString(m[1]).replace(/\s+/g, "_").replace(/^_+|_+$/g, "");
+    name = normalizeTagCleanerAliasDisplayName(m[1]);
     if (!name) continue;
     header = parseTagCleanerAliasHeader(m[2] || "");
     var info = {
@@ -1124,9 +1138,12 @@ function sortTagCleanerPreparedRows(lines) {
 function clearTagCleanerTemplateSlots(line, cfg) {
   var marker = cfg && cfg.templateSlotMarker != null ? String(cfg.templateSlotMarker) : "_";
   var escaped = marker.replace(/([\\^$.*+?()[\]{}|])/g, "\\$1");
-  var slot = new RegExp("((?:::|:|#)\\s*)" + escaped + "[^" + escaped + "\\r\\n]*" + escaped, "g");
+  var closedSlot = new RegExp("((?:::|:|#)\\s*)" + escaped + "[^" + escaped + "\\r\\n]*" + escaped, "g");
+  var openSlot = new RegExp("((?:::|:|#)\\s*)" + escaped + "(?!" + escaped + ")[^" + escaped + "\\r\\n,;\"']*", "g");
 
-  return String(line || "").replace(slot, "$1" + marker + marker);
+  return String(line || "")
+    .replace(closedSlot, "$1" + marker + marker)
+    .replace(openSlot, "$1" + marker);
 }
 
 function compactTagCleanerTemplateText(sourceText, cfg) {

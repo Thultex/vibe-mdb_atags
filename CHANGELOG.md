@@ -26,33 +26,39 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 
 ### 2026-07-11 - (ca. 0,2h)
 
-- Change: `RUN_LIB_CHECK` ist in `core/_checkLibs.js` standardmaessig `true`, damit der Versionscheck beim Laden direkt laeuft.
-- Change: Text-/Verbose-Ausgabe von `checkAtagLibVersions()` beginnt mit `System Version X.XX (ok, X libs, X local)` oder einer `missmatch`-/`missing`-Summary; Mismatches werden unten als `VERSION RMT: ...` oder `VERSION LOCAL: ...` ausgegeben.
+- Change: `RUN_LIB_CHECK` ist in `core/_checkVersions.js` standardmaessig `true`, damit der Versionscheck beim Laden direkt laeuft.
+- Change: Text-/Verbose-Ausgabe von `checkAtagLibVersions()` beginnt mit `System Version X.XX (ok, X libs, X local)` oder einer `missmatch`-/`missing`-Summary; Mismatches werden unten als `VERSION RM: ...` oder `VERSION LOCAL: ...` ausgegeben.
 - Fix: Auch spaeter per `registerAtagLibVersion()` registrierte bekannte Plugin-Mismatches werden direkt geloggt.
-- Change: `_checkLibs` v1.33 schliesst Text-/Verbose-Ausgaben mit einer Leerzeile ab.
-- Fix: `_checkLibs` v1.34 setzt die Ziel-`ATAG_SYS_VERSION` selbst auf `2.50`, statt ein zuvor von alten Libs gesetztes globales `ATAG_SYS_VERSION` zu uebernehmen.
-- Fix: `_checkLibs` v1.35 erkennt lokale Mismatches auch ueber vorhandene `get...Version()`-Getter, wenn ein altes lokales Plugin/Add-on sich noch nicht per Registry registriert.
-- Change: `_checkLibs` v1.36 formatiert die Summary als `System Version X.XX (ok, X libs, X local)` bzw. mit Detailteil `-> Missmatches: X libs, X local; Missing: X`.
-- Change: `_checkLibs` v1.37 gibt geladene bekannte lokale Module als `LOCAL ...` aus.
-- Change: `_checkLibs` v1.38 setzt `var RUN_LIB_CHECK = true;` sichtbar an den Dateianfang, damit ein normaler Run die Prüfung direkt ausgibt.
-- Change: `_checkLibs` v1.40 fasst Options-, Sortier- und Ausgabe-Helfer zusammen; Getter-basierte Missing-Meldungen laufen getrennt ueber `SHOW_REMOTE_MISSING` und `SHOW_LOCAL_MISSING`.
-- Change: `_checkLibs` Summary ist bei Befunden kompakt, z. B. `System Version 2.50 (missmatch/missing, 2 libs, 2 local, 13 missing)`; nur bei `ok` werden alle geladenen Counts gezeigt.
-- Change: `_checkLibs` v1.41 ergaenzt `SHOW_REMOTE_MISSMATCHES` und `SHOW_LOCAL_MISSMATCHES`, damit Versionslisten, Mismatches und Missing-Meldungen getrennt geschaltet werden koennen.
-- Feature: `_checkLibs` v1.42 ergaenzt `GET_CURRENT_CONFIG`/`SHOW_CURRENT_CONFIG`, Aufruf-Overrides fuer Live-Config-Schalter und optionale `getLibsVersionsConfig()`-Filter fuer verwendete Remote-/Local-Module.
-- Change: `_checkLibs` v1.43 nutzt eine vorhandene lokale `getLibsVersionsConfig()` automatisch, damit lokale Modul-Config nicht bei Lib-Updates angepasst werden muss.
-- Change: `_checkLibs` v1.44 gibt `SHOW_CURRENT_CONFIG` als direkt kopierbaren `getLibsVersionsConfig()`-Block aus statt als einzelne Config-Zeilen.
-- Change: `_checkLibs` v1.45 gibt den `SHOW_CURRENT_CONFIG`-Block als separate erste Meldung vor dem Versionsbericht aus.
-- Change: `_checkLibs` v1.46 formatiert den Config-Block mit einer Zeile pro Remote-/Local-Modul.
-- Change: `_checkLibs` v1.47 schreibt in den Config-Block nur Module, die im aktuellen Check tatsaechlich gefunden wurden.
+- Change: `_checkVersions` v1.33 schliesst Text-/Verbose-Ausgaben mit einer Leerzeile ab.
+- Fix: `_checkVersions` v1.34 setzt die Ziel-`ATAG_SYS_VERSION` selbst auf `2.50`, statt ein zuvor von alten Libs gesetztes globales `ATAG_SYS_VERSION` zu uebernehmen.
+- Fix: `_checkVersions` v1.35 erkennt lokale Mismatches auch ueber vorhandene `get...Version()`-Getter, wenn ein altes lokales Plugin/Add-on sich noch nicht per Registry registriert.
+- Change: `_checkVersions` v1.36 formatiert die Summary als `System Version X.XX (ok, X libs, X local)` bzw. mit Detailteil `-> Missmatches: X libs, X local; Missing: X`.
+- Change: `_checkVersions` v1.37 gibt geladene bekannte lokale Module als `LOCAL ...` aus.
+- Change: `_checkVersions` v1.38 setzt `var RUN_LIB_CHECK = true;` sichtbar an den Dateianfang, damit ein normaler Run die Prüfung direkt ausgibt.
+- Change: `_checkVersions` v1.40 fasst Options-, Sortier- und Ausgabe-Helfer zusammen; Getter-basierte Missing-Meldungen laufen getrennt ueber `SHOW_REMOTE_MISSING` und `SHOW_LOCAL_MISSING`.
+- Change: `_checkVersions` Summary ist bei Befunden kompakt, z. B. `System Version 2.50 (missmatch/missing, 2 libs, 2 local, 13 missing)`; nur bei `ok` werden alle geladenen Counts gezeigt.
+- Change: `_checkVersions` v1.41 ergaenzt `SHOW_REMOTE_MISSMATCHES` und `SHOW_LOCAL_MISSMATCHES`, damit Versionslisten, Mismatches und Missing-Meldungen getrennt geschaltet werden koennen.
+- Feature: `_checkVersions` v1.42 ergaenzt `GET_CURRENT_CONFIG`/`SHOW_CURRENT_CONFIG`, Aufruf-Overrides fuer Live-Config-Schalter und optionale `getLibsVersionsConfig()`-Filter fuer verwendete Remote-/Local-Module.
+- Change: `_checkVersions` v1.43 nutzt eine vorhandene lokale `getLibsVersionsConfig()` automatisch, damit lokale Modul-Config nicht bei Lib-Updates angepasst werden muss.
+- Change: `_checkVersions` v1.44 gibt `SHOW_CURRENT_CONFIG` als direkt kopierbaren `getLibsVersionsConfig()`-Block aus statt als einzelne Config-Zeilen.
+- Change: `_checkVersions` v1.45 gibt den `SHOW_CURRENT_CONFIG`-Block als separate erste Meldung vor dem Versionsbericht aus.
+- Change: `_checkVersions` v1.46 formatiert den Config-Block mit einer Zeile pro Remote-/Local-Modul.
+- Change: `_checkVersions` v1.47 schreibt in den Config-Block nur Module, die im aktuellen Check tatsaechlich gefunden wurden.
+- Change: `_checkVersions` v1.48 kuerzt die Summary auf `System vX.XX (...)` mit `config`/`match`/`miss`; fehlt bei aktivem `GET_CURRENT_CONFIG` die lokale Config, erscheint `no config!`.
+- Change: `_checkVersions` v1.49 setzt die Live-Defaults auf `GET_CURRENT_CONFIG = true` und `SHOW_LOCAL_VERSIONS = false`.
+- Change: `_checkVersions` v1.50 nennt Remote-Counts in der Summary `rm` statt `libs`.
 - Feature: `syncLastFromLatest` v1.07 unterstuetzt Map-Eintraege mit `append`/`prepend` fuer String-Werte, z. B. `RecordAdd: ["Record", "append"]`.
 - Fix: `collectAtags_lib` v1.66 ordnet direkte Kategorie-Children mit reinem Umlaut-Namen zu, z. B. `@@@Kat::` gefolgt von `@@ö`; Slash-Alias-Tokens sind per Regressionstest abgesichert.
 - Change: Systemversion auf `sys 2.50` angehoben; alle bekannten lokalen Plugins/Addons mit neuem Versions-Getter wurden auf eigene Patch-Versionen nachgezogen und in `Z_LIB_VERSIONS.md` aufgefuehrt.
 - Fix: `collectAtags_lib` v1.65 behandelt `/` vor Tags als Trenner; `/Tag2` und `/Tag#` werden als `Tag` erkannt, aber nie inklusive `/` gespeichert.
 - Fix: DustMerger v0.12 misst das 28h-Vortagsfenster ab 00:00 Uhr des Vortags; Einträge vom Vortag werden damit standardmaessig nur bis 04:00 Uhr des Folgetags gemerged.
-- Fix: DustMerger v0.13 registriert sich per `registerAtagLibVersion()` und stellt `getDustMergerVersion()` bereit, sodass `_checkLibs` alte Merger-Versionen sichtbar als Mismatch meldet.
-- Change: `_checkLibs` v1.32 ruft Versions-Getter aus `ATAG_EXPECTED_OPTIONAL_LIBS` generisch auf; bekannte optionale Plugins/Addons registrieren sich jetzt beim Laden selbst.
+- Fix: DustMerger v0.16 nutzt beim Prepend gefuellter Template-Rows die Reihenfolge der Ziel-Templates.
+- Feature: DustMerger v0.15 übernimmt erfolgreiche Merge-JSON-Einträge aus der Quelle ins Ziel; Status-/Attempt-Einträge wie `no_target` werden nicht kopiert.
+- Feature: DustMerger v0.14 ergänzt optionale `statusField`-/`mergeCountField`-Ausgabe; Statuswerte sind kompakt (`merged`, `trashed`, `notarget`, `blocked` usw.), Merge-Counts werden standardmaessig aus dem Merge-JSON gezählt und nur mit `mergeCountNoJson: true` per Fallback gesetzt. Debug kann mit `debugEnabled: false` trotz `debugField` unterdrückt werden.
+- Fix: DustMerger v0.13 registriert sich per `registerAtagLibVersion()` und stellt `getDustMergerVersion()` bereit, sodass `_checkVersions` alte Merger-Versionen sichtbar als Mismatch meldet.
+- Change: `_checkVersions` v1.32 ruft Versions-Getter aus `ATAG_EXPECTED_OPTIONAL_LIBS` generisch auf; bekannte optionale Plugins/Addons registrieren sich jetzt beim Laden selbst.
 - Feature: `collectAtags_lib` v1.64 erkennt in `@@@Kategorie::` die Form `@@/Negativ:` als normales Child `Negativ` mit negativem Kategorie-Vorzeichen.
-- Change: `core/_checkLibs.js` v1.31 listet im Standard weiter nur die Remote-Core-Libs, gibt aber Versions-/Sys-Mismatches registrierter bekannter Addons/Plugins in `versionMismatch` und der Text-/Verbose-Ausgabe aus.
+- Change: `core/_checkVersions.js` v1.31 listet im Standard weiter nur die Remote-Core-Libs, gibt aber Versions-/Sys-Mismatches registrierter bekannter Addons/Plugins in `versionMismatch` und der Text-/Verbose-Ausgabe aus.
 - Fix: Fehlende optionale Addons/Plugins werden bei `checkAtagLibVersions()` nicht als Missing ausgegeben.
 - Tests/Doku: LibVersions-Regressionen, README und `Z_LIB_VERSIONS.md` angepasst.
 
@@ -98,10 +104,12 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Feature: Tag Cleaner v1.47 ergänzt `prepareTagCleanerTemplateText()`/`applyTagCleanerTemplatePrep()` für neue Einträge; Template-Slots werden zuerst geleert, gleiche leere Template-Variablen danach entfernt.
 - Change: Tag Cleaner v1.48 ergänzt `cleanTags()` als kurzen Alias für `applyCleanTags()`, unterstützt `fields` für mehrere Felder und sortiert Row-Blöcke im normalen Clean-Vorgang standardmäßig; `cleanTemplateTags()` sortiert nur noch explizit mit `sortRows: true`.
 - Fix: Tag Cleaner v1.49 behandelt gefüllte Template-Slots wie `Mal_sehen:_-8_` in Tagleisten wie normale Werte, inklusive negativer Zahlen, `00`, `++` und Textwerten.
+- Fix: Tag Cleaner v1.52 normalisiert negative-only Alias-Kopfzeilen wie `@@/Festhängen (fh+)`, sodass die Anzeige zu `Festhängen` statt `/Festhängen` expandiert.
+- Change: Tag Cleaner v1.53 behandelt offene Template-Slots wie `Kiefer:_3` im Template-Prep wie `Kiefer:_`, inklusive Leeren, Row-Prefix-Entfernung und Dedupe; quotierte Werte bleiben ausgenommen.
 - Feature: `restoreAtags` v2.09 kann Kategorie-Listen aus dem normalen JSON als aggregierte Parent-Werte restoren; Child-Werte werden dabei zuerst wie Row-/Activity-Werte aggregiert, danach wird der Kategorie-Wert gebildet.
 - Tests: `tests/test_dustMerger.js` deckt Zielsuche, Row-Dedupe, Tag-Dedupe, Blockmap, Merge-JSON, Trash und Open ab.
 - Feature: `collectAtags_lib` v1.62 unterstützt Positiv/Negativ-Alias-Header wie `@@Aufmerksam/Unaufmerksam(Aufm): -Unauf`; negative Werte werden unter dem Negativnamen erfasst.
-- Change: `inputLinker_lib` aus der Core-Lib-Schiene entfernt; `core/_checkLibs.js` v1.30, `Z_LIB_VERSIONS.md`, README und LibVersions-Tests erwarten nur noch `helpers_lib`, `collectAtags_lib` und `exportAtags_lib`.
+- Change: `inputLinker_lib` aus der Core-Lib-Schiene entfernt; `core/_checkVersions.js` v1.30, `Z_LIB_VERSIONS.md`, README und CheckVersions-Tests erwarten nur noch `helpers_lib`, `collectAtags_lib` und `exportAtags_lib`.
 
 ### 2026-06-20 - (ca. 0,5h)
 
@@ -255,14 +263,14 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Fix: Doppelte Aliasziele sind standardmaessig aktiv, damit ein Alias wie `abgeschlagen` gleichzeitig positiv in `Erschoepfung` und negativ in `Stimmung` zaehlt; `multiAliasTargets: false` stellt das alte Last-Wins-Verhalten wieder her
 - Nummerierung: Remote-Libs nutzen `#1`-`#3`, Core nutzt `A1`-`A4`; die Reihenfolge folgt wieder alphanumerisch den Dateinamen im jeweiligen Bereich
 - Feature: `checkAtagLibVersions()` prueft automatisch alle erwarteten Remote-Libs und optional mit `checkAccess: true` die aufrufbaren Versionsfunktionen
-- Struktur: Versions-Checker nach `core/_checkLibs.js` umbenannt, damit klar ist, dass er selbst keine Remote-Lib ist
+- Struktur: Versions-Checker nach `core/_checkVersions.js` umbenannt, damit klar ist, dass er selbst keine Remote-Lib ist
 - Fix: `makeTagCleanerTextWithOptions()` splittet Zeilen ohne Regex-Literal, damit Memento/Rhino-Kopierpfade an der Einstiegstelle robuster bleiben
 - Test/Doku: Lade-Reihenfolge fuer `core/helpers.js` und Regression fuer CRLF-Zeilen im TagCleaner ergaenzt
 - Struktur: Remote-nutzbare Lib-Dateien nach `core_lib/` verschoben und mit `_lib` gekennzeichnet (`collectAtags_lib`, `exportAtags_lib`, `helpers_lib`)
 - Struktur: `tagCleaner` aus den Addons nach `core/tagCleaner.js` verschoben; Core-Funktionen bleiben feldschreibfrei, `applyTagCleaner` bleibt als optionaler Memento-Wrapper erhalten
 - Refactor: String-/Quote-Basishelfer aus dem Cleaner in `helpers_lib` ausgelagert
 - Test/Doku: Pfade, Versionierungscheck und TagCleaner-Beispiele an die neue Struktur angepasst
-- Feature: `core/_checkLibs.js` mit `checkLibVersions()` und eigener Versionsfunktion pro Lib ergaenzt
+- Feature: `core/_checkVersions.js` mit `checkLibVersions()` und eigener Versionsfunktion pro Lib ergaenzt
 - Doku: `core_lib/Z_LIB_VERSIONS.md` als statische Uebersicht der aktuellen Remote-Lib-Versionen ergaenzt
 - Struktur: `core/helpers.js` enthaelt gezielt Memento-Wrapper wie `applyTags`, verweist auf `core_lib/helpers_lib.js`; `helpers` und `tagCleaner` werden nicht als Remote-Libs registriert
 - Fix: Superscript-Werte in Readable-/Tagbar-Zeilen werden auch vor Satzzeichen erkannt, z. B. `testc⁴,`

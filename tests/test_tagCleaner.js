@@ -149,6 +149,14 @@ assertEquals(
 );
 
 assertEquals(
+  "alias-display-negative-only-header-long-without-slash",
+  makeTagCleanerTextWithOptions("fh2", {
+    aliasText: "@@/Festh\u00E4ngen (fh+): hakt"
+  }),
+  "Festh\u00E4ngen\u00B2"
+);
+
+assertEquals(
   "alias-display-header-long-not-read-from-clean-text-by-default",
   makeTagCleanerTextWithOptions("@@Ablenkung (ab+): bei\nab\u00B2", {}),
   "@@Ablenkung (ab+): bei\nab\u00B2"
@@ -501,6 +509,24 @@ assertEquals(
   "template-prep-keeps-different-template-variables",
   prepareTagCleanerTemplateText("1: Testing:_4_\n2: Laufen:_2 km_"),
   "Testing:__\nLaufen:__"
+);
+
+assertEquals(
+  "template-prep-clears-open-template-slot-before-dedupe",
+  prepareTagCleanerTemplateText("1: Kiefer:_3\nKiefer:_"),
+  "Kiefer:_"
+);
+
+assertEquals(
+  "template-prep-open-template-slot-removes-row-prefix",
+  prepareTagCleanerTemplateText("1: Kiefer:_3"),
+  "Kiefer:_"
+);
+
+assertEquals(
+  "template-prep-open-template-slot-keeps-quoted-value",
+  prepareTagCleanerTemplateText("Kiefer:\"_3\""),
+  "Kiefer:\"_3\""
 );
 
 assertEquals(

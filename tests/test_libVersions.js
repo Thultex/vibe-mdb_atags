@@ -16,10 +16,21 @@ function read(relPath) {
   return fso.OpenTextFile(fso.BuildPath(scriptDir, "..\\" + relPath), 1).ReadAll();
 }
 
-eval(read("core\\_checkLibs.js"));
-assertTrue("autorun-plugin-mismatch-summary", _logs.join("\n").indexOf("System Version 2.50 (missmatch/missing, 1 local, 14 missing)") >= 0);
+eval(read("core\\_checkVersions.js"));
+assertTrue("autorun-plugin-mismatch-summary", _logs.join("\n").indexOf("System v2.50 (config/match/miss, 1 local, 14 missing - no config!)") >= 0);
 assertTrue("autorun-plugin-mismatch-visible", _logs.join("\n").indexOf("VERSION LOCAL: tagCleaner expected sys 2.50 got sys 2.40") >= 0);
 assertEquals("checker-overrides-old-global-sys", ATAG_SYS_VERSION, "2.50");
+assertEquals("default-run-lib-check", RUN_LIB_CHECK, true);
+assertEquals("default-get-current-config", GET_CURRENT_CONFIG, true);
+assertEquals("default-show-current-config", SHOW_CURRENT_CONFIG, false);
+assertEquals("default-show-remote-versions", SHOW_REMOTE_VERSIONS, true);
+assertEquals("default-show-local-versions", SHOW_LOCAL_VERSIONS, false);
+assertEquals("default-show-remote-missmatches", SHOW_REMOTE_MISSMATCHES, true);
+assertEquals("default-show-local-missmatches", SHOW_LOCAL_MISSMATCHES, true);
+assertEquals("default-show-remote-missing", SHOW_REMOTE_MISSING, true);
+assertEquals("default-show-local-missing", SHOW_LOCAL_MISSING, true);
+GET_CURRENT_CONFIG = false;
+SHOW_LOCAL_VERSIONS = true;
 ATAG_LIB_VERSIONS = {};
 eval(read("core_lib\\helpers_lib.js"));
 eval(read("core_lib\\collectAtags_lib.js"));
@@ -58,16 +69,16 @@ function log(msg) {
   _logs.push(String(msg));
 }
 
-assertEquals("libVersions-own-version", getLibVersionsVersion().version, "1.47");
+assertEquals("checkVersions-own-version", getCheckVersionsVersion().version, "1.50");
 assertEquals("helpers-lib-own-version", getHelpersLibVersion().version, "2.11");
 assertEquals("helpers-lib-sys-version", getHelpersLibVersion().sysVersion, "2.50");
 assertEquals("collect-lib-own-version", getCollectAtagsLibVersion().version, "1.66");
 assertEquals("export-lib-own-version", getExportAtagsLibVersion().version, "1.84");
-assertEquals("tag-cleaner-own-version", getTagCleanerVersion().version, "1.51");
+assertEquals("tag-cleaner-own-version", getTagCleanerVersion().version, "1.53");
 assertEquals("helpers-own-version", getHelpersVersion().version, "1.03");
 assertEquals("helpers-mem-compat-version", getHelpersMemVersion().version, "1.03");
-assertEquals("dust-merger-own-version", getDustMergerVersion().version, "0.13");
-assertEquals("dust-merger-registered-version", ATAG_LIB_VERSIONS.dustMerger.version, "0.13");
+assertEquals("dust-merger-own-version", getDustMergerVersion().version, "0.16");
+assertEquals("dust-merger-registered-version", ATAG_LIB_VERSIONS.dustMerger.version, "0.16");
 assertEquals("time-marker-registered-version", ATAG_LIB_VERSIONS.timeMarker.version, "1.40");
 assertEquals("hour-guide-registered-version", ATAG_LIB_VERSIONS.hourGuide.version, "1.31");
 
@@ -80,29 +91,29 @@ assertEquals("export-lib-map-version", result.map.exportAtags_lib.version, "1.84
 assertEquals("collect-lib-map-version", result.map.collectAtags_lib.version, "1.66");
 
 var dustGetterResult = checkAtagLibVersions({ names: ["dustMerger"], checkAccess: true, requireAll: false, asText: false });
-assertEquals("generic-getter-dust-merger-version", dustGetterResult.map.dustMerger.version, "0.13");
+assertEquals("generic-getter-dust-merger-version", dustGetterResult.map.dustMerger.version, "0.16");
 assertEquals("generic-getter-dust-merger-no-mismatch", dustGetterResult.versionMismatch.length, 0);
 assertEquals("access-count", result.access.length, 3);
 
-var nonLib = checkLibVersions({ names: ["libVersions", "tagCleaner", "helpers"], requireAll: false });
+var nonLib = checkLibVersions({ names: ["checkVersions", "tagCleaner", "helpers"], requireAll: false });
 assertEquals("registered-optional-listed", nonLib.libs.length, 2);
-assertEquals("registered-optional-tag-cleaner", nonLib.map.tagCleaner.version, "1.51");
+assertEquals("registered-optional-tag-cleaner", nonLib.map.tagCleaner.version, "1.53");
 assertEquals("registered-optional-helpers", nonLib.map.helpers.version, "1.03");
 
 var textResult = checkAtagLibVersions({ checkAccess: true, asText: true });
-assertTrue("text-result-starts-with-summary", textResult.indexOf("System Version 2.50 (ok, 3 libs, 16 local)") === 0);
+assertTrue("text-result-starts-with-summary", textResult.indexOf("System v2.50 (ok, 3 rm, 16 local)") === 0);
 assertTrue("text-result-has-export", textResult.indexOf("exportAtags_lib v1.84") !== -1);
 assertTrue("text-result-has-collect", textResult.indexOf("collectAtags_lib v1.66") !== -1);
-assertTrue("text-result-has-local-tag-cleaner", textResult.indexOf("LOCAL tagCleaner v1.51") !== -1);
-assertTrue("text-result-has-local-dust-merger", textResult.indexOf("LOCAL dustMerger v0.13") !== -1);
+assertTrue("text-result-has-local-tag-cleaner", textResult.indexOf("LOCAL tagCleaner v1.53") !== -1);
+assertTrue("text-result-has-local-dust-merger", textResult.indexOf("LOCAL dustMerger v0.16") !== -1);
 assertTrue("text-result-ends-with-blank-line", /\n\n$/.test(textResult));
 
 var hiddenLocalText = checkAtagLibVersions({ checkAccess: true, asText: true, showLocalVersions: false });
-assertTrue("hidden-local-summary-keeps-count", hiddenLocalText.indexOf("System Version 2.50 (ok, 3 libs, 16 local)") === 0);
-assertTrue("hidden-local-lines-hidden", hiddenLocalText.indexOf("LOCAL tagCleaner v1.51") < 0);
+assertTrue("hidden-local-summary-keeps-count", hiddenLocalText.indexOf("System v2.50 (ok, 3 rm, 16 local)") === 0);
+assertTrue("hidden-local-lines-hidden", hiddenLocalText.indexOf("LOCAL tagCleaner v1.53") < 0);
 
 var hiddenUppercaseLocalText = checkAtagLibVersions({ checkAccess: true, asText: true, SHOW_LOCAL_VERSIONS: false });
-assertTrue("hidden-uppercase-local-lines-hidden", hiddenUppercaseLocalText.indexOf("LOCAL tagCleaner v1.51") < 0);
+assertTrue("hidden-uppercase-local-lines-hidden", hiddenUppercaseLocalText.indexOf("LOCAL tagCleaner v1.53") < 0);
 
 var scopedConfigText = checkAtagLibVersions({
   checkAccess: true,
@@ -114,11 +125,11 @@ var scopedConfigText = checkAtagLibVersions({
   }
 });
 assertTrue("scoped-config-function-first", scopedConfigText.indexOf("function getLibsVersionsConfig() {") === 0);
-assertTrue("scoped-config-rmt-visible", scopedConfigText.indexOf("    remote: [\n      \"helpers_lib\"\n    ],") !== -1);
+assertTrue("scoped-config-rm-visible", scopedConfigText.indexOf("    remote: [\n      \"helpers_lib\"\n    ],") !== -1);
 assertTrue("scoped-config-local-visible", scopedConfigText.indexOf("    local: [\n      \"syncLastFromLatest\"\n    ]") !== -1);
-assertTrue("scoped-config-summary-after-config", scopedConfigText.indexOf("\n\nSystem Version 2.50 (ok, 1 libs, 1 local)") !== -1);
+assertTrue("scoped-config-summary-after-config", scopedConfigText.indexOf("\n\nSystem v2.50 (ok, 1 rm, 1 local)") !== -1);
 assertTrue("scoped-config-omits-remote", scopedConfigText.indexOf("collectAtags_lib v1.66") < 0);
-assertTrue("scoped-config-omits-local", scopedConfigText.indexOf("LOCAL tagCleaner v1.51") < 0);
+assertTrue("scoped-config-omits-local", scopedConfigText.indexOf("LOCAL tagCleaner v1.53") < 0);
 
 _logs = [];
 checkAtagLibVersions({
@@ -131,7 +142,7 @@ checkAtagLibVersions({
   }
 });
 assertTrue("verbose-config-is-first-message", _logs[0].indexOf("function getLibsVersionsConfig() {") === 0);
-assertTrue("verbose-report-is-second-message", _logs[1].indexOf("System Version 2.50 (ok, 1 libs, 1 local)") === 0);
+assertTrue("verbose-report-is-second-message", _logs[1].indexOf("System v2.50 (ok, 1 rm, 1 local)") === 0);
 
 var getLibsVersionsConfig = function() {
   return {
@@ -146,20 +157,28 @@ var getterScopedConfigText = checkAtagLibVersions({
   showCurrentConfig: true
 });
 assertTrue("getter-config-function-first", getterScopedConfigText.indexOf("function getLibsVersionsConfig() {") === 0);
-assertTrue("getter-config-summary", getterScopedConfigText.indexOf("\n\nSystem Version 2.50 (ok, 1 libs, 1 local)") !== -1);
+assertTrue("getter-config-summary", getterScopedConfigText.indexOf("\n\nSystem v2.50 (ok, 1 rm, 1 local)") !== -1);
 assertTrue("getter-config-local-visible", getterScopedConfigText.indexOf("    local: [\n      \"syncLastFromLatest\"\n    ]") !== -1);
 
 getLibsVersionsConfig = undefined;
+
+var noConfigText = checkAtagLibVersions({ checkAccess: true, asText: true, getCurrentConfig: true, showCurrentConfig: false });
+assertTrue("no-config-summary", noConfigText.indexOf("System v2.50 (config - no config!)") === 0);
+var savedGetCurrentConfigFlag = GET_CURRENT_CONFIG;
+GET_CURRENT_CONFIG = true;
+var noGlobalConfigText = checkAtagLibVersions({ checkAccess: true, asText: true, showCurrentConfig: false });
+assertTrue("no-global-config-summary", noGlobalConfigText.indexOf("System v2.50 (config - no config!)") === 0);
+GET_CURRENT_CONFIG = savedGetCurrentConfigFlag;
 
 var savedRegistryForMissingOptions = ATAG_LIB_VERSIONS;
 var savedGetTagCleanerVersionForMissingOptions = getTagCleanerVersion;
 ATAG_LIB_VERSIONS = {};
 getTagCleanerVersion = undefined;
 var hiddenLocalMissingText = checkAtagLibVersions({ checkAccess: true, asText: true, showLocalMissing: false });
-assertTrue("hidden-local-missing-summary-ok", hiddenLocalMissingText.indexOf("System Version 2.50 (ok, 3 libs, 15 local)") === 0);
+assertTrue("hidden-local-missing-summary-ok", hiddenLocalMissingText.indexOf("System v2.50 (ok, 3 rm, 15 local)") === 0);
 assertTrue("hidden-local-missing-line-hidden", hiddenLocalMissingText.indexOf("MISSING LOCAL: A4 Tag Cleaner (core)") < 0);
 var visibleLocalMissingText = checkAtagLibVersions({ checkAccess: true, asText: true, showLocalMissing: true });
-assertTrue("visible-local-missing-summary", visibleLocalMissingText.indexOf("System Version 2.50 (missing, 1 missing)") === 0);
+assertTrue("visible-local-missing-summary", visibleLocalMissingText.indexOf("System v2.50 (miss, 1 missing)") === 0);
 assertTrue("visible-local-missing-line", visibleLocalMissingText.indexOf("MISSING LOCAL: A4 Tag Cleaner (core)") !== -1);
 getTagCleanerVersion = savedGetTagCleanerVersionForMissingOptions;
 ATAG_LIB_VERSIONS = savedRegistryForMissingOptions;
@@ -188,8 +207,8 @@ var softAccessMissing = checkAtagLibVersions({ names: ["helpers_lib"], checkAcce
 assertTrue("soft-access-missing-ok", softAccessMissing.ok);
 assertEquals("soft-access-missing-listed", softAccessMissing.optionalAccessMissing[0], "helpers_lib");
 var hiddenRemoteMissing = checkAtagLibVersions({ names: ["helpers_lib"], checkAccess: true, requireAll: true, asText: true, showRemoteMissing: false });
-assertTrue("hidden-remote-missing-summary-ok", hiddenRemoteMissing.indexOf("System Version 2.50 (ok, 1 libs, 16 local)") === 0);
-assertTrue("hidden-remote-missing-line-hidden", hiddenRemoteMissing.indexOf("MISSING RMT: #3 Helpers Lib (core_lib)") < 0);
+assertTrue("hidden-remote-missing-summary-ok", hiddenRemoteMissing.indexOf("System v2.50 (ok, 1 rm, 16 local)") === 0);
+assertTrue("hidden-remote-missing-line-hidden", hiddenRemoteMissing.indexOf("MISSING RM: #3 Helpers Lib (core_lib)") < 0);
 var savedRegistryForRemoteConfig = ATAG_LIB_VERSIONS;
 ATAG_LIB_VERSIONS = {};
 var missingRemoteConfigText = checkAtagLibVersions({ names: ["helpers_lib"], checkAccess: true, requireAll: true, asText: true, showCurrentConfig: true });
@@ -271,8 +290,8 @@ getCollectAtagsLibVersion = function() {
   };
 };
 var hiddenRemoteMissmatchText = checkAtagLibVersions({ names: ["collectAtags_lib"], checkAccess: true, asText: true, showRemoteMissmatches: false });
-assertTrue("hidden-remote-missmatch-summary-ok", hiddenRemoteMissmatchText.indexOf("System Version 2.50 (ok, 1 libs, 16 local)") === 0);
-assertTrue("hidden-remote-missmatch-line-hidden", hiddenRemoteMissmatchText.indexOf("VERSION RMT: collectAtags_lib expected 1.66 got 1.39") < 0);
+assertTrue("hidden-remote-missmatch-summary-ok", hiddenRemoteMissmatchText.indexOf("System v2.50 (ok, 1 rm, 16 local)") === 0);
+assertTrue("hidden-remote-missmatch-line-hidden", hiddenRemoteMissmatchText.indexOf("VERSION RM: collectAtags_lib expected 1.66 got 1.39") < 0);
 getCollectAtagsLibVersion = savedGetCollectAtagsLibVersion;
 ATAG_LIB_VERSIONS = savedRegistry;
 
@@ -288,7 +307,7 @@ getTagCleanerVersion = function() {
   };
 };
 var optionalGetterSysMismatchText = checkAtagLibVersions({ checkAccess: true, asText: true });
-assertTrue("optional-getter-sys-mismatch-summary", optionalGetterSysMismatchText.indexOf("System Version 2.50 (missmatch, 1 local)") === 0);
+assertTrue("optional-getter-sys-mismatch-summary", optionalGetterSysMismatchText.indexOf("System v2.50 (match, 1 local)") === 0);
 assertTrue("optional-getter-sys-mismatch-visible", optionalGetterSysMismatchText.indexOf("VERSION LOCAL: tagCleaner expected sys 2.50 got sys 2.40") !== -1);
 assertTrue("optional-getter-sys-mismatch-listed-as-local", optionalGetterSysMismatchText.indexOf("LOCAL tagCleaner v1.51 (sys 2.40)") !== -1);
 getTagCleanerVersion = savedGetTagCleanerVersion;
@@ -306,8 +325,8 @@ getTagCleanerVersion = function() {
   };
 };
 var hiddenLocalMissmatchText = checkAtagLibVersions({ checkAccess: true, asText: true, showLocalMissmatches: false });
-assertTrue("hidden-local-missmatch-summary-ok", hiddenLocalMissmatchText.indexOf("System Version 2.50 (ok, 3 libs, 16 local)") === 0);
-assertTrue("hidden-local-missmatch-line-hidden", hiddenLocalMissmatchText.indexOf("VERSION LOCAL: tagCleaner expected 1.51 got 1.50") < 0);
+assertTrue("hidden-local-missmatch-summary-ok", hiddenLocalMissmatchText.indexOf("System v2.50 (ok, 3 rm, 16 local)") === 0);
+assertTrue("hidden-local-missmatch-line-hidden", hiddenLocalMissmatchText.indexOf("VERSION LOCAL: tagCleaner expected 1.53 got 1.50") < 0);
 getTagCleanerVersion = savedGetTagCleanerVersion;
 ATAG_LIB_VERSIONS = savedRegistry;
 
@@ -336,9 +355,9 @@ getTagCleanerVersion = function() {
 getHelpersLibVersion = undefined;
 getTimeMarkerVersion = undefined;
 var mixedOrderText = checkAtagLibVersions({ names: ["collectAtags_lib", "helpers_lib"], checkAccess: true, asText: true, showLocalMissing: true });
-var mixedVersionRemIndex = mixedOrderText.indexOf("VERSION RMT: collectAtags_lib expected 1.66 got 1.39");
-var mixedMissingRemIndex = mixedOrderText.indexOf("MISSING RMT: #3 Helpers Lib (core_lib)");
-var mixedVersionLocalIndex = mixedOrderText.indexOf("VERSION LOCAL: tagCleaner expected 1.51 got 1.50");
+var mixedVersionRemIndex = mixedOrderText.indexOf("VERSION RM: collectAtags_lib expected 1.66 got 1.39");
+var mixedMissingRemIndex = mixedOrderText.indexOf("MISSING RM: #3 Helpers Lib (core_lib)");
+var mixedVersionLocalIndex = mixedOrderText.indexOf("VERSION LOCAL: tagCleaner expected 1.53 got 1.50");
 var mixedMissingLocalIndex = mixedOrderText.indexOf("MISSING LOCAL: B7 Time Marker (3_workflow)");
 assertTrue("mixed-order-version-rem-present", mixedVersionRemIndex !== -1);
 assertTrue("mixed-order-missing-rem-present", mixedMissingRemIndex !== -1);
@@ -357,23 +376,23 @@ savedRegistry = ATAG_LIB_VERSIONS;
 ATAG_LIB_VERSIONS = {};
 registerAtagLibVersion("tagCleaner", "1.50", "2.50", "core/tagCleaner.js");
 var optionalPluginMismatch = checkAtagLibVersions({ checkAccess: true, asText: false });
-assertEquals("optional-plugin-mismatch", optionalPluginMismatch.versionMismatch[0], "tagCleaner expected 1.51 got 1.50");
+assertEquals("optional-plugin-mismatch", optionalPluginMismatch.versionMismatch[0], "tagCleaner expected 1.53 got 1.50");
 assertEquals("optional-plugin-not-listed", optionalPluginMismatch.map.tagCleaner, undefined);
 assertEquals("optional-plugin-no-missing", optionalPluginMismatch.missing.length, 0);
 assertEquals("optional-plugin-no-optional-missing", optionalPluginMismatch.optionalMissing.length, 0);
 var optionalPluginMismatchText = checkAtagLibVersions({ checkAccess: true, asText: true });
-assertTrue("optional-plugin-mismatch-text-summary", optionalPluginMismatchText.indexOf("System Version 2.50 (missmatch, 1 local)") === 0);
-assertTrue("optional-plugin-mismatch-text-visible", optionalPluginMismatchText.indexOf("VERSION LOCAL: tagCleaner expected 1.51 got 1.50") !== -1);
+assertTrue("optional-plugin-mismatch-text-summary", optionalPluginMismatchText.indexOf("System v2.50 (match, 1 local)") === 0);
+assertTrue("optional-plugin-mismatch-text-visible", optionalPluginMismatchText.indexOf("VERSION LOCAL: tagCleaner expected 1.53 got 1.50") !== -1);
 assertTrue("optional-plugin-mismatch-text-listed-as-local", optionalPluginMismatchText.indexOf("LOCAL tagCleaner v1.50") !== -1);
 assertTrue("optional-plugin-mismatch-text-ends-with-blank-line", /\n\n$/.test(optionalPluginMismatchText));
-assertTrue("optional-plugin-mismatch-register-log-visible", _logs.join("\n").indexOf("VERSION LOCAL: tagCleaner expected 1.51 got 1.50") >= 0);
+assertTrue("optional-plugin-mismatch-register-log-visible", _logs.join("\n").indexOf("VERSION LOCAL: tagCleaner expected 1.53 got 1.50") >= 0);
 ATAG_LIB_VERSIONS = {};
 _logs = [];
 registerAtagLibVersion("dustMerger", "0.12", "2.50", "addons/2_syncing/dustMerger.js", true);
-assertTrue("optional-dust-merger-mismatch-register-log-summary", _logs.join("\n").indexOf("System Version 2.50 (missmatch, 1 local)") >= 0);
-assertTrue("optional-dust-merger-mismatch-register-log-visible", _logs.join("\n").indexOf("VERSION LOCAL: dustMerger expected 0.13 got 0.12") >= 0);
+assertTrue("optional-dust-merger-mismatch-register-log-summary", _logs.join("\n").indexOf("System v2.50 (match, 1 local)") >= 0);
+assertTrue("optional-dust-merger-mismatch-register-log-visible", _logs.join("\n").indexOf("VERSION LOCAL: dustMerger expected 0.16 got 0.12") >= 0);
 ATAG_LIB_VERSIONS = {};
-registerAtagLibVersion("tagCleaner", "1.51", "2.50", "core/tagCleaner.js");
+registerAtagLibVersion("tagCleaner", "1.53", "2.50", "core/tagCleaner.js");
 var optionalPluginCurrent = checkAtagLibVersions({ checkAccess: true, asText: false });
 assertEquals("optional-plugin-current-no-mismatch", optionalPluginCurrent.versionMismatch.length, 0);
 ATAG_LIB_VERSIONS = savedRegistry;

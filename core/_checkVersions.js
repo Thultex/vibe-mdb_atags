@@ -1,10 +1,10 @@
 /*
 ========================================
-A1 Lib Versions v1.47 (sys 2.50)
+A1 Check Versions v1.50 (sys 2.50)
 ========================================
 
 Notes
-- Text output starts with `System Version X.XX (ok, X libs, X local)` or a missmatch/missing summary and ends with a blank line.
+- Text output starts with `System vX.XX (ok, X rm, X local)` or a compact config/match/miss summary and ends with a blank line.
 - RUN_LIB_CHECK is a visible top-level switch for the immediate verbose startup check.
 - Standard report lists only remote core libs, but registered known addons are checked for version mismatches.
 - Reports major version mismatches even when loaded versions are newer.
@@ -44,11 +44,11 @@ checkAtagLibVersions({
 
 // Live Config
 var RUN_LIB_CHECK = true;
-var GET_CURRENT_CONFIG = false;
+var GET_CURRENT_CONFIG = true;
 var SHOW_CURRENT_CONFIG = false;
 
 var SHOW_REMOTE_VERSIONS = true;
-var SHOW_LOCAL_VERSIONS = true;
+var SHOW_LOCAL_VERSIONS = false;
 
 var SHOW_REMOTE_MISSMATCHES = true;
 var SHOW_LOCAL_MISSMATCHES = true;
@@ -62,13 +62,19 @@ var ATAG_SYS_VERSION = "2.50";
 var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERSIONS : {};
 
 // Version API
-function getLibVersionsVersion() {
+function getCheckVersionsVersion() {
   return {
-    name: "libVersions",
-    version: "1.47",
+    name: "checkVersions",
+    version: "1.50",
     sysVersion: "2.50",
-    path: "core/_checkLibs.js"
+    path: "core/_checkVersions.js"
   };
+}
+
+function getLibVersionsVersion() {
+  var info = getCheckVersionsVersion();
+  info.name = "libVersions";
+  return info;
 }
 
 // Expected Modules
@@ -79,10 +85,10 @@ var ATAG_EXPECTED_LIBS = [
 ];
 
 var ATAG_EXPECTED_OPTIONAL_LIBS = [
-  { id: "A1", title: "Lib Versions", area: "core", name: "libVersions", version: "1.47", getter: "getLibVersionsVersion", path: "core/_checkLibs.js", optional: true },
+  { id: "A1", title: "Check Versions", area: "core", name: "checkVersions", version: "1.50", getter: "getCheckVersionsVersion", path: "core/_checkVersions.js", optional: true },
   { id: "A2", title: "Atag Helpers", area: "core", name: "helpers", version: "1.03", getter: "getHelpersVersion", path: "core/helpers.js", optional: true },
   { id: "A3", title: "Restore Atags", area: "core", name: "restoreAtags", version: "2.10", getter: "getRestoreAtagsVersion", path: "core/restoreAtags.js", optional: true },
-  { id: "A4", title: "Tag Cleaner", area: "core", name: "tagCleaner", version: "1.51", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
+  { id: "A4", title: "Tag Cleaner", area: "core", name: "tagCleaner", version: "1.53", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
   { id: "B2", title: "Tag Pair Parser", area: "1_tagging", name: "tagPairParser", version: "1.02", getter: "getTagPairParserVersion", path: "addons/1_tagging/tagPairParser.js", optional: true },
   { id: "B3", title: "Global Field Sync", area: "2_syncing", name: "globalFieldSync", version: "1.04", getter: "getGlobalFieldSyncVersion", path: "addons/2_syncing/globalFieldSync.js", optional: true },
   { id: "B4", title: "Sync Last From Latest", area: "2_syncing", name: "syncLastFromLatest", version: "1.07", getter: "getSyncLastFromLatestVersion", path: "addons/2_syncing/syncLastFromLatest.js", optional: true },
@@ -91,7 +97,7 @@ var ATAG_EXPECTED_OPTIONAL_LIBS = [
   { id: "B7", title: "Time Marker", area: "3_workflow", name: "timeMarker", version: "1.40", getter: "getTimeMarkerVersion", path: "addons/3_workflow/timeMarker.js", optional: true },
   { id: "B8", title: "Obsidian Linker", area: "6_integration", name: "obsidianLinker", version: "1.17", getter: "getObsidianLinkerVersion", path: "addons/6_integration/obsidianLinker.js", optional: true },
   { id: "B9", title: "Wiki Linker", area: "6_integration", name: "wikiLinker", version: "1.01", getter: "getWikiLinkerVersion", path: "addons/6_integration/wikiLinker.js", optional: true },
-  { id: "B10", title: "Dust Merger", area: "2_syncing", name: "dustMerger", version: "0.13", getter: "getDustMergerVersion", path: "addons/2_syncing/dustMerger.js", optional: true },
+  { id: "B10", title: "Dust Merger", area: "2_syncing", name: "dustMerger", version: "0.16", getter: "getDustMergerVersion", path: "addons/2_syncing/dustMerger.js", optional: true },
   { id: "C1", title: "Multi Choice Helpers", area: "z_generell", name: "multiChoiceHelpers", version: "1.02", getter: "getMultiChoiceHelpersVersion", path: "addons/z_generell/multiChoiceHelpers.js", optional: true },
   { id: "C2", title: "Typed Text Fields", area: "z_generell", name: "typedTextFields", version: "1.01", getter: "getTypedTextFieldsVersion", path: "addons/z_generell/typedTextFields.js", optional: true },
   { id: "C3", title: "Hour Guide", area: "z_others", name: "hourGuide", version: "1.31", getter: "getHourGuideVersion", path: "addons/z_others/hourGuide.js", optional: true }
@@ -429,25 +435,24 @@ function addAtagLocalLoaded(loaded, items, info) {
   return true;
 }
 
-function atagLibCheckSummaryLine(libMismatchCount, localMismatchCount, missingCount, libCount, localCount) {
-  var status = "";
+function atagLibCheckSummaryLine(configMissing, libMismatchCount, localMismatchCount, missingCount, libCount, localCount) {
+  var status = [];
   var counts = [];
+  var suffix = "";
 
-  if (libMismatchCount === 0 && localMismatchCount === 0 && missingCount === 0) {
-    return "System Version " + ATAG_SYS_VERSION + " (ok, " + libCount + " libs, " + localCount + " local)";
-  } else if ((libMismatchCount > 0 || localMismatchCount > 0) && missingCount > 0) {
-    status = "missmatch/missing";
-  } else if (libMismatchCount > 0 || localMismatchCount > 0) {
-    status = "missmatch";
-  } else {
-    status = "missing";
+  if (!configMissing && libMismatchCount === 0 && localMismatchCount === 0 && missingCount === 0) {
+    return "System v" + ATAG_SYS_VERSION + " (ok, " + libCount + " rm, " + localCount + " local)";
   }
 
-  if (libMismatchCount > 0) counts.push(libMismatchCount + " libs");
+  if (configMissing) status.push("config");
+  if (libMismatchCount > 0 || localMismatchCount > 0) status.push("match");
+  if (missingCount > 0) status.push("miss");
+  if (libMismatchCount > 0) counts.push(libMismatchCount + " rm");
   if (localMismatchCount > 0) counts.push(localMismatchCount + " local");
   if (missingCount > 0) counts.push(missingCount + " missing");
+  if (configMissing) suffix = " - no config!";
 
-  return "System Version " + ATAG_SYS_VERSION + " (" + status + ", " + counts.join(", ") + ")";
+  return "System v" + ATAG_SYS_VERSION + " (" + status.join("/") + (counts.length > 0 ? ", " + counts.join(", ") : "") + suffix + ")";
 }
 
 function logAtagRegisteredVersionMismatch(info) {
@@ -461,7 +466,7 @@ function logAtagRegisteredVersionMismatch(info) {
   if (!text || SHOW_LOCAL_MISSMATCHES === false) return;
   if (typeof log === "function") {
     log(
-      atagLibCheckSummaryLine(0, 1, 0, 0, 1) + "\n" +
+      atagLibCheckSummaryLine(false, 0, 1, 0, 0, 1) + "\n" +
       "VERSION LOCAL: " + text + "\n\n"
     );
   }
@@ -517,8 +522,8 @@ function checkLibVersions(cfg) {
     for (i = 0; i < out.length; i++) {
       lines.push(out[i].name + " v" + out[i].version + " (sys " + out[i].sysVersion + ")");
     }
-    for (i = 0; i < missing.length; i++) lines.push("MISSING RMT: " + atagDisplayName(missing[i]));
-    for (i = 0; i < optionalMissing.length; i++) lines.push("MISSING RMT: " + atagDisplayName(optionalMissing[i]));
+    for (i = 0; i < missing.length; i++) lines.push("MISSING RM: " + atagDisplayName(missing[i]));
+    for (i = 0; i < optionalMissing.length; i++) lines.push("MISSING RM: " + atagDisplayName(optionalMissing[i]));
     text = lines.join("\n") + "\n\n";
     if (verbose && typeof log === "function") log(text);
     if (asText) return text;
@@ -560,12 +565,14 @@ function checkAtagLibVersions(cfg) {
   var text;
   var options = atagCheckOptions(cfg);
   var currentConfig = atagCurrentConfig(cfg, options);
+  var configMissing = false;
   var shownLibVersionMismatch;
   var shownLocalVersionMismatch;
   var expected = getExpectedAtagLibs();
   var optionalExpected = getExpectedAtagOptionalLibs();
   var checkOptionalRegistered = cfg.checkOptionalRegistered !== false && cfg.remoteOnly !== true;
 
+  configMissing = options.getCurrentConfig && !currentConfig;
   if (allVersions) names = getExpectedAtagLibNames();
   if (Object.prototype.toString.call(names) !== "[object Array]") names = [names];
   names = atagFilterNamesByConfig(names, currentConfig);
@@ -651,7 +658,8 @@ function checkAtagLibVersions(cfg) {
     accessMissing.length === 0 &&
     localMissing.length === 0 &&
     shownLibVersionMismatch.length === 0 &&
-    shownLocalVersionMismatch.length === 0;
+    shownLocalVersionMismatch.length === 0 &&
+    !configMissing;
   sortAtagVersionList(result.libs);
   sortAtagVersionList(result.local);
 
@@ -665,6 +673,7 @@ function checkAtagLibVersions(cfg) {
       configText = atagConfigFunctionLines(result.libs, result.local).join("\n") + "\n";
     }
     lines.push(atagLibCheckSummaryLine(
+      configMissing,
       shownLibVersionMismatch.length,
       shownLocalVersionMismatch.length,
       missingCount,
@@ -681,11 +690,11 @@ function checkAtagLibVersions(cfg) {
         lines.push(atagVersionLine(result.local[i], "LOCAL "));
       }
     }
-    for (i = 0; i < shownLibVersionMismatch.length; i++) lines.push("VERSION RMT: " + shownLibVersionMismatch[i]);
+    for (i = 0; i < shownLibVersionMismatch.length; i++) lines.push("VERSION RM: " + shownLibVersionMismatch[i]);
     if (options.showRemoteMissing) {
-      for (i = 0; i < result.missing.length; i++) lines.push("MISSING RMT: " + atagDisplayName(result.missing[i]));
-      for (i = 0; i < accessMissing.length; i++) lines.push("MISSING RMT: " + atagDisplayName(accessMissing[i]));
-      for (i = 0; i < optionalAccessMissing.length; i++) lines.push("MISSING RMT: " + atagDisplayName(optionalAccessMissing[i]));
+      for (i = 0; i < result.missing.length; i++) lines.push("MISSING RM: " + atagDisplayName(result.missing[i]));
+      for (i = 0; i < accessMissing.length; i++) lines.push("MISSING RM: " + atagDisplayName(accessMissing[i]));
+      for (i = 0; i < optionalAccessMissing.length; i++) lines.push("MISSING RM: " + atagDisplayName(optionalAccessMissing[i]));
     }
     for (i = 0; i < shownLocalVersionMismatch.length; i++) lines.push("VERSION LOCAL: " + shownLocalVersionMismatch[i]);
     if (options.showLocalMissing) {
