@@ -58,7 +58,7 @@ function log(msg) {
   _logs.push(String(msg));
 }
 
-assertEquals("libVersions-own-version", getLibVersionsVersion().version, "1.42");
+assertEquals("libVersions-own-version", getLibVersionsVersion().version, "1.47");
 assertEquals("helpers-lib-own-version", getHelpersLibVersion().version, "2.11");
 assertEquals("helpers-lib-sys-version", getHelpersLibVersion().sysVersion, "2.50");
 assertEquals("collect-lib-own-version", getCollectAtagsLibVersion().version, "1.66");
@@ -113,27 +113,43 @@ var scopedConfigText = checkAtagLibVersions({
     local: ["syncLastFromLatest"]
   }
 });
-assertTrue("scoped-config-summary", scopedConfigText.indexOf("System Version 2.50 (ok, 1 libs, 1 local)") === 0);
-assertTrue("scoped-config-rem-visible", scopedConfigText.indexOf("CONFIG REM: #3 Helpers Lib (core_lib)") !== -1);
-assertTrue("scoped-config-local-visible", scopedConfigText.indexOf("CONFIG LOCAL: B4 Sync Last From Latest (2_syncing)") !== -1);
+assertTrue("scoped-config-function-first", scopedConfigText.indexOf("function getLibsVersionsConfig() {") === 0);
+assertTrue("scoped-config-rmt-visible", scopedConfigText.indexOf("    remote: [\n      \"helpers_lib\"\n    ],") !== -1);
+assertTrue("scoped-config-local-visible", scopedConfigText.indexOf("    local: [\n      \"syncLastFromLatest\"\n    ]") !== -1);
+assertTrue("scoped-config-summary-after-config", scopedConfigText.indexOf("\n\nSystem Version 2.50 (ok, 1 libs, 1 local)") !== -1);
 assertTrue("scoped-config-omits-remote", scopedConfigText.indexOf("collectAtags_lib v1.66") < 0);
 assertTrue("scoped-config-omits-local", scopedConfigText.indexOf("LOCAL tagCleaner v1.51") < 0);
 
-function getLibsVersionsConfig() {
+_logs = [];
+checkAtagLibVersions({
+  checkAccess: true,
+  verbose: true,
+  showCurrentConfig: true,
+  currentConfig: {
+    remote: ["helpers_lib"],
+    local: ["syncLastFromLatest"]
+  }
+});
+assertTrue("verbose-config-is-first-message", _logs[0].indexOf("function getLibsVersionsConfig() {") === 0);
+assertTrue("verbose-report-is-second-message", _logs[1].indexOf("System Version 2.50 (ok, 1 libs, 1 local)") === 0);
+
+var getLibsVersionsConfig = function() {
   return {
     libs: ["helpers_lib"],
     plugins: ["syncLastFromLatest"]
   };
-}
+};
 
 var getterScopedConfigText = checkAtagLibVersions({
   checkAccess: true,
   asText: true,
-  getCurrentConfig: true,
   showCurrentConfig: true
 });
-assertTrue("getter-config-summary", getterScopedConfigText.indexOf("System Version 2.50 (ok, 1 libs, 1 local)") === 0);
-assertTrue("getter-config-local-visible", getterScopedConfigText.indexOf("CONFIG LOCAL: B4 Sync Last From Latest (2_syncing)") !== -1);
+assertTrue("getter-config-function-first", getterScopedConfigText.indexOf("function getLibsVersionsConfig() {") === 0);
+assertTrue("getter-config-summary", getterScopedConfigText.indexOf("\n\nSystem Version 2.50 (ok, 1 libs, 1 local)") !== -1);
+assertTrue("getter-config-local-visible", getterScopedConfigText.indexOf("    local: [\n      \"syncLastFromLatest\"\n    ]") !== -1);
+
+getLibsVersionsConfig = undefined;
 
 var savedRegistryForMissingOptions = ATAG_LIB_VERSIONS;
 var savedGetTagCleanerVersionForMissingOptions = getTagCleanerVersion;
@@ -153,6 +169,9 @@ ATAG_LIB_VERSIONS = {};
 getTimeMarkerVersion = undefined;
 var visibleTimeMarkerMissingText = checkAtagLibVersions({ checkAccess: true, asText: true, showLocalMissing: true });
 assertTrue("visible-time-marker-missing-line", visibleTimeMarkerMissingText.indexOf("MISSING LOCAL: B7 Time Marker (3_workflow)") !== -1);
+var missingLocalConfigText = checkAtagLibVersions({ checkAccess: true, asText: true, showCurrentConfig: true, showLocalMissing: true });
+assertTrue("missing-local-config-starts-with-function", missingLocalConfigText.indexOf("function getLibsVersionsConfig() {") === 0);
+assertTrue("missing-local-config-omits-missing-local", missingLocalConfigText.indexOf("      \"timeMarker\"") < 0);
 getTimeMarkerVersion = savedGetTimeMarkerVersionForMissingOptions;
 ATAG_LIB_VERSIONS = savedRegistryForMissingOptions;
 
@@ -170,7 +189,13 @@ assertTrue("soft-access-missing-ok", softAccessMissing.ok);
 assertEquals("soft-access-missing-listed", softAccessMissing.optionalAccessMissing[0], "helpers_lib");
 var hiddenRemoteMissing = checkAtagLibVersions({ names: ["helpers_lib"], checkAccess: true, requireAll: true, asText: true, showRemoteMissing: false });
 assertTrue("hidden-remote-missing-summary-ok", hiddenRemoteMissing.indexOf("System Version 2.50 (ok, 1 libs, 16 local)") === 0);
-assertTrue("hidden-remote-missing-line-hidden", hiddenRemoteMissing.indexOf("MISSING REM: #3 Helpers Lib (core_lib)") < 0);
+assertTrue("hidden-remote-missing-line-hidden", hiddenRemoteMissing.indexOf("MISSING RMT: #3 Helpers Lib (core_lib)") < 0);
+var savedRegistryForRemoteConfig = ATAG_LIB_VERSIONS;
+ATAG_LIB_VERSIONS = {};
+var missingRemoteConfigText = checkAtagLibVersions({ names: ["helpers_lib"], checkAccess: true, requireAll: true, asText: true, showCurrentConfig: true });
+assertTrue("missing-remote-config-starts-with-function", missingRemoteConfigText.indexOf("function getLibsVersionsConfig() {") === 0);
+assertTrue("missing-remote-config-omits-missing-lib", missingRemoteConfigText.indexOf("      \"helpers_lib\"") < 0);
+ATAG_LIB_VERSIONS = savedRegistryForRemoteConfig;
 getHelpersLibVersion = savedGetHelpersLibVersion;
 
 var savedRegistry = ATAG_LIB_VERSIONS;
@@ -247,7 +272,7 @@ getCollectAtagsLibVersion = function() {
 };
 var hiddenRemoteMissmatchText = checkAtagLibVersions({ names: ["collectAtags_lib"], checkAccess: true, asText: true, showRemoteMissmatches: false });
 assertTrue("hidden-remote-missmatch-summary-ok", hiddenRemoteMissmatchText.indexOf("System Version 2.50 (ok, 1 libs, 16 local)") === 0);
-assertTrue("hidden-remote-missmatch-line-hidden", hiddenRemoteMissmatchText.indexOf("VERSION REM: collectAtags_lib expected 1.66 got 1.39") < 0);
+assertTrue("hidden-remote-missmatch-line-hidden", hiddenRemoteMissmatchText.indexOf("VERSION RMT: collectAtags_lib expected 1.66 got 1.39") < 0);
 getCollectAtagsLibVersion = savedGetCollectAtagsLibVersion;
 ATAG_LIB_VERSIONS = savedRegistry;
 
@@ -311,8 +336,8 @@ getTagCleanerVersion = function() {
 getHelpersLibVersion = undefined;
 getTimeMarkerVersion = undefined;
 var mixedOrderText = checkAtagLibVersions({ names: ["collectAtags_lib", "helpers_lib"], checkAccess: true, asText: true, showLocalMissing: true });
-var mixedVersionRemIndex = mixedOrderText.indexOf("VERSION REM: collectAtags_lib expected 1.66 got 1.39");
-var mixedMissingRemIndex = mixedOrderText.indexOf("MISSING REM: #3 Helpers Lib (core_lib)");
+var mixedVersionRemIndex = mixedOrderText.indexOf("VERSION RMT: collectAtags_lib expected 1.66 got 1.39");
+var mixedMissingRemIndex = mixedOrderText.indexOf("MISSING RMT: #3 Helpers Lib (core_lib)");
 var mixedVersionLocalIndex = mixedOrderText.indexOf("VERSION LOCAL: tagCleaner expected 1.51 got 1.50");
 var mixedMissingLocalIndex = mixedOrderText.indexOf("MISSING LOCAL: B7 Time Marker (3_workflow)");
 assertTrue("mixed-order-version-rem-present", mixedVersionRemIndex !== -1);

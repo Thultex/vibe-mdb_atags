@@ -1,6 +1,6 @@
 /*
 ========================================
-A1 Lib Versions v1.42 (sys 2.50)
+A1 Lib Versions v1.47 (sys 2.50)
 ========================================
 
 Notes
@@ -17,7 +17,19 @@ Notes
   - collectAtags_lib v1.66 (sys 2.50)
   - exportAtags_lib v1.84 (sys 2.50)
 
-Example
+Local config example
+
+function getLibsVersionsConfig() {
+  return {
+    remote: ["helpers_lib"],
+    local: ["syncLastFromLatest"]
+  };
+}
+
+// If this function exists in a local shared script, A1 uses it automatically.
+// Modules not listed there are not checked and not reported as missing.
+
+Call override example
 
 checkAtagLibVersions({
   SHOW_CURRENT_CONFIG: true,
@@ -53,7 +65,7 @@ var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERS
 function getLibVersionsVersion() {
   return {
     name: "libVersions",
-    version: "1.42",
+    version: "1.47",
     sysVersion: "2.50",
     path: "core/_checkLibs.js"
   };
@@ -67,7 +79,7 @@ var ATAG_EXPECTED_LIBS = [
 ];
 
 var ATAG_EXPECTED_OPTIONAL_LIBS = [
-  { id: "A1", title: "Lib Versions", area: "core", name: "libVersions", version: "1.42", getter: "getLibVersionsVersion", path: "core/_checkLibs.js", optional: true },
+  { id: "A1", title: "Lib Versions", area: "core", name: "libVersions", version: "1.47", getter: "getLibVersionsVersion", path: "core/_checkLibs.js", optional: true },
   { id: "A2", title: "Atag Helpers", area: "core", name: "helpers", version: "1.03", getter: "getHelpersVersion", path: "core/helpers.js", optional: true },
   { id: "A3", title: "Restore Atags", area: "core", name: "restoreAtags", version: "2.10", getter: "getRestoreAtagsVersion", path: "core/restoreAtags.js", optional: true },
   { id: "A4", title: "Tag Cleaner", area: "core", name: "tagCleaner", version: "1.51", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
@@ -332,7 +344,7 @@ function atagCurrentConfig(cfg, options) {
   var rem;
   var local;
 
-  if (!raw && options.getCurrentConfig) raw = atagCallCurrentConfigGetter();
+  if (!raw) raw = atagCallCurrentConfigGetter();
   if (!raw) return null;
 
   rem = atagListMap(atagConfigNames(raw, ["remote", "rem", "libs", "libraries"]));
@@ -378,13 +390,34 @@ function atagExpectedByConfig(expected, map) {
   return out;
 }
 
-function atagConfigLines(prefix, expected) {
+function atagJsString(value) {
+  return "\"" + String(value || "").replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\"";
+}
+
+function atagConfigArrayLine(prefix, expected) {
   var out = [];
   var i;
 
+  out.push("    " + prefix + ": [");
   for (i = 0; i < expected.length; i++) {
-    out.push(prefix + ": " + atagDisplayName(expected[i].name));
+    out.push("      " + atagJsString(expected[i].name) + (i < expected.length - 1 ? "," : ""));
   }
+  out.push("    ]");
+  return out;
+}
+
+function atagConfigFunctionLines(expected, optionalExpected) {
+  var out = [];
+
+  out.push("function getLibsVersionsConfig() {");
+  out.push("  return {");
+  out = out.concat(atagConfigArrayLine("remote", expected));
+  out[out.length - 1] = out[out.length - 1] + ",";
+  out = out.concat(atagConfigArrayLine("local", optionalExpected));
+  out.push("  };");
+  out.push("}");
+  out.push("");
+
   return out;
 }
 
@@ -484,8 +517,8 @@ function checkLibVersions(cfg) {
     for (i = 0; i < out.length; i++) {
       lines.push(out[i].name + " v" + out[i].version + " (sys " + out[i].sysVersion + ")");
     }
-    for (i = 0; i < missing.length; i++) lines.push("MISSING REM: " + atagDisplayName(missing[i]));
-    for (i = 0; i < optionalMissing.length; i++) lines.push("MISSING REM: " + atagDisplayName(optionalMissing[i]));
+    for (i = 0; i < missing.length; i++) lines.push("MISSING RMT: " + atagDisplayName(missing[i]));
+    for (i = 0; i < optionalMissing.length; i++) lines.push("MISSING RMT: " + atagDisplayName(optionalMissing[i]));
     text = lines.join("\n") + "\n\n";
     if (verbose && typeof log === "function") log(text);
     if (asText) return text;
@@ -624,7 +657,13 @@ function checkAtagLibVersions(cfg) {
 
   if (asText || verbose) {
     var lines = [];
+    var configText = "";
+    var reportText;
+    var fullText;
     var missingCount = result.missing.length + accessMissing.length + localMissing.length;
+    if (options.showCurrentConfig) {
+      configText = atagConfigFunctionLines(result.libs, result.local).join("\n") + "\n";
+    }
     lines.push(atagLibCheckSummaryLine(
       shownLibVersionMismatch.length,
       shownLocalVersionMismatch.length,
@@ -632,10 +671,6 @@ function checkAtagLibVersions(cfg) {
       result.libs.length,
       result.localLoadedCount
     ));
-    if (options.showCurrentConfig) {
-      lines = lines.concat(atagConfigLines("CONFIG REM", expected));
-      lines = lines.concat(atagConfigLines("CONFIG LOCAL", optionalExpected));
-    }
     if (options.showRemoteVersions) {
       for (i = 0; i < result.libs.length; i++) {
         lines.push(atagVersionLine(result.libs[i], ""));
@@ -646,20 +681,24 @@ function checkAtagLibVersions(cfg) {
         lines.push(atagVersionLine(result.local[i], "LOCAL "));
       }
     }
-    for (i = 0; i < shownLibVersionMismatch.length; i++) lines.push("VERSION REM: " + shownLibVersionMismatch[i]);
+    for (i = 0; i < shownLibVersionMismatch.length; i++) lines.push("VERSION RMT: " + shownLibVersionMismatch[i]);
     if (options.showRemoteMissing) {
-      for (i = 0; i < result.missing.length; i++) lines.push("MISSING REM: " + atagDisplayName(result.missing[i]));
-      for (i = 0; i < accessMissing.length; i++) lines.push("MISSING REM: " + atagDisplayName(accessMissing[i]));
-      for (i = 0; i < optionalAccessMissing.length; i++) lines.push("MISSING REM: " + atagDisplayName(optionalAccessMissing[i]));
+      for (i = 0; i < result.missing.length; i++) lines.push("MISSING RMT: " + atagDisplayName(result.missing[i]));
+      for (i = 0; i < accessMissing.length; i++) lines.push("MISSING RMT: " + atagDisplayName(accessMissing[i]));
+      for (i = 0; i < optionalAccessMissing.length; i++) lines.push("MISSING RMT: " + atagDisplayName(optionalAccessMissing[i]));
     }
     for (i = 0; i < shownLocalVersionMismatch.length; i++) lines.push("VERSION LOCAL: " + shownLocalVersionMismatch[i]);
     if (options.showLocalMissing) {
       for (i = 0; i < localMissing.length; i++) lines.push("MISSING LOCAL: " + atagDisplayName(localMissing[i]));
     }
-    text = lines.join("\n") + "\n\n";
-    result.text = text;
-    if (verbose && typeof log === "function") log(text);
-    if (asText) return text;
+    reportText = lines.join("\n") + "\n\n";
+    fullText = configText + reportText;
+    result.text = fullText;
+    if (verbose && typeof log === "function") {
+      if (configText) log(configText);
+      log(reportText);
+    }
+    if (asText) return fullText;
   }
 
   return result;

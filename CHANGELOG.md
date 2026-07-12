@@ -27,7 +27,7 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 ### 2026-07-11 - (ca. 0,2h)
 
 - Change: `RUN_LIB_CHECK` ist in `core/_checkLibs.js` standardmaessig `true`, damit der Versionscheck beim Laden direkt laeuft.
-- Change: Text-/Verbose-Ausgabe von `checkAtagLibVersions()` beginnt mit `System Version X.XX (ok, X libs, X local)` oder einer `missmatch`-/`missing`-Summary; Mismatches werden unten als `VERSION REM: ...` oder `VERSION LOCAL: ...` ausgegeben.
+- Change: Text-/Verbose-Ausgabe von `checkAtagLibVersions()` beginnt mit `System Version X.XX (ok, X libs, X local)` oder einer `missmatch`-/`missing`-Summary; Mismatches werden unten als `VERSION RMT: ...` oder `VERSION LOCAL: ...` ausgegeben.
 - Fix: Auch spaeter per `registerAtagLibVersion()` registrierte bekannte Plugin-Mismatches werden direkt geloggt.
 - Change: `_checkLibs` v1.33 schliesst Text-/Verbose-Ausgaben mit einer Leerzeile ab.
 - Fix: `_checkLibs` v1.34 setzt die Ziel-`ATAG_SYS_VERSION` selbst auf `2.50`, statt ein zuvor von alten Libs gesetztes globales `ATAG_SYS_VERSION` zu uebernehmen.
@@ -39,6 +39,11 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Change: `_checkLibs` Summary ist bei Befunden kompakt, z. B. `System Version 2.50 (missmatch/missing, 2 libs, 2 local, 13 missing)`; nur bei `ok` werden alle geladenen Counts gezeigt.
 - Change: `_checkLibs` v1.41 ergaenzt `SHOW_REMOTE_MISSMATCHES` und `SHOW_LOCAL_MISSMATCHES`, damit Versionslisten, Mismatches und Missing-Meldungen getrennt geschaltet werden koennen.
 - Feature: `_checkLibs` v1.42 ergaenzt `GET_CURRENT_CONFIG`/`SHOW_CURRENT_CONFIG`, Aufruf-Overrides fuer Live-Config-Schalter und optionale `getLibsVersionsConfig()`-Filter fuer verwendete Remote-/Local-Module.
+- Change: `_checkLibs` v1.43 nutzt eine vorhandene lokale `getLibsVersionsConfig()` automatisch, damit lokale Modul-Config nicht bei Lib-Updates angepasst werden muss.
+- Change: `_checkLibs` v1.44 gibt `SHOW_CURRENT_CONFIG` als direkt kopierbaren `getLibsVersionsConfig()`-Block aus statt als einzelne Config-Zeilen.
+- Change: `_checkLibs` v1.45 gibt den `SHOW_CURRENT_CONFIG`-Block als separate erste Meldung vor dem Versionsbericht aus.
+- Change: `_checkLibs` v1.46 formatiert den Config-Block mit einer Zeile pro Remote-/Local-Modul.
+- Change: `_checkLibs` v1.47 schreibt in den Config-Block nur Module, die im aktuellen Check tatsaechlich gefunden wurden.
 - Feature: `syncLastFromLatest` v1.07 unterstuetzt Map-Eintraege mit `append`/`prepend` fuer String-Werte, z. B. `RecordAdd: ["Record", "append"]`.
 - Fix: `collectAtags_lib` v1.66 ordnet direkte Kategorie-Children mit reinem Umlaut-Namen zu, z. B. `@@@Kat::` gefolgt von `@@ö`; Slash-Alias-Tokens sind per Regressionstest abgesichert.
 - Change: Systemversion auf `sys 2.50` angehoben; alle bekannten lokalen Plugins/Addons mit neuem Versions-Getter wurden auf eigene Patch-Versionen nachgezogen und in `Z_LIB_VERSIONS.md` aufgefuehrt.
