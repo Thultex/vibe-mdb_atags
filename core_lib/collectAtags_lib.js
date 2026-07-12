@@ -1,9 +1,10 @@
 /*
 ========================================
-#1 collectAtags Lib v1.65 (sys 2.50)
+#1 collectAtags Lib v1.66 (sys 2.50)
 ========================================
 
 Changes
+- allow umlaut-only direct category children like `@@@Kat::` followed by `@@ö`
 - direct category blocks treat `@@/Negative:` as child `Negative` with negative category sign
 - category aliases can use `@@@Category::` to collect direct alias lines below as fixed children
 - support positive/negative alias headers, e.g. `@@Gut/Schlecht(G): -Bad`
@@ -52,14 +53,14 @@ Changes
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.65",
+    version: "1.66",
     sysVersion: "2.50",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.65", "2.50", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.66", "2.50", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");
@@ -384,7 +385,7 @@ function collectAtags(cfg) {
   }
 
   function isAtagAliasNameToken(raw) {
-    return /^[A-Za-zÃ„Ã–ÃœÃ¤Ã¶Ã¼ÃŸ_][A-Za-zÃ„Ã–ÃœÃ¤Ã¶Ã¼ÃŸ0-9_\-]*$/.test(String(raw || ""));
+    return /^[A-Za-z_\u00C4\u00D6\u00DC\u00E4\u00F6\u00FC\u00DF][A-Za-z0-9_\-\u00C4\u00D6\u00DC\u00E4\u00F6\u00FC\u00DF]*$/.test(String(raw || ""));
   }
 
   function parseAliasHeaderInfo(raw) {
@@ -1370,7 +1371,7 @@ function collectAtags(cfg) {
       }
 
       // name + number: emo3 / emo+1,3 / emo-12,32
-      var rxNum = /(^|[\s,;.!?()\[\]{}\/])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)(\+{2,}\d*|-{2,}\d*|[+\-]?\d+(?:[.,]\d+)?|\++|-+)(?=$|[\s,;.!?()\[\]{}])/g;
+      var rxNum = /(^|[\s,;.!?()\[\]{}\/])([A-Za-z_\u00C4\u00D6\u00DC\u00E4\u00F6\u00FC\u00DF][A-Za-z0-9_\-\u00C4\u00D6\u00DC\u00E4\u00F6\u00FC\u00DF]*)(\+{2,}\d*|-{2,}\d*|[+\-]?\d+(?:[.,]\d+)?|\++|-+)(?=$|[\s,;.!?()\[\]{}])/g;
       var mn;
       while ((mn = rxNum.exec(parseLine)) !== null) {
         var nameN = mn[2];

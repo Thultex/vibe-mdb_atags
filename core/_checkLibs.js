@@ -1,6 +1,6 @@
 /*
 ========================================
-A1 Lib Versions v1.41 (sys 2.50)
+A1 Lib Versions v1.42 (sys 2.50)
 ========================================
 
 Notes
@@ -14,14 +14,26 @@ Notes
 - inputLinker_lib is no longer part of the core lib check.
 - Current libs:
   - helpers_lib v2.11 (sys 2.50)
-  - collectAtags_lib v1.65 (sys 2.50)
+  - collectAtags_lib v1.66 (sys 2.50)
   - exportAtags_lib v1.84 (sys 2.50)
+
+Example
+
+checkAtagLibVersions({
+  SHOW_CURRENT_CONFIG: true,
+  currentConfig: {
+    remote: ["helpers_lib"],
+    local: ["syncLastFromLatest"]
+  }
+});
 
 ========================================
 */
 
 // Live Config
 var RUN_LIB_CHECK = true;
+var GET_CURRENT_CONFIG = false;
+var SHOW_CURRENT_CONFIG = false;
 
 var SHOW_REMOTE_VERSIONS = true;
 var SHOW_LOCAL_VERSIONS = true;
@@ -33,33 +45,35 @@ var SHOW_REMOTE_MISSING = true;
 var SHOW_LOCAL_MISSING = true;
 
 
-// Funktions and Data
+// System Data
 var ATAG_SYS_VERSION = "2.50";
 var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERSIONS : {};
 
+// Version API
 function getLibVersionsVersion() {
   return {
     name: "libVersions",
-    version: "1.41",
+    version: "1.42",
     sysVersion: "2.50",
     path: "core/_checkLibs.js"
   };
 }
 
+// Expected Modules
 var ATAG_EXPECTED_LIBS = [
   { id: "#3", title: "Helpers Lib", area: "core_lib", name: "helpers_lib", version: "2.11", getter: "getHelpersLibVersion", path: "core_lib/helpers_lib.js" },
-  { id: "#1", title: "Collect Atags Lib", area: "core_lib", name: "collectAtags_lib", version: "1.65", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
+  { id: "#1", title: "Collect Atags Lib", area: "core_lib", name: "collectAtags_lib", version: "1.66", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
   { id: "#2", title: "Export Atags Lib", area: "core_lib", name: "exportAtags_lib", version: "1.84", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" }
 ];
 
 var ATAG_EXPECTED_OPTIONAL_LIBS = [
-  { id: "A1", title: "Lib Versions", area: "core", name: "libVersions", version: "1.41", getter: "getLibVersionsVersion", path: "core/_checkLibs.js", optional: true },
+  { id: "A1", title: "Lib Versions", area: "core", name: "libVersions", version: "1.42", getter: "getLibVersionsVersion", path: "core/_checkLibs.js", optional: true },
   { id: "A2", title: "Atag Helpers", area: "core", name: "helpers", version: "1.03", getter: "getHelpersVersion", path: "core/helpers.js", optional: true },
   { id: "A3", title: "Restore Atags", area: "core", name: "restoreAtags", version: "2.10", getter: "getRestoreAtagsVersion", path: "core/restoreAtags.js", optional: true },
   { id: "A4", title: "Tag Cleaner", area: "core", name: "tagCleaner", version: "1.51", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
   { id: "B2", title: "Tag Pair Parser", area: "1_tagging", name: "tagPairParser", version: "1.02", getter: "getTagPairParserVersion", path: "addons/1_tagging/tagPairParser.js", optional: true },
   { id: "B3", title: "Global Field Sync", area: "2_syncing", name: "globalFieldSync", version: "1.04", getter: "getGlobalFieldSyncVersion", path: "addons/2_syncing/globalFieldSync.js", optional: true },
-  { id: "B4", title: "Sync Last From Latest", area: "2_syncing", name: "syncLastFromLatest", version: "1.06", getter: "getSyncLastFromLatestVersion", path: "addons/2_syncing/syncLastFromLatest.js", optional: true },
+  { id: "B4", title: "Sync Last From Latest", area: "2_syncing", name: "syncLastFromLatest", version: "1.07", getter: "getSyncLastFromLatestVersion", path: "addons/2_syncing/syncLastFromLatest.js", optional: true },
   { id: "B5", title: "Floating Average", area: "3_workflow", name: "floatingAverage", version: "1.01", getter: "getFloatingAverageVersion", path: "addons/3_workflow/floatingAverage.js", optional: true },
   { id: "B6", title: "Sequence Counter", area: "3_workflow", name: "sequenceCounter", version: "1.06", getter: "getSequenceCounterVersion", path: "addons/3_workflow/sequenceCounter.js", optional: true },
   { id: "B7", title: "Time Marker", area: "3_workflow", name: "timeMarker", version: "1.40", getter: "getTimeMarkerVersion", path: "addons/3_workflow/timeMarker.js", optional: true },
@@ -254,15 +268,124 @@ function atagDisplayName(name) {
   return String(info.name || name || "");
 }
 
+// Config Functions
+function atagOptionValue(cfg, name, globalValue, globalName) {
+  if (cfg && typeof cfg[name] === "boolean") return cfg[name];
+  if (cfg && globalName && typeof cfg[globalName] === "boolean") return cfg[globalName];
+  return globalValue !== false;
+}
+
 function atagCheckOptions(cfg) {
   return {
-    showRemoteVersions: cfg.showRemoteVersions !== false && SHOW_REMOTE_VERSIONS !== false,
-    showLocalVersions: cfg.showLocalVersions !== false && SHOW_LOCAL_VERSIONS !== false,
-    showRemoteMissmatches: cfg.showRemoteMissmatches !== false && SHOW_REMOTE_MISSMATCHES !== false,
-    showLocalMissmatches: cfg.showLocalMissmatches !== false && SHOW_LOCAL_MISSMATCHES !== false,
-    showRemoteMissing: cfg.showRemoteMissing !== false && SHOW_REMOTE_MISSING !== false,
-    showLocalMissing: cfg.showLocalMissing !== false && SHOW_LOCAL_MISSING !== false
+    getCurrentConfig: atagOptionValue(cfg, "getCurrentConfig", GET_CURRENT_CONFIG, "GET_CURRENT_CONFIG"),
+    showCurrentConfig: atagOptionValue(cfg, "showCurrentConfig", SHOW_CURRENT_CONFIG, "SHOW_CURRENT_CONFIG"),
+    showRemoteVersions: atagOptionValue(cfg, "showRemoteVersions", SHOW_REMOTE_VERSIONS, "SHOW_REMOTE_VERSIONS"),
+    showLocalVersions: atagOptionValue(cfg, "showLocalVersions", SHOW_LOCAL_VERSIONS, "SHOW_LOCAL_VERSIONS"),
+    showRemoteMissmatches: atagOptionValue(cfg, "showRemoteMissmatches", SHOW_REMOTE_MISSMATCHES, "SHOW_REMOTE_MISSMATCHES"),
+    showLocalMissmatches: atagOptionValue(cfg, "showLocalMissmatches", SHOW_LOCAL_MISSMATCHES, "SHOW_LOCAL_MISSMATCHES"),
+    showRemoteMissing: atagOptionValue(cfg, "showRemoteMissing", SHOW_REMOTE_MISSING, "SHOW_REMOTE_MISSING"),
+    showLocalMissing: atagOptionValue(cfg, "showLocalMissing", SHOW_LOCAL_MISSING, "SHOW_LOCAL_MISSING")
   };
+}
+
+function atagListMap(list) {
+  var out = {};
+  var i;
+  var name;
+
+  if (list == null) return null;
+  if (Object.prototype.toString.call(list) !== "[object Array]") list = [list];
+  for (i = 0; i < list.length; i++) {
+    name = String(list[i] || "");
+    if (name) out[name] = true;
+  }
+  return out;
+}
+
+function atagConfigNames(raw, keys) {
+  var i;
+  var val;
+
+  if (!raw) return null;
+  for (i = 0; i < keys.length; i++) {
+    val = raw[keys[i]];
+    if (val != null) return val;
+  }
+  return null;
+}
+
+function atagCallCurrentConfigGetter() {
+  var getterFn;
+
+  try {
+    getterFn = eval("getLibsVersionsConfig");
+  } catch (e) {
+    getterFn = null;
+  }
+
+  if (typeof getterFn !== "function") return null;
+  return getterFn();
+}
+
+function atagCurrentConfig(cfg, options) {
+  var raw = cfg.currentConfig || cfg.config || null;
+  var rem;
+  var local;
+
+  if (!raw && options.getCurrentConfig) raw = atagCallCurrentConfigGetter();
+  if (!raw) return null;
+
+  rem = atagListMap(atagConfigNames(raw, ["remote", "rem", "libs", "libraries"]));
+  local = atagListMap(atagConfigNames(raw, ["local", "plugins", "addons", "modules"]));
+
+  return {
+    raw: raw,
+    remoteMap: rem,
+    localMap: local
+  };
+}
+
+function atagConfigAllows(map, name) {
+  if (!map) return true;
+  return map[String(name || "")] === true;
+}
+
+function atagFilterNamesByConfig(names, currentConfig) {
+  var out = [];
+  var i;
+  var name;
+  var info;
+
+  for (i = 0; i < names.length; i++) {
+    name = String(names[i] || "");
+    info = getExpectedAtagAnyLibInfo(name);
+    if (info && info.optional === true) {
+      if (atagConfigAllows(currentConfig && currentConfig.localMap, name)) out.push(name);
+    } else if (atagConfigAllows(currentConfig && currentConfig.remoteMap, name)) {
+      out.push(name);
+    }
+  }
+  return out;
+}
+
+function atagExpectedByConfig(expected, map) {
+  var out = [];
+  var i;
+
+  for (i = 0; i < expected.length; i++) {
+    if (atagConfigAllows(map, expected[i].name)) out.push(expected[i]);
+  }
+  return out;
+}
+
+function atagConfigLines(prefix, expected) {
+  var out = [];
+  var i;
+
+  for (i = 0; i < expected.length; i++) {
+    out.push(prefix + ": " + atagDisplayName(expected[i].name));
+  }
+  return out;
 }
 
 function addAtagLocalLoaded(loaded, items, info) {
@@ -361,8 +484,8 @@ function checkLibVersions(cfg) {
     for (i = 0; i < out.length; i++) {
       lines.push(out[i].name + " v" + out[i].version + " (sys " + out[i].sysVersion + ")");
     }
-    for (i = 0; i < missing.length; i++) lines.push("MISSING RMT: " + atagDisplayName(missing[i]));
-    for (i = 0; i < optionalMissing.length; i++) lines.push("MISSING RMT: " + atagDisplayName(optionalMissing[i]));
+    for (i = 0; i < missing.length; i++) lines.push("MISSING REM: " + atagDisplayName(missing[i]));
+    for (i = 0; i < optionalMissing.length; i++) lines.push("MISSING REM: " + atagDisplayName(optionalMissing[i]));
     text = lines.join("\n") + "\n\n";
     if (verbose && typeof log === "function") log(text);
     if (asText) return text;
@@ -403,6 +526,7 @@ function checkAtagLibVersions(cfg) {
   var name;
   var text;
   var options = atagCheckOptions(cfg);
+  var currentConfig = atagCurrentConfig(cfg, options);
   var shownLibVersionMismatch;
   var shownLocalVersionMismatch;
   var expected = getExpectedAtagLibs();
@@ -411,6 +535,9 @@ function checkAtagLibVersions(cfg) {
 
   if (allVersions) names = getExpectedAtagLibNames();
   if (Object.prototype.toString.call(names) !== "[object Array]") names = [names];
+  names = atagFilterNamesByConfig(names, currentConfig);
+  expected = atagExpectedByConfig(expected, currentConfig && currentConfig.remoteMap);
+  optionalExpected = atagExpectedByConfig(optionalExpected, currentConfig && currentConfig.localMap);
   for (i = 0; i < expected.length; i++) {
     if (expected[i].optional === true) optionalNames.push(expected[i].name);
   }
@@ -505,6 +632,10 @@ function checkAtagLibVersions(cfg) {
       result.libs.length,
       result.localLoadedCount
     ));
+    if (options.showCurrentConfig) {
+      lines = lines.concat(atagConfigLines("CONFIG REM", expected));
+      lines = lines.concat(atagConfigLines("CONFIG LOCAL", optionalExpected));
+    }
     if (options.showRemoteVersions) {
       for (i = 0; i < result.libs.length; i++) {
         lines.push(atagVersionLine(result.libs[i], ""));
@@ -515,11 +646,11 @@ function checkAtagLibVersions(cfg) {
         lines.push(atagVersionLine(result.local[i], "LOCAL "));
       }
     }
-    for (i = 0; i < shownLibVersionMismatch.length; i++) lines.push("VERSION RMT: " + shownLibVersionMismatch[i]);
+    for (i = 0; i < shownLibVersionMismatch.length; i++) lines.push("VERSION REM: " + shownLibVersionMismatch[i]);
     if (options.showRemoteMissing) {
-      for (i = 0; i < result.missing.length; i++) lines.push("MISSING RMT: " + atagDisplayName(result.missing[i]));
-      for (i = 0; i < accessMissing.length; i++) lines.push("MISSING RMT: " + atagDisplayName(accessMissing[i]));
-      for (i = 0; i < optionalAccessMissing.length; i++) lines.push("MISSING RMT: " + atagDisplayName(optionalAccessMissing[i]));
+      for (i = 0; i < result.missing.length; i++) lines.push("MISSING REM: " + atagDisplayName(result.missing[i]));
+      for (i = 0; i < accessMissing.length; i++) lines.push("MISSING REM: " + atagDisplayName(accessMissing[i]));
+      for (i = 0; i < optionalAccessMissing.length; i++) lines.push("MISSING REM: " + atagDisplayName(optionalAccessMissing[i]));
     }
     for (i = 0; i < shownLocalVersionMismatch.length; i++) lines.push("VERSION LOCAL: " + shownLocalVersionMismatch[i]);
     if (options.showLocalMissing) {

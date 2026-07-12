@@ -344,10 +344,16 @@ assertCategoryTag("cat-alias-direct-negative-child-from-slash-name", "@@@Kategor
 assertCategorySigns("cat-alias-direct-negative-child-from-slash-name-sign", "@@@Kategorie::\n@@/Inhaltnegativ:\nInhaltnegativ2", "Kategorie", { inhaltnegativ: -1 });
 assertItem("cat-alias-direct-negative-child-normal-tag-name", "@@@Kategorie::\n@@/Inhaltnegativ:\nInhaltnegativ2", "Inhaltnegativ", "+2", 2, null, null);
 assertMissing("cat-alias-direct-negative-child-no-slash-tag-name", "@@@Kategorie::\n@@/Inhaltnegativ:\nInhaltnegativ2", "/Inhaltnegativ");
+assertCategoryTag("cat-alias-direct-umlaut-child", "@@@Kat::\n@@\u00F6\n\u00F62", "Kat", ["\u00F6"], "Kat");
+assertItem("cat-alias-direct-umlaut-child-item", "@@@Kat::\n@@\u00F6\n\u00F62", "\u00F6", "+2", 2, null, null);
 assertItem("slash-prefixed-token-starts-after-slash", "@@/Inhaltnegativ:\n/Inhaltnegativ2", "Inhaltnegativ", "+2", 2, null, null);
 assertMissing("slash-prefixed-token-is-not-a-slash-tag", "@@/Inhaltnegativ:\n/Inhaltnegativ2", "/Inhaltnegativ");
 assertItem("slash-prefixed-hash-token-starts-after-slash", "@@/Inhaltnegativ:\n/Inhaltnegativ#", "Inhaltnegativ", null, null, null, null);
 assertMissing("slash-prefixed-hash-token-is-not-a-slash-tag", "@@/Inhaltnegativ:\n/Inhaltnegativ#", "/Inhaltnegativ");
+assertItem("slash-alias-token-starts-after-slash", "@@/ggg(g+)\n/ggg2", "ggg", "+2", 2, null, null);
+assertMissing("slash-alias-token-does-not-expand-slash", "@@/ggg(g+)\n/ggg2", "/ggg");
+assertItem("slash-short-alias-token-starts-after-slash", "@@/ggg(g+)\n/g2", "ggg", "+2", 2, null, null);
+assertMissing("slash-short-alias-token-does-not-expand-slash", "@@/ggg(g+)\n/g2", "/ggg");
 assertCategoryTag("alias-category-line-without-prefix", "tag1 (tg1)[self]: 3\ntag2 (tg2)[self]: 3\ntg1# tg2#", "self", ["tag1", "tag2"], "self");
 assertItem("alias-fixed-bare", "@@SymptomA (SA): sa, SymptomAlias1\n#SymptomAlias", "SymptomA", "+1", 1, null, null);
 assertItem("alias-fixed-overrides-value", "@@SymptomA (SA): sa, SymptomAlias1\nSymptomAlias3", "SymptomA", "+1", 1, null, null);

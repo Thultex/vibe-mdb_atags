@@ -38,6 +38,9 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 - Change: `_checkLibs` v1.40 fasst Options-, Sortier- und Ausgabe-Helfer zusammen; Getter-basierte Missing-Meldungen laufen getrennt ueber `SHOW_REMOTE_MISSING` und `SHOW_LOCAL_MISSING`.
 - Change: `_checkLibs` Summary ist bei Befunden kompakt, z. B. `System Version 2.50 (missmatch/missing, 2 libs, 2 local, 13 missing)`; nur bei `ok` werden alle geladenen Counts gezeigt.
 - Change: `_checkLibs` v1.41 ergaenzt `SHOW_REMOTE_MISSMATCHES` und `SHOW_LOCAL_MISSMATCHES`, damit Versionslisten, Mismatches und Missing-Meldungen getrennt geschaltet werden koennen.
+- Feature: `_checkLibs` v1.42 ergaenzt `GET_CURRENT_CONFIG`/`SHOW_CURRENT_CONFIG`, Aufruf-Overrides fuer Live-Config-Schalter und optionale `getLibsVersionsConfig()`-Filter fuer verwendete Remote-/Local-Module.
+- Feature: `syncLastFromLatest` v1.07 unterstuetzt Map-Eintraege mit `append`/`prepend` fuer String-Werte, z. B. `RecordAdd: ["Record", "append"]`.
+- Fix: `collectAtags_lib` v1.66 ordnet direkte Kategorie-Children mit reinem Umlaut-Namen zu, z. B. `@@@Kat::` gefolgt von `@@ö`; Slash-Alias-Tokens sind per Regressionstest abgesichert.
 - Change: Systemversion auf `sys 2.50` angehoben; alle bekannten lokalen Plugins/Addons mit neuem Versions-Getter wurden auf eigene Patch-Versionen nachgezogen und in `Z_LIB_VERSIONS.md` aufgefuehrt.
 - Fix: `collectAtags_lib` v1.65 behandelt `/` vor Tags als Trenner; `/Tag2` und `/Tag#` werden als `Tag` erkannt, aber nie inklusive `/` gespeichert.
 - Fix: DustMerger v0.12 misst das 28h-Vortagsfenster ab 00:00 Uhr des Vortags; Einträge vom Vortag werden damit standardmaessig nur bis 04:00 Uhr des Folgetags gemerged.

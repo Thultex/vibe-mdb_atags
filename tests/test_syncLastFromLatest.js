@@ -101,6 +101,45 @@ function testMapAndOnlyIfEmpty() {
   assertArrayEquals("map-skipped", result.skipped, ["Dosis"]);
 }
 
+function testMapAppendAndPrependStringModes() {
+  var current = makeEntry({ Einnahmedatum: "2026-04-03", RecordAdd: "Heute", RecordPre: "danach" });
+  _entries = [
+    current,
+    makeEntry({ Einnahmedatum: "2026-04-02", Record: "Quelle" })
+  ];
+
+  var result = syncLastFromLatest({
+    fieldDate: "Einnahmedatum",
+    separator: "\n",
+    map: {
+      RecordAdd: ["Record", "append"],
+      RecordPre: { source: "Record", mode: "prepend" }
+    }
+  });
+
+  assertEquals("map-append-string", current.field("RecordAdd"), "Heute\nQuelle");
+  assertEquals("map-prepend-string", current.field("RecordPre"), "Quelle\ndanach");
+  assertArrayEquals("map-mode-updated", result.updated, ["RecordAdd", "RecordPre"]);
+}
+
+function testMapAppendSkipsNonStringSource() {
+  var current = makeEntry({ Einnahmedatum: "2026-04-03", RecordAdd: "Heute" });
+  _entries = [
+    current,
+    makeEntry({ Einnahmedatum: "2026-04-02", Record: ["Quelle"] })
+  ];
+
+  var result = syncLastFromLatest({
+    fieldDate: "Einnahmedatum",
+    map: {
+      RecordAdd: ["Record", "append"]
+    }
+  });
+
+  assertEquals("map-append-non-string-keeps-target", current.field("RecordAdd"), "Heute");
+  assertArrayEquals("map-append-non-string-skipped", result.skipped, ["RecordAdd"]);
+}
+
 function testSyncWithoutDateFieldUsesNewestLibraryEntry() {
   var current = makeEntry({ Dosis: "" });
   var newest = makeEntry({ Dosis: "20" });
@@ -250,6 +289,8 @@ function testClearTemplateSlotsAcceptsStringLikeObjects() {
 
 testCopiesLatestPreviousEntry();
 testMapAndOnlyIfEmpty();
+testMapAppendAndPrependStringModes();
+testMapAppendSkipsNonStringSource();
 testSyncWithoutDateFieldUsesNewestLibraryEntry();
 testDateFieldScanDefaultsCanBeLimited();
 testDateFieldMaxEntriesZeroUsesNewestEntry();

@@ -1,6 +1,6 @@
 /*
 ========================================
-B4 Sync Last From Latest v1.06 (sys 2.50)
+B4 Sync Last From Latest v1.07 (sys 2.50)
 ========================================
 
 Changes
@@ -16,6 +16,7 @@ Changes
 - support fields list or target-to-source map
 - skip empty source values
 - optional onlyIfEmpty target protection
+- support map entries with append/prepend mode for string values
 
 Usage
 
@@ -29,7 +30,8 @@ syncLastFromLatest({
   fieldDate: "Einnahmedatum",
   map: {
     "Dosis": "Dosis",
-    "Wirkstoff": "WS"
+    "Wirkstoff": "WS",
+    "RecordAdd": ["Record", "append"]
   }
 });
 
@@ -39,21 +41,21 @@ if (newest) applyHourGuide({ entryObj: newest });
 
 /*
 ========================================
-B4 Sync Last From Latest v1.06 (sys 2.50)
+B4 Sync Last From Latest v1.07 (sys 2.50)
 ========================================
 */
 
 function getSyncLastFromLatestVersion() {
   return {
     name: "syncLastFromLatest",
-    version: "1.06",
+    version: "1.07",
     sysVersion: "2.50",
     path: "addons/2_syncing/syncLastFromLatest.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("syncLastFromLatest", "1.06", "2.50", "addons/2_syncing/syncLastFromLatest.js", true);
+  registerAtagLibVersion("syncLastFromLatest", "1.07", "2.50", "addons/2_syncing/syncLastFromLatest.js", true);
 }
 
 function slflTrim(s) {
@@ -341,9 +343,45 @@ function getNewestLibraryEntry(cfg) {
   return slflFirstEntry(entries);
 }
 
-function slflCopyField(sourceEntry, targetEntry, sourceField, targetField, onlyIfEmpty, result, cfg) {
+function slflMapSpec(raw) {
+  if (slflIsArray(raw)) {
+    return {
+      source: raw[0],
+      mode: raw.length > 1 ? raw[1] : ""
+    };
+  }
+
+  if (raw != null && typeof raw === "object" && !slflIsString(raw)) {
+    return {
+      source: raw.source || raw.from || raw.field || raw.name,
+      mode: raw.mode || raw.action || "",
+      separator: raw.separator
+    };
+  }
+
+  return {
+    source: raw,
+    mode: ""
+  };
+}
+
+function slflCopyModeValue(sourceVal, targetVal, mode, cfg, spec) {
+  var sep = spec && spec.separator != null ? spec.separator : cfg && (cfg.separator != null ? cfg.separator : cfg.appendSeparator);
+  var current = targetVal == null ? "" : String(targetVal);
+  var incoming = String(sourceVal);
+
+  if (sep == null) sep = "";
+  sep = String(sep);
+
+  if (mode === "append") return current ? current + sep + incoming : incoming;
+  if (mode === "prepend") return current ? incoming + sep + current : incoming;
+  return sourceVal;
+}
+
+function slflCopyField(sourceEntry, targetEntry, sourceField, targetField, onlyIfEmpty, result, cfg, spec) {
   var sourceVal;
   var targetVal;
+  var mode = spec && spec.mode ? String(spec.mode || "").toLowerCase() : "";
 
   if (!sourceEntry || !targetEntry || !sourceField || !targetField) return;
 
@@ -353,15 +391,23 @@ function slflCopyField(sourceEntry, targetEntry, sourceField, targetField, onlyI
     return;
   }
 
+  targetVal = targetEntry.field(targetField);
   if (onlyIfEmpty) {
-    targetVal = targetEntry.field(targetField);
     if (!slflIsEmpty(targetVal)) {
       result.skipped.push(targetField);
       return;
     }
   }
 
-  targetEntry.set(targetField, slflPrepareValueForCopy(sourceVal, cfg));
+  if (mode === "append" || mode === "prepend") {
+    if (!slflIsString(sourceVal)) {
+      result.skipped.push(targetField);
+      return;
+    }
+    targetEntry.set(targetField, slflCopyModeValue(slflPrepareValueForCopy(sourceVal, cfg), targetVal, mode, cfg, spec));
+  } else {
+    targetEntry.set(targetField, slflPrepareValueForCopy(sourceVal, cfg));
+  }
   result.updated.push(targetField);
 }
 
@@ -381,6 +427,7 @@ function syncLastFromLatest(cfg) {
     skipped: []
   };
   var target;
+  var spec;
   var fields;
   var i;
 
@@ -389,7 +436,8 @@ function syncLastFromLatest(cfg) {
   if (cfg.map) {
     for (target in cfg.map) {
       if (cfg.map.hasOwnProperty(target)) {
-        slflCopyField(latestEntry, currentEntry, cfg.map[target], target, onlyIfEmpty, result, cfg);
+        spec = slflMapSpec(cfg.map[target]);
+        slflCopyField(latestEntry, currentEntry, spec.source, target, onlyIfEmpty, result, cfg, spec);
       }
     }
     return result;
@@ -397,7 +445,7 @@ function syncLastFromLatest(cfg) {
 
   fields = slflNormalizeFields(cfg.fields);
   for (i = 0; i < fields.length; i++) {
-    slflCopyField(latestEntry, currentEntry, fields[i], fields[i], onlyIfEmpty, result, cfg);
+    slflCopyField(latestEntry, currentEntry, fields[i], fields[i], onlyIfEmpty, result, cfg, null);
   }
 
   return result;

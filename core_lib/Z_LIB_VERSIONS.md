@@ -4,7 +4,7 @@ Aktuelle Library-Dateien und Versionen:
 
 | Name | Version | Sys | Pfad |
 | --- | ---: | ---: | --- |
-| #1 collectAtags_lib | 1.65 | 2.50 | `core_lib/collectAtags_lib.js` |
+| #1 collectAtags_lib | 1.66 | 2.50 | `core_lib/collectAtags_lib.js` |
 | #2 exportAtags_lib | 1.84 | 2.50 | `core_lib/exportAtags_lib.js` |
 | #3 helpers_lib | 2.11 | 2.50 | `core_lib/helpers_lib.js` |
 
@@ -14,7 +14,7 @@ Aktuelle Library-Dateien und Versionen:
 
 | Name | Version | Sys | Pfad |
 | --- | ---: | ---: | --- |
-| A1 libVersions | 1.41 | 2.50 | `core/_checkLibs.js` |
+| A1 libVersions | 1.42 | 2.50 | `core/_checkLibs.js` |
 
 Optionale Plugins/Addons koennen sich beim Laden per `registerAtagLibVersion(name, version, sysVersion, path, true)` registrieren und in `ATAG_EXPECTED_OPTIONAL_LIBS` einen `getter` besitzen. Mismatch- und Missing-Meldungen ueber fehlende Getter/Module werden getrennt ueber `SHOW_REMOTE_MISSMATCHES`, `SHOW_LOCAL_MISSMATCHES`, `SHOW_REMOTE_MISSING` und `SHOW_LOCAL_MISSING` gesteuert.
 
@@ -29,7 +29,7 @@ Diese Dateien gehoeren funktionell zur Lib-Nutzung, sind aber keine externen Rem
 | A4 tagCleaner | 1.51 | 2.50 | `core/tagCleaner.js` | Cleaner-/Alias-Memento-Wrapper |
 | B2 tagPairParser | 1.02 | 2.50 | `addons/1_tagging/tagPairParser.js` | Tag-Paare aus Tag-Feldern |
 | B3 globalFieldSync | 1.04 | 2.50 | `addons/2_syncing/globalFieldSync.js` | Feld-Sync innerhalb einer Library |
-| B4 syncLastFromLatest | 1.06 | 2.50 | `addons/2_syncing/syncLastFromLatest.js` | Felder vom neuesten Eintrag uebernehmen |
+| B4 syncLastFromLatest | 1.07 | 2.50 | `addons/2_syncing/syncLastFromLatest.js` | Felder vom neuesten Eintrag uebernehmen |
 | B5 floatingAverage | 1.01 | 2.50 | `addons/3_workflow/floatingAverage.js` | Gleitender Mittelwert |
 | B6 sequenceCounter | 1.06 | 2.50 | `addons/3_workflow/sequenceCounter.js` | Sequenz-/Spree-Zaehler |
 | B7 timeMarker | 1.40 | 2.50 | `addons/3_workflow/timeMarker.js` | Zeitmarker in Textfeldern |
