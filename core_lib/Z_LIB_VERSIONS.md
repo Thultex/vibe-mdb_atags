@@ -14,7 +14,7 @@ Aktuelle Library-Dateien und Versionen:
 
 | Name | Version | Sys | Pfad |
 | --- | ---: | ---: | --- |
-| A1 Check Versions | 1.50 | 2.50 | `core/_checkVersions.js` |
+| A1 Check Versions | 1.51 | 2.50 | `core/_checkVersions.js` |
 
 Optionale Plugins/Addons koennen sich beim Laden per `registerAtagLibVersion(name, version, sysVersion, path, true)` registrieren und in `ATAG_EXPECTED_OPTIONAL_LIBS` einen `getter` besitzen. Mismatch- und Missing-Meldungen ueber fehlende Getter/Module werden getrennt ueber `SHOW_REMOTE_MISSMATCHES`, `SHOW_LOCAL_MISSMATCHES`, `SHOW_REMOTE_MISSING` und `SHOW_LOCAL_MISSING` gesteuert.
 
@@ -26,13 +26,13 @@ Diese Dateien gehoeren funktionell zur Lib-Nutzung, sind aber keine externen Rem
 | --- | ---: | ---: | --- | --- |
 | A2 helpers | 1.03 | 2.50 | `core/helpers.js` | Memento-Wrapper fuer `applyTags`, `bulkApplyTags` und `bulkExportAtags`; nutzt `core_lib/helpers_lib.js` |
 | A3 restoreAtags | 2.10 | 2.50 | `core/restoreAtags.js` | Restore aus Atag-JSON in Felder |
-| A4 tagCleaner | 1.53 | 2.50 | `core/tagCleaner.js` | Cleaner-/Alias-Memento-Wrapper |
+| A4 tagCleaner | 1.54 | 2.50 | `core/tagCleaner.js` | Cleaner-/Alias-Memento-Wrapper |
 | B2 tagPairParser | 1.02 | 2.50 | `addons/1_tagging/tagPairParser.js` | Tag-Paare aus Tag-Feldern |
 | B3 globalFieldSync | 1.04 | 2.50 | `addons/2_syncing/globalFieldSync.js` | Feld-Sync innerhalb einer Library |
 | B4 syncLastFromLatest | 1.07 | 2.50 | `addons/2_syncing/syncLastFromLatest.js` | Felder vom neuesten Eintrag uebernehmen |
 | B5 floatingAverage | 1.01 | 2.50 | `addons/3_workflow/floatingAverage.js` | Gleitender Mittelwert |
 | B6 sequenceCounter | 1.06 | 2.50 | `addons/3_workflow/sequenceCounter.js` | Sequenz-/Spree-Zaehler |
-| B7 timeMarker | 1.40 | 2.50 | `addons/3_workflow/timeMarker.js` | Zeitmarker in Textfeldern |
+| B7 timeMarker | 1.41 | 2.50 | `addons/3_workflow/timeMarker.js` | Zeitmarker in Textfeldern |
 | B8 obsidianLinker | 1.17 | 2.50 | `addons/6_integration/obsidianLinker.js` | Memento-/Obsidian-Linking |
 | B9 wikiLinker | 1.01 | 2.50 | `addons/6_integration/wikiLinker.js` | Wikipedia-Suchlinks |
 | B10 dustMerger | 0.16 | 2.50 | `addons/2_syncing/dustMerger.js` | Zeitnahes Mergen von Eintraegen |

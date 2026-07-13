@@ -626,6 +626,27 @@ function testCleanupReturnsFalseWhenNoMarkersRemain() {
   assertEquals("cleanup-return-false-when-no-marker-remains", hasMarkers, false);
 }
 
+function testCleanupTimeMarkerSupportsFields() {
+  var entryObj = makeEntry({
+    Note: "1: alt\n3: ",
+    Record: ": neu",
+    Hours: 2
+  });
+
+  var changed = cleanupTimeMarker({
+    entryObj: entryObj,
+    fields: ["Note", "Record"],
+    sourceMode: "hours",
+    sourceHoursField: "Hours",
+    stepHours: 0.5
+  });
+
+  assertEquals("cleanup-time-marker-fields-note", entryObj.field("Note"), "1: alt");
+  assertEquals("cleanup-time-marker-fields-record", entryObj.field("Record"), "2: neu");
+  assertEquals("cleanup-time-marker-fields-result-note", changed.Note, true);
+  assertEquals("cleanup-time-marker-fields-result-record", changed.Record, true);
+}
+
 function testClearTimeMarkerRowsRemovesRowPrefixesOnly() {
   var entryObj = makeEntry({
     Note: "1: Mal_sehen:__\n1: Mal_sehen:__\n2: Inhalt"
@@ -711,6 +732,7 @@ testCleanupMergesSameRowsWithDefaultSeparator();
 testCleanupMergedRowsAreIdempotentWhenRepeated();
 testCleanupRemovesExactDuplicateRowsWithoutMergingSameTimestamps();
 testCleanupReturnsFalseWhenNoMarkersRemain();
+testCleanupTimeMarkerSupportsFields();
 testClearTimeMarkerRowsRemovesRowPrefixesOnly();
 testClearTimeMarkerRowsCanResetRowsToCurrentMarker();
 testClearTimeMarkerRowsSupportsFields();

@@ -1,9 +1,10 @@
 /*
 ========================================
-B7 Time Marker v1.40 (sys 2.50)
+B7 Time Marker v1.41 (sys 2.50)
 ========================================
 
 Änderungen
+- `cleanupTimeMarker()` unterstuetzt `fields` fuer mehrere Textfelder.
 - Entfernt alten Alias `cleanupTimeMarkerPlaceholders`.
 - `clearTimeMarkerRows()` entfernt Row-Prefixe oder setzt sie auf den aktuellen Marker zurueck, ohne Template-Inhalte zu interpretieren
 - `mergeSameRowContents` entfernt identische Row-Inhalte getrennt vor `mergeSameRows`
@@ -59,21 +60,21 @@ clearTimeMarkerRows({
 
 /*
 ========================================
-B7 Time Marker v1.40 (sys 2.50)
+B7 Time Marker v1.41 (sys 2.50)
 ========================================
 */
 
 function getTimeMarkerVersion() {
   return {
     name: "timeMarker",
-    version: "1.40",
+    version: "1.41",
     sysVersion: "2.50",
     path: "addons/3_workflow/timeMarker.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("timeMarker", "1.40", "2.50", "addons/3_workflow/timeMarker.js", true);
+  registerAtagLibVersion("timeMarker", "1.41", "2.50", "addons/3_workflow/timeMarker.js", true);
 }
 
 function toDateSafe(v) {
@@ -764,6 +765,30 @@ function cleanupTimeMarker(cfg) {
 
   var e = cfg.entryObj || entry();
   var targetTextField = resolveTimeMarkerTextField(cfg);
+  var fields = cfg.fields;
+  var results;
+  var i;
+  var fieldCfg;
+  var key;
+
+  if (fields && Object.prototype.toString.call(fields) !== "[object Array]") fields = [fields];
+  if (fields && fields.length) {
+    results = {};
+    for (i = 0; i < fields.length; i++) {
+      if (!fields[i]) continue;
+      fieldCfg = {};
+      for (key in cfg) {
+        if (cfg.hasOwnProperty(key) && key !== "fields" && key !== "targetTextField" && key !== "textField") {
+          fieldCfg[key] = cfg[key];
+        }
+      }
+      fieldCfg.entryObj = e;
+      fieldCfg.targetTextField = fields[i];
+      results[fields[i]] = cleanupTimeMarker(fieldCfg);
+    }
+    return results;
+  }
+
   if (!e || !targetTextField) return false;
 
   var text = e.field(targetTextField);

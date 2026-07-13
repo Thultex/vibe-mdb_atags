@@ -1,6 +1,6 @@
 /*
 ========================================
-A1 Check Versions v1.50 (sys 2.50)
+A1 Check Versions v1.51 (sys 2.50)
 ========================================
 
 Notes
@@ -65,7 +65,7 @@ var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERS
 function getCheckVersionsVersion() {
   return {
     name: "checkVersions",
-    version: "1.50",
+    version: "1.51",
     sysVersion: "2.50",
     path: "core/_checkVersions.js"
   };
@@ -88,13 +88,13 @@ var ATAG_EXPECTED_OPTIONAL_LIBS = [
   { id: "A1", title: "Check Versions", area: "core", name: "checkVersions", version: "1.50", getter: "getCheckVersionsVersion", path: "core/_checkVersions.js", optional: true },
   { id: "A2", title: "Atag Helpers", area: "core", name: "helpers", version: "1.03", getter: "getHelpersVersion", path: "core/helpers.js", optional: true },
   { id: "A3", title: "Restore Atags", area: "core", name: "restoreAtags", version: "2.10", getter: "getRestoreAtagsVersion", path: "core/restoreAtags.js", optional: true },
-  { id: "A4", title: "Tag Cleaner", area: "core", name: "tagCleaner", version: "1.53", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
+  { id: "A4", title: "Tag Cleaner", area: "core", name: "tagCleaner", version: "1.54", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
   { id: "B2", title: "Tag Pair Parser", area: "1_tagging", name: "tagPairParser", version: "1.02", getter: "getTagPairParserVersion", path: "addons/1_tagging/tagPairParser.js", optional: true },
   { id: "B3", title: "Global Field Sync", area: "2_syncing", name: "globalFieldSync", version: "1.04", getter: "getGlobalFieldSyncVersion", path: "addons/2_syncing/globalFieldSync.js", optional: true },
   { id: "B4", title: "Sync Last From Latest", area: "2_syncing", name: "syncLastFromLatest", version: "1.07", getter: "getSyncLastFromLatestVersion", path: "addons/2_syncing/syncLastFromLatest.js", optional: true },
   { id: "B5", title: "Floating Average", area: "3_workflow", name: "floatingAverage", version: "1.01", getter: "getFloatingAverageVersion", path: "addons/3_workflow/floatingAverage.js", optional: true },
   { id: "B6", title: "Sequence Counter", area: "3_workflow", name: "sequenceCounter", version: "1.06", getter: "getSequenceCounterVersion", path: "addons/3_workflow/sequenceCounter.js", optional: true },
-  { id: "B7", title: "Time Marker", area: "3_workflow", name: "timeMarker", version: "1.40", getter: "getTimeMarkerVersion", path: "addons/3_workflow/timeMarker.js", optional: true },
+  { id: "B7", title: "Time Marker", area: "3_workflow", name: "timeMarker", version: "1.41", getter: "getTimeMarkerVersion", path: "addons/3_workflow/timeMarker.js", optional: true },
   { id: "B8", title: "Obsidian Linker", area: "6_integration", name: "obsidianLinker", version: "1.17", getter: "getObsidianLinkerVersion", path: "addons/6_integration/obsidianLinker.js", optional: true },
   { id: "B9", title: "Wiki Linker", area: "6_integration", name: "wikiLinker", version: "1.01", getter: "getWikiLinkerVersion", path: "addons/6_integration/wikiLinker.js", optional: true },
   { id: "B10", title: "Dust Merger", area: "2_syncing", name: "dustMerger", version: "0.16", getter: "getDustMergerVersion", path: "addons/2_syncing/dustMerger.js", optional: true },

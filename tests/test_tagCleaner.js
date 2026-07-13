@@ -530,6 +530,12 @@ assertEquals(
 );
 
 assertEquals(
+  "template-prep-cleans-bare-template-values-and-dedupes",
+  prepareTagCleanerTemplateText("8: Nacken_2\n8: Nacken_2_\n0,5: Kiefer:_1\n1,5: Nacken_2\n2,5: Nacken_2\nks:_\nNacken:_\n\nKiefer:_\nöffnen:_"),
+  "Kiefer:_\nks:_\n\nNacken:_\nöffnen:_"
+);
+
+assertEquals(
   "template-prep-keeps-non-template-row-prefix-by-default",
   prepareTagCleanerTemplateText("1: Inhalt\n1: Mal_sehen:__"),
   "1: Inhalt\nMal_sehen:__"

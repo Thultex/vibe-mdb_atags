@@ -26,6 +26,9 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 
 ### 2026-07-11 - (ca. 0,2h)
 
+- Fix: Tag Cleaner v1.54 bereinigt in `cleanTemplateTags()` auch nackte Template-Werte wie `Nacken_2`/`Nacken_2_` zu `Nacken:_`, dedupliziert sie gegen bestehende leere Templates und erhaelt die gewuenschte Gruppierung.
+- Feature: Time Marker v1.41 unterstuetzt `cleanupTimeMarker({ fields: [...] })` fuer mehrere Textfelder.
+- Change: Check Versions v1.51 zieht die erwarteten Versionen fuer Tag Cleaner v1.54 und Time Marker v1.41 nach.
 - Change: `RUN_LIB_CHECK` ist in `core/_checkVersions.js` standardmaessig `true`, damit der Versionscheck beim Laden direkt laeuft.
 - Change: Text-/Verbose-Ausgabe von `checkAtagLibVersions()` beginnt mit `System Version X.XX (ok, X libs, X local)` oder einer `missmatch`-/`missing`-Summary; Mismatches werden unten als `VERSION RM: ...` oder `VERSION LOCAL: ...` ausgegeben.
 - Fix: Auch spaeter per `registerAtagLibVersion()` registrierte bekannte Plugin-Mismatches werden direkt geloggt.

@@ -1,6 +1,6 @@
 /*
 ========================================
-A4 Tag Cleaner v1.53 (sys 2.50)
+A4 Tag Cleaner v1.54 (sys 2.50)
 ========================================
 
 Notes
@@ -37,21 +37,21 @@ cleanTemplateTags({
 
 /*
 ========================================
-A4 Tag Cleaner v1.53 (sys 2.50)
+A4 Tag Cleaner v1.54 (sys 2.50)
 ========================================
 */
 
 function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
-    version: "1.53",
+    version: "1.54",
     sysVersion: "2.50",
     path: "core/tagCleaner.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("tagCleaner", "1.53", "2.50", "core/tagCleaner.js", true);
+  registerAtagLibVersion("tagCleaner", "1.54", "2.50", "core/tagCleaner.js", true);
 }
 
 function splitTagCleanerLines(text) {
@@ -1146,6 +1146,29 @@ function clearTagCleanerTemplateSlots(line, cfg) {
     .replace(openSlot, "$1" + marker);
 }
 
+function normalizeTagCleanerBareTemplateSlot(line, cfg) {
+  var marker = cfg && cfg.templateSlotMarker != null ? String(cfg.templateSlotMarker) : "_";
+  var text = trimAtagLibString(line);
+  var prefix = "";
+  var idx;
+  var name;
+  var value;
+
+  if (!text || text.indexOf(":") >= 0 || text.indexOf("#") >= 0 || text.indexOf("\"") >= 0 || text.indexOf("'") >= 0) return line;
+  if (text.charAt(0) === "#") {
+    prefix = "#";
+    text = text.substring(1);
+  }
+  if (text.charAt(text.length - 1) === marker) text = text.substring(0, text.length - 1);
+  idx = text.lastIndexOf(marker);
+  if (idx <= 0) return line;
+  name = text.substring(0, idx);
+  value = text.substring(idx + marker.length);
+  if (!/^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*$/.test(name)) return line;
+  if (!value || /[\s,;]/.test(value)) return line;
+  return prefix + name + ":" + marker;
+}
+
 function compactTagCleanerTemplateText(sourceText, cfg) {
   cfg = cfg || {};
 
@@ -1162,6 +1185,43 @@ function compactTagCleanerTemplateText(sourceText, cfg) {
   var cleanedLine;
   var templateKey;
   var seenTemplateKeys = {};
+  var bareTemplateKeys = {};
+  var existingEmptyTemplateKeys = {};
+  var deferredBareTemplateLines = [];
+  var deferredBareTemplateKeys = {};
+
+  function scanTemplateKeys() {
+    var scanLine;
+    var scanRow;
+    var scanContent;
+    var cleared;
+    var normalized;
+    var key;
+
+    for (i = 0; i < lines.length; i++) {
+      scanLine = String(lines[i] || "");
+      scanRow = splitTagCleanerTimestampLine(scanLine);
+      scanContent = scanRow ? scanRow.content : trimAtagLibString(scanLine);
+      cleared = clearTemplateSlots ? clearTagCleanerTemplateSlots(scanContent, cfg) : scanContent;
+      normalized = normalizeTagCleanerBareTemplateSlot(cleared, cfg);
+      if (normalized !== cleared && isTagCleanerTemplateSlotLine(normalized, cfg)) {
+        key = tagCleanerTemplateSlotKey(normalized, cfg);
+        if (key) bareTemplateKeys[key] = 1;
+      }
+      if (!scanRow && isTagCleanerTemplateSlotLine(scanContent, cfg)) {
+        key = tagCleanerTemplateSlotKey(scanContent, cfg);
+        if (key) existingEmptyTemplateKeys[key] = 1;
+      }
+    }
+  }
+
+  function flushDeferredBareTemplateLines() {
+    var j;
+    var pending = deferredBareTemplateLines;
+
+    deferredBareTemplateLines = [];
+    for (j = 0; j < pending.length; j++) pushPreparedLine(pending[j]);
+  }
 
   function pushPreparedLine(preparedLine) {
     if (isTagCleanerTemplateSlotLine(preparedLine, cfg)) {
@@ -1174,14 +1234,24 @@ function compactTagCleanerTemplateText(sourceText, cfg) {
     out.push(preparedLine);
   }
 
+  scanTemplateKeys();
   for (i = 0; i < lines.length; i++) {
     line = String(lines[i] || "");
     row = splitTagCleanerTimestampLine(line);
     content = row ? row.content : trimAtagLibString(line);
     cleanedContent = clearTemplateSlots ? clearTagCleanerTemplateSlots(content, cfg) : content;
+    cleanedContent = normalizeTagCleanerBareTemplateSlot(cleanedContent, cfg);
+    templateKey = isTagCleanerTemplateSlotLine(cleanedContent, cfg) ? tagCleanerTemplateSlotKey(cleanedContent, cfg) : "";
+
+    if (!row && trimAtagLibString(line) === "") {
+      pushPreparedLine(line);
+      flushDeferredBareTemplateLines();
+      continue;
+    }
 
     if (row && !content) continue;
     if (row && removeRowPrefix && isTagCleanerTemplateSlotLine(cleanedContent, cfg)) {
+      if (templateKey && bareTemplateKeys[templateKey] && existingEmptyTemplateKeys[templateKey]) continue;
       pushPreparedLine(cleanedContent);
       continue;
     }
@@ -1195,9 +1265,17 @@ function compactTagCleanerTemplateText(sourceText, cfg) {
     }
 
     cleanedLine = clearTemplateSlots ? clearTagCleanerTemplateSlots(line, cfg) : line;
+    cleanedLine = normalizeTagCleanerBareTemplateSlot(cleanedLine, cfg);
+    templateKey = isTagCleanerTemplateSlotLine(cleanedLine, cfg) ? tagCleanerTemplateSlotKey(cleanedLine, cfg) : "";
+    if (templateKey && bareTemplateKeys[templateKey] && !deferredBareTemplateKeys[templateKey]) {
+      deferredBareTemplateKeys[templateKey] = 1;
+      deferredBareTemplateLines.push(cleanedLine);
+      continue;
+    }
     pushPreparedLine(cleanedLine);
   }
 
+  flushDeferredBareTemplateLines();
   if (sortRows) out = sortTagCleanerPreparedRows(out);
   return out.join("\n");
 }
