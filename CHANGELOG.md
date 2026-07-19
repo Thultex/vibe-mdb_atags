@@ -24,6 +24,19 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 
 ## Log
 
+### 2026-07-20
+
+- Feature: Obsidian Linker v1.21 macht Frontmatter-Tags ueber `tags` optional und unabhaengig von `folderPath`; mit `folderAsTag: true` wird der normalisierte Zielordner als erster Tag uebernommen, danach folgen eigene Tags.
+- Fix: Vorhandene Obsidian-Links werden vor der Neu-Datei-Konfiguration verarbeitet, sodass `folderAsTag` oder ein fehlendes `contentField` ihr Oeffnen nicht mehr blockiert.
+- Change: Check Versions v1.55 erwartet Obsidian Linker v1.21.
+
+### 2026-07-19
+
+- Feature: Obsidian Linker v1.18 erkennt neben Advanced-URI-Links auch normale Obsidian-Pfadlinks (`obsidian://open?...`) und formatiert sie als Markdown-Link.
+- Feature: Die oeffentliche API besteht aus `linkObsidianUri()` fuer Erzeugen/Verknuepfen und `formatObsidianUri({ field: "..." })` fuer Post-Effect-/After-Entry-Laeufe. Letztere formatiert nur eine bestehende Obsidian-URL; leere Felder bleiben ohne Schreibzugriff leer.
+- Feature: `folderPath` legt den Vault-relativen Zielordner fuer neu erzeugte Obsidian-Dateien fest; ohne Angabe bleibt `memento/<Library>` der Standard.
+- Change: Check Versions v1.52 erwartet Obsidian Linker v1.18 und fuehrt seine eigene erwartete Version konsistent nach.
+
 ### 2026-07-11 - (ca. 0,2h)
 
 - Fix: Tag Cleaner v1.54 bereinigt in `cleanTemplateTags()` auch nackte Template-Werte wie `Nacken_2`/`Nacken_2_` zu `Nacken:_`, dedupliziert sie gegen bestehende leere Templates und erhaelt die gewuenschte Gruppierung.

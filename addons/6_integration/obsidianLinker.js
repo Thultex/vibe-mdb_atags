@@ -1,6 +1,6 @@
 /*
 ========================================
-B8 Obsidian Linker v1.17 (sys 2.50)
+B8 Obsidian Linker v1.21 (sys 2.50)
 ========================================
 
 Changes
@@ -25,39 +25,51 @@ Changes
 - write connected Obsidian fields as bare Markdown links
 - allow obsidianMarkdownField-only configs to create/open overwrite links
 - add formatOnly mode for after-entry formatting without creating/opening overwrite links
+- recognize regular Obsidian open/path URIs in addition to Advanced URI links
+- add a post-effect helper that only formats an existing URL and leaves empty fields untouched
+- make frontmatter tags optional and configurable independently from the file path
+- optionally add the target folder as a tag with folderAsTag
+- open existing links before evaluating new-file folder, tags, or content configuration
 
 Usage
 
-makeObsidianMementoUri({
+linkObsidianUri({
   contentField: "Text",
   overwriteMarkdownField: "Obsidian Overwrite Link",
   obsidianMarkdownField: "Obsidian Link",
   dateField: "Datum",
   mementoLinkField: "Memento Link",
   vault: "ExampleVault",
+  folderPath: "memento/Connector DB",
+  tags: "memento/connector-db",
+  folderAsTag: true,
   formatOnly: false,
   open: false
+});
+
+formatObsidianUri({
+  field: "Obsidian Link"
 });
 
 */
 
 /*
 ========================================
-B8 Obsidian Linker v1.17 (sys 2.50)
+B8 Obsidian Linker v1.21 (sys 2.50)
 ========================================
 */
 
 function getObsidianLinkerVersion() {
   return {
     name: "obsidianLinker",
-    version: "1.17",
+    version: "1.21",
     sysVersion: "2.50",
     path: "addons/6_integration/obsidianLinker.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("obsidianLinker", "1.17", "2.50", "addons/6_integration/obsidianLinker.js", true);
+  registerAtagLibVersion("obsidianLinker", "1.21", "2.50", "addons/6_integration/obsidianLinker.js", true);
 }
 
 function obsTrim(s) {
@@ -109,10 +121,10 @@ function obsHtmlUnescape(s) {
 
 function obsExtractUri(s) {
   var text = obsHtmlUnescape(s);
-  var match = text.match(/\]\((obsidian:\/\/(?:advanced-uri|adv-uri)[^\s"'<>\)]+)\)/);
+  var match = text.match(/\]\((obsidian:\/\/[^\s"'<>\)]+)\)/);
   if (match) return match[1];
 
-  match = text.match(/obsidian:\/\/(?:advanced-uri|adv-uri)[^\s"'<>\]\[]+/);
+  match = text.match(/obsidian:\/\/[^\s"'<>\]\[]+/);
   return match ? match[0] : "";
 }
 
@@ -166,6 +178,13 @@ function obsSanitizePath(s) {
     .replace(/\s+/g, "_");
 }
 
+function obsNormalizeFolderPath(s) {
+  return obsTrim(s)
+    .replace(/\\/g, "/")
+    .replace(/^\/+|\/+$/g, "")
+    .replace(/\/{2,}/g, "/");
+}
+
 function obsYamlQuote(s) {
   return '"' + String(s == null ? "" : s)
     .replace(/\\/g, "\\\\")
@@ -176,6 +195,44 @@ function obsYamlQuote(s) {
 function obsYamlLineIf(key, value) {
   if (obsTrim(value) === "") return "";
   return key + ": " + obsYamlQuote(value) + "\n";
+}
+
+function obsNormalizeTag(s) {
+  return obsNormalizeFolderPath(s).replace(/\s+/g, "_");
+}
+
+function obsPushTag(tags, seen, value) {
+  var tag = obsNormalizeTag(value);
+  if (!tag || seen[tag]) return;
+  seen[tag] = true;
+  tags.push(tag);
+}
+
+function obsBuildTags(cfg, folderPath) {
+  var tags = [];
+  var seen = {};
+  var configured = cfg.tags;
+  var i;
+
+  if (cfg.folderAsTag === true) obsPushTag(tags, seen, folderPath);
+
+  if (Object.prototype.toString.call(configured) === "[object Array]") {
+    for (i = 0; i < configured.length; i++) obsPushTag(tags, seen, configured[i]);
+  } else if (configured != null) {
+    obsPushTag(tags, seen, configured);
+  }
+
+  return tags;
+}
+
+function obsYamlTagsLine(tags) {
+  var quoted = [];
+  var i;
+
+  if (!tags || tags.length === 0) return "";
+  if (tags.length === 1) return "tags: " + obsYamlQuote(tags[0]) + "\n";
+  for (i = 0; i < tags.length; i++) quoted.push(obsYamlQuote(tags[i]));
+  return "tags: [" + quoted.join(", ") + "]\n";
 }
 
 function obsMarkdownEscapeText(s) {
@@ -321,23 +378,27 @@ function obsBuildOverwriteUri(cfg, e, l) {
   var mementoId = obsTrim(obsEntryId(e));
   var titleRaw = obsTitle(e) || "Ohne Titel";
   var fileName;
+  var folderPath;
   var filepath;
   var rawContent;
   var mementoDate;
   var mementoDateCreated;
   var mementoLink;
-  var tagPath;
+  var tags;
   var finalContent;
 
   if (!dbName || !mementoId) return "";
 
   fileName = obsSanitizePath(titleRaw) + " (" + mementoId + ")";
-  filepath = "memento/" + dbName + "/" + fileName + ".md";
+  folderPath = cfg.folderPath != null
+    ? obsNormalizeFolderPath(cfg.folderPath)
+    : "memento/" + dbName;
+  filepath = (folderPath ? folderPath + "/" : "") + fileName + ".md";
   rawContent = String(e.field(cfg.contentField) || "");
   mementoDate = cfg.dateField ? obsTrim(e.field(cfg.dateField)) : "";
   mementoDateCreated = obsTrim(e.creationTime || "");
   mementoLink = cfg.mementoLinkField ? obsTrim(e.field(cfg.mementoLinkField)) : "";
-  tagPath = "memento/" + dbName;
+  tags = obsBuildTags(cfg, folderPath);
 
   finalContent =
     "---\n" +
@@ -346,7 +407,7 @@ function obsBuildOverwriteUri(cfg, e, l) {
     obsYamlLineIf("memento_link", mementoLink) +
     obsYamlLineIf("memento_date", mementoDate) +
     obsYamlLineIf("memento_date_created", mementoDateCreated) +
-    "tags: " + obsYamlQuote(tagPath) + "\n" +
+    obsYamlTagsLine(tags) +
     "---\n" +
     "# " + titleRaw + "\n\n" +
     rawContent;
@@ -358,17 +419,18 @@ function obsBuildOverwriteUri(cfg, e, l) {
     "&mode=overwrite";
 }
 
-function makeObsidianMementoUri(cfg) {
+function linkObsidianUri(cfg) {
   cfg = cfg || {};
 
   var e = cfg.entryObj || entry();
-  var l = cfg.libObj || lib();
+  var formatOnly = obsFormatOnly(cfg);
+  var l = null;
   var vault = cfg.vault || "ExampleVault";
   var overwriteField = cfg.overwriteMarkdownField || cfg.overwriteHtmlField || cfg.overwriteLinkField || cfg.markdownTargetField || cfg.htmlTargetField || cfg.targetField || cfg.obsidianMarkdownField || cfg.obsidianHtmlField || cfg.obsidianLinkField || cfg.openLinkField;
   var obsidianField = cfg.obsidianMarkdownField || cfg.obsidianHtmlField || cfg.obsidianLinkField || cfg.openLinkField || cfg.overwriteMarkdownField || cfg.overwriteHtmlField || cfg.overwriteLinkField || cfg.markdownTargetField || cfg.htmlTargetField || cfg.targetField;
   var hasOverwriteField = !!overwriteField;
-  var obsidianRaw = obsidianField ? String(e.field(obsidianField) || "") : "";
-  var overwriteRaw = overwriteField ? String(e.field(overwriteField) || "") : "";
+  var obsidianRaw = e && obsidianField ? String(e.field(obsidianField) || "") : "";
+  var overwriteRaw = e && overwriteField ? String(e.field(overwriteField) || "") : "";
   var sameField = overwriteField && obsidianField && overwriteField === obsidianField;
   var obsidianUri = obsExtractUri(obsidianRaw);
   var obsidianMode = obsUriMode(obsidianRaw);
@@ -381,12 +443,9 @@ function makeObsidianMementoUri(cfg) {
   var mode = "";
   var openResult;
 
-  if (!e || !cfg.contentField) {
+  if (!e || !obsidianField) {
     return { overwriteUri: "", obsidianUri: "", mode: "missing_config", openResult: { attempted: false, ok: false, method: "disabled", error: "" } };
   }
-
-  createUri = obsBuildOverwriteUri(cfg, e, l);
-  overwriteUri = createUri;
 
   if (pendingInsert) {
     if (!sameField) {
@@ -403,17 +462,26 @@ function makeObsidianMementoUri(cfg) {
     hasObsidianOpenLink = true;
   }
 
-  if (obsFormatOnly(cfg) && !hasObsidianOpenLink) {
+  if (formatOnly && !hasObsidianOpenLink) {
     return { overwriteUri: "", obsidianUri: "", mode: "format_only_no_link", openResult: { attempted: false, ok: false, method: "format_only", error: "" } };
   }
 
-  if (sameField) {
-    if (hasObsidianOpenLink) {
-      obsSetConnectedLinkField(e, obsidianField, openUri, cfg);
-      openResult = obsFormatOnly(cfg) ? obsFormatOnlyOpenResult() : obsOpenUri(openUri, cfg);
-      return { overwriteUri: "", obsidianUri: openUri, mode: "connected_obsidian_same_field", openResult: openResult };
-    }
+  if (hasObsidianOpenLink) {
+    if (!sameField) obsClearField(e, overwriteField);
+    obsSetConnectedLinkField(e, obsidianField, openUri, cfg);
+    openResult = formatOnly ? obsFormatOnlyOpenResult() : obsOpenUri(openUri, cfg);
+    return { overwriteUri: "", obsidianUri: openUri, mode: sameField ? "connected_obsidian_same_field" : "connected_obsidian", openResult: openResult };
+  }
 
+  if (!cfg.contentField) {
+    return { overwriteUri: "", obsidianUri: "", mode: "missing_config", openResult: { attempted: false, ok: false, method: "disabled", error: "" } };
+  }
+
+  l = cfg.libObj || lib();
+  createUri = obsBuildOverwriteUri(cfg, e, l);
+  overwriteUri = createUri;
+
+  if (sameField) {
     if (cfg.open && createUri) {
       openResult = obsOpenUri(createUri, cfg);
       if (openResult.ok) {
@@ -427,13 +495,6 @@ function makeObsidianMementoUri(cfg) {
     obsSetLinkField(e, overwriteField, createUri);
     openResult = obsOpenUri(createUri, cfg);
     return { overwriteUri: createUri, obsidianUri: "", mode: createUri ? "created_overwrite_same_field" : "missing_identity", openResult: openResult };
-  }
-
-  if (hasObsidianOpenLink) {
-    obsClearField(e, overwriteField);
-    obsSetConnectedLinkField(e, obsidianField, openUri, cfg);
-    openResult = obsFormatOnly(cfg) ? obsFormatOnlyOpenResult() : obsOpenUri(openUri, cfg);
-    return { overwriteUri: "", obsidianUri: openUri, mode: "connected_obsidian", openResult: openResult };
   }
 
   if (createUri) {
@@ -456,4 +517,21 @@ function makeObsidianMementoUri(cfg) {
 
   openResult = obsOpenUri(createUri, cfg);
   return { overwriteUri: createUri, obsidianUri: openUri, mode: mode, openResult: openResult };
+}
+
+function formatObsidianUri(cfg) {
+  cfg = cfg || {};
+
+  var options = {};
+  var key;
+
+  for (key in cfg) {
+    if (cfg.hasOwnProperty(key)) options[key] = cfg[key];
+  }
+
+  options.obsidianMarkdownField = cfg.field || cfg.textField || cfg.obsidianMarkdownField || cfg.obsidianHtmlField || cfg.obsidianLinkField || cfg.openLinkField;
+  options.formatOnly = true;
+  options.open = false;
+
+  return linkObsidianUri(options);
 }

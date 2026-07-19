@@ -14,6 +14,12 @@ function assertContains(label, actual, expectedPart) {
   }
 }
 
+function assertNotContains(label, actual, unexpectedPart) {
+  if (String(actual).indexOf(unexpectedPart) >= 0) {
+    fail(label + ": expected text not to contain '" + unexpectedPart + "' but got '" + actual + "'");
+  }
+}
+
 function assertEquals(label, actual, expected) {
   if (String(actual) !== String(expected)) {
     fail(label + ": expected '" + expected + "' but got '" + actual + "'");
@@ -52,7 +58,7 @@ function testCreatesOverwriteLinkOnlyInOverwriteField() {
     "Obsidian Link": ""
   });
 
-  var result = makeObsidianMementoUri({
+  var result = linkObsidianUri({
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
@@ -67,7 +73,52 @@ function testCreatesOverwriteLinkOnlyInOverwriteField() {
   assertContains("overwrite-field-target", e.field("Overwrite Link"), "](obsidian://advanced-uri");
   assertContains("overwrite-field-mode", e.field("Overwrite Link"), "mode=overwrite");
   assertContains("overwrite-path", e.field("Overwrite Link"), "Atomic_Habits%20(123).md");
+  assertNotContains("overwrite-no-tags-by-default", obsExtractQueryParam(e.field("Overwrite Link"), "data"), "\ntags:");
   assertEquals("obsidian-field-untouched", e.field("Obsidian Link"), "");
+}
+
+function testCreatesOverwriteLinkInConfiguredFolderPath() {
+  var e = makeEntry({
+    Text: "Body",
+    "Overwrite Link": "",
+    "Obsidian Link": ""
+  });
+
+  linkObsidianUri({
+    entryObj: e,
+    libObj: lib(),
+    contentField: "Text",
+    overwriteMarkdownField: "Overwrite Link",
+    obsidianMarkdownField: "Obsidian Link",
+    vault: "ExampleVault",
+    folderPath: "Inbox\\Memento Notes\\",
+    tags: "custom/tag/",
+    folderAsTag: true
+  });
+
+  assertContains("configured-folder-path", e.field("Overwrite Link"), "filepath=Inbox%2FMemento%20Notes%2FAtomic_Habits%20(123).md");
+  assertContains("configured-tags", obsExtractQueryParam(e.field("Overwrite Link"), "data"), "\ntags: [\"Inbox/Memento_Notes\", \"custom/tag\"]\n");
+  assertNotContains("configured-tags-no-trailing-slash", obsExtractQueryParam(e.field("Overwrite Link"), "data"), "custom/tag/\"");
+}
+
+function testFolderAsTagUsesDefaultFolderWithoutTrailingSlash() {
+  var e = makeEntry({
+    Text: "Body",
+    "Overwrite Link": "",
+    "Obsidian Link": ""
+  });
+
+  linkObsidianUri({
+    entryObj: e,
+    libObj: lib(),
+    contentField: "Text",
+    overwriteMarkdownField: "Overwrite Link",
+    obsidianMarkdownField: "Obsidian Link",
+    vault: "ExampleVault",
+    folderAsTag: true
+  });
+
+  assertContains("default-folder-as-tag", obsExtractQueryParam(e.field("Overwrite Link"), "data"), "\ntags: \"memento/Connector_DB\"\n");
 }
 
 function testUidClearsOverwriteAndWritesConnectedObsidianField() {
@@ -77,7 +128,7 @@ function testUidClearsOverwriteAndWritesConnectedObsidianField() {
     "Obsidian Link": '<a href="obsidian://adv-uri?vault=ExampleVault&amp;uid=abc123">open</a>'
   });
 
-  var result = makeObsidianMementoUri({
+  var result = linkObsidianUri({
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
@@ -109,7 +160,7 @@ function testSameFieldMarksExistingObsidianLinkOnly() {
     Link: '<a href="obsidian://adv-uri?vault=ExampleVault&amp;uid=abc123">open</a>'
   });
 
-  var result = makeObsidianMementoUri({
+  var result = linkObsidianUri({
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
@@ -133,7 +184,7 @@ function testMarkdownLinkDoesNotSelfNestOnRepeatedRuns() {
     "Obsidian Link": "[obsidian://adv-uri?vault=ExampleVault&uid=abc123](obsidian://adv-uri?vault=ExampleVault&uid=abc123)"
   });
 
-  var first = makeObsidianMementoUri({
+  var first = linkObsidianUri({
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
@@ -142,7 +193,7 @@ function testMarkdownLinkDoesNotSelfNestOnRepeatedRuns() {
     vault: "ExampleVault"
   });
   var firstText = e.field("Obsidian Link");
-  var second = makeObsidianMementoUri({
+  var second = linkObsidianUri({
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
@@ -164,7 +215,7 @@ function testConnectedLinkUsesCustomWindowsBaseTemplate() {
     "Obsidian Link": '<a href="obsidian://adv-uri?vault=ExampleVault&amp;uid=abc123">open</a>'
   });
 
-  makeObsidianMementoUri({
+  linkObsidianUri({
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
@@ -186,7 +237,7 @@ function testOpenOptionCallsConfiguredOpenFunctionForConnectedLink() {
     "Obsidian Link": '<a href="obsidian://adv-uri?vault=ExampleVault&amp;uid=abc123">open</a>'
   });
 
-  var result = makeObsidianMementoUri({
+  var result = linkObsidianUri({
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
@@ -206,6 +257,27 @@ function testOpenOptionCallsConfiguredOpenFunctionForConnectedLink() {
   assertEquals("open-option-uri", openedUri, "obsidian://adv-uri?vault=ExampleVault&uid=abc123");
 }
 
+function testFolderAsTagDoesNotBlockOpeningExistingLink() {
+  var openedUri = "";
+  var e = makeEntry({
+    "Obsidian Link": "obsidian://open?vault=ExampleVault&file=Folder%2FNote.md"
+  });
+
+  var result = linkObsidianUri({
+    entryObj: e,
+    obsidianMarkdownField: "Obsidian Link",
+    folderAsTag: true,
+    open: true,
+    openFunction: function(uri) {
+      openedUri = uri;
+    }
+  });
+
+  assertEquals("folder-as-tag-existing-mode", result.mode, "connected_obsidian_same_field");
+  assertEquals("folder-as-tag-existing-open-ok", result.openResult.ok, true);
+  assertEquals("folder-as-tag-existing-open-uri", openedUri, "obsidian://open?vault=ExampleVault&file=Folder%2FNote.md");
+}
+
 function testOpenOptionCallsConfiguredOpenFunctionForCreateLink() {
   var openedUri = "";
   var e = makeEntry({
@@ -213,7 +285,7 @@ function testOpenOptionCallsConfiguredOpenFunctionForCreateLink() {
     Link: ""
   });
 
-  var result = makeObsidianMementoUri({
+  var result = linkObsidianUri({
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
@@ -242,7 +314,7 @@ function testOpenCreateSeparateFieldsClearsOverwriteAndMarksPendingInsert() {
     "Obsidian Link": ""
   });
 
-  var result = makeObsidianMementoUri({
+  var result = linkObsidianUri({
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
@@ -269,7 +341,7 @@ function testPendingInsertDoesNotOpenOrOverwriteAgain() {
     "Obsidian Link": "Link: EINFÜGEN"
   });
 
-  var result = makeObsidianMementoUri({
+  var result = linkObsidianUri({
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
@@ -326,7 +398,7 @@ function testOpenOptionFallsBackToJavaTypeRundllOnDesktop() {
     }
   };
 
-  var result = makeObsidianMementoUri({
+  var result = linkObsidianUri({
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
@@ -354,7 +426,7 @@ function testSameFieldCreatesOverwriteWhenNoObsidianLinkExists() {
     Link: ""
   });
 
-  var result = makeObsidianMementoUri({
+  var result = linkObsidianUri({
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
@@ -374,7 +446,7 @@ function testObsidianOnlyFieldCreatesOverwriteLink() {
     "Obsidian Link": ""
   });
 
-  var result = makeObsidianMementoUri({
+  var result = linkObsidianUri({
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
@@ -395,7 +467,7 @@ function testObsidianOnlyOpenFailureKeepsOverwriteLink() {
     "Obsidian Link": ""
   });
 
-  var result = makeObsidianMementoUri({
+  var result = linkObsidianUri({
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
@@ -421,7 +493,7 @@ function testObsidianOnlyFieldStillOpensExistingObsidianLink() {
     "Obsidian Link": "[obsidian://adv-uri?vault=ExampleVault&uid=abc123](obsidian://adv-uri?vault=ExampleVault&uid=abc123)"
   });
 
-  var result = makeObsidianMementoUri({
+  var result = linkObsidianUri({
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
@@ -445,7 +517,7 @@ function testFormatOnlyDoesNotCreateOrOpenOverwriteLink() {
     "Obsidian Link": ""
   });
 
-  var result = makeObsidianMementoUri({
+  var result = linkObsidianUri({
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
@@ -472,7 +544,7 @@ function testFormatOnlyStillFormatsExistingObsidianLink() {
     "Obsidian Link": '<a href="obsidian://adv-uri?vault=ExampleVault&amp;uid=abc123">open</a>'
   });
 
-  var result = makeObsidianMementoUri({
+  var result = linkObsidianUri({
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
@@ -491,13 +563,70 @@ function testFormatOnlyStillFormatsExistingObsidianLink() {
   assertEquals("format-only-existing-field", e.field("Obsidian Link"), "[obsidian://adv-uri?vault=ExampleVault&uid=abc123](obsidian://adv-uri?vault=ExampleVault&uid=abc123)");
 }
 
+function testFormatsRegularObsidianPathLink() {
+  var uri = "obsidian://open?vault=ExampleVault&file=Folder%2FAtomic%20Habits.md";
+  var e = makeEntry({
+    "Obsidian Link": uri
+  });
+
+  var result = formatObsidianUri({
+    entryObj: e,
+    field: "Obsidian Link"
+  });
+
+  assertEquals("path-link-mode", result.mode, "connected_obsidian_same_field");
+  assertEquals("path-link-uri", result.obsidianUri, uri);
+  assertEquals("path-link-field", e.field("Obsidian Link"), "[" + uri + "](" + uri + ")");
+}
+
+function testPostEffectLeavesEmptyFieldUntouched() {
+  var setCalls = 0;
+  var e = makeEntry({
+    "Obsidian Link": ""
+  });
+  e.set = function(name, value) {
+    setCalls += 1;
+    this._fields[name] = value;
+  };
+
+  var result = formatObsidianUri({
+    entryObj: e,
+    field: "Obsidian Link"
+  });
+
+  assertEquals("post-effect-empty-mode", result.mode, "format_only_no_link");
+  assertEquals("post-effect-empty-field", e.field("Obsidian Link"), "");
+  assertEquals("post-effect-empty-set-calls", setCalls, 0);
+}
+
+function testPostEffectLeavesNonObsidianUrlUntouched() {
+  var setCalls = 0;
+  var url = "https://example.org/note";
+  var e = makeEntry({
+    "Obsidian Link": url
+  });
+  e.set = function(name, value) {
+    setCalls += 1;
+    this._fields[name] = value;
+  };
+
+  var result = formatObsidianUri({
+    entryObj: e,
+    field: "Obsidian Link"
+  });
+
+  assertEquals("post-effect-web-url-mode", result.mode, "format_only_no_link");
+  assertEquals("post-effect-web-url-field", e.field("Obsidian Link"), url);
+  assertEquals("post-effect-web-url-set-calls", setCalls, 0);
+}
+
 function testCreateOverwriteLinkFalseIsFormatOnlyAlias() {
   var e = makeEntry({
     Text: "Body",
     "Obsidian Link": ""
   });
 
-  var result = makeObsidianMementoUri({
+  var result = linkObsidianUri({
     entryObj: e,
     libObj: lib(),
     contentField: "Text",
@@ -511,11 +640,14 @@ function testCreateOverwriteLinkFalseIsFormatOnlyAlias() {
 }
 
 testCreatesOverwriteLinkOnlyInOverwriteField();
+testCreatesOverwriteLinkInConfiguredFolderPath();
+testFolderAsTagUsesDefaultFolderWithoutTrailingSlash();
 testUidClearsOverwriteAndWritesConnectedObsidianField();
 testSameFieldMarksExistingObsidianLinkOnly();
 testMarkdownLinkDoesNotSelfNestOnRepeatedRuns();
 testConnectedLinkUsesCustomWindowsBaseTemplate();
 testOpenOptionCallsConfiguredOpenFunctionForConnectedLink();
+testFolderAsTagDoesNotBlockOpeningExistingLink();
 testOpenOptionCallsConfiguredOpenFunctionForCreateLink();
 testOpenCreateSeparateFieldsClearsOverwriteAndMarksPendingInsert();
 testPendingInsertDoesNotOpenOrOverwriteAgain();
@@ -526,6 +658,9 @@ testObsidianOnlyOpenFailureKeepsOverwriteLink();
 testObsidianOnlyFieldStillOpensExistingObsidianLink();
 testFormatOnlyDoesNotCreateOrOpenOverwriteLink();
 testFormatOnlyStillFormatsExistingObsidianLink();
+testFormatsRegularObsidianPathLink();
+testPostEffectLeavesEmptyFieldUntouched();
+testPostEffectLeavesNonObsidianUrlUntouched();
 testCreateOverwriteLinkFalseIsFormatOnlyAlias();
 
 WScript.Echo("OK");

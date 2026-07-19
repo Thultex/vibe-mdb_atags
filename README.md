@@ -158,7 +158,7 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
   - optionales Stundenlimit ueber `maxHours` (Default: `30`)
 **Integration Add-ons**
 - `B8` `addons/6_integration/obsidianLinker.js` (Memento-zu-Obsidian Advanced URI)
-  - `makeObsidianMementoUri()`
+  - `linkObsidianUri()`
   - `overwriteMarkdownField` fuer den Erstellen-/Overwrite-Link
   - `obsidianMarkdownField` fuer den formatierten bestehenden Obsidian-Link
   - alte `...HtmlField`-Optionen bleiben als Alias kompatibel
@@ -683,20 +683,27 @@ multiChoiceRemove({
 
 **Obsidian Linker (Integration)**
 
-Erstellt einen `mode=overwrite`-Link fuer Advanced URI im `overwriteMarkdownField`. Sobald ein vorhandener Obsidian-Link im `obsidianMarkdownField` erkannt wird, wird das Overwrite-Feld geleert. Beide Felder werden als Markdown geschrieben; die alten `...HtmlField`-Optionen bleiben als Alias kompatibel. Ein bestehender Obsidian-Link wird im Obsidian-Feld als reiner Markdown-Link ohne Prefix ausgegeben. Optional erzeugt `windowsOpenBase` zusaetzlich `Win:` mit ausgeschriebenem HTTP-/HTTPS-Redirect-Link. Wenn nur ein Feld existiert, nur `obsidianMarkdownField` gesetzt ist oder beide Felder gleich sind, laufen beide Rollen auf dieses eine Feld.
+Erstellt einen `mode=overwrite`-Link fuer Advanced URI im `overwriteMarkdownField`. Sobald ein vorhandener Obsidian-Link im `obsidianMarkdownField` erkannt wird, wird das Overwrite-Feld geleert. Erkannt werden Advanced-URI-Links sowie normale Obsidian-Pfadlinks wie `obsidian://open?vault=...&file=...` oder `obsidian://open?path=...`. Beide Felder werden als Markdown geschrieben; die alten `...HtmlField`-Optionen bleiben als Alias kompatibel. Ein bestehender Obsidian-Link wird im Obsidian-Feld als reiner Markdown-Link ohne Prefix ausgegeben. Optional erzeugt `windowsOpenBase` zusaetzlich `Win:` mit ausgeschriebenem HTTP-/HTTPS-Redirect-Link. Wenn nur ein Feld existiert, nur `obsidianMarkdownField` gesetzt ist oder beide Felder gleich sind, laufen beide Rollen auf dieses eine Feld.
 
 ```js
-makeObsidianMementoUri({
+linkObsidianUri({
   contentField: "Text",
   overwriteMarkdownField: "Obsidian Overwrite Link",
   obsidianMarkdownField: "Obsidian Link",
   dateField: "Datum",
   mementoLinkField: "Memento Link",
   vault: "ExampleVault",
+  folderPath: "memento/Connector DB",
+  tags: "eigener/tag",
+  folderAsTag: true,
   formatOnly: false,
   open: true
 });
 ```
+
+Mit `folderPath` wird der Vault-relative Ordner fuer neu erzeugte Dateien festgelegt. Der Linker haengt daran weiterhin den stabilen Dateinamen `<Titel> (<Memento-ID>).md` an. Ohne `folderPath` bleibt der Standard `memento/<Library>` aktiv; mit `folderPath: ""` wird die Datei im Vault-Hauptordner angelegt.
+
+`tags` ist eine eigene optionale Angabe fuer das YAML-Frontmatter und unabhaengig von `folderPath`; als Wert sind ein String oder mehrere Tags als Array moeglich. Mit `folderAsTag: true` wird zusaetzlich der Zielordner als erster Tag eingefuegt, danach folgen die Werte aus `tags`. Leerzeichen werden dabei zu Unterstrichen und ein abschliessender Slash wird entfernt. Ohne `tags` und ohne `folderAsTag` wird keine Tagzeile geschrieben.
 
 Empfohlen fuer Windows Desktop und Android ist `open: true`: Das Addon schreibt weiterhin stabile Markdown-Links in die Felder und versucht zusaetzlich, den verbundenen oder neu erzeugten Obsidian-Link direkt per Script zu oeffnen. Auf Android nutzt es `intent("android.intent.action.VIEW")`; auf Windows Desktop werden Java `Desktop.browse()` und als Fallback `rundll32.exe url.dll,FileProtocolHandler` versucht. Wenn die Plattform das blockt, bleibt das Feld trotzdem geschrieben und `openResult` enthaelt den Fehlerstatus.
 
@@ -704,7 +711,15 @@ Wenn `open: true` einen neuen `mode=overwrite`-Link oeffnet, wird danach kein Ov
 
 Wenn nur `obsidianMarkdownField` gesetzt ist, erzeugt das Addon dort den Overwrite-Link und nutzt dasselbe Feld spaeter zum Anzeigen/Oeffnen eines eingefuegten Obsidian-Links. Scheitert `open: true`, bleibt der Markdown-Link im Feld sichtbar.
 
-Für After-Entry-Workflows kann `formatOnly: true` genutzt werden. Dann formatiert das Addon nur einen bereits vorhandenen Obsidian-Link im Zielfeld, erzeugt keinen neuen `mode=overwrite`-Link und öffnet nichts. `createOverwriteLink: false` ist ein Alias für denselben Modus.
+Für Post-Effect-/After-Entry-Workflows gibt es einen eigenen Kurzaufruf. Er wandelt nur eine bereits im Textfeld vorhandene `obsidian://`-URL in einen Markdown-Link um. Andere URLs und leere Felder bleiben unverändert; es wird auch kein Overwrite-Link erzeugt:
+
+```js
+formatObsidianUri({
+  field: "Obsidian Link"
+});
+```
+
+`formatObsidianUri()` benötigt weder `contentField` noch `libObj` oder Erzeugungsoptionen. Für das Erzeugen und Verknüpfen neuer Dateien wird separat `linkObsidianUri()` verwendet.
 
 Ohne lokalen Helper funktioniert `http://127.0.0.1:17890/...` nicht. `windowsOpenBase` sollte deshalb normalerweise leer bleiben. Fuer einen zusaetzlichen `Win:`-Link ohne Helper braucht `windowsOpenBase` eine echte Browser-Redirect-Seite, z.B. `https://example.org/obsidian-open?uri=` oder ein Template mit `{uri}`.
 

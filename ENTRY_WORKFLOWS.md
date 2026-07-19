@@ -85,7 +85,7 @@ Ohne `core/helpers.js` sind `applyTags()`, `bulkApplyTags()` und `bulkExportAtag
 
 6. **Ruecksynchronisation und Integrationen**
    - `syncFieldBack()` laeuft nach den Parser-/Export-Schritten.
-   - `makeObsidianMementoUri()` laeuft spaet, damit der finale Notizinhalt verwendet wird.
+   - `linkObsidianUri()` laeuft spaet, damit der finale Notizinhalt verwendet wird.
    - `Hidden` wird am Ende gesetzt.
 
 ## PostEntry-Variante
