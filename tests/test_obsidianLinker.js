@@ -64,7 +64,8 @@ function testCreatesOverwriteLinkOnlyInOverwriteField() {
     contentField: "Text",
     overwriteMarkdownField: "Overwrite Link",
     obsidianMarkdownField: "Obsidian Link",
-    vault: "ExampleVault"
+    vault: "ExampleVault",
+    open: false
   });
 
   assertEquals("created-mode", result.mode, "created_overwrite");
@@ -134,7 +135,8 @@ function testUidClearsOverwriteAndWritesConnectedObsidianField() {
     contentField: "Text",
     overwriteMarkdownField: "Overwrite Link",
     obsidianMarkdownField: "Obsidian Link",
-    vault: "ExampleVault"
+    vault: "ExampleVault",
+    open: false
   });
 
   assertEquals("uid-mode", result.mode, "connected_obsidian");
@@ -259,15 +261,15 @@ function testOpenOptionCallsConfiguredOpenFunctionForConnectedLink() {
 
 function testFolderAsTagDoesNotBlockOpeningExistingLink() {
   var openedUri = "";
+  var uri = "obsidian://adv-uri?vault=RasObs&uid=cbd6a875-9335-4d9b-a347-bc0ccd78fea9";
   var e = makeEntry({
-    "Obsidian Link": "obsidian://open?vault=ExampleVault&file=Folder%2FNote.md"
+    "Obsidian Link": uri
   });
 
   var result = linkObsidianUri({
     entryObj: e,
     obsidianMarkdownField: "Obsidian Link",
     folderAsTag: true,
-    open: true,
     openFunction: function(uri) {
       openedUri = uri;
     }
@@ -275,7 +277,7 @@ function testFolderAsTagDoesNotBlockOpeningExistingLink() {
 
   assertEquals("folder-as-tag-existing-mode", result.mode, "connected_obsidian_same_field");
   assertEquals("folder-as-tag-existing-open-ok", result.openResult.ok, true);
-  assertEquals("folder-as-tag-existing-open-uri", openedUri, "obsidian://open?vault=ExampleVault&file=Folder%2FNote.md");
+  assertEquals("folder-as-tag-existing-open-uri", openedUri, uri);
 }
 
 function testOpenOptionCallsConfiguredOpenFunctionForCreateLink() {
@@ -579,6 +581,23 @@ function testFormatsRegularObsidianPathLink() {
   assertEquals("path-link-field", e.field("Obsidian Link"), "[" + uri + "](" + uri + ")");
 }
 
+function testFormatPreservesExistingVaultAndDropsTrailingParenthesis() {
+  var uri = "obsidian://adv-uri?vault=RasObs&uid=cbd6a875-9335-4d9b-a347-bc0ccd78fea9";
+  var e = makeEntry({
+    "Obsidian Link": uri + ")"
+  });
+
+  var result = formatObsidianUri({
+    entryObj: e,
+    field: "Obsidian Link"
+  });
+
+  assertEquals("existing-vault-uri", result.obsidianUri, uri);
+  assertEquals("existing-vault-field", e.field("Obsidian Link"), "[" + uri + "](" + uri + ")");
+  assertNotContains("existing-vault-no-example", e.field("Obsidian Link"), "ExampleVault");
+  assertNotContains("existing-vault-no-encoded-parenthesis", e.field("Obsidian Link"), "%29");
+}
+
 function testPostEffectLeavesEmptyFieldUntouched() {
   var setCalls = 0;
   var e = makeEntry({
@@ -659,6 +678,7 @@ testObsidianOnlyFieldStillOpensExistingObsidianLink();
 testFormatOnlyDoesNotCreateOrOpenOverwriteLink();
 testFormatOnlyStillFormatsExistingObsidianLink();
 testFormatsRegularObsidianPathLink();
+testFormatPreservesExistingVaultAndDropsTrailingParenthesis();
 testPostEffectLeavesEmptyFieldUntouched();
 testPostEffectLeavesNonObsidianUrlUntouched();
 testCreateOverwriteLinkFalseIsFormatOnlyAlias();

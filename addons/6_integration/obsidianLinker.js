@@ -1,6 +1,6 @@
 /*
 ========================================
-B8 Obsidian Linker v1.21 (sys 2.50)
+B8 Obsidian Linker v1.23 (sys 2.50)
 ========================================
 
 Changes
@@ -30,6 +30,8 @@ Changes
 - make frontmatter tags optional and configurable independently from the file path
 - optionally add the target folder as a tag with folderAsTag
 - open existing links before evaluating new-file folder, tags, or content configuration
+- preserve the vault and full URI of existing UID links and ignore trailing wrapper parentheses
+- open an existing link by default in linkObsidianUri while allowing open: false
 
 Usage
 
@@ -55,21 +57,21 @@ formatObsidianUri({
 
 /*
 ========================================
-B8 Obsidian Linker v1.21 (sys 2.50)
+B8 Obsidian Linker v1.23 (sys 2.50)
 ========================================
 */
 
 function getObsidianLinkerVersion() {
   return {
     name: "obsidianLinker",
-    version: "1.21",
+    version: "1.23",
     sysVersion: "2.50",
     path: "addons/6_integration/obsidianLinker.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("obsidianLinker", "1.21", "2.50", "addons/6_integration/obsidianLinker.js", true);
+  registerAtagLibVersion("obsidianLinker", "1.23", "2.50", "addons/6_integration/obsidianLinker.js", true);
 }
 
 function obsTrim(s) {
@@ -124,7 +126,7 @@ function obsExtractUri(s) {
   var match = text.match(/\]\((obsidian:\/\/[^\s"'<>\)]+)\)/);
   if (match) return match[1];
 
-  match = text.match(/obsidian:\/\/[^\s"'<>\]\[]+/);
+  match = text.match(/obsidian:\/\/[^\s"'<>\)\]\[]+/);
   return match ? match[0] : "";
 }
 
@@ -289,14 +291,16 @@ function obsClearField(entryObj, fieldName) {
   }
 }
 
-function obsOpenUri(uri, cfg) {
+function obsOpenUri(uri, cfg, openByDefault) {
   var i;
   var Desktop;
   var URI;
   var ProcessBuilder;
   var lastError = "";
 
-  if (!cfg || !cfg.open || !uri) {
+  openByDefault = openByDefault === true;
+
+  if (!cfg || (openByDefault ? cfg.open === false : !cfg.open) || !uri) {
     return { attempted: false, ok: false, method: "disabled", error: "" };
   }
 
@@ -454,11 +458,11 @@ function linkObsidianUri(cfg) {
     return { overwriteUri: "", obsidianUri: "", mode: sameField ? "pending_insert_same_field" : "pending_insert", openResult: { attempted: false, ok: false, method: "pending_insert", error: "" } };
   }
 
-  if (existingUid) {
-    openUri = "obsidian://adv-uri?vault=" + encodeURIComponent(vault) + "&uid=" + encodeURIComponent(existingUid);
-    hasObsidianOpenLink = true;
-  } else if (obsidianUri && obsidianMode !== "overwrite") {
+  if (obsidianUri && obsidianMode !== "overwrite") {
     openUri = obsidianUri;
+    hasObsidianOpenLink = true;
+  } else if (existingUid) {
+    openUri = "obsidian://adv-uri?vault=" + encodeURIComponent(vault) + "&uid=" + encodeURIComponent(existingUid);
     hasObsidianOpenLink = true;
   }
 
@@ -469,7 +473,7 @@ function linkObsidianUri(cfg) {
   if (hasObsidianOpenLink) {
     if (!sameField) obsClearField(e, overwriteField);
     obsSetConnectedLinkField(e, obsidianField, openUri, cfg);
-    openResult = formatOnly ? obsFormatOnlyOpenResult() : obsOpenUri(openUri, cfg);
+    openResult = formatOnly ? obsFormatOnlyOpenResult() : obsOpenUri(openUri, cfg, true);
     return { overwriteUri: "", obsidianUri: openUri, mode: sameField ? "connected_obsidian_same_field" : "connected_obsidian", openResult: openResult };
   }
 

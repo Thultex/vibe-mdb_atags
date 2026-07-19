@@ -26,9 +26,11 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 
 ### 2026-07-20
 
-- Feature: Obsidian Linker v1.21 macht Frontmatter-Tags ueber `tags` optional und unabhaengig von `folderPath`; mit `folderAsTag: true` wird der normalisierte Zielordner als erster Tag uebernommen, danach folgen eigene Tags.
+- Feature: Obsidian Linker v1.23 macht Frontmatter-Tags ueber `tags` optional und unabhaengig von `folderPath`; mit `folderAsTag: true` wird der normalisierte Zielordner als erster Tag uebernommen, danach folgen eigene Tags.
 - Fix: Vorhandene Obsidian-Links werden vor der Neu-Datei-Konfiguration verarbeitet, sodass `folderAsTag` oder ein fehlendes `contentField` ihr Oeffnen nicht mehr blockiert.
-- Change: Check Versions v1.55 erwartet Obsidian Linker v1.21.
+- Fix: Vorhandene UID-Links behalten ihre komplette URI samt Vault; eine abschliessende Wrapper-Klammer wird nicht mehr als Teil der URL formatiert.
+- Fix: `linkObsidianUri()` oeffnet einen bereits gesetzten Obsidian-Link standardmaessig; mit `open: false` kann das explizit unterdrueckt werden. `formatObsidianUri()` bleibt ein reiner Formatter.
+- Change: Check Versions v1.57 erwartet Obsidian Linker v1.23.
 
 ### 2026-07-19
 

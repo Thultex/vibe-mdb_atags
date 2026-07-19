@@ -719,7 +719,7 @@ formatObsidianUri({
 });
 ```
 
-`formatObsidianUri()` benötigt weder `contentField` noch `libObj` oder Erzeugungsoptionen. Für das Erzeugen und Verknüpfen neuer Dateien wird separat `linkObsidianUri()` verwendet.
+`formatObsidianUri()` benötigt weder `contentField` noch `libObj` oder Erzeugungsoptionen und formatiert nur. Für das Erzeugen und Verknüpfen neuer Dateien wird separat `linkObsidianUri()` verwendet. Beim Aufruf von `linkObsidianUri()` wird ein bereits gesetzter Obsidian-Link standardmaessig geoeffnet; `open: false` unterdrueckt dies. Zum direkten Oeffnen eines neu erzeugten Links bleibt `open: true` erforderlich.
 
 Ohne lokalen Helper funktioniert `http://127.0.0.1:17890/...` nicht. `windowsOpenBase` sollte deshalb normalerweise leer bleiben. Fuer einen zusaetzlichen `Win:`-Link ohne Helper braucht `windowsOpenBase` eine echte Browser-Redirect-Seite, z.B. `https://example.org/obsidian-open?uri=` oder ein Template mit `{uri}`.
 
