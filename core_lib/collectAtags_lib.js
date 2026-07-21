@@ -1,9 +1,10 @@
 /*
 ========================================
-#1 collectAtags Lib v1.66 (sys 2.50)
+#1 collectAtags Lib v1.67 (sys 2.50)
 ========================================
 
 Changes
+- parse open template slot values like `tag:_2` or `tag:_-1,4` without keeping the marker
 - allow umlaut-only direct category children like `@@@Kat::` followed by `@@ö`
 - direct category blocks treat `@@/Negative:` as child `Negative` with negative category sign
 - category aliases can use `@@@Category::` to collect direct alias lines below as fixed children
@@ -53,14 +54,14 @@ Changes
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.66",
+    version: "1.67",
     sysVersion: "2.50",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.66", "2.50", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.67", "2.50", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");
@@ -159,6 +160,7 @@ function collectAtags(cfg) {
 
     if (s === "_" || s === "__") return null;
     if (/^_[^_\r\n]+_$/.test(s)) return s.substring(1, s.length - 1);
+    if (/^_[^_\r\n]+$/.test(s)) return s.substring(1);
 
     return raw;
   }
@@ -1294,7 +1296,7 @@ function collectAtags(cfg) {
       }
 
       // template slot values allow spacing after : / ::
-      var rxColonSlotValue = /(^|[\s\n\r\/])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:{1,2}\s*(_[^_\r\n]+_)/g;
+      var rxColonSlotValue = /(^|[\s\n\r\/])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:{1,2}\s*(_[^_\r\n]+_|_(?:[+\-]?\d+(?:[.,]\d+)?|\++|-+)(?=$|[\s,;.!?()\[\]{}])|_[^:\s,;.!?()\[\]{}]+)/g;
       var mslot;
       while ((mslot = rxColonSlotValue.exec(parseLine)) !== null) {
         if (isInsideAtagQuoteState(quoteState, mslot.index)) continue;
@@ -1302,7 +1304,7 @@ function collectAtags(cfg) {
       }
 
       // colon: gfk: 1,4 / tag:inhalt / tag:: inhalt
-      var rxColon = /(^|[\s\n\r\/])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:(?:"([^"]*)"|(_[^_\r\n]+_)|([^:\s,;.!?()\[\]{}]+))/g;
+      var rxColon = /(^|[\s\n\r\/])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:(?:"([^"]*)"|(_[^_\r\n]+_)|((?!_)[^:\s,;.!?()\[\]{}]+))/g;
       var m1;
       while ((m1 = rxColon.exec(parseLine)) !== null) {
         var name1 = m1[2];
@@ -1321,7 +1323,7 @@ function collectAtags(cfg) {
         addParsedTagValue(m1[2] || "", raw1, items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw);
       }
 
-      var rxColonExplicit = /(^|[\s\n\r\/])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*::\s*(?:"([^"]*)"|(_[^_\r\n]+_)|([^\r\n,;.!?()\[\]{}]+))/g;
+      var rxColonExplicit = /(^|[\s\n\r\/])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*::\s*(?:"([^"]*)"|(_[^_\r\n]+_)|((?!_)[^\r\n,;.!?()\[\]{}]+))/g;
       while ((m1 = rxColonExplicit.exec(parseLine)) !== null) {
         raw1 = m1[3] != null && m1[3] !== "" ? m1[3] : (m1[4] != null && m1[4] !== "" ? m1[4] : (m1[5] || ""));
         raw1 = trimAtagString(raw1);

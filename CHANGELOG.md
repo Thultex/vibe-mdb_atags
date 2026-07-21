@@ -24,6 +24,11 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 
 ## Log
 
+### 2026-07-22
+
+- Fix: `collectAtags_lib` v1.67 entfernt bei offenen Template-Slot-Werten wie `Kiefer:_1` und `Kiefer:_-1,4` den fuehrenden Marker; Vorzeichen, Dezimalwerte und kumulative Werte bleiben dabei erhalten.
+- Change: Check Versions v1.58 erwartet `collectAtags_lib` v1.67.
+
 ### 2026-07-20
 
 - Feature: Obsidian Linker v1.23 macht Frontmatter-Tags ueber `tags` optional und unabhaengig von `folderPath`; mit `folderAsTag: true` wird der normalisierte Zielordner als erster Tag uebernommen, danach folgen eigene Tags.

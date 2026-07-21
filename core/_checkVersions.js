@@ -1,9 +1,10 @@
 /*
 ========================================
-A1 Check Versions v1.57 (sys 2.50)
+A1 Check Versions v1.58 (sys 2.50)
 ========================================
 
 Notes
+- Expected collectAtags_lib version is 1.67.
 - Text output starts with `System vX.XX (ok, X rm, X local)` or a compact config/match/miss summary and ends with a blank line.
 - RUN_LIB_CHECK is a visible top-level switch for the immediate verbose startup check.
 - Standard report lists only remote core libs, but registered known addons are checked for version mismatches.
@@ -14,7 +15,7 @@ Notes
 - inputLinker_lib is no longer part of the core lib check.
 - Current libs:
   - helpers_lib v2.11 (sys 2.50)
-  - collectAtags_lib v1.66 (sys 2.50)
+  - collectAtags_lib v1.67 (sys 2.50)
   - exportAtags_lib v1.84 (sys 2.50)
 
 Local config example
@@ -65,7 +66,7 @@ var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERS
 function getCheckVersionsVersion() {
   return {
     name: "checkVersions",
-    version: "1.57",
+    version: "1.58",
     sysVersion: "2.50",
     path: "core/_checkVersions.js"
   };
@@ -80,12 +81,12 @@ function getLibVersionsVersion() {
 // Expected Modules
 var ATAG_EXPECTED_LIBS = [
   { id: "#3", title: "Helpers Lib", area: "core_lib", name: "helpers_lib", version: "2.11", getter: "getHelpersLibVersion", path: "core_lib/helpers_lib.js" },
-  { id: "#1", title: "Collect Atags Lib", area: "core_lib", name: "collectAtags_lib", version: "1.66", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
+  { id: "#1", title: "Collect Atags Lib", area: "core_lib", name: "collectAtags_lib", version: "1.67", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
   { id: "#2", title: "Export Atags Lib", area: "core_lib", name: "exportAtags_lib", version: "1.84", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" }
 ];
 
 var ATAG_EXPECTED_OPTIONAL_LIBS = [
-  { id: "A1", title: "Check Versions", area: "core", name: "checkVersions", version: "1.57", getter: "getCheckVersionsVersion", path: "core/_checkVersions.js", optional: true },
+  { id: "A1", title: "Check Versions", area: "core", name: "checkVersions", version: "1.58", getter: "getCheckVersionsVersion", path: "core/_checkVersions.js", optional: true },
   { id: "A2", title: "Atag Helpers", area: "core", name: "helpers", version: "1.03", getter: "getHelpersVersion", path: "core/helpers.js", optional: true },
   { id: "A3", title: "Restore Atags", area: "core", name: "restoreAtags", version: "2.10", getter: "getRestoreAtagsVersion", path: "core/restoreAtags.js", optional: true },
   { id: "A4", title: "Tag Cleaner", area: "core", name: "tagCleaner", version: "1.54", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
