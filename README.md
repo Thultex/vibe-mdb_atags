@@ -315,7 +315,7 @@ trackTagsComplete({
 });
 ```
 
-Der Transfer muss vor `applyTags()` laufen, damit verschobene Werte im selben PostEntry-Durchlauf erfasst werden. Die allgemeine Completion-Pruefung folgt danach und kann dasselbe Collector-Ergebnis wiederverwenden. `templateNames` beziehungsweise `templates` sind optional und werden wie `requiredTags` gegen nicht-leere Tagwerte geprueft. Leere Template-Slots erscheinen nicht als gefuellte Tags; normale Parser-Tags mit Wert werden genauso behandelt wie Template-Werte.
+Der Transfer muss vor `applyTags()` laufen, damit verschobene Werte im selben PostEntry-Durchlauf erfasst werden. Die allgemeine Completion-Pruefung folgt danach und kann dasselbe Collector-Ergebnis wiederverwenden. `templateNames` beziehungsweise `templates` sind optional und werden wie `requiredTags` gegen nicht-leere Tagwerte geprueft. Leere Template-Slots erscheinen nicht als gefuellte Tags; normale Parser-Tags mit Wert werden genauso behandelt wie Template-Werte. Nicht ausgefüllte Namen werden standardmäßig in ihrer Prüfreihenfolge als einfache Liste wie `Kiefer, ks` in das Feld `Noch Fehlend` geschrieben; sobald alles erfasst ist, wird das Feld geleert. Mit `missingField` lässt sich der Feldname ändern, mit `missingField: ""` die Ausgabe abschalten.
 
 Beim Transfer werden Template-Marker entfernt: numerische und kumulative Werte werden kompakt (`MetricA:_-3` → `MetricA-3`) und koennen danach vom Cleaner hochgestellt werden; Textwerte werden zur normalen Colon-Form (`TaskA:_ready` → `TaskA: ready`). Mehrwortwerte werden quotiert. Row-Modi erzeugen fuer Zeilen ohne vorhandenen Row-Prefix einen Zeitwert aus `fieldDate`; `rowLabel` ueberschreibt ihn explizit.
 
@@ -333,7 +333,7 @@ trackTagsComplete({
 });
 ```
 
-Mit `map: { Primary: { tag: "MetricA" } }` kann ein Map-Eintrag stattdessen auf einen Namen im Collector-Ergebnis zeigen. `missingField` ist optional; ohne dieses Feld stehen unvollstaendige Namen nur in `incompleteTags` im Rueckgabewert.
+Mit `map: { Primary: { tag: "MetricA" } }` kann ein Map-Eintrag stattdessen auf einen Namen im Collector-Ergebnis zeigen. `missingField` überschreibt das Standardfeld `Noch Fehlend`; mit `missingField: ""` stehen unvollständige Namen nur in `incompleteTags` im Rückgabewert.
 
 **Typed Text Fields (Syncing)**
 

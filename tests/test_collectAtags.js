@@ -485,9 +485,28 @@ function testTrackTagsCompleteCanCombineTemplatesAndFilledMap() {
   assertArray("track-combined-filled", tracked.filledTags, ["TemplateA", "ExternalA"]);
 }
 
+function testTrackTagsCompleteWritesDefaultMissingFieldInOrderAndClearsIt() {
+  var entryObj = makeWritableTrackEntry({ "Noch Fehlend": "alter Wert" });
+
+  trackTagsComplete({
+    entry: entryObj,
+    map: { Kiefer: "", ks: null },
+    completeField: ""
+  });
+  if (entryObj.field("Noch Fehlend") !== "Kiefer, ks") fail("track-default-missing-field-order");
+
+  trackTagsComplete({
+    entry: entryObj,
+    map: { Kiefer: -1.4, ks: "erfasst" },
+    completeField: ""
+  });
+  if (entryObj.field("Noch Fehlend") !== "") fail("track-default-missing-field-cleared");
+}
+
 testTrackTagsCompleteUsesCollectorValuesAndTemplates();
 testTrackTagsCompleteAcceptsDirectValueMap();
 testTrackTagsCompleteCanCollectAndUseMappedTagNames();
 testTrackTagsCompleteCanCombineTemplatesAndFilledMap();
+testTrackTagsCompleteWritesDefaultMissingFieldInOrderAndClearsIt();
 
 print("OK");

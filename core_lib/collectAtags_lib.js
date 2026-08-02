@@ -1,9 +1,10 @@
 /*
 ========================================
-#1 collectAtags Lib v1.68 (sys 2.50)
+#1 collectAtags Lib v1.69 (sys 2.50)
 ========================================
 
 Changes
+- write incomplete tag names in required order to the default field `Noch Fehlend`
 - add trackTagsComplete for required tags, direct value maps and optional template names
 - parse open template slot values like `tag:_2` or `tag:_-1,4` without keeping the marker
 - allow umlaut-only direct category children like `@@@Kat::` followed by `@@ö`
@@ -52,17 +53,23 @@ Changes
 
 */
 
+/*
+========================================
+#1 collectAtags Lib v1.69 (sys 2.50)
+========================================
+*/
+
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.68",
+    version: "1.69",
     sysVersion: "2.50",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.68", "2.50", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.69", "2.50", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");
@@ -1664,7 +1671,7 @@ function trackTagsComplete(cfg) {
   cfg = cfg || {};
   var entryObj = atcResolveEntry(cfg);
   var completeField = cfg.completeField || "tags_complete";
-  var missingField = cfg.missingField;
+  var missingField = cfg.missingField == null ? "Noch Fehlend" : cfg.missingField;
   var collectorResult = cfg.result || cfg.collectResult || null;
   var items = cfg.items != null ? cfg.items : (collectorResult && collectorResult.items);
   var collectorMaps;
