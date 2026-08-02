@@ -28,6 +28,11 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 
 - Fix: `collectAtags_lib` v1.67 entfernt bei offenen Template-Slot-Werten wie `Kiefer:_1` und `Kiefer:_-1,4` den fuehrenden Marker; Vorzeichen, Dezimalwerte und kumulative Werte bleiben dabei erhalten.
 - Change: Check Versions v1.58 erwartet `collectAtags_lib` v1.67.
+- Feature: Template Field Transfer v1.00 verschiebt gefuellte Template-Slots innerhalb eines Eintrags zwischen konfigurierbaren Textfeldern, unterstuetzt `append`, `prepend`, `replace` und optionale Row-Labels und setzt die Quellslots erst nach erfolgreichem Target-Schreiben zurueck.
+- Feature: `collectAtags_lib` v1.68 stellt `trackTagsComplete()` bereit. Die Funktion prueft `requiredTags` und optionale `templateNames` gegen nicht-leere Collector-Werte oder wertet eine direkte `map` aus; normale Tags und Template-Tags werden gleich behandelt.
+- Change: `moveAndTrackTemplates()` delegiert die Vollstaendigkeitspruefung an `trackTagsComplete()` und haelt Template-Transfer und allgemeines Tag-Tracking getrennt.
+- Tests: `tests/test_templateFieldTransfer.js` deckt offene/geschlossene Slots, Dezimalwerte, Rows, zusammengesetzte Template-Zeilen, Dedupe, fehlgeschlagene Writes und Completion-Tracking ab.
+- Change: Check Versions v1.59 registriert Template Field Transfer v1.00 als B11 und erwartet `collectAtags_lib` v1.68.
 
 ### 2026-07-20
 

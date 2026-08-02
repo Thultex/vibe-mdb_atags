@@ -23,7 +23,7 @@ Regeln:
 
 - Modulversion pro geänderter Datei anheben
 - Jede Datei hat eine stabile Kennung im Header: `#` fuer Remote-Libs, `A` fuer Core, `B` fuer Addons, `C` fuer geloeste eigenstaendige Module.
-- Die Nummer folgt der alphanumerischen Repo-Reihenfolge im jeweiligen Dateibereich. Remote-Libs: `#1` bis `#3`; Core: `A1` bis `A4`; Addons: `B1` bis `B10`; geloeste generelle Module: `C1` bis `C3`.
+- Die Nummer folgt der alphanumerischen Repo-Reihenfolge im jeweiligen Dateibereich. Remote-Libs: `#1` bis `#3`; Core: `A1` bis `A4`; Addons: `B1` bis `B11`; geloeste generelle Module: `C1` bis `C3`.
 - Kopfblöcke in Moduldateien sehr kurz halten; ausführliche Änderungen gehören in `CHANGELOG.md`
 - In Kopfblöcken vorsichtig mit Quotes, Backticks, langen `Änderungen`-Listen und Sonderzeichen umgehen, weil der Memento-Java-Editor daran hängen bleiben kann
 - Changelog mit Datum, Versionssprung und Wirkung ergänzen
@@ -101,6 +101,8 @@ Ziel-Felder
 **Core Lib**
 
 - `#1` `core_lib/collectAtags_lib.js`
+  - `collectAtags()` sammelt Parser-Tags und Werte
+  - `trackTagsComplete()` prueft erforderliche Tags auf nicht-leere Collector-Werte
 - `#2` `core_lib/exportAtags_lib.js`
 - `#3` `core_lib/helpers_lib.js`
 Empfohlene Lade-Reihenfolge: `helpers_lib`, dann `collectAtags_lib`, dann `exportAtags_lib`. `core/tagCleaner.js` nutzt ebenfalls `helpers_lib`.
@@ -144,6 +146,10 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
   - `mergeJsonField` schreibt Ziel-Historie und einen Stop-Marker im gemergten Quell-Eintrag inklusive letztem Trash-Status
   - optional `skipField`, `forceMergeField`, `blockMap`, `statusField`, `mergeCountField`, `mergeCountNoJson`, `debugField`, `trashMergedEntry`, `openTargetEntry`
   - `statusField` wird auf dem geprueften Eintrag aktualisiert; `mergeCountField` wird auf dem Ziel-Eintrag aus dessen Merge-JSON gezaehlt, ausser `mergeCountNoJson: true` erzwingt den Fallback
+- `B11` `addons/2_syncing/templateFieldTransfer.js` (gefuellte Templates zwischen Feldern verschieben)
+  - `moveFilledTemplates()` verschiebt gefuellte Slots und setzt sie im Quellfeld zurueck
+  - `moveAndTrackTemplates()` kombiniert Transfer und das allgemeine `trackTagsComplete()` aus dem Collector
+  - unterstuetzt `append`, `prepend`, `replace`, Dedupe und optionale `rowLabel`-Werte
 
 **Workflow Add-ons**
 - `B5` `addons/3_workflow/floatingAverage.js` (gleitender Gruppen-Mittelwert)
@@ -187,6 +193,7 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
 - `tests/test_timeMarker.js`
 - `tests/test_dustMerger.js`
 - `tests/test_syncLastFromLatest.js`
+- `tests/test_templateFieldTransfer.js`
 - `tests/test_typedTextFields.js`
 - `tests/test_sequenceCounter.js`
 - `tests/test_multiChoiceHelpers.js`
@@ -275,6 +282,52 @@ syncLastFromLatest({
 ```
 
 Damit wird z. B. `Laufen:_2 km_` zu `Laufen:__`, waehrend die Vorlage selbst erhalten bleibt.
+
+**Template Field Transfer**
+
+Gefuellte Templates koennen im selben Eintrag aus `Record` nach `Notiz` verschoben werden. Offene Slots wie `MetricA:_-1,4` werden zu `MetricA:_` zurueckgesetzt, geschlossene Slots wie `TaskA:_ja_` zu `TaskA:__`. Das Quellfeld wird erst geleert, wenn der Zielinhalt erfolgreich geschrieben wurde.
+
+```js
+var transfer = moveFilledTemplates({
+  entry: e,
+  sourceField: "Record",
+  targetField: "Notiz",
+  mode: "append"
+});
+
+var result = applyTags({
+  entryObj: e,
+  textFields: ["Notiz", "Record", "Atag Aliases"],
+  targetField: "tags",
+  targetFieldType: "tags"
+});
+
+trackTagsComplete({
+  entry: e,
+  templateNames: transfer.templateNames,
+  result: result,
+  completeField: "record_complete",
+  missingField: "record_missing"
+});
+```
+
+Der Transfer muss vor `applyTags()` laufen, damit verschobene Werte im selben PostEntry-Durchlauf erfasst werden. Die allgemeine Completion-Pruefung folgt danach und kann dasselbe Collector-Ergebnis wiederverwenden. `templateNames` beziehungsweise `templates` sind optional und werden wie `requiredTags` gegen nicht-leere Tagwerte geprueft. Leere Template-Slots erscheinen nicht als gefuellte Tags; normale Parser-Tags mit Wert werden genauso behandelt wie Template-Werte.
+
+Alternativ kann `map` bereits vorhandene Werte direkt pruefen. Zahlen einschliesslich `0` und nicht-leere Texte gelten als gefuellt; `null`, leere Texte und `false` gelten als leer.
+
+```js
+trackTagsComplete({
+  entry: e,
+  map: {
+    MetricA: e.field("Metric A"),
+    TaskA: e.field("Task A")
+  },
+  completeField: "fields_complete",
+  missingField: "fields_missing"
+});
+```
+
+Mit `map: { Primary: { tag: "MetricA" } }` kann ein Map-Eintrag stattdessen auf einen Namen im Collector-Ergebnis zeigen. `missingField` ist optional; ohne dieses Feld stehen unvollstaendige Namen nur in `incompleteTags` im Rueckgabewert.
 
 **Typed Text Fields (Syncing)**
 

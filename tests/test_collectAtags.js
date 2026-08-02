@@ -392,4 +392,102 @@ assertSimpleTag("exclusive-readable-comma-ended-cleaner-suffix", "\"| testa\u00B
 assertMissing("exclusive-readable-leading-quote-skips-body", "bodytag2\n\"| tag\u00B3", "bodytag");
 assertItem("readable-global-double-bar-is-not-exclusive-body", "bodytag2\n|| tag\u00B3", "bodytag", "+2", 2, null, null);
 
+function makeWritableTrackEntry(fields) {
+  return {
+    _fields: fields,
+    field: function(name) {
+      return this._fields[name];
+    },
+    set: function(name, value) {
+      this._fields[name] = value;
+    }
+  };
+}
+
+function testTrackTagsCompleteUsesCollectorValuesAndTemplates() {
+  var parsed = collectAtags({
+    entryObj: makeEntry({ Note: "MetricA:_2\nTaskA#\nNullA:00\nTemplateA:_ok_" }),
+    textFields: ["Note"]
+  });
+  var entryObj = makeWritableTrackEntry({ tags_complete: true, Missing: "" });
+  var tracked = trackTagsComplete({
+    entry: entryObj,
+    result: parsed,
+    requiredTags: ["MetricA", "TaskA", "MissingA", "NullA"],
+    templateNames: ["TemplateA"],
+    completeField: "tags_complete",
+    missingField: "Missing"
+  });
+
+  assertArray("track-required", tracked.requiredTags, ["MetricA", "TaskA", "MissingA", "NullA", "TemplateA"]);
+  assertArray("track-filled", tracked.filledTags, ["MetricA", "NullA", "TemplateA"]);
+  assertArray("track-missing", tracked.missingTags, ["MissingA"]);
+  assertArray("track-empty", tracked.emptyTags, ["TaskA"]);
+  assertArray("track-incomplete", tracked.incompleteTags, ["TaskA", "MissingA"]);
+  if (entryObj.field("tags_complete") !== false) fail("track-complete-field: expected false");
+  if (entryObj.field("Missing") !== "TaskA, MissingA") fail("track-missing-field: expected TaskA, MissingA");
+}
+
+function testTrackTagsCompleteAcceptsDirectValueMap() {
+  var entryObj = makeWritableTrackEntry({ fields_complete: true, Missing: "" });
+  var tracked = trackTagsComplete({
+    entryObj: entryObj,
+    map: {
+      MetricA: 0,
+      TaskA: "",
+      FlagA: false,
+      TextA: "filled"
+    },
+    completeField: "fields_complete",
+    missingField: "Missing",
+    missingAsList: true
+  });
+
+  assertArray("track-map-required", tracked.requiredTags, ["MetricA", "TaskA", "FlagA", "TextA"]);
+  assertArray("track-map-filled", tracked.filledTags, ["MetricA", "TextA"]);
+  assertArray("track-map-empty", tracked.emptyTags, ["TaskA", "FlagA"]);
+  if (tracked.missingTags.length !== 0) fail("track-map-no-missing: expected 0");
+  assertArray("track-map-missing-field-list", entryObj.field("Missing"), ["TaskA", "FlagA"]);
+}
+
+function testTrackTagsCompleteCanCollectAndUseMappedTagNames() {
+  var entryObj = makeWritableTrackEntry({ Note: "MetricA:_3\nTaskA#", complete: false });
+  var tracked = trackTagsComplete({
+    entry: entryObj,
+    textFields: ["Note"],
+    map: {
+      Primary: { tag: "MetricA" },
+      Secondary: { tag: "TaskA" },
+      Ignored: { required: false }
+    },
+    completeField: "complete"
+  });
+
+  assertArray("track-map-tag-required", tracked.requiredTags, ["Primary", "Secondary"]);
+  assertArray("track-map-tag-filled", tracked.filledTags, ["Primary"]);
+  assertArray("track-map-tag-empty", tracked.emptyTags, ["Secondary"]);
+  if (entryObj.field("complete") !== false) fail("track-map-tag-complete: expected false");
+}
+
+function testTrackTagsCompleteCanCombineTemplatesAndFilledMap() {
+  var parsed = collectAtags({
+    entryObj: makeEntry({ Note: "TemplateA:_yes_" }),
+    textFields: ["Note"]
+  });
+  var tracked = trackTagsComplete({
+    result: parsed,
+    templates: ["TemplateA"],
+    map: { ExternalA: "ready" },
+    completeField: ""
+  });
+
+  if (tracked.complete !== true) fail("track-combined-complete: expected true");
+  assertArray("track-combined-filled", tracked.filledTags, ["TemplateA", "ExternalA"]);
+}
+
+testTrackTagsCompleteUsesCollectorValuesAndTemplates();
+testTrackTagsCompleteAcceptsDirectValueMap();
+testTrackTagsCompleteCanCollectAndUseMappedTagNames();
+testTrackTagsCompleteCanCombineTemplatesAndFilledMap();
+
 print("OK");

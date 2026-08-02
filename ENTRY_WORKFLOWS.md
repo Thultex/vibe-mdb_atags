@@ -99,6 +99,13 @@ function PostEntry(e, fileOps) {
   fileOps = fileOps || false;
   e = e || entry();
 
+  var recordTransfer = moveFilledTemplates({
+    entry: e,
+    sourceField: "Record",
+    targetField: "Notiz",
+    mode: "append"
+  });
+
   applyTagCleaner({
     entryObj: e,
     textField: "Notiz",
@@ -115,6 +122,13 @@ function PostEntry(e, fileOps) {
     targetFieldType: "tags",
     preserveForeignTagsField: "Tags User",
     parserOwnedTagsField: "Tags Parser"
+  });
+
+  trackTagsComplete({
+    entry: e,
+    templateNames: recordTransfer.templateNames,
+    result: result,
+    completeField: "record_complete"
   });
 
   applyTags({

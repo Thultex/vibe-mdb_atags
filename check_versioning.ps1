@@ -11,6 +11,7 @@ $moduleFiles = @(
   "addons/1_tagging/tagPairParser.js",
   "addons/2_syncing/globalFieldSync.js",
   "addons/2_syncing/syncLastFromLatest.js",
+  "addons/2_syncing/templateFieldTransfer.js",
   "addons/3_workflow/floatingAverage.js",
   "addons/3_workflow/sequenceCounter.js",
   "addons/3_workflow/timeMarker.js",
@@ -32,6 +33,7 @@ $moduleIds = @{
   "addons/1_tagging/tagPairParser.js" = "B2"
   "addons/2_syncing/globalFieldSync.js" = "B3"
   "addons/2_syncing/syncLastFromLatest.js" = "B4"
+  "addons/2_syncing/templateFieldTransfer.js" = "B11"
   "addons/3_workflow/floatingAverage.js" = "B5"
   "addons/3_workflow/sequenceCounter.js" = "B6"
   "addons/3_workflow/timeMarker.js" = "B7"

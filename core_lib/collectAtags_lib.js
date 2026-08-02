@@ -1,9 +1,10 @@
 /*
 ========================================
-#1 collectAtags Lib v1.67 (sys 2.50)
+#1 collectAtags Lib v1.68 (sys 2.50)
 ========================================
 
 Changes
+- add trackTagsComplete for required tags, direct value maps and optional template names
 - parse open template slot values like `tag:_2` or `tag:_-1,4` without keeping the marker
 - allow umlaut-only direct category children like `@@@Kat::` followed by `@@ö`
 - direct category blocks treat `@@/Negative:` as child `Negative` with negative category sign
@@ -54,14 +55,14 @@ Changes
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.67",
+    version: "1.68",
     sysVersion: "2.50",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.67", "2.50", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.68", "2.50", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");
@@ -1499,4 +1500,269 @@ function collectAtags(cfg) {
   addCategoryItems(items, seen, aliasMap);
 
   return { items: items };
+}
+
+function atcTrim(value) {
+  return String(value == null ? "" : value).replace(/^\s+|\s+$/g, "");
+}
+
+function atcIsArray(value) {
+  return Object.prototype.toString.call(value) === "[object Array]";
+}
+
+function atcListLength(value) {
+  var length;
+
+  if (value == null || typeof value === "string" || Object.prototype.toString.call(value) === "[object String]") return null;
+  if (atcIsArray(value)) return value.length;
+
+  try {
+    length = Number(value.length);
+    if (!isNaN(length) && length >= 0 && Math.floor(length) === length) return length;
+  } catch (e0) {}
+  try {
+    length = Number(value.length());
+    if (!isNaN(length) && length >= 0 && Math.floor(length) === length) return length;
+  } catch (e1) {}
+  try {
+    length = Number(value.size());
+    if (!isNaN(length) && length >= 0 && Math.floor(length) === length) return length;
+  } catch (e2) {}
+  return null;
+}
+
+function atcListItem(value, index) {
+  try {
+    if (typeof value.get === "function") return value.get(index);
+  } catch (e0) {}
+  try {
+    if (typeof value.item === "function") return value.item(index);
+  } catch (e1) {}
+  return value[index];
+}
+
+function atcToArray(value) {
+  var length;
+  var out = [];
+  var i;
+
+  if (value == null) return out;
+  if (atcIsArray(value)) return value.slice(0);
+  if (typeof value === "string" || Object.prototype.toString.call(value) === "[object String]") return [String(value)];
+
+  length = atcListLength(value);
+  if (length != null) {
+    for (i = 0; i < length; i++) out.push(atcListItem(value, i));
+    return out;
+  }
+  return [value];
+}
+
+function atcResolveEntry(cfg) {
+  cfg = cfg || {};
+  if (cfg.entryObj) return cfg.entryObj;
+  if (cfg.entry) return cfg.entry;
+  if (cfg.currentEntry) return cfg.currentEntry;
+  try {
+    return typeof entry === "function" ? entry() : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function atcSafeSet(entryObj, fieldName, value) {
+  if (!entryObj || !fieldName) return false;
+  try {
+    entryObj.set(fieldName, value);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function atcNormalizeName(value) {
+  return atcTrim(value).replace(/^#+/, "").replace(/\s+/g, "_").toLowerCase();
+}
+
+function atcHasOwn(obj, key) {
+  return !!obj && Object.prototype.hasOwnProperty.call(obj, key);
+}
+
+function atcValueFilled(value) {
+  var values;
+  var i;
+
+  if (value == null) return false;
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return !isNaN(value);
+  if (typeof value === "string" || Object.prototype.toString.call(value) === "[object String]") return atcTrim(value) !== "";
+
+  values = atcToArray(value);
+  if (values.length > 1 || atcIsArray(value) || atcListLength(value) != null) {
+    for (i = 0; i < values.length; i++) {
+      if (atcValueFilled(values[i])) return true;
+    }
+    return false;
+  }
+  return true;
+}
+
+function atcItemName(item) {
+  if (item == null) return "";
+  try {
+    if (typeof item.name === "function") return atcTrim(item.name());
+  } catch (e0) {}
+  try {
+    if (item.name != null) return atcTrim(item.name);
+  } catch (e1) {}
+  return typeof item === "string" ? atcTrim(item) : "";
+}
+
+function atcItemFilled(item) {
+  if (item == null) return false;
+  if (typeof item !== "object") return atcValueFilled(item);
+  if (atcHasOwn(item, "attrText") && atcValueFilled(item.attrText)) return true;
+  if (atcHasOwn(item, "rawText") && atcValueFilled(item.rawText)) return true;
+  if (atcHasOwn(item, "value") && atcValueFilled(item.value)) return true;
+  return false;
+}
+
+function atcBuildCollectorMaps(items) {
+  var values = atcToArray(items);
+  var present = {};
+  var filled = {};
+  var names = {};
+  var i;
+
+  for (i = 0; i < values.length; i++) {
+    var displayName = atcItemName(values[i]);
+    var key = atcNormalizeName(displayName);
+    if (!key) continue;
+    present[key] = true;
+    names[key] = displayName;
+    if (atcItemFilled(values[i])) filled[key] = true;
+    else if (!atcHasOwn(filled, key)) filled[key] = false;
+  }
+  return { present: present, filled: filled, names: names };
+}
+
+function atcPushUniqueName(list, seen, value) {
+  var displayName = atcTrim(value).replace(/^#+/, "");
+  var key = atcNormalizeName(displayName);
+  if (!key || seen[key]) return;
+  seen[key] = true;
+  list.push(displayName);
+}
+
+function atcRequirementNames(value, list, seen) {
+  var values = atcToArray(value);
+  var i;
+  for (i = 0; i < values.length; i++) atcPushUniqueName(list, seen, values[i]);
+}
+
+function trackTagsComplete(cfg) {
+  cfg = cfg || {};
+  var entryObj = atcResolveEntry(cfg);
+  var completeField = cfg.completeField || "tags_complete";
+  var missingField = cfg.missingField;
+  var collectorResult = cfg.result || cfg.collectResult || null;
+  var items = cfg.items != null ? cfg.items : (collectorResult && collectorResult.items);
+  var collectorMaps;
+  var required = [];
+  var requiredSeen = {};
+  var directStatus = {};
+  var directPresent = {};
+  var directDisplay = {};
+  var valueMap = cfg.map || cfg.tagMap;
+  var key;
+  var i;
+  var missing = [];
+  var empty = [];
+  var incomplete = [];
+  var result = {
+    enabled: cfg.enabled !== false,
+    complete: false,
+    requiredTags: [],
+    filledTags: [],
+    missingTags: [],
+    emptyTags: [],
+    incompleteTags: [],
+    filledMap: {},
+    presentMap: {},
+    changed: false,
+    errors: []
+  };
+
+  if (!result.enabled) return result;
+
+  if (!collectorResult && items == null && cfg.textFields && entryObj) {
+    collectorResult = collectAtags({ entryObj: entryObj, textFields: cfg.textFields, excludeNames: cfg.excludeNames });
+    items = collectorResult.items;
+  }
+  collectorMaps = atcBuildCollectorMaps(items || []);
+
+  atcRequirementNames(cfg.requiredTags || cfg.tags, required, requiredSeen);
+  atcRequirementNames(cfg.templateNames || cfg.templates, required, requiredSeen);
+
+  if (valueMap && typeof valueMap === "object" && !atcIsArray(valueMap) && atcListLength(valueMap) == null) {
+    for (key in valueMap) {
+      if (!atcHasOwn(valueMap, key)) continue;
+      var mapValue = valueMap[key];
+      var statusKey = atcNormalizeName(key);
+      var display = atcTrim(key).replace(/^#+/, "");
+      var lookupName = "";
+
+      if (mapValue && typeof mapValue === "object" && !atcIsArray(mapValue) && atcListLength(mapValue) == null) {
+        if (mapValue.required === false) continue;
+        lookupName = mapValue.tag || mapValue.name || "";
+        if (atcHasOwn(mapValue, "filled")) directStatus[statusKey] = mapValue.filled === true;
+        else if (atcHasOwn(mapValue, "value")) directStatus[statusKey] = atcValueFilled(mapValue.value);
+        else if (lookupName) {
+          var lookupKey = atcNormalizeName(lookupName);
+          directStatus[statusKey] = collectorMaps.filled[lookupKey] === true;
+          directPresent[statusKey] = collectorMaps.present[lookupKey] === true;
+        } else directStatus[statusKey] = atcValueFilled(mapValue);
+      } else directStatus[statusKey] = atcValueFilled(mapValue);
+
+      if (!atcHasOwn(directPresent, statusKey)) directPresent[statusKey] = true;
+      directDisplay[statusKey] = display;
+      atcPushUniqueName(required, requiredSeen, display);
+    }
+  } else if (valueMap != null) {
+    atcRequirementNames(valueMap, required, requiredSeen);
+  }
+
+  for (i = 0; i < required.length; i++) {
+    var requiredName = required[i];
+    var requiredKey = atcNormalizeName(requiredName);
+    var present = atcHasOwn(directPresent, requiredKey) ? directPresent[requiredKey] : collectorMaps.present[requiredKey] === true;
+    var filled = atcHasOwn(directStatus, requiredKey) ? directStatus[requiredKey] : collectorMaps.filled[requiredKey] === true;
+
+    result.presentMap[requiredName] = present;
+    result.filledMap[requiredName] = filled;
+    if (filled) result.filledTags.push(requiredName);
+    else {
+      incomplete.push(requiredName);
+      if (present) empty.push(requiredName);
+      else missing.push(requiredName);
+    }
+  }
+
+  result.requiredTags = required;
+  result.missingTags = missing;
+  result.emptyTags = empty;
+  result.incompleteTags = incomplete;
+  result.complete = incomplete.length === 0;
+
+  if (entryObj && completeField) {
+    if (!atcSafeSet(entryObj, completeField, result.complete)) result.errors.push("Complete-Feld konnte nicht geschrieben werden");
+    else result.changed = true;
+  }
+  if (entryObj && missingField) {
+    var missingValue = cfg.missingAsList === true ? incomplete.slice(0) : incomplete.join(", ");
+    if (!atcSafeSet(entryObj, missingField, missingValue)) result.errors.push("Missing-Feld konnte nicht geschrieben werden");
+    else result.changed = true;
+  }
+
+  return result;
 }
