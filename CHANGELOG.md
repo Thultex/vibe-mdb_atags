@@ -26,6 +26,7 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 
 ### 2026-08-02
 
+- Change: Check Versions v1.65 besitzt wie die übrigen kopierbaren Module zusätzlich zum Dokumentationskopf einen kompakten zweiten Versionsbanner direkt vor dem Code.
 - Feature: `collectAtags_lib` v1.69 schreibt unvollständige Tags standardmäßig in Prüfreihenfolge als einfache Liste in `Noch Fehlend` und leert das Feld bei Vollständigkeit; `missingField: ""` deaktiviert die Ausgabe.
 - Change: Check Versions v1.64 erwartet `collectAtags_lib` v1.69.
 - Fix: Tag Cleaner v1.55 wandelt den exakten Nullwert `tag00` global in den wertlosen, später ergänzbaren Tag `tagˣ` um; längere Dezimalwerte wie `tag003` bleiben als `tag⁰⁰³` erhalten.

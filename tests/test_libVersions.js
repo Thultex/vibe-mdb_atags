@@ -70,7 +70,7 @@ function log(msg) {
   _logs.push(String(msg));
 }
 
-assertEquals("checkVersions-own-version", getCheckVersionsVersion().version, "1.64");
+assertEquals("checkVersions-own-version", getCheckVersionsVersion().version, "1.65");
 assertEquals("helpers-lib-own-version", getHelpersLibVersion().version, "2.11");
 assertEquals("helpers-lib-sys-version", getHelpersLibVersion().sysVersion, "2.50");
 assertEquals("collect-lib-own-version", getCollectAtagsLibVersion().version, "1.69");

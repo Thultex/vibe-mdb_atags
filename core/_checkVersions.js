@@ -1,6 +1,6 @@
 /*
 ========================================
-A1 Check Versions v1.64 (sys 2.50)
+A1 Check Versions v1.65 (sys 2.50)
 ========================================
 
 Notes
@@ -46,6 +46,12 @@ checkAtagLibVersions({
 ========================================
 */
 
+/*
+========================================
+A1 Check Versions v1.65 (sys 2.50)
+========================================
+*/
+
 // Live Config
 var RUN_LIB_CHECK = true;
 var GET_CURRENT_CONFIG = true;
@@ -69,7 +75,7 @@ var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERS
 function getCheckVersionsVersion() {
   return {
     name: "checkVersions",
-    version: "1.64",
+    version: "1.65",
     sysVersion: "2.50",
     path: "core/_checkVersions.js"
   };
@@ -89,7 +95,7 @@ var ATAG_EXPECTED_LIBS = [
 ];
 
 var ATAG_EXPECTED_OPTIONAL_LIBS = [
-  { id: "A1", title: "Check Versions", area: "core", name: "checkVersions", version: "1.64", getter: "getCheckVersionsVersion", path: "core/_checkVersions.js", optional: true },
+  { id: "A1", title: "Check Versions", area: "core", name: "checkVersions", version: "1.65", getter: "getCheckVersionsVersion", path: "core/_checkVersions.js", optional: true },
   { id: "A2", title: "Atag Helpers", area: "core", name: "helpers", version: "1.03", getter: "getHelpersVersion", path: "core/helpers.js", optional: true },
   { id: "A3", title: "Restore Atags", area: "core", name: "restoreAtags", version: "2.10", getter: "getRestoreAtagsVersion", path: "core/restoreAtags.js", optional: true },
   { id: "A4", title: "Tag Cleaner", area: "core", name: "tagCleaner", version: "1.55", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
