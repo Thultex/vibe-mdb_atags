@@ -102,7 +102,7 @@ Ziel-Felder
 
 - `#1` `core_lib/collectAtags_lib.js`
   - `collectAtags()` sammelt Parser-Tags und Werte
-  - `trackTagsComplete()` prueft erforderliche Tags auf nicht-leere Collector-Werte
+  - `trackTagsComplete()` prueft erforderliche Tags auf nicht-leere Collector-Werte und schreibt offene Namen standardmäßig in `Noch Fehlend` (`missingField`)
 - `#2` `core_lib/exportAtags_lib.js`
 - `#3` `core_lib/helpers_lib.js`
 Empfohlene Lade-Reihenfolge: `helpers_lib`, dann `collectAtags_lib`, dann `exportAtags_lib`. `core/tagCleaner.js` nutzt ebenfalls `helpers_lib`.
@@ -311,7 +311,7 @@ trackTagsComplete({
   templateNames: transfer.templateNames,
   result: result,
   completeField: "record_complete",
-  missingField: "record_missing"
+  missingField: "Noch Fehlend" // optional; Standard: "Noch Fehlend", "" deaktiviert die Ausgabe
 });
 ```
 
