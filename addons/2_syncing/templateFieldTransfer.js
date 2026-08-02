@@ -1,10 +1,10 @@
 /*
 ========================================
-B11 Template Field Transfer v1.02 (sys 2.50)
+B11 Template Field Transfer v1.03 (sys 2.50)
 ========================================
 
 Changes
-- convert filled `name:_00` slots into valueless `namex` tags before cleaning
+- keep transferred `name:_00` slots as normal `name00` input for the cleaner
 - convert moved template values into normal compact or colon tags
 - generate rows for string_rows and append_row/prepend_row modes
 - move filled template slots between text fields on the same entry
@@ -38,17 +38,23 @@ trackTagsComplete({
 
 */
 
+/*
+========================================
+B11 Template Field Transfer v1.03 (sys 2.50)
+========================================
+*/
+
 function getTemplateFieldTransferVersion() {
   return {
     name: "templateFieldTransfer",
-    version: "1.02",
+    version: "1.03",
     sysVersion: "2.50",
     path: "addons/2_syncing/templateFieldTransfer.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("templateFieldTransfer", "1.02", "2.50", "addons/2_syncing/templateFieldTransfer.js", true);
+  registerAtagLibVersion("templateFieldTransfer", "1.03", "2.50", "addons/2_syncing/templateFieldTransfer.js", true);
 }
 
 function tftTrim(value) {
@@ -240,9 +246,7 @@ function tftParseTemplatePart(part, cfg) {
   value = closed ? rawValue.substring(1, rawValue.length - 1) : rawValue.substring(1);
   resetValue = closed ? marker + marker : marker;
   displayValue = tftTrim(value);
-  if (displayValue === "00") {
-    normalTag = match[2] + match[3] + "x";
-  } else if (/^(?:[+\-]?\d+(?:[.,]\d+)?|\++|-+)$/.test(displayValue)) {
+  if (/^(?:[+\-]?\d+(?:[.,]\d+)?|\++|-+)$/.test(displayValue)) {
     normalTag = match[2] + match[3] + displayValue;
   } else if (/^[^\s,;"']+$/.test(displayValue)) {
     normalTag = match[2] + match[3] + ": " + displayValue;

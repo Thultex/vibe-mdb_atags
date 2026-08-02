@@ -1,10 +1,11 @@
 /*
 ========================================
-A1 Check Versions v1.62 (sys 2.50)
+A1 Check Versions v1.63 (sys 2.50)
 ========================================
 
 Notes
-- Expects Template Field Transfer v1.02 with null-slot conversion to valueless tags.
+- Expects Tag Cleaner v1.55 with exact `00` null values converted to valueless tags.
+- Expects Template Field Transfer v1.03 with normal-tag conversion before cleaning.
 - Expects Dust Merger v0.17 with negative row offsets clamped at zero.
 - Expected collectAtags_lib version is 1.68 with general tag completeness tracking.
 - Text output starts with `System vX.XX (ok, X rm, X local)` or a compact config/match/miss summary and ends with a blank line.
@@ -68,7 +69,7 @@ var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERS
 function getCheckVersionsVersion() {
   return {
     name: "checkVersions",
-    version: "1.62",
+    version: "1.63",
     sysVersion: "2.50",
     path: "core/_checkVersions.js"
   };
@@ -88,10 +89,10 @@ var ATAG_EXPECTED_LIBS = [
 ];
 
 var ATAG_EXPECTED_OPTIONAL_LIBS = [
-  { id: "A1", title: "Check Versions", area: "core", name: "checkVersions", version: "1.62", getter: "getCheckVersionsVersion", path: "core/_checkVersions.js", optional: true },
+  { id: "A1", title: "Check Versions", area: "core", name: "checkVersions", version: "1.63", getter: "getCheckVersionsVersion", path: "core/_checkVersions.js", optional: true },
   { id: "A2", title: "Atag Helpers", area: "core", name: "helpers", version: "1.03", getter: "getHelpersVersion", path: "core/helpers.js", optional: true },
   { id: "A3", title: "Restore Atags", area: "core", name: "restoreAtags", version: "2.10", getter: "getRestoreAtagsVersion", path: "core/restoreAtags.js", optional: true },
-  { id: "A4", title: "Tag Cleaner", area: "core", name: "tagCleaner", version: "1.54", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
+  { id: "A4", title: "Tag Cleaner", area: "core", name: "tagCleaner", version: "1.55", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
   { id: "B2", title: "Tag Pair Parser", area: "1_tagging", name: "tagPairParser", version: "1.02", getter: "getTagPairParserVersion", path: "addons/1_tagging/tagPairParser.js", optional: true },
   { id: "B3", title: "Global Field Sync", area: "2_syncing", name: "globalFieldSync", version: "1.04", getter: "getGlobalFieldSyncVersion", path: "addons/2_syncing/globalFieldSync.js", optional: true },
   { id: "B4", title: "Sync Last From Latest", area: "2_syncing", name: "syncLastFromLatest", version: "1.07", getter: "getSyncLastFromLatestVersion", path: "addons/2_syncing/syncLastFromLatest.js", optional: true },
@@ -101,7 +102,7 @@ var ATAG_EXPECTED_OPTIONAL_LIBS = [
   { id: "B8", title: "Obsidian Linker", area: "6_integration", name: "obsidianLinker", version: "1.23", getter: "getObsidianLinkerVersion", path: "addons/6_integration/obsidianLinker.js", optional: true },
   { id: "B9", title: "Wiki Linker", area: "6_integration", name: "wikiLinker", version: "1.01", getter: "getWikiLinkerVersion", path: "addons/6_integration/wikiLinker.js", optional: true },
   { id: "B10", title: "Dust Merger", area: "2_syncing", name: "dustMerger", version: "0.17", getter: "getDustMergerVersion", path: "addons/2_syncing/dustMerger.js", optional: true },
-  { id: "B11", title: "Template Field Transfer", area: "2_syncing", name: "templateFieldTransfer", version: "1.02", getter: "getTemplateFieldTransferVersion", path: "addons/2_syncing/templateFieldTransfer.js", optional: true },
+  { id: "B11", title: "Template Field Transfer", area: "2_syncing", name: "templateFieldTransfer", version: "1.03", getter: "getTemplateFieldTransferVersion", path: "addons/2_syncing/templateFieldTransfer.js", optional: true },
   { id: "C1", title: "Multi Choice Helpers", area: "z_generell", name: "multiChoiceHelpers", version: "1.02", getter: "getMultiChoiceHelpersVersion", path: "addons/z_generell/multiChoiceHelpers.js", optional: true },
   { id: "C2", title: "Typed Text Fields", area: "z_generell", name: "typedTextFields", version: "1.01", getter: "getTypedTextFieldsVersion", path: "addons/z_generell/typedTextFields.js", optional: true },
   { id: "C3", title: "Hour Guide", area: "z_others", name: "hourGuide", version: "1.31", getter: "getHourGuideVersion", path: "addons/z_others/hourGuide.js", optional: true }

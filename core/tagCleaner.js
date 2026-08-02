@@ -1,9 +1,10 @@
 /*
 ========================================
-A4 Tag Cleaner v1.54 (sys 2.50)
+A4 Tag Cleaner v1.55 (sys 2.50)
 ========================================
 
 Notes
+- Converts every numeric null suffix `00` to the valueless superscript tag suffix `x`.
 - remove unused legacy wrappers; keep documented cleaner entrypoints.
 - core tag cleaner module.
 - Details live in README.md and CHANGELOG.md.
@@ -37,21 +38,21 @@ cleanTemplateTags({
 
 /*
 ========================================
-A4 Tag Cleaner v1.54 (sys 2.50)
+A4 Tag Cleaner v1.55 (sys 2.50)
 ========================================
 */
 
 function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
-    version: "1.54",
+    version: "1.55",
     sysVersion: "2.50",
     path: "core/tagCleaner.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("tagCleaner", "1.54", "2.50", "core/tagCleaner.js", true);
+  registerAtagLibVersion("tagCleaner", "1.55", "2.50", "core/tagCleaner.js", true);
 }
 
 function splitTagCleanerLines(text) {
@@ -222,6 +223,7 @@ function tagCleanerSuperscript(raw, positiveSignMode) {
   var mode = normalizeTagCleanerFormatValueMode(positiveSignMode);
 
   if (mode === "none") return s;
+  if (s === "00") return tagCleanerTagSuffix();
 
   if (/^\d/.test(s) && mode === "max") s = "+" + s;
   else if (/^\+\d/.test(s) && mode === "min") s = s.substring(1);

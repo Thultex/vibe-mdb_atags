@@ -151,7 +151,7 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
   - `moveFilledTemplates()` verschiebt gefuellte Slots und setzt sie im Quellfeld zurueck
   - `moveAndTrackTemplates()` kombiniert Transfer und das allgemeine `trackTagsComplete()` aus dem Collector
   - unterstuetzt `append`, `prepend`, `replace` sowie `append_row`, `prepend_row`, `replace_row`
-  - `_00` wird beim Übertrag zu `x`, sodass der Cleaner daraus einen wertlosen, später ergänzbaren Tag macht
+  - `_00` wird als normales `tag00` übertragen; der Cleaner macht daraus global den wertlosen, später ergänzbaren Tag `tagˣ`
   - alternativ aktiviert `datatype: "string_rows"` die Row-Erzeugung bei normalem Append/Prepend
 
 **Workflow Add-ons**
@@ -521,17 +521,17 @@ Beispiele:
 
 ```text
 emo2 tag-0,3 stuff++
-tag+ tag-- tag++2 tag00 tag02 tag-0,2
+tag+ tag-- tag++2 tag00 tag02 tag003 tag-0,2
 ```
 
 wird zu:
 
 ```text
 emo² tag⁻⁰³ stuff⁺⁺
-tag⁺ tag⁻⁻ tag⁺⁺² tag⁰⁰ tag⁰² tag⁻⁰²
+tag⁺ tag⁻⁻ tag⁺⁺² tagˣ tag⁰² tag⁰⁰³ tag⁻⁰²
 ```
 
-Mit `formatValues: "keep"` bleibt `tag+3` als `tag⁺³`, während `tag3` zu `tag³` wird. Mit `"max"` wird auch `tag³` zu `tag⁺³`; mit `"min"` wird `tag⁺³` zu `tag³`. Kumulative Formen bleiben bewusst sichtbar: `tag+` wird `tag⁺`, `tag++` wird `tag⁺⁺`, `tag++2` wird `tag⁺⁺²`. Längere Läufe werden verdichtet: `tag++++` wird wie `tag++4` gelesen. `tag:_`, `tag::__` und `tag#__` gelten als leere Vorlagen und werden aus der Tagleiste nicht übernommen; Slot-Werte wie `tag:_2 km_`, `tag: _2 km_`, `tag::_2 km_` oder `tag#_2 km_` werden als Stringwert `2 km` gelesen. `tag:: Inhalt` bleibt mit doppeltem Doppelpunkt erhalten; `tag::Inhalt` wird zu `tag:: Inhalt`. In der Tagleiste wird auch `test_b: sdfd` als Stringwert erkannt und zu `test_b:sdfd`; im normalen Text bleibt diese Form unberührt. Wörter mit Unterstrich vor der Zahl bleiben Wörter, z. B. `test_00` und `test_3`. Alleinstehende Superscripts werden als normaler Text zurückgeschrieben, z. B. `Nr ²` zu `Nr 2`.
+Mit `formatValues: "keep"` bleibt `tag+3` als `tag⁺³`, während `tag3` zu `tag³` wird. Mit `"max"` wird auch `tag³` zu `tag⁺³`; mit `"min"` wird `tag⁺³` zu `tag³`. Der exakte Nullwert `tag00` wird immer zum wertlosen `tagˣ`; längere Dezimalformen bleiben Werte, z. B. `tag003` als `tag⁰⁰³` (0,03). Kumulative Formen bleiben bewusst sichtbar: `tag+` wird `tag⁺`, `tag++` wird `tag⁺⁺`, `tag++2` wird `tag⁺⁺²`. Längere Läufe werden verdichtet: `tag++++` wird wie `tag++4` gelesen. `tag:_`, `tag::__` und `tag#__` gelten als leere Vorlagen und werden aus der Tagleiste nicht übernommen; Slot-Werte wie `tag:_2 km_`, `tag: _2 km_`, `tag::_2 km_` oder `tag#_2 km_` werden als Stringwert `2 km` gelesen. `tag:: Inhalt` bleibt mit doppeltem Doppelpunkt erhalten; `tag::Inhalt` wird zu `tag:: Inhalt`. In der Tagleiste wird auch `test_b: sdfd` als Stringwert erkannt und zu `test_b:sdfd`; im normalen Text bleibt diese Form unberührt. Wörter mit Unterstrich vor der Zahl bleiben Wörter, z. B. `test_00` und `test_3`. Alleinstehende Superscripts werden als normaler Text zurückgeschrieben, z. B. `Nr ²` zu `Nr 2`.
 
 Tagleisten:
 
@@ -860,7 +860,7 @@ Aggregation:
 - `sum`
 - `null`
 
-Kumulative `+`/`-`-Tags wie `tag+`, `tag++`, `tag--` und `tag++2` werden in Row-Aggregationen immer addiert, auch wenn `rowAggregateMode: "avg"` gesetzt ist. Bei `tag++324` ist `324` der kumulative Wert; `tag++++` wird als Kurzform für `tag++4` gelesen. `tag00` ist ein leerer/null-Wert, `tag0` ist die Zahl 0, `tag02`/`tag0,2` sind 0,2. `test_00` und `test_3` werden nicht als Tagwert erkannt, weil die Zahl Teil des Wortes ist. `tag:_`, `tag::__` und `tag#__` gelten als Vorlagen und werden ignoriert; `tag:_inhalt_` wird als Stringwert gelesen.
+Kumulative `+`/`-`-Tags wie `tag+`, `tag++`, `tag--` und `tag++2` werden in Row-Aggregationen immer addiert, auch wenn `rowAggregateMode: "avg"` gesetzt ist. Bei `tag++324` ist `324` der kumulative Wert; `tag++++` wird als Kurzform für `tag++4` gelesen. `tag00` ist ein leerer/null-Wert und wird vom Cleaner als `tagˣ` geschrieben; `tag0` ist die Zahl 0, `tag02`/`tag0,2` sind 0,2 und `tag003` ist 0,03. `test_00` und `test_3` werden nicht als Tagwert erkannt, weil die Zahl Teil des Wortes ist. `tag:_`, `tag::__` und `tag#__` gelten als Vorlagen und werden ignoriert; `tag:_inhalt_` wird als Stringwert gelesen.
 
 **Alias-System**
 

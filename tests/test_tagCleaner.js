@@ -36,20 +36,20 @@ assertEquals(
 
 assertEquals(
   "inline-issue38-values",
-  makeTagCleanerText("tag+ tag- tag++ tag-- tag++2 tag--3 tag++++ tag---- tag00 tag0 tag02 tag0,2 tag-02 tag-0,2"),
-  "tag\u207A tag\u207B tag\u207A\u207A tag\u207B\u207B tag\u207A\u207A\u00B2 tag\u207B\u207B\u00B3 tag\u207A\u207A\u2074 tag\u207B\u207B\u2074 tag\u2070\u2070 tag\u2070 tag\u2070\u00B2 tag\u2070\u00B2 tag\u207B\u2070\u00B2 tag\u207B\u2070\u00B2"
+  makeTagCleanerText("tag+ tag- tag++ tag-- tag++2 tag--3 tag++++ tag---- tag00 tag0 tag02 tag003 tag0,2 tag-02 tag-0,2"),
+  "tag\u207A tag\u207B tag\u207A\u207A tag\u207B\u207B tag\u207A\u207A\u00B2 tag\u207B\u207B\u00B3 tag\u207A\u207A\u2074 tag\u207B\u207B\u2074 tag\u02E3 tag\u2070 tag\u2070\u00B2 tag\u2070\u2070\u00B3 tag\u2070\u00B2 tag\u207B\u2070\u00B2 tag\u207B\u2070\u00B2"
 );
 
 assertEquals(
   "inline-underscore-words-not-values",
   makeTagCleanerText("test_00 test_3 tag00 tag3"),
-  "test_00 test_3 tag\u2070\u2070 tag\u00B3"
+  "test_00 test_3 tag\u02E3 tag\u00B3"
 );
 
 assertEquals(
   "inline-issue50-mixed-suffix-conversions",
   makeTagCleanerText("TempoHalb\u02E32 test\u2070\u207003 tag\u00B2\u02E3 tag\u00B2# Tem\u02E300"),
-  "TempoHalb\u00B2 test\u2070\u00B3 tag\u02E3 tag\u02E3 Tem\u2070\u2070"
+  "TempoHalb\u00B2 test\u2070\u00B3 tag\u02E3 tag\u02E3 Tem\u02E3"
 );
 
 assertEquals(
@@ -289,13 +289,13 @@ assertEquals(
 assertEquals(
   "tagbar-issue38-values-and-templates",
   makeTagCleanerText("Text\n| tag+ tag-- tag++2 tag00 tag02 test:_ test:: _"),
-  "Text\n\n| tag\u207A tag\u207B\u207B tag\u207A\u207A\u00B2 tag\u2070\u2070 tag\u2070\u00B2"
+  "Text\n\n| tag\u207A tag\u207B\u207B tag\u207A\u207A\u00B2 tag\u2070\u00B2, tag\u02E3"
 );
 
 assertEquals(
   "tagbar-template-slot-values-use-normal-value-parser",
   makeTagCleanerText("Text\n| Mal_sehen:_-8_ Plus:_+8_ Null:_00_ Kum:_++_ Info:_2 km_ Empty:__"),
-  "Text\n\n| Kum\u207A\u207A Mal_sehen\u207B\u2078 Null\u2070\u2070 Plus\u207A\u2078, Info:2 km"
+  "Text\n\n| Kum\u207A\u207A Mal_sehen\u207B\u2078 Plus\u207A\u2078, Info:2 km, Null\u02E3"
 );
 
 assertEquals(

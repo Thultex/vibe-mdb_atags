@@ -26,7 +26,9 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 
 ### 2026-08-02
 
-- Fix: Template Field Transfer v1.02 wandelt `_00` beim Übertrag in ein wertloses `x`-Tag um, das der Cleaner anschließend hochstellt und das später ergänzt werden kann.
+- Fix: Tag Cleaner v1.55 wandelt den exakten Nullwert `tag00` global in den wertlosen, später ergänzbaren Tag `tagˣ` um; längere Dezimalwerte wie `tag003` bleiben als `tag⁰⁰³` erhalten.
+- Change: Template Field Transfer v1.03 lässt `_00` als normales `tag00` für die zentrale Cleaner-Regel stehen.
+- Change: Check Versions v1.63 erwartet Tag Cleaner v1.55 und Template Field Transfer v1.03.
 - Change: Check Versions v1.62 erwartet Template Field Transfer v1.02.
 - Fix: DustMerger v0.17 behandelt negative Quell-Rows als Zeitversatz beim Übertrag und begrenzt Ergebnisse unter der Hauptzeit auf `0:`.
 - Change: Check Versions v1.61 erwartet DustMerger v0.17.
