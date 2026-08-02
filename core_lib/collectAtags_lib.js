@@ -1,10 +1,10 @@
 /*
 ========================================
-#1 collectAtags Lib v1.71 (sys 2.50)
+#1 collectAtags Lib v1.72 (sys 2.50)
 ========================================
 
 Changes
-- preserve logged alias source names for general tag completeness tracking
+- expose the collector alias resolution and canonicalize completeness requirements once
 - strip complete trailing alias display-marker runs from short names such as `tst--`
 - write incomplete tag names in required order to the default field `Noch Fehlend`
 - add trackTagsComplete for required tags, direct value maps and optional template names
@@ -57,21 +57,21 @@ Changes
 
 /*
 ========================================
-#1 collectAtags Lib v1.71 (sys 2.50)
+#1 collectAtags Lib v1.72 (sys 2.50)
 ========================================
 */
 
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.71",
+    version: "1.72",
     sysVersion: "2.50",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.71", "2.50", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.72", "2.50", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");
@@ -278,27 +278,15 @@ function collectAtags(cfg) {
     };
   }
 
-  function addItem(items, seen, name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, displayName, cats, kind, cumulative, categoryChildSigns, sourceName) {
+  function addItem(items, seen, name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, displayName, cats, kind, cumulative, categoryChildSigns) {
     var item;
-    var sourceDisplay = normalizeTagName(sourceName || "");
     var key = String(name).toLowerCase() +
       "|" + String(attrText) +
       "|" + String(rowValue) +
       "|" + String(rowUnit);
 
-    if (seen[key]) {
-      item = seen[key];
-      if (sourceDisplay && item.sourceNames) {
-        var sourceKey = sourceDisplay.toLowerCase();
-        var sourceExists = false;
-        var sourceIndex;
-        for (sourceIndex = 0; sourceIndex < item.sourceNames.length; sourceIndex++) {
-          if (String(item.sourceNames[sourceIndex]).toLowerCase() === sourceKey) sourceExists = true;
-        }
-        if (!sourceExists) item.sourceNames.push(sourceDisplay);
-      }
-      return;
-    }
+    if (seen[key]) return;
+    seen[key] = true;
 
     item = {
       name: name,
@@ -309,8 +297,7 @@ function collectAtags(cfg) {
       rowUnit: rowUnit != null ? rowUnit : null,
       rowRaw: rowRaw != null ? rowRaw : null,
       displayName: displayName || name,
-      cats: cats || [],
-      sourceNames: sourceDisplay ? [sourceDisplay] : []
+      cats: cats || []
     };
 
     if (!cumulative && /^([+\-]|\+{2,}\d*|-{2,}\d*)$/.test(String(attrText || ""))) {
@@ -324,7 +311,6 @@ function collectAtags(cfg) {
     if (cumulative) item.cumulative = true;
     if (categoryChildSigns) item.categoryChildSigns = categoryChildSigns;
 
-    seen[key] = item;
     items.push(item);
   }
 
@@ -826,6 +812,34 @@ function collectAtags(cfg) {
     return [resolveAlias(name, aliasMap)];
   }
 
+  function buildResolvedTagNameMap(aliasMap) {
+    var out = {};
+    var multiMap = aliasMap && aliasMap._multiAliasTargets ? aliasMap._multiAliasTargets : {};
+    var key;
+    var infos;
+    var names;
+    var seenNames;
+    var i;
+    var resolvedName;
+    var resolvedKey;
+
+    for (key in aliasMap) {
+      if (!Object.prototype.hasOwnProperty.call(aliasMap, key) || key.charAt(0) === "_") continue;
+      infos = multiMap[key] && multiMap[key].length ? multiMap[key] : [aliasMap[key]];
+      names = [];
+      seenNames = {};
+      for (i = 0; i < infos.length; i++) {
+        resolvedName = infos[i] && infos[i].name ? normalizeTagName(infos[i].name) : "";
+        resolvedKey = String(resolvedName || "").toLowerCase();
+        if (!resolvedKey || seenNames[resolvedKey]) continue;
+        seenNames[resolvedKey] = true;
+        names.push(resolvedName);
+      }
+      if (names.length) out[String(key).toLowerCase()] = names;
+    }
+    return out;
+  }
+
   function decodeReadableSuperscript(raw) {
     var s = String(raw || "");
     var out = "";
@@ -901,9 +915,7 @@ function collectAtags(cfg) {
         norm.attrText, norm.attrValue, effectiveRaw,
         rowValue, rowUnit, rowRaw,
         aliasInfo.shortName || resolvedName,
-        aliasInfo.cats || [],
-        null, null, null,
-        name
+        aliasInfo.cats || []
       );
     }
   }
@@ -1524,7 +1536,7 @@ function collectAtags(cfg) {
 
   addCategoryItems(items, seen, aliasMap);
 
-  return { items: items };
+  return { items: items, resolvedTagNames: buildResolvedTagNameMap(aliasMap) };
 }
 
 function atcTrim(value) {
@@ -1659,25 +1671,48 @@ function atcBuildCollectorMaps(items) {
   var names = {};
   var i;
 
-  function addName(displayName, itemFilled) {
-    var key = atcNormalizeName(displayName);
-    if (!key) return;
-    present[key] = true;
-    names[key] = atcTrim(displayName);
-    if (itemFilled) filled[key] = true;
-    else if (!atcHasOwn(filled, key)) filled[key] = false;
-  }
-
   for (i = 0; i < values.length; i++) {
     var displayName = atcItemName(values[i]);
-    var itemFilled = atcItemFilled(values[i]);
-    var sourceNames = atcToArray(values[i] && values[i].sourceNames);
-    var sourceIndex;
-    addName(displayName, itemFilled);
-    if (values[i] && values[i].displayName != null) addName(values[i].displayName, itemFilled);
-    for (sourceIndex = 0; sourceIndex < sourceNames.length; sourceIndex++) addName(sourceNames[sourceIndex], itemFilled);
+    var key = atcNormalizeName(displayName);
+    if (!key) continue;
+    present[key] = true;
+    names[key] = displayName;
+    if (atcItemFilled(values[i])) filled[key] = true;
+    else if (!atcHasOwn(filled, key)) filled[key] = false;
   }
   return { present: present, filled: filled, names: names };
+}
+
+function atcResolvedTagKeys(name, collectorResult) {
+  var key = atcNormalizeName(name);
+  var resolvedMap = collectorResult && collectorResult.resolvedTagNames;
+  var resolved = resolvedMap && resolvedMap[key] ? atcToArray(resolvedMap[key]) : [];
+  var out = [];
+  var seen = {};
+  var i;
+  var resolvedKey;
+
+  if (!resolved.length) resolved = [name];
+  for (i = 0; i < resolved.length; i++) {
+    resolvedKey = atcNormalizeName(resolved[i]);
+    if (!resolvedKey || seen[resolvedKey]) continue;
+    seen[resolvedKey] = true;
+    out.push(resolvedKey);
+  }
+  if (!out.length && key) out.push(key);
+  return out;
+}
+
+function atcCollectorTagStatus(name, collectorResult, collectorMaps) {
+  var keys = atcResolvedTagKeys(name, collectorResult);
+  var status = { present: false, filled: false };
+  var i;
+
+  for (i = 0; i < keys.length; i++) {
+    if (collectorMaps.present[keys[i]] === true) status.present = true;
+    if (collectorMaps.filled[keys[i]] === true) status.filled = true;
+  }
+  return status;
 }
 
 function atcPushUniqueName(list, seen, value) {
@@ -1752,9 +1787,9 @@ function trackTagsComplete(cfg) {
         if (atcHasOwn(mapValue, "filled")) directStatus[statusKey] = mapValue.filled === true;
         else if (atcHasOwn(mapValue, "value")) directStatus[statusKey] = atcValueFilled(mapValue.value);
         else if (lookupName) {
-          var lookupKey = atcNormalizeName(lookupName);
-          directStatus[statusKey] = collectorMaps.filled[lookupKey] === true;
-          directPresent[statusKey] = collectorMaps.present[lookupKey] === true;
+          var lookupStatus = atcCollectorTagStatus(lookupName, collectorResult, collectorMaps);
+          directStatus[statusKey] = lookupStatus.filled;
+          directPresent[statusKey] = lookupStatus.present;
         } else directStatus[statusKey] = atcValueFilled(mapValue);
       } else directStatus[statusKey] = atcValueFilled(mapValue);
 
@@ -1769,8 +1804,9 @@ function trackTagsComplete(cfg) {
   for (i = 0; i < required.length; i++) {
     var requiredName = required[i];
     var requiredKey = atcNormalizeName(requiredName);
-    var present = atcHasOwn(directPresent, requiredKey) ? directPresent[requiredKey] : collectorMaps.present[requiredKey] === true;
-    var filled = atcHasOwn(directStatus, requiredKey) ? directStatus[requiredKey] : collectorMaps.filled[requiredKey] === true;
+    var collectorStatus = atcCollectorTagStatus(requiredName, collectorResult, collectorMaps);
+    var present = atcHasOwn(directPresent, requiredKey) ? directPresent[requiredKey] : collectorStatus.present;
+    var filled = atcHasOwn(directStatus, requiredKey) ? directStatus[requiredKey] : collectorStatus.filled;
 
     result.presentMap[requiredName] = present;
     result.filledMap[requiredName] = filled;

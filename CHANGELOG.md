@@ -26,6 +26,8 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 
 ### 2026-08-02
 
+- Refactor: `collectAtags_lib` v1.72 gibt seine bereits gebaute Aliasauflösung als `resolvedTagNames` zurück; `trackTagsComplete()` kanonisiert Soll- und Templatenamen darüber einmalig statt Aliasnamen aus gefundenen Items zurückzuermitteln.
+- Change: Check Versions v1.68 erwartet `collectAtags_lib` v1.72.
 - Fix: `collectAtags_lib` v1.71 bewahrt geloggte Alias-/Quellnamen im Collector-Ergebnis; `trackTagsComplete()` erkennt dadurch beispielsweise `Kiefer`, `ks` und `Nacken` auch dann als ausgefüllt, wenn sie zu Langnamen aufgelöst werden.
 - Change: Check Versions v1.67 erwartet `collectAtags_lib` v1.71.
 - Fix: Tag Cleaner v1.56 und `collectAtags_lib` v1.70 entfernen bei Alias-Headern den vollständigen abschließenden Steuerzeichenlauf; `test(tst--)` nutzt dadurch den Kurznamen `tst` ohne verbleibendes Minus.

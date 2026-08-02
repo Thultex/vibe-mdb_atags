@@ -508,19 +508,19 @@ function testTrackTagsCompleteWritesDefaultMissingFieldInOrderAndClearsIt() {
 function testTrackTagsCompleteRecognizesLoggedAliasNames() {
   var parsed = collectAtags({
     entryObj: makeEntry({
-      Note: "@@Kieferspannung (ks): Kiefer\n@@Nackenschmerz (N): Nacken\nKiefer1 ks0 Nacken0"
+      Note: "@@Kieferspannung (ks): Kiefer\n@@Nackenschmerz (N): Nacken\n@@Emotion (emo): Feeling\nKieferspannung1 Nackenschmerz0 Emotion-1"
     }),
     textFields: ["Note"]
   });
   var tracked = trackTagsComplete({
     result: parsed,
-    requiredTags: ["Kiefer", "ks", "Nacken", "emo"],
+    requiredTags: ["Kiefer", "ks", "Nacken", "emo", "\u00F6ffnen"],
     completeField: "",
     missingField: ""
   });
 
-  assertArray("track-alias-filled", tracked.filledTags, ["Kiefer", "ks", "Nacken"]);
-  assertArray("track-alias-incomplete", tracked.incompleteTags, ["emo"]);
+  assertArray("track-alias-filled", tracked.filledTags, ["Kiefer", "ks", "Nacken", "emo"]);
+  assertArray("track-alias-incomplete", tracked.incompleteTags, ["\u00F6ffnen"]);
 }
 
 testTrackTagsCompleteUsesCollectorValuesAndTemplates();
