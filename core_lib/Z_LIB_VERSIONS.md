@@ -14,7 +14,7 @@ Aktuelle Library-Dateien und Versionen:
 
 | Name | Version | Sys | Pfad |
 | --- | ---: | ---: | --- |
-| A1 Check Versions | 1.60 | 2.50 | `core/_checkVersions.js` |
+| A1 Check Versions | 1.61 | 2.50 | `core/_checkVersions.js` |
 
 Optionale Plugins/Addons koennen sich beim Laden per `registerAtagLibVersion(name, version, sysVersion, path, true)` registrieren und in `ATAG_EXPECTED_OPTIONAL_LIBS` einen `getter` besitzen. Mismatch- und Missing-Meldungen ueber fehlende Getter/Module werden getrennt ueber `SHOW_REMOTE_MISSMATCHES`, `SHOW_LOCAL_MISSMATCHES`, `SHOW_REMOTE_MISSING` und `SHOW_LOCAL_MISSING` gesteuert.
 
@@ -35,7 +35,7 @@ Diese Dateien gehoeren funktionell zur Lib-Nutzung, sind aber keine externen Rem
 | B7 timeMarker | 1.41 | 2.50 | `addons/3_workflow/timeMarker.js` | Zeitmarker in Textfeldern |
 | B8 obsidianLinker | 1.23 | 2.50 | `addons/6_integration/obsidianLinker.js` | Memento-/Obsidian-Linking |
 | B9 wikiLinker | 1.01 | 2.50 | `addons/6_integration/wikiLinker.js` | Wikipedia-Suchlinks |
-| B10 dustMerger | 0.16 | 2.50 | `addons/2_syncing/dustMerger.js` | Zeitnahes Mergen von Eintraegen |
+| B10 dustMerger | 0.17 | 2.50 | `addons/2_syncing/dustMerger.js` | Zeitnahes Mergen von Eintraegen |
 | B11 templateFieldTransfer | 1.01 | 2.50 | `addons/2_syncing/templateFieldTransfer.js` | Template-Werte als normale Tags und optionale Rows uebertragen |
 | C1 multiChoiceHelpers | 1.02 | 2.50 | `addons/z_generell/multiChoiceHelpers.js` | Multi-Choice-Helfer |
 | C2 typedTextFields | 1.01 | 2.50 | `addons/z_generell/typedTextFields.js` | Typisierte Textfeld-Sync-Helfer |

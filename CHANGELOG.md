@@ -26,6 +26,8 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 
 ### 2026-08-02
 
+- Fix: DustMerger v0.17 behandelt negative Quell-Rows als Zeitversatz beim Übertrag und begrenzt Ergebnisse unter der Hauptzeit auf `0:`.
+- Change: Check Versions v1.61 erwartet DustMerger v0.17.
 - Feature: Template Field Transfer v1.01 wandelt verschobene Template-Werte in normale Parser-Tags um: Zahlen und kumulative Werte werden kompakt, Textwerte als Colon-Tags ausgegeben und Mehrwortwerte quotiert.
 - Feature: `append_row`, `prepend_row` und `replace_row` erzeugen echte Zeit-Rows; alternativ aktiviert `datatype: "string_rows"` die Row-Erzeugung. `fieldDate` liefert die Zeit, `rowLabel` bleibt als explizites Override erhalten.
 - Change: Check Versions v1.60 erwartet Template Field Transfer v1.01.

@@ -143,6 +143,7 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
   - merge den aktuellen neueren Eintrag in einen älteren Eintrag derselben Library
   - `map` mit `append`, `prepend`, `replace`, `add`, `subtract`
   - `rowSourceMode: "realtime_since"` rechnet relative Quell-Rows beim Merge auf das Ziel-Datum um, z. B. `0:` im Quell-Eintrag zu `1,5:` im älteren Ziel-Eintrag
+  - negative Quell-Rows ziehen Zeit vom Übertrag ab; im normalen Merge von der Quellzeit, bei `realtime_since` vom Datumsabstand. Ergebnisse unter null werden zu `0:`
   - `mergeJsonField` schreibt Ziel-Historie und einen Stop-Marker im gemergten Quell-Eintrag inklusive letztem Trash-Status
   - optional `skipField`, `forceMergeField`, `blockMap`, `statusField`, `mergeCountField`, `mergeCountNoJson`, `debugField`, `trashMergedEntry`, `openTargetEntry`
   - `statusField` wird auf dem geprueften Eintrag aktualisiert; `mergeCountField` wird auf dem Ziel-Eintrag aus dessen Merge-JSON gezaehlt, ausser `mergeCountNoJson: true` erzwingt den Fallback

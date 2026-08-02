@@ -234,6 +234,58 @@ function testRealtimeSinceRowsAreShiftedToTargetDate() {
   assertEquals("relative-row-note", older.field("Notiz"), "9,5: old\n1,5: start\n2: next");
 }
 
+function testNegativeRealtimeRowsOffsetSourceTimeAndClampToZero() {
+  var newer = makeEntry({
+    id: "new",
+    Datum: "2026-07-07 01:00",
+    Notiz: "-0,5: earlier\n-2: clamped"
+  });
+  var older = makeEntry({
+    id: "old",
+    Datum: "2026-07-07 00:00",
+    Notiz: "old"
+  });
+  _entries = [newer, older];
+
+  dustMerge({
+    fieldDate: "Datum",
+    rowSourceMode: "realtime",
+    trashMergedEntry: false,
+    openTargetEntry: false,
+    map: [
+      { name: "Notiz", mode: "append", datatype: "string_rows" }
+    ]
+  });
+
+  assertEquals("negative-realtime-row-note", older.field("Notiz"), "old\n0,5: earlier\n0: clamped");
+}
+
+function testNegativeRelativeRowsOffsetDeltaAndClampToZero() {
+  var newer = makeEntry({
+    id: "new",
+    Datum: "2026-07-07 11:00",
+    Notiz: "-1: earlier\n-2: clamped"
+  });
+  var older = makeEntry({
+    id: "old",
+    Datum: "2026-07-07 09:30",
+    Notiz: "old"
+  });
+  _entries = [newer, older];
+
+  dustMerge({
+    fieldDate: "Datum",
+    rowSourceMode: "realtime_since",
+    trashMergedEntry: false,
+    openTargetEntry: false,
+    map: [
+      { name: "Notiz", mode: "append", datatype: "string_rows" }
+    ]
+  });
+
+  assertEquals("negative-relative-row-note", older.field("Notiz"), "old\n0,5: earlier\n0: clamped");
+}
+
 function testBlockMapStopsMergeWhenTargetFieldHasContent() {
   var newer = makeEntry({
     id: "new",
@@ -719,6 +771,8 @@ testDoesNotDuplicateExactRows();
 testDoesNotMergeEmptyTemplateRows();
 testTemplateRowsFollowTargetTemplateOrder();
 testRealtimeSinceRowsAreShiftedToTargetDate();
+testNegativeRealtimeRowsOffsetSourceTimeAndClampToZero();
+testNegativeRelativeRowsOffsetDeltaAndClampToZero();
 testBlockMapStopsMergeWhenTargetFieldHasContent();
 testDayStartAndWindowMustMatch();
 testPreviousDayGraceCanMergeAcrossMidnightWithTwentyEightHourWindow();

@@ -1,9 +1,10 @@
 /*
 ========================================
-B10 Dust Merger v0.16 (sys 2.50)
+B10 Dust Merger v0.17 (sys 2.50)
 ========================================
 
 Changes
+- treat negative source rows as transfer-time offsets and clamp them to 0
 - keep target template order when prepending filled template rows
 - transfer successful source merge-log entries into the target merge log
 - default merge window is 28 hours; no_target attempt logs do not count as already merged
@@ -58,11 +59,11 @@ dustMerge({
 
 /*
 ========================================
-B10 Dust Merger v0.16 (sys 2.50)
+B10 Dust Merger v0.17 (sys 2.50)
 ========================================
 */
 
-var DUST_MERGER_VERSION = "0.16";
+var DUST_MERGER_VERSION = "0.17";
 
 function getDustMergerVersion() {
   return {
@@ -328,7 +329,9 @@ function dmRowLabel(sourceDate, targetDate, cfg, rowOffsetHours) {
     hours += Number(rowOffsetHours || 0);
   } else {
     hours = sourceDate.getHours() + sourceDate.getMinutes() / 60 + sourceDate.getSeconds() / 3600;
+    hours += Number(rowOffsetHours || 0);
   }
+  if (hours < 0) hours = 0;
   hours = dmStepHours(hours, cfg.rowStepHours == null ? 0.5 : cfg.rowStepHours, cfg.rowRoundMode || "round");
   return dmFormatHours(hours);
 }
@@ -525,7 +528,7 @@ function dmMergeStringRows(targetEntry, sourceEntry, fieldName, mode, sourceDate
   for (i = 0; i < source.length; i++) {
     if (dmIsEmptyTemplateSlotLine(source[i])) continue;
     row = dmSplitRowLine(source[i]);
-    if (row && (sourceMode === "realtime_since" || sourceMode === "since" || sourceMode === "relative")) {
+    if (row && (sourceMode === "realtime_since" || sourceMode === "since" || sourceMode === "relative" || row.value < 0)) {
       line = dmRowLabel(sourceDate, targetDate, cfg, row.value) + ": " + row.content;
     } else {
       line = row ? source[i] : label + ": " + source[i];
