@@ -124,7 +124,7 @@ function testConvertsTemplateVariantsToNormalTags() {
   assertEquals(
     "normal-tag-variants",
     entryObj.field("Notiz"),
-    "NegativeA-3\nPositiveA+2\nDecimalA-1,4\nCumulativeA++\nNullA00\nTextA: rewre\nPhraseA: \"two words\""
+    "NegativeA-3\nPositiveA+2\nDecimalA-1,4\nCumulativeA++\nNullAx\nTextA: rewre\nPhraseA: \"two words\""
   );
   assertEquals(
     "normal-tag-variant-reset",

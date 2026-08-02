@@ -151,6 +151,7 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
   - `moveFilledTemplates()` verschiebt gefuellte Slots und setzt sie im Quellfeld zurueck
   - `moveAndTrackTemplates()` kombiniert Transfer und das allgemeine `trackTagsComplete()` aus dem Collector
   - unterstuetzt `append`, `prepend`, `replace` sowie `append_row`, `prepend_row`, `replace_row`
+  - `_00` wird beim Übertrag zu `x`, sodass der Cleaner daraus einen wertlosen, später ergänzbaren Tag macht
   - alternativ aktiviert `datatype: "string_rows"` die Row-Erzeugung bei normalem Append/Prepend
 
 **Workflow Add-ons**
