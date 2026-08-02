@@ -26,6 +26,8 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 
 ### 2026-08-02
 
+- Fix: Tag Cleaner v1.56 und `collectAtags_lib` v1.70 entfernen bei Alias-Headern den vollständigen abschließenden Steuerzeichenlauf; `test(tst--)` nutzt dadurch den Kurznamen `tst` ohne verbleibendes Minus.
+- Change: Check Versions v1.66 erwartet Tag Cleaner v1.56 und `collectAtags_lib` v1.70.
 - Change: Check Versions v1.65 besitzt wie die übrigen kopierbaren Module zusätzlich zum Dokumentationskopf einen kompakten zweiten Versionsbanner direkt vor dem Code.
 - Feature: `collectAtags_lib` v1.69 schreibt unvollständige Tags standardmäßig in Prüfreihenfolge als einfache Liste in `Noch Fehlend` und leert das Feld bei Vollständigkeit; `missingField: ""` deaktiviert die Ausgabe.
 - Change: Check Versions v1.64 erwartet `collectAtags_lib` v1.69.

@@ -499,7 +499,7 @@ Optionen:
 - Das zu cleanende Feld wird nicht automatisch als Aliasquelle genutzt; dafuer muss es explizit in `aliasTextFields` stehen
 - `cleanerTagText: "long" | "short" | "none"` waehlt Langname, Kurzname oder nur Symbol fuer bekannte Alias-Tags
 - `cleanerEmoji: "none" | "prefix" | "suffix" | "only"` setzt ein Emoji vor/hinter den Namen oder nutzt es exklusiv, z. B. `😃emo²`, `emo😃²` oder `😃²`
-- Alias-Header koennen die Cleaner-Schreibweise selbst steuern: `emo*` bleibt wie eingegeben, `emo-` schreibt kurz, `emo+` schreibt lang; `emo` mit Emoji schreibt standardmaessig Emoji-only
+- Alias-Header koennen die Cleaner-Schreibweise selbst steuern: `emo*` bleibt wie eingegeben, `emo-` schreibt kurz, `emo+` schreibt lang; `emo` mit Emoji schreibt standardmaessig Emoji-only. Abschließende Steuerzeichen werden vollständig vom Kurznamen getrennt, sodass `test(tst--)` als Kurzname `tst` und nicht `tst-` schreibt
 - Alias-Header ohne Kurzname koennen Symboltokens steuern: `(+, 😃)` schreibt `😃²` zur Langform, `(-, 😃)` ignoriert die Symbolkonversion, `(*, 😃)` behaelt alles
 - `||`, `|"` und `|'` werden beim Cleanen als exklusive Tagleiste zu `"|` normalisiert
 - Eine einzelne leere `|`-Zeile wird standardmaessig ebenfalls zu `"|`; mit `singleBarExclusive: false` bleibt sie normale leere Tagleiste

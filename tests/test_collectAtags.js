@@ -278,6 +278,8 @@ assertItem("alias-short", "@@SymptomA (sa): SymptomA, SymAlias\nsa2", "SymptomA"
 assertItem("alias-short-display-marker-minus-is-not-part-of-name", "@@Emotion (emo-): feel\nemo2", "Emotion", "+2", 2, null, null);
 assertItem("alias-short-display-marker-plus-is-not-part-of-name", "@@Emotion (emo+): feel\nemo2", "Emotion", "+2", 2, null, null);
 assertItem("alias-short-display-marker-star-is-not-part-of-name", "@@Emotion (emo*): feel\nemo2", "Emotion", "+2", 2, null, null);
+assertItem("alias-repeated-display-markers-are-not-part-of-short-name", "@@test(tst--)\ntst2", "test", "+2", 2, null, null);
+assertDisplayName("alias-repeated-display-markers-short-display", "@@test(tst--)\ntest2", "test", "tst");
 assertDisplayName("alias-short-display", "@@SymptomA (sa): SymptomA, SymAlias\nSymptomA2", "SymptomA", "sa");
 assertItem("alias-emoji-superscript", "@@Emotion (emo, $): feel\n$\u00B2", "Emotion", "+2", 2, null, null);
 assertItem("alias-emoji-tagbar-superscript", "@@Emotion (emo, $): feel\n| $\u00B2", "Emotion", "+2", 2, null, null);

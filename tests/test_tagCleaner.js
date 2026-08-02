@@ -133,6 +133,14 @@ assertEquals(
 );
 
 assertEquals(
+  "alias-display-repeated-minus-is-not-part-of-short-name",
+  makeTagCleanerTextWithOptions("test2 tst3", {
+    aliasText: "@@test(tst--)"
+  }),
+  "tst\u00B2 tst\u00B3"
+);
+
+assertEquals(
   "alias-display-quoted-alias-tokens-stay-unchanged",
   makeTagCleanerTextWithOptions("goodfeel2 badfeel3 Feeling4 emo5", {
     aliasText: "@@Feeling (emo-): \"goodfeel\", -\"badfeel\""

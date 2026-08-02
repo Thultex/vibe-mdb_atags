@@ -1,9 +1,10 @@
 /*
 ========================================
-#1 collectAtags Lib v1.69 (sys 2.50)
+#1 collectAtags Lib v1.70 (sys 2.50)
 ========================================
 
 Changes
+- strip complete trailing alias display-marker runs from short names such as `tst--`
 - write incomplete tag names in required order to the default field `Noch Fehlend`
 - add trackTagsComplete for required tags, direct value maps and optional template names
 - parse open template slot values like `tag:_2` or `tag:_-1,4` without keeping the marker
@@ -55,21 +56,21 @@ Changes
 
 /*
 ========================================
-#1 collectAtags Lib v1.69 (sys 2.50)
+#1 collectAtags Lib v1.70 (sys 2.50)
 ========================================
 */
 
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.69",
+    version: "1.70",
     sysVersion: "2.50",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.69", "2.50", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.70", "2.50", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");
@@ -407,7 +408,7 @@ function collectAtags(cfg) {
     for (i = 0; i < parts.length; i++) {
       part = trimAtagString(parts[i]);
       if (!part) continue;
-      if (part.length > 1 && (part.charAt(part.length - 1) === "*" || part.charAt(part.length - 1) === "-" || part.charAt(part.length - 1) === "+")) {
+      while (part.length > 1 && (part.charAt(part.length - 1) === "*" || part.charAt(part.length - 1) === "-" || part.charAt(part.length - 1) === "+")) {
         part = part.substring(0, part.length - 1);
       }
       if (isAtagAliasNameToken(part) && !out.shortName) {

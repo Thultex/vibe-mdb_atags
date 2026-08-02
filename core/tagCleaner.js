@@ -1,9 +1,10 @@
 /*
 ========================================
-A4 Tag Cleaner v1.55 (sys 2.50)
+A4 Tag Cleaner v1.56 (sys 2.50)
 ========================================
 
 Notes
+- Removes complete trailing display-marker runs from alias short names such as `tst--`.
 - Converts every numeric null suffix `00` to the valueless superscript tag suffix `x`.
 - remove unused legacy wrappers; keep documented cleaner entrypoints.
 - core tag cleaner module.
@@ -38,21 +39,21 @@ cleanTemplateTags({
 
 /*
 ========================================
-A4 Tag Cleaner v1.55 (sys 2.50)
+A4 Tag Cleaner v1.56 (sys 2.50)
 ========================================
 */
 
 function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
-    version: "1.55",
+    version: "1.56",
     sysVersion: "2.50",
     path: "core/tagCleaner.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("tagCleaner", "1.55", "2.50", "core/tagCleaner.js", true);
+  registerAtagLibVersion("tagCleaner", "1.56", "2.50", "core/tagCleaner.js", true);
 }
 
 function splitTagCleanerLines(text) {
@@ -286,8 +287,10 @@ function parseTagCleanerAliasHeader(raw) {
     }
     if (!part) continue;
     last = part.charAt(part.length - 1);
-    if (part.length > 1 && (last === "*" || last === "-" || last === "+")) {
-      out.marker = last;
+    if (part.length > 1 && (last === "*" || last === "-" || last === "+")) out.marker = last;
+    while (part.length > 1) {
+      last = part.charAt(part.length - 1);
+      if (last !== "*" && last !== "-" && last !== "+") break;
       part = part.substring(0, part.length - 1);
     }
     if (isTagCleanerAliasNameToken(part) && !out.shortName) {
