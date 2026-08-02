@@ -70,7 +70,7 @@ function log(msg) {
   _logs.push(String(msg));
 }
 
-assertEquals("checkVersions-own-version", getCheckVersionsVersion().version, "1.59");
+assertEquals("checkVersions-own-version", getCheckVersionsVersion().version, "1.60");
 assertEquals("helpers-lib-own-version", getHelpersLibVersion().version, "2.11");
 assertEquals("helpers-lib-sys-version", getHelpersLibVersion().sysVersion, "2.50");
 assertEquals("collect-lib-own-version", getCollectAtagsLibVersion().version, "1.68");
@@ -80,8 +80,8 @@ assertEquals("helpers-own-version", getHelpersVersion().version, "1.03");
 assertEquals("helpers-mem-compat-version", getHelpersMemVersion().version, "1.03");
 assertEquals("dust-merger-own-version", getDustMergerVersion().version, "0.16");
 assertEquals("dust-merger-registered-version", ATAG_LIB_VERSIONS.dustMerger.version, "0.16");
-assertEquals("template-transfer-own-version", getTemplateFieldTransferVersion().version, "1.00");
-assertEquals("template-transfer-registered-version", ATAG_LIB_VERSIONS.templateFieldTransfer.version, "1.00");
+assertEquals("template-transfer-own-version", getTemplateFieldTransferVersion().version, "1.01");
+assertEquals("template-transfer-registered-version", ATAG_LIB_VERSIONS.templateFieldTransfer.version, "1.01");
 assertEquals("time-marker-registered-version", ATAG_LIB_VERSIONS.timeMarker.version, "1.41");
 assertEquals("hour-guide-registered-version", ATAG_LIB_VERSIONS.hourGuide.version, "1.31");
 
@@ -97,7 +97,7 @@ var dustGetterResult = checkAtagLibVersions({ names: ["dustMerger"], checkAccess
 assertEquals("generic-getter-dust-merger-version", dustGetterResult.map.dustMerger.version, "0.16");
 assertEquals("generic-getter-dust-merger-no-mismatch", dustGetterResult.versionMismatch.length, 0);
 var templateTransferGetterResult = checkAtagLibVersions({ names: ["templateFieldTransfer"], checkAccess: true, requireAll: false, asText: false });
-assertEquals("generic-getter-template-transfer-version", templateTransferGetterResult.map.templateFieldTransfer.version, "1.00");
+assertEquals("generic-getter-template-transfer-version", templateTransferGetterResult.map.templateFieldTransfer.version, "1.01");
 assertEquals("generic-getter-template-transfer-no-mismatch", templateTransferGetterResult.versionMismatch.length, 0);
 assertEquals("access-count", result.access.length, 3);
 
@@ -112,7 +112,7 @@ assertTrue("text-result-has-export", textResult.indexOf("exportAtags_lib v1.84")
 assertTrue("text-result-has-collect", textResult.indexOf("collectAtags_lib v1.68") !== -1);
 assertTrue("text-result-has-local-tag-cleaner", textResult.indexOf("LOCAL tagCleaner v1.54") !== -1);
 assertTrue("text-result-has-local-dust-merger", textResult.indexOf("LOCAL dustMerger v0.16") !== -1);
-assertTrue("text-result-has-local-template-transfer", textResult.indexOf("LOCAL templateFieldTransfer v1.00") !== -1);
+assertTrue("text-result-has-local-template-transfer", textResult.indexOf("LOCAL templateFieldTransfer v1.01") !== -1);
 assertTrue("text-result-ends-with-blank-line", /\n\n$/.test(textResult));
 
 var hiddenLocalText = checkAtagLibVersions({ checkAccess: true, asText: true, showLocalVersions: false });

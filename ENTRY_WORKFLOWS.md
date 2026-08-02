@@ -103,7 +103,8 @@ function PostEntry(e, fileOps) {
     entry: e,
     sourceField: "Record",
     targetField: "Notiz",
-    mode: "append"
+    mode: "append_row",
+    fieldDate: "Einnahmedatum"
   });
 
   applyTagCleaner({

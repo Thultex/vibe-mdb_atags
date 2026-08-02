@@ -149,7 +149,8 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
 - `B11` `addons/2_syncing/templateFieldTransfer.js` (gefuellte Templates zwischen Feldern verschieben)
   - `moveFilledTemplates()` verschiebt gefuellte Slots und setzt sie im Quellfeld zurueck
   - `moveAndTrackTemplates()` kombiniert Transfer und das allgemeine `trackTagsComplete()` aus dem Collector
-  - unterstuetzt `append`, `prepend`, `replace`, Dedupe und optionale `rowLabel`-Werte
+  - unterstuetzt `append`, `prepend`, `replace` sowie `append_row`, `prepend_row`, `replace_row`
+  - alternativ aktiviert `datatype: "string_rows"` die Row-Erzeugung bei normalem Append/Prepend
 
 **Workflow Add-ons**
 - `B5` `addons/3_workflow/floatingAverage.js` (gleitender Gruppen-Mittelwert)
@@ -292,7 +293,8 @@ var transfer = moveFilledTemplates({
   entry: e,
   sourceField: "Record",
   targetField: "Notiz",
-  mode: "append"
+  mode: "append_row",
+  fieldDate: "Einnahmedatum"
 });
 
 var result = applyTags({
@@ -312,6 +314,8 @@ trackTagsComplete({
 ```
 
 Der Transfer muss vor `applyTags()` laufen, damit verschobene Werte im selben PostEntry-Durchlauf erfasst werden. Die allgemeine Completion-Pruefung folgt danach und kann dasselbe Collector-Ergebnis wiederverwenden. `templateNames` beziehungsweise `templates` sind optional und werden wie `requiredTags` gegen nicht-leere Tagwerte geprueft. Leere Template-Slots erscheinen nicht als gefuellte Tags; normale Parser-Tags mit Wert werden genauso behandelt wie Template-Werte.
+
+Beim Transfer werden Template-Marker entfernt: numerische und kumulative Werte werden kompakt (`MetricA:_-3` → `MetricA-3`) und koennen danach vom Cleaner hochgestellt werden; Textwerte werden zur normalen Colon-Form (`TaskA:_ready` → `TaskA: ready`). Mehrwortwerte werden quotiert. Row-Modi erzeugen fuer Zeilen ohne vorhandenen Row-Prefix einen Zeitwert aus `fieldDate`; `rowLabel` ueberschreibt ihn explizit.
 
 Alternativ kann `map` bereits vorhandene Werte direkt pruefen. Zahlen einschliesslich `0` und nicht-leere Texte gelten als gefuellt; `null`, leere Texte und `false` gelten als leer.
 

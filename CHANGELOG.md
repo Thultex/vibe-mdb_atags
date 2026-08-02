@@ -24,6 +24,12 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 
 ## Log
 
+### 2026-08-02
+
+- Feature: Template Field Transfer v1.01 wandelt verschobene Template-Werte in normale Parser-Tags um: Zahlen und kumulative Werte werden kompakt, Textwerte als Colon-Tags ausgegeben und Mehrwortwerte quotiert.
+- Feature: `append_row`, `prepend_row` und `replace_row` erzeugen echte Zeit-Rows; alternativ aktiviert `datatype: "string_rows"` die Row-Erzeugung. `fieldDate` liefert die Zeit, `rowLabel` bleibt als explizites Override erhalten.
+- Change: Check Versions v1.60 erwartet Template Field Transfer v1.01.
+
 ### 2026-07-22
 
 - Fix: `collectAtags_lib` v1.67 entfernt bei offenen Template-Slot-Werten wie `Kiefer:_1` und `Kiefer:_-1,4` den fuehrenden Marker; Vorzeichen, Dezimalwerte und kumulative Werte bleiben dabei erhalten.

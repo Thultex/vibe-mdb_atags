@@ -1,9 +1,11 @@
 /*
 ========================================
-B11 Template Field Transfer v1.00 (sys 2.50)
+B11 Template Field Transfer v1.01 (sys 2.50)
 ========================================
 
 Changes
+- convert moved template values into normal compact or colon tags
+- generate rows for string_rows and append_row/prepend_row modes
 - move filled template slots between text fields on the same entry
 - reset moved source slots only after the target write succeeds
 - support append, prepend and replace modes with optional row labels
@@ -38,14 +40,14 @@ trackTagsComplete({
 function getTemplateFieldTransferVersion() {
   return {
     name: "templateFieldTransfer",
-    version: "1.00",
+    version: "1.01",
     sysVersion: "2.50",
     path: "addons/2_syncing/templateFieldTransfer.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("templateFieldTransfer", "1.00", "2.50", "addons/2_syncing/templateFieldTransfer.js", true);
+  registerAtagLibVersion("templateFieldTransfer", "1.01", "2.50", "addons/2_syncing/templateFieldTransfer.js", true);
 }
 
 function tftTrim(value) {
@@ -92,6 +94,89 @@ function tftMarker(cfg) {
 
 function tftSplitLines(text) {
   return String(text == null ? "" : text).replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+}
+
+function tftToDate(value) {
+  var dateObj;
+  var text;
+  var match;
+  var year;
+
+  if (value == null || value === "") return null;
+  if (Object.prototype.toString.call(value) === "[object Date]") return isNaN(value.getTime()) ? null : value;
+  if (typeof value === "number") {
+    dateObj = new Date(value);
+    return isNaN(dateObj.getTime()) ? null : dateObj;
+  }
+
+  text = tftTrim(value);
+  match = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2})(?::(\d{1,2})(?::(\d{1,2}))?)?)?/);
+  if (match) {
+    dateObj = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), Number(match[4] || 0), Number(match[5] || 0), Number(match[6] || 0));
+    return isNaN(dateObj.getTime()) ? null : dateObj;
+  }
+
+  match = text.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{2,4})(?:\s+(\d{1,2})(?::(\d{1,2})(?::(\d{1,2}))?)?)?/);
+  if (match) {
+    year = Number(match[3]);
+    if (year < 100) year += 2000;
+    dateObj = new Date(year, Number(match[2]) - 1, Number(match[1]), Number(match[4] || 0), Number(match[5] || 0), Number(match[6] || 0));
+    return isNaN(dateObj.getTime()) ? null : dateObj;
+  }
+
+  dateObj = new Date(value);
+  return isNaN(dateObj.getTime()) ? null : dateObj;
+}
+
+function tftStepHours(hours, step, roundMode) {
+  var inverse;
+  step = Number(step == null ? 0.5 : step);
+  if (!step || isNaN(step) || step <= 0) return hours;
+  inverse = 1 / step;
+  if (roundMode === "floor") return Math.floor(hours * inverse) / inverse;
+  if (roundMode === "ceil") return Math.ceil(hours * inverse) / inverse;
+  return Math.round(hours * inverse) / inverse;
+}
+
+function tftFormatHours(hours) {
+  var rounded = Math.round(hours * 1000000) / 1000000;
+  var integer = Math.round(rounded);
+  var text;
+  if (Math.abs(rounded - integer) < 0.000001) return String(integer);
+  text = String(rounded).replace(".", ",");
+  return text.replace(/0+$/, "").replace(/,$/, "");
+}
+
+function tftUsesRows(cfg) {
+  var datatype = String(cfg && cfg.datatype || "").toLowerCase();
+  var mode = String(cfg && cfg.mode || "append").toLowerCase();
+  return datatype === "string_rows" || datatype === "rows" || cfg && (cfg.rows === true || cfg.appendRow === true || cfg.prependRow === true) || /_row$/.test(mode);
+}
+
+function tftBaseMode(cfg) {
+  var mode = String(cfg && cfg.mode || "append").toLowerCase();
+  if (cfg && cfg.prependRow === true) return "prepend";
+  if (cfg && cfg.appendRow === true) return "append";
+  mode = mode.replace(/_row$/, "");
+  if (mode !== "prepend" && mode !== "replace") return "append";
+  return mode;
+}
+
+function tftResolveRowLabel(entryObj, cfg) {
+  var explicit = cfg && cfg.rowLabel;
+  var fieldName;
+  var dateObj;
+  var hours;
+
+  if (explicit != null && tftTrim(explicit) !== "") return tftTrim(explicit);
+  if (!tftUsesRows(cfg)) return "";
+
+  fieldName = cfg && (cfg.fieldDate || cfg.sourceDateField) || "Datum";
+  dateObj = tftToDate(tftSafeField(entryObj, fieldName));
+  if (!dateObj) dateObj = new Date();
+  hours = dateObj.getHours() + dateObj.getMinutes() / 60 + dateObj.getSeconds() / 3600;
+  hours = tftStepHours(hours, cfg && cfg.rowStepHours, cfg && cfg.rowRoundMode || "round");
+  return tftFormatHours(hours);
 }
 
 function tftRowParts(line) {
@@ -143,6 +228,8 @@ function tftParseTemplatePart(part, cfg) {
   var closed;
   var value;
   var resetValue;
+  var displayValue;
+  var normalTag;
 
   if (!match) return null;
   rawValue = match[5];
@@ -151,13 +238,21 @@ function tftParseTemplatePart(part, cfg) {
   closed = rawValue.length > 1 && rawValue.charAt(rawValue.length - 1) === marker;
   value = closed ? rawValue.substring(1, rawValue.length - 1) : rawValue.substring(1);
   resetValue = closed ? marker + marker : marker;
+  displayValue = tftTrim(value);
+  if (/^(?:[+\-]?\d+(?:[.,]\d+)?|\++|-+)$/.test(displayValue)) {
+    normalTag = match[2] + match[3] + displayValue;
+  } else if (/^[^\s,;"']+$/.test(displayValue)) {
+    normalTag = match[2] + match[3] + ": " + displayValue;
+  } else {
+    normalTag = match[2] + match[3] + ": \"" + displayValue.replace(/"/g, "'") + "\"";
+  }
 
   return {
     name: match[3],
     filled: tftTrim(value) !== "",
     value: value,
     resetPart: match[1] + match[2] + match[3] + match[4] + resetValue + match[6],
-    movedPart: tftTrim(text)
+    movedPart: normalTag
   };
 }
 
@@ -172,7 +267,7 @@ function tftJoinParts(parts, separators) {
 }
 
 function tftApplyRowLabel(row, movedContent, cfg) {
-  var label = cfg && cfg.rowLabel;
+  var label = cfg && (cfg._resolvedRowLabel != null ? cfg._resolvedRowLabel : cfg.rowLabel);
   var rowMode = String(cfg && cfg.rowMode || "preserve").toLowerCase();
 
   if (label != null && tftTrim(label) !== "" && (!row.hasRow || rowMode === "replace")) {
@@ -239,7 +334,7 @@ function tftContainsLine(lines, line) {
 function tftMergeTargetText(targetText, movedLines, cfg) {
   var current = tftCompactTargetLines(targetText);
   var incoming = [];
-  var mode = String(cfg && cfg.mode || "append").toLowerCase();
+  var mode = tftBaseMode(cfg);
   var dedupe = !cfg || cfg.dedupe !== false;
   var i;
 
@@ -271,6 +366,8 @@ function moveFilledTemplates(cfg) {
   var targetValue;
   var analysis;
   var nextTarget;
+  var transferCfg = {};
+  var cfgKey;
   var result = {
     enabled: cfg.enabled !== false,
     moved: [],
@@ -293,14 +390,18 @@ function moveFilledTemplates(cfg) {
 
   sourceValue = tftSafeField(entryObj, sourceField);
   targetValue = tftSafeField(entryObj, targetField);
-  analysis = tftAnalyzeSource(sourceValue, cfg);
+  for (cfgKey in cfg) {
+    if (Object.prototype.hasOwnProperty.call(cfg, cfgKey)) transferCfg[cfgKey] = cfg[cfgKey];
+  }
+  transferCfg._resolvedRowLabel = tftResolveRowLabel(entryObj, cfg);
+  analysis = tftAnalyzeSource(sourceValue, transferCfg);
   result.moved = analysis.movedLines.slice(0);
   result.templateNames = analysis.templateNames.slice(0);
   result.sourceText = analysis.resetText;
 
   if (!analysis.movedLines.length) return result;
 
-  nextTarget = tftMergeTargetText(targetValue, analysis.movedLines, cfg);
+  nextTarget = tftMergeTargetText(targetValue, analysis.movedLines, transferCfg);
   result.targetText = nextTarget;
   result.targetChanged = nextTarget !== String(targetValue == null ? "" : targetValue);
 
