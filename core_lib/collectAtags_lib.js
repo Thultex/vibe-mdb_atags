@@ -1,9 +1,10 @@
 /*
 ========================================
-#1 collectAtags Lib v1.70 (sys 2.50)
+#1 collectAtags Lib v1.71 (sys 2.50)
 ========================================
 
 Changes
+- preserve logged alias source names for general tag completeness tracking
 - strip complete trailing alias display-marker runs from short names such as `tst--`
 - write incomplete tag names in required order to the default field `Noch Fehlend`
 - add trackTagsComplete for required tags, direct value maps and optional template names
@@ -56,21 +57,21 @@ Changes
 
 /*
 ========================================
-#1 collectAtags Lib v1.70 (sys 2.50)
+#1 collectAtags Lib v1.71 (sys 2.50)
 ========================================
 */
 
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.70",
+    version: "1.71",
     sysVersion: "2.50",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.70", "2.50", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.71", "2.50", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");
@@ -277,15 +278,27 @@ function collectAtags(cfg) {
     };
   }
 
-  function addItem(items, seen, name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, displayName, cats, kind, cumulative, categoryChildSigns) {
+  function addItem(items, seen, name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, displayName, cats, kind, cumulative, categoryChildSigns, sourceName) {
     var item;
+    var sourceDisplay = normalizeTagName(sourceName || "");
     var key = String(name).toLowerCase() +
       "|" + String(attrText) +
       "|" + String(rowValue) +
       "|" + String(rowUnit);
 
-    if (seen[key]) return;
-    seen[key] = true;
+    if (seen[key]) {
+      item = seen[key];
+      if (sourceDisplay && item.sourceNames) {
+        var sourceKey = sourceDisplay.toLowerCase();
+        var sourceExists = false;
+        var sourceIndex;
+        for (sourceIndex = 0; sourceIndex < item.sourceNames.length; sourceIndex++) {
+          if (String(item.sourceNames[sourceIndex]).toLowerCase() === sourceKey) sourceExists = true;
+        }
+        if (!sourceExists) item.sourceNames.push(sourceDisplay);
+      }
+      return;
+    }
 
     item = {
       name: name,
@@ -296,7 +309,8 @@ function collectAtags(cfg) {
       rowUnit: rowUnit != null ? rowUnit : null,
       rowRaw: rowRaw != null ? rowRaw : null,
       displayName: displayName || name,
-      cats: cats || []
+      cats: cats || [],
+      sourceNames: sourceDisplay ? [sourceDisplay] : []
     };
 
     if (!cumulative && /^([+\-]|\+{2,}\d*|-{2,}\d*)$/.test(String(attrText || ""))) {
@@ -310,6 +324,7 @@ function collectAtags(cfg) {
     if (cumulative) item.cumulative = true;
     if (categoryChildSigns) item.categoryChildSigns = categoryChildSigns;
 
+    seen[key] = item;
     items.push(item);
   }
 
@@ -886,7 +901,9 @@ function collectAtags(cfg) {
         norm.attrText, norm.attrValue, effectiveRaw,
         rowValue, rowUnit, rowRaw,
         aliasInfo.shortName || resolvedName,
-        aliasInfo.cats || []
+        aliasInfo.cats || [],
+        null, null, null,
+        name
       );
     }
   }
@@ -1642,14 +1659,23 @@ function atcBuildCollectorMaps(items) {
   var names = {};
   var i;
 
+  function addName(displayName, itemFilled) {
+    var key = atcNormalizeName(displayName);
+    if (!key) return;
+    present[key] = true;
+    names[key] = atcTrim(displayName);
+    if (itemFilled) filled[key] = true;
+    else if (!atcHasOwn(filled, key)) filled[key] = false;
+  }
+
   for (i = 0; i < values.length; i++) {
     var displayName = atcItemName(values[i]);
-    var key = atcNormalizeName(displayName);
-    if (!key) continue;
-    present[key] = true;
-    names[key] = displayName;
-    if (atcItemFilled(values[i])) filled[key] = true;
-    else if (!atcHasOwn(filled, key)) filled[key] = false;
+    var itemFilled = atcItemFilled(values[i]);
+    var sourceNames = atcToArray(values[i] && values[i].sourceNames);
+    var sourceIndex;
+    addName(displayName, itemFilled);
+    if (values[i] && values[i].displayName != null) addName(values[i].displayName, itemFilled);
+    for (sourceIndex = 0; sourceIndex < sourceNames.length; sourceIndex++) addName(sourceNames[sourceIndex], itemFilled);
   }
   return { present: present, filled: filled, names: names };
 }

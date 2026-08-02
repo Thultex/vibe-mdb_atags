@@ -505,10 +505,29 @@ function testTrackTagsCompleteWritesDefaultMissingFieldInOrderAndClearsIt() {
   if (entryObj.field("Noch Fehlend") !== "") fail("track-default-missing-field-cleared");
 }
 
+function testTrackTagsCompleteRecognizesLoggedAliasNames() {
+  var parsed = collectAtags({
+    entryObj: makeEntry({
+      Note: "@@Kieferspannung (ks): Kiefer\n@@Nackenschmerz (N): Nacken\nKiefer1 ks0 Nacken0"
+    }),
+    textFields: ["Note"]
+  });
+  var tracked = trackTagsComplete({
+    result: parsed,
+    requiredTags: ["Kiefer", "ks", "Nacken", "emo"],
+    completeField: "",
+    missingField: ""
+  });
+
+  assertArray("track-alias-filled", tracked.filledTags, ["Kiefer", "ks", "Nacken"]);
+  assertArray("track-alias-incomplete", tracked.incompleteTags, ["emo"]);
+}
+
 testTrackTagsCompleteUsesCollectorValuesAndTemplates();
 testTrackTagsCompleteAcceptsDirectValueMap();
 testTrackTagsCompleteCanCollectAndUseMappedTagNames();
 testTrackTagsCompleteCanCombineTemplatesAndFilledMap();
 testTrackTagsCompleteWritesDefaultMissingFieldInOrderAndClearsIt();
+testTrackTagsCompleteRecognizesLoggedAliasNames();
 
 print("OK");
