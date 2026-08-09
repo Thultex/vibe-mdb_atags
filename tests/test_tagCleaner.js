@@ -41,6 +41,12 @@ assertEquals(
 );
 
 assertEquals(
+  "inline-large-integer-values-issue80",
+  makeTagCleanerText("tag100 metric400 score1200 tag00 tag02 tag003 tag0,2"),
+  "tag\u00B9\u2070\u2070 metric\u2074\u2070\u2070 score\u00B9\u00B2\u2070\u2070 tag\u02E3 tag\u2070\u00B2 tag\u2070\u2070\u00B3 tag\u2070\u00B2"
+);
+
+assertEquals(
   "inline-underscore-words-not-values",
   makeTagCleanerText("test_00 test_3 tag00 tag3"),
   "test_00 test_3 tag\u02E3 tag\u00B3"

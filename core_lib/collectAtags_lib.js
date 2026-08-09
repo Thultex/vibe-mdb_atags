@@ -1,9 +1,10 @@
 /*
 ========================================
-#1 collectAtags Lib v1.72 (sys 2.50)
+#1 collectAtags Lib v1.73 (sys 2.50)
 ========================================
 
 Changes
+- parse complete multi-digit suffixes such as `tag400` as one numeric value
 - expose the collector alias resolution and canonicalize completeness requirements once
 - strip complete trailing alias display-marker runs from short names such as `tst--`
 - write incomplete tag names in required order to the default field `Noch Fehlend`
@@ -57,21 +58,21 @@ Changes
 
 /*
 ========================================
-#1 collectAtags Lib v1.72 (sys 2.50)
+#1 collectAtags Lib v1.73 (sys 2.50)
 ========================================
 */
 
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.72",
+    version: "1.73",
     sysVersion: "2.50",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.72", "2.50", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.73", "2.50", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");
@@ -1427,6 +1428,12 @@ function collectAtags(cfg) {
         if (zeroSplit && zeroSplit[1]) {
           nameN = zeroSplit[1];
           rawN = zeroSplit[2];
+        }
+
+        var integerSplit = fullTokenN.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*?)(\d+)$/);
+        if (integerSplit && integerSplit[1]) {
+          nameN = integerSplit[1];
+          rawN = integerSplit[2];
         }
 
         var cumulativeSplit = fullTokenN.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*?)(\+{1,}\d*|-{2,}\d*)$/);

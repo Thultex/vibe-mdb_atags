@@ -4,7 +4,7 @@ Aktuelle Library-Dateien und Versionen:
 
 | Name | Version | Sys | Pfad |
 | --- | ---: | ---: | --- |
-| #1 collectAtags_lib | 1.72 | 2.50 | `core_lib/collectAtags_lib.js` |
+| #1 collectAtags_lib | 1.73 | 2.50 | `core_lib/collectAtags_lib.js` |
 | #2 exportAtags_lib | 1.84 | 2.50 | `core_lib/exportAtags_lib.js` |
 | #3 helpers_lib | 2.11 | 2.50 | `core_lib/helpers_lib.js` |
 
@@ -14,7 +14,7 @@ Aktuelle Library-Dateien und Versionen:
 
 | Name | Version | Sys | Pfad |
 | --- | ---: | ---: | --- |
-| A1 Check Versions | 1.68 | 2.50 | `core/_checkVersions.js` |
+| A1 Check Versions | 1.69 | 2.50 | `core/_checkVersions.js` |
 
 Optionale Plugins/Addons koennen sich beim Laden per `registerAtagLibVersion(name, version, sysVersion, path, true)` registrieren und in `ATAG_EXPECTED_OPTIONAL_LIBS` einen `getter` besitzen. Mismatch- und Missing-Meldungen ueber fehlende Getter/Module werden getrennt ueber `SHOW_REMOTE_MISSMATCHES`, `SHOW_LOCAL_MISSMATCHES`, `SHOW_REMOTE_MISSING` und `SHOW_LOCAL_MISSING` gesteuert.
 
@@ -26,7 +26,7 @@ Diese Dateien gehoeren funktionell zur Lib-Nutzung, sind aber keine externen Rem
 | --- | ---: | ---: | --- | --- |
 | A2 helpers | 1.03 | 2.50 | `core/helpers.js` | Memento-Wrapper fuer `applyTags`, `bulkApplyTags` und `bulkExportAtags`; nutzt `core_lib/helpers_lib.js` |
 | A3 restoreAtags | 2.10 | 2.50 | `core/restoreAtags.js` | Restore aus Atag-JSON in Felder |
-| A4 tagCleaner | 1.56 | 2.50 | `core/tagCleaner.js` | Cleaner-/Alias-Memento-Wrapper |
+| A4 tagCleaner | 1.57 | 2.50 | `core/tagCleaner.js` | Cleaner-/Alias-Memento-Wrapper |
 | B2 tagPairParser | 1.02 | 2.50 | `addons/1_tagging/tagPairParser.js` | Tag-Paare aus Tag-Feldern |
 | B3 globalFieldSync | 1.04 | 2.50 | `addons/2_syncing/globalFieldSync.js` | Feld-Sync innerhalb einer Library |
 | B4 syncLastFromLatest | 1.07 | 2.50 | `addons/2_syncing/syncLastFromLatest.js` | Felder vom neuesten Eintrag uebernehmen |

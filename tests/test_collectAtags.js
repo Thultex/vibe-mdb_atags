@@ -212,9 +212,13 @@ assertItem("minusminus-with-zero-suffix", "tag--02", "tag", "--02", -2, null, nu
 assertItem("large-cumulative-suffix", "tag++324", "tag", "++324", 324, null, null);
 assertItem("long-plus-run-cumulative", "tag++++", "tag", "++4", 4, null, null);
 assertItem("long-minus-run-cumulative", "tag----", "tag", "--4", -4, null, null);
+assertItem("large-int-hundred", "tag100", "tag", "+100", 100, null, null);
+assertItem("large-int-trailing-double-zero", "metric400", "metric", "+400", 400, null, null);
+assertItem("large-int-four-digits", "score1200", "score", "+1200", 1200, null, null);
 assertItem("zero-null", "tag00", "tag", "00", null, null, null);
 assertItem("zero-number", "tag0", "tag", "0", 0, null, null);
 assertItem("zero-decimal-compact", "tag02", "tag", "0,2", 0.2, null, null);
+assertItem("zero-decimal-long-compact", "tag003", "tag", "0,03", 0.03, null, null);
 assertItem("zero-decimal-comma", "tag0,2", "tag", "0,2", 0.2, null, null);
 assertItem("negative-zero-decimal-compact", "tag-02", "tag", "-0,2", -0.2, null, null);
 assertItem("negative-zero-decimal-comma", "tag-0,2", "tag", "-0,2", -0.2, null, null);

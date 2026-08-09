@@ -1,11 +1,11 @@
 /*
 ========================================
-A1 Check Versions v1.68 (sys 2.50)
+A1 Check Versions v1.69 (sys 2.50)
 ========================================
 
 Notes
-- Expects collectAtags_lib v1.72 with canonical alias-aware completeness tracking.
-- Expects Tag Cleaner v1.56 with repeated alias-marker cleanup.
+- Expects collectAtags_lib v1.73 with complete multi-digit numeric suffix parsing.
+- Expects Tag Cleaner v1.57 with complete multi-digit numeric suffix cleaning.
 - Expects Template Field Transfer v1.03 with normal-tag conversion before cleaning.
 - Expects Dust Merger v0.17 with negative row offsets clamped at zero.
 - Text output starts with `System vX.XX (ok, X rm, X local)` or a compact config/match/miss summary and ends with a blank line.
@@ -18,7 +18,7 @@ Notes
 - inputLinker_lib is no longer part of the core lib check.
 - Current libs:
   - helpers_lib v2.11 (sys 2.50)
-  - collectAtags_lib v1.72 (sys 2.50)
+  - collectAtags_lib v1.73 (sys 2.50)
   - exportAtags_lib v1.84 (sys 2.50)
 
 Local config example
@@ -48,7 +48,7 @@ checkAtagLibVersions({
 
 /*
 ========================================
-A1 Check Versions v1.68 (sys 2.50)
+A1 Check Versions v1.69 (sys 2.50)
 ========================================
 */
 
@@ -75,7 +75,7 @@ var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERS
 function getCheckVersionsVersion() {
   return {
     name: "checkVersions",
-    version: "1.68",
+    version: "1.69",
     sysVersion: "2.50",
     path: "core/_checkVersions.js"
   };
@@ -90,15 +90,15 @@ function getLibVersionsVersion() {
 // Expected Modules
 var ATAG_EXPECTED_LIBS = [
   { id: "#3", title: "Helpers Lib", area: "core_lib", name: "helpers_lib", version: "2.11", getter: "getHelpersLibVersion", path: "core_lib/helpers_lib.js" },
-  { id: "#1", title: "Collect Atags Lib", area: "core_lib", name: "collectAtags_lib", version: "1.72", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
+  { id: "#1", title: "Collect Atags Lib", area: "core_lib", name: "collectAtags_lib", version: "1.73", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
   { id: "#2", title: "Export Atags Lib", area: "core_lib", name: "exportAtags_lib", version: "1.84", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" }
 ];
 
 var ATAG_EXPECTED_OPTIONAL_LIBS = [
-  { id: "A1", title: "Check Versions", area: "core", name: "checkVersions", version: "1.68", getter: "getCheckVersionsVersion", path: "core/_checkVersions.js", optional: true },
+  { id: "A1", title: "Check Versions", area: "core", name: "checkVersions", version: "1.69", getter: "getCheckVersionsVersion", path: "core/_checkVersions.js", optional: true },
   { id: "A2", title: "Atag Helpers", area: "core", name: "helpers", version: "1.03", getter: "getHelpersVersion", path: "core/helpers.js", optional: true },
   { id: "A3", title: "Restore Atags", area: "core", name: "restoreAtags", version: "2.10", getter: "getRestoreAtagsVersion", path: "core/restoreAtags.js", optional: true },
-  { id: "A4", title: "Tag Cleaner", area: "core", name: "tagCleaner", version: "1.56", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
+  { id: "A4", title: "Tag Cleaner", area: "core", name: "tagCleaner", version: "1.57", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
   { id: "B2", title: "Tag Pair Parser", area: "1_tagging", name: "tagPairParser", version: "1.02", getter: "getTagPairParserVersion", path: "addons/1_tagging/tagPairParser.js", optional: true },
   { id: "B3", title: "Global Field Sync", area: "2_syncing", name: "globalFieldSync", version: "1.04", getter: "getGlobalFieldSyncVersion", path: "addons/2_syncing/globalFieldSync.js", optional: true },
   { id: "B4", title: "Sync Last From Latest", area: "2_syncing", name: "syncLastFromLatest", version: "1.07", getter: "getSyncLastFromLatestVersion", path: "addons/2_syncing/syncLastFromLatest.js", optional: true },

@@ -1,9 +1,10 @@
 /*
 ========================================
-A4 Tag Cleaner v1.56 (sys 2.50)
+A4 Tag Cleaner v1.57 (sys 2.50)
 ========================================
 
 Notes
+- Keeps complete multi-digit suffixes together, so `tag400` is value 400 instead of `tag4` plus null `00`.
 - Removes complete trailing display-marker runs from alias short names such as `tst--`.
 - Converts every numeric null suffix `00` to the valueless superscript tag suffix `x`.
 - remove unused legacy wrappers; keep documented cleaner entrypoints.
@@ -39,21 +40,21 @@ cleanTemplateTags({
 
 /*
 ========================================
-A4 Tag Cleaner v1.56 (sys 2.50)
+A4 Tag Cleaner v1.57 (sys 2.50)
 ========================================
 */
 
 function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
-    version: "1.56",
+    version: "1.57",
     sysVersion: "2.50",
     path: "core/tagCleaner.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("tagCleaner", "1.56", "2.50", "core/tagCleaner.js", true);
+  registerAtagLibVersion("tagCleaner", "1.57", "2.50", "core/tagCleaner.js", true);
 }
 
 function splitTagCleanerLines(text) {
@@ -906,6 +907,12 @@ function cleanTagCleanerInlineLine(line, positiveSignMode, displayMap, cfg) {
     if (zeroSplit) {
       name = zeroSplit[1];
       raw = zeroSplit[2];
+    }
+
+    var integerSplit = full.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*?)(\d+)$/);
+    if (integerSplit) {
+      name = integerSplit[1];
+      raw = integerSplit[2];
     }
 
     var cumulativeSplit = full.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*?)(\+{1,}\d*|-{2,}\d*)$/);

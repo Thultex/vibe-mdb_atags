@@ -24,6 +24,13 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 
 ## Log
 
+### 2026-08-09 - (ca. 0,2h)
+
+- Fix: Tag Cleaner v1.57 und `collectAtags_lib` v1.73 lesen vollständige mehrstellige Zahlensuffixe; `tag400` bleibt der Wert 400 statt als `tag4` plus Nullmarker `00` zu zerfallen (#80).
+- Tests/Doku: Regressionen für 100, 400 und 1200 sichern den Fix; `tag00`, `tag02`, `tag003` und `tag0,2` bleiben unverändert dokumentiert und getestet.
+- Change: Check Versions v1.69 erwartet Tag Cleaner v1.57 und `collectAtags_lib` v1.73.
+- *Versionen: Check Versions v1.69, Tag Cleaner v1.57, collectAtags_lib v1.73.*
+
 ### 2026-08-02
 
 - Refactor: `collectAtags_lib` v1.72 gibt seine bereits gebaute Aliasauflösung als `resolvedTagNames` zurück; `trackTagsComplete()` kanonisiert Soll- und Templatenamen darüber einmalig statt Aliasnamen aus gefundenen Items zurückzuermitteln.
