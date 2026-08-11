@@ -151,6 +151,7 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
   - `moveFilledTemplates()` verschiebt gefuellte Slots und setzt sie im Quellfeld zurueck
   - `moveAndTrackTemplates()` kombiniert Transfer und das allgemeine `trackTagsComplete()` aus dem Collector
   - unterstuetzt `append`, `prepend`, `replace` sowie `append_row`, `prepend_row`, `replace_row`
+  - Row-Zeiten verwenden optional dieselben Quellen und Variablen wie der Time Marker
   - `_00` wird als normales `tag00` übertragen; der Cleaner macht daraus global den wertlosen, später ergänzbaren Tag `tagˣ`
   - alternativ aktiviert `datatype: "string_rows"` die Row-Erzeugung bei normalem Append/Prepend
 
@@ -296,7 +297,11 @@ var transfer = moveFilledTemplates({
   sourceField: "Record",
   targetField: "Notiz",
   mode: "append_row",
-  fieldDate: "Einnahmedatum"
+  sourceMode: "realtime_since",
+  startDatetimeField: "Einnahmedatum",
+  stepHours: 0.5,
+  roundMode: "round",
+  maxHours: 15
 });
 
 var result = applyTags({
@@ -317,7 +322,9 @@ trackTagsComplete({
 
 Der Transfer muss vor `applyTags()` laufen, damit verschobene Werte im selben PostEntry-Durchlauf erfasst werden. Die allgemeine Completion-Pruefung folgt danach und kann dasselbe Collector-Ergebnis wiederverwenden. `templateNames` beziehungsweise `templates` sind optional und werden wie `requiredTags` gegen nicht-leere Tagwerte geprueft. Leere Template-Slots erscheinen nicht als gefuellte Tags; normale Parser-Tags mit Wert werden genauso behandelt wie Template-Werte. Die Sollnamen werden dabei einmal über dieselbe Aliasmap wie die gefundenen Tags auf Langnamen aufgelöst: Wird etwa `Kiefer` zu `Kieferspannung` aufgelöst, gilt das Template `Kiefer` auch dann als ausgefüllt, wenn nur der Langname geloggt ist. Nicht ausgefüllte Namen werden standardmäßig in ihrer Prüfreihenfolge als einfache Liste wie `Kiefer, ks` in das Feld `Noch Fehlend` geschrieben; sobald alles erfasst ist, wird das Feld geleert. Mit `missingField` lässt sich der Feldname ändern, mit `missingField: ""` die Ausgabe abschalten.
 
-Beim Transfer werden Template-Marker entfernt: numerische und kumulative Werte werden kompakt (`MetricA:_-3` → `MetricA-3`) und koennen danach vom Cleaner hochgestellt werden; Textwerte werden zur normalen Colon-Form (`TaskA:_ready` → `TaskA: ready`). Mehrwortwerte werden quotiert. Row-Modi erzeugen fuer Zeilen ohne vorhandenen Row-Prefix einen Zeitwert aus `fieldDate`; `rowLabel` ueberschreibt ihn explizit.
+Beim Transfer werden Template-Marker entfernt: numerische und kumulative Werte werden kompakt (`MetricA:_-3` → `MetricA-3`) und koennen danach vom Cleaner hochgestellt werden; Textwerte werden zur normalen Colon-Form (`TaskA:_ready` → `TaskA: ready`). Mehrwortwerte werden quotiert.
+
+Row-Modi akzeptieren dieselben Zeitvariablen wie der Time Marker: `sourceMode: "realtime"`, `sourceMode: "realtime_since"` mit `startDatetimeField`, `sourceMode: "datetime"` mit `sourceDatetimeField` und `sourceMode: "hours"` mit `sourceHoursField`. `stepHours`, `roundMode` und `maxHours` haben dieselbe Bedeutung; ohne explizites `maxHours` gilt 30, `maxHours: null` deaktiviert das Limit. Fehlt die konfigurierte Zeitquelle oder wird das Limit überschritten, bleiben Quell- und Zielfeld unverändert. `rowLabel` ueberschreibt die Zeitquelle explizit. Ohne `sourceMode` bleibt das bisherige `fieldDate`-Verhalten kompatibel; `rowStepHours` und `rowRoundMode` bleiben als Aliase erhalten.
 
 Alternativ kann `map` bereits vorhandene Werte direkt pruefen. Zahlen einschliesslich `0` und nicht-leere Texte gelten als gefuellt; `null`, leere Texte und `false` gelten als leer.
 

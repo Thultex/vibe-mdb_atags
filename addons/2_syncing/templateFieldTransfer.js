@@ -1,9 +1,10 @@
 /*
 ========================================
-B11 Template Field Transfer v1.03 (sys 2.50)
+B11 Template Field Transfer v1.04 (sys 2.50)
 ========================================
 
 Changes
+- support the Time Marker time-source variables for generated transfer rows
 - keep transferred `name:_00` slots as normal `name00` input for the cleaner
 - convert moved template values into normal compact or colon tags
 - generate rows for string_rows and append_row/prepend_row modes
@@ -19,7 +20,12 @@ var transfer = moveFilledTemplates({
   entry: e,
   sourceField: "Record",
   targetField: "Notiz",
-  mode: "append"
+  mode: "append_row",
+  sourceMode: "realtime_since",
+  startDatetimeField: "Einnahmedatum",
+  stepHours: 0.5,
+  roundMode: "round",
+  maxHours: 15
 });
 
 var result = applyTags({
@@ -40,21 +46,21 @@ trackTagsComplete({
 
 /*
 ========================================
-B11 Template Field Transfer v1.03 (sys 2.50)
+B11 Template Field Transfer v1.04 (sys 2.50)
 ========================================
 */
 
 function getTemplateFieldTransferVersion() {
   return {
     name: "templateFieldTransfer",
-    version: "1.03",
+    version: "1.04",
     sysVersion: "2.50",
     path: "addons/2_syncing/templateFieldTransfer.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("templateFieldTransfer", "1.03", "2.50", "addons/2_syncing/templateFieldTransfer.js", true);
+  registerAtagLibVersion("templateFieldTransfer", "1.04", "2.50", "addons/2_syncing/templateFieldTransfer.js", true);
 }
 
 function tftTrim(value) {
@@ -112,6 +118,7 @@ function tftToDate(value) {
   if (value == null || value === "") return null;
   if (Object.prototype.toString.call(value) === "[object Date]") return isNaN(value.getTime()) ? null : value;
   if (typeof value === "number") {
+    if (value < 100000000000) value *= 1000;
     dateObj = new Date(value);
     return isNaN(dateObj.getTime()) ? null : dateObj;
   }
@@ -137,12 +144,62 @@ function tftToDate(value) {
 
 function tftStepHours(hours, step, roundMode) {
   var inverse;
+  var steppedInput;
   step = Number(step == null ? 0.5 : step);
   if (!step || isNaN(step) || step <= 0) return hours;
   inverse = 1 / step;
-  if (roundMode === "floor") return Math.floor(hours * inverse) / inverse;
-  if (roundMode === "ceil") return Math.ceil(hours * inverse) / inverse;
-  return Math.round(hours * inverse) / inverse;
+  steppedInput = hours * inverse + 1e-9;
+  if (roundMode === "floor") return Math.floor(steppedInput) / inverse;
+  if (roundMode === "ceil") return Math.ceil(steppedInput) / inverse;
+  return Math.round(steppedInput) / inverse;
+}
+
+function tftToNumber(value) {
+  var text;
+  var number;
+  if (value == null || value === "") return null;
+  if (typeof value === "number") return isNaN(value) ? null : value;
+  text = tftTrim(value).replace(",", ".");
+  if (!text) return null;
+  number = parseFloat(text);
+  return isNaN(number) ? null : number;
+}
+
+function tftRealtimeHours() {
+  var now = new Date();
+  return now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+}
+
+function tftSourceHours(entryObj, cfg) {
+  var mode = cfg && cfg.sourceMode;
+  var start;
+  var dateObj;
+
+  if (mode === "realtime") return tftRealtimeHours();
+  if (mode === "realtime_since") {
+    start = tftToDate(tftSafeField(entryObj, cfg.startDatetimeField));
+    if (!start) return null;
+    return (new Date().getTime() - start.getTime()) / 3600000;
+  }
+  if (mode === "datetime") {
+    dateObj = tftToDate(tftSafeField(entryObj, cfg.sourceDatetimeField));
+    if (!dateObj) return null;
+    return dateObj.getHours() + dateObj.getMinutes() / 60 + dateObj.getSeconds() / 3600;
+  }
+  if (mode === "hours") return tftToNumber(tftSafeField(entryObj, cfg.sourceHoursField));
+  return null;
+}
+
+function tftResolveMaxHours(cfg) {
+  if (cfg && Object.prototype.hasOwnProperty.call(cfg, "maxHours")) return cfg.maxHours;
+  return 30;
+}
+
+function tftExceedsMaxHours(rawHours, steppedHours, maxHours) {
+  var max = tftToNumber(maxHours);
+  if (max == null || max < 0) return false;
+  if (rawHours != null && rawHours > max) return true;
+  return steppedHours != null && steppedHours > max;
 }
 
 function tftFormatHours(hours) {
@@ -169,21 +226,42 @@ function tftBaseMode(cfg) {
   return mode;
 }
 
-function tftResolveRowLabel(entryObj, cfg) {
+function tftResolveRowTiming(entryObj, cfg) {
   var explicit = cfg && cfg.rowLabel;
   var fieldName;
   var dateObj;
-  var hours;
+  var rawHours;
+  var steppedHours;
+  var step;
+  var roundMode;
 
-  if (explicit != null && tftTrim(explicit) !== "") return tftTrim(explicit);
-  if (!tftUsesRows(cfg)) return "";
+  if (explicit != null && tftTrim(explicit) !== "") return { label: tftTrim(explicit), skip: false };
+  if (!tftUsesRows(cfg)) return { label: "", skip: false };
+
+  step = cfg && cfg.stepHours != null ? cfg.stepHours : cfg && cfg.rowStepHours;
+  roundMode = cfg && (cfg.roundMode || cfg.rowRoundMode) || "round";
+
+  if (cfg && cfg.sourceMode) {
+    rawHours = tftSourceHours(entryObj, cfg);
+    if (rawHours == null) return { label: "", skip: true, reason: "source_hours" };
+    steppedHours = tftStepHours(rawHours, step, roundMode);
+    if (tftExceedsMaxHours(rawHours, steppedHours, tftResolveMaxHours(cfg))) {
+      return { label: "", skip: true, reason: "max_hours", rawHours: rawHours, steppedHours: steppedHours };
+    }
+    return {
+      label: tftFormatHours(steppedHours),
+      skip: false,
+      rawHours: rawHours,
+      steppedHours: steppedHours
+    };
+  }
 
   fieldName = cfg && (cfg.fieldDate || cfg.sourceDateField) || "Datum";
   dateObj = tftToDate(tftSafeField(entryObj, fieldName));
   if (!dateObj) dateObj = new Date();
-  hours = dateObj.getHours() + dateObj.getMinutes() / 60 + dateObj.getSeconds() / 3600;
-  hours = tftStepHours(hours, cfg && cfg.rowStepHours, cfg && cfg.rowRoundMode || "round");
-  return tftFormatHours(hours);
+  rawHours = dateObj.getHours() + dateObj.getMinutes() / 60 + dateObj.getSeconds() / 3600;
+  steppedHours = tftStepHours(rawHours, step, roundMode);
+  return { label: tftFormatHours(steppedHours), skip: false, rawHours: rawHours, steppedHours: steppedHours };
 }
 
 function tftRowParts(line) {
@@ -373,6 +451,7 @@ function moveFilledTemplates(cfg) {
   var targetValue;
   var analysis;
   var nextTarget;
+  var rowTiming;
   var transferCfg = {};
   var cfgKey;
   var result = {
@@ -400,7 +479,15 @@ function moveFilledTemplates(cfg) {
   for (cfgKey in cfg) {
     if (Object.prototype.hasOwnProperty.call(cfg, cfgKey)) transferCfg[cfgKey] = cfg[cfgKey];
   }
-  transferCfg._resolvedRowLabel = tftResolveRowLabel(entryObj, cfg);
+  rowTiming = tftResolveRowTiming(entryObj, cfg);
+  result.rowLabel = rowTiming.label;
+  result.rawHours = rowTiming.rawHours;
+  result.steppedHours = rowTiming.steppedHours;
+  if (rowTiming.skip) {
+    result.skipped = rowTiming.reason;
+    return result;
+  }
+  transferCfg._resolvedRowLabel = rowTiming.label;
   analysis = tftAnalyzeSource(sourceValue, transferCfg);
   result.moved = analysis.movedLines.slice(0);
   result.templateNames = analysis.templateNames.slice(0);

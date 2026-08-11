@@ -163,6 +163,129 @@ function testPrependRowShorthandGeneratesAndPrependsRows() {
   assertEquals("prepend-row-target", entryObj.field("Notiz"), "8: MetricA2\n9: old");
 }
 
+function testRealtimeSinceUsesTimeMarkerVariableNames() {
+  var start = new Date(new Date().getTime() - 5 * 60 * 1000);
+  var entryObj = makeEntry({
+    Startzeit: start,
+    Record: "MetricA:_2",
+    Notiz: ""
+  });
+
+  var result = moveFilledTemplates({
+    entry: entryObj,
+    mode: "append_row",
+    sourceMode: "realtime_since",
+    startDatetimeField: "Startzeit",
+    stepHours: 0.5,
+    roundMode: "round",
+    maxHours: 15
+  });
+
+  assertEquals("realtime-since-target", entryObj.field("Notiz"), "0: MetricA2");
+  assertEquals("realtime-since-source", entryObj.field("Record"), "MetricA:_");
+  assertEquals("realtime-since-label", result.rowLabel, "0");
+}
+
+function testDatetimeAndHoursUseTimeMarkerVariableNames() {
+  var datetimeEntry = makeEntry({
+    Zeitpunkt: "2026-08-09 07:15",
+    Record: "MetricA:_1",
+    Notiz: ""
+  });
+  var hoursEntry = makeEntry({
+    Stunden: "2,3",
+    Record: "MetricA:_1",
+    Notiz: ""
+  });
+
+  moveFilledTemplates({
+    entry: datetimeEntry,
+    mode: "append_row",
+    sourceMode: "datetime",
+    sourceDatetimeField: "Zeitpunkt",
+    stepHours: 0.5,
+    roundMode: "round",
+    maxHours: null
+  });
+  moveFilledTemplates({
+    entry: hoursEntry,
+    mode: "append_row",
+    sourceMode: "hours",
+    sourceHoursField: "Stunden",
+    stepHours: 0.5,
+    roundMode: "floor",
+    maxHours: null
+  });
+
+  assertEquals("datetime-source-target", datetimeEntry.field("Notiz"), "7,5: MetricA1");
+  assertEquals("hours-source-target", hoursEntry.field("Notiz"), "2: MetricA1");
+}
+
+function testDatetimeAcceptsEpochSeconds() {
+  var entryObj = makeEntry({
+    Zeitpunkt: new Date(2026, 7, 9, 7, 15).getTime() / 1000,
+    Record: "MetricA:_1",
+    Notiz: ""
+  });
+
+  var result = moveFilledTemplates({
+    entry: entryObj,
+    mode: "append_row",
+    sourceMode: "datetime",
+    sourceDatetimeField: "Zeitpunkt",
+    stepHours: 0.5,
+    roundMode: "round"
+  });
+
+  assertEquals("epoch-seconds-target", entryObj.field("Notiz"), "7,5: MetricA1");
+  assertEquals("epoch-seconds-label", result.rowLabel, "7,5");
+}
+
+function testStepHoursToleratesFloatingPointBoundary() {
+  assertEquals("step-boundary", tftStepHours(1 - 1e-10, 0.5, "floor"), 1);
+}
+
+function testMaxHoursAndMissingSourcePreserveTemplates() {
+  var maxEntry = makeEntry({ Stunden: 16, Record: "MetricA:_1", Notiz: "alt" });
+  var missingEntry = makeEntry({ Record: "MetricA:_1", Notiz: "alt" });
+
+  var maxResult = moveFilledTemplates({
+    entry: maxEntry,
+    mode: "append_row",
+    sourceMode: "hours",
+    sourceHoursField: "Stunden",
+    maxHours: 15
+  });
+  var missingResult = moveFilledTemplates({
+    entry: missingEntry,
+    mode: "append_row",
+    sourceMode: "datetime",
+    sourceDatetimeField: "Zeitpunkt"
+  });
+
+  assertEquals("max-hours-target-unchanged", maxEntry.field("Notiz"), "alt");
+  assertEquals("max-hours-source-preserved", maxEntry.field("Record"), "MetricA:_1");
+  assertEquals("max-hours-reason", maxResult.skipped, "max_hours");
+  assertEquals("missing-source-target-unchanged", missingEntry.field("Notiz"), "alt");
+  assertEquals("missing-source-preserved", missingEntry.field("Record"), "MetricA:_1");
+  assertEquals("missing-source-reason", missingResult.skipped, "source_hours");
+}
+
+function testExplicitRowLabelOverridesTimeSource() {
+  var entryObj = makeEntry({ Record: "MetricA:_1", Notiz: "" });
+
+  moveFilledTemplates({
+    entry: entryObj,
+    mode: "append_row",
+    rowLabel: 0,
+    sourceMode: "datetime",
+    sourceDatetimeField: "Fehlt",
+    maxHours: 0
+  });
+
+  assertEquals("explicit-label-overrides-source", entryObj.field("Notiz"), "0: MetricA1");
+}
+
 function testCombinedHelperAndDisabledMode() {
   var entryObj = makeEntry({ Record: "MetricA:_1", Notiz: "", record_complete: false });
   var combined = moveAndTrackTemplates({
@@ -192,6 +315,12 @@ testRowLabelCanBeAddedOrReplaced();
 testConvertsTemplateVariantsToNormalTags();
 testStringRowsGenerateLabelsFromEntryDate();
 testPrependRowShorthandGeneratesAndPrependsRows();
+testRealtimeSinceUsesTimeMarkerVariableNames();
+testDatetimeAndHoursUseTimeMarkerVariableNames();
+testDatetimeAcceptsEpochSeconds();
+testStepHoursToleratesFloatingPointBoundary();
+testMaxHoursAndMissingSourcePreserveTemplates();
+testExplicitRowLabelOverridesTimeSource();
 testCombinedHelperAndDisabledMode();
 
 WScript.Echo("OK");

@@ -24,12 +24,17 @@ Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisier
 
 ## Log
 
-### 2026-08-09 - (ca. 0,2h)
+### 2026-08-09 - (ca. 0,5h)
 
+- *Summary: Relative Template-Transfer-Zeiten nach Time-Marker-API und Parser-Fix für große Zahlensuffixe.*
 - Fix: Tag Cleaner v1.57 und `collectAtags_lib` v1.73 lesen vollständige mehrstellige Zahlensuffixe; `tag400` bleibt der Wert 400 statt als `tag4` plus Nullmarker `00` zu zerfallen (#80).
 - Tests/Doku: Regressionen für 100, 400 und 1200 sichern den Fix; `tag00`, `tag02`, `tag003` und `tag0,2` bleiben unverändert dokumentiert und getestet.
-- Change: Check Versions v1.69 erwartet Tag Cleaner v1.57 und `collectAtags_lib` v1.73.
-- *Versionen: Check Versions v1.69, Tag Cleaner v1.57, collectAtags_lib v1.73.*
+- Feature: Template Field Transfer v1.04 erzeugt Row-Zeiten über dieselben Variablen und Modi wie der Time Marker; `realtime_since` beginnt relativ zu `startDatetimeField` bei `0:` (#81).
+- Kompatibilität: `rowLabel` bleibt der explizite Override; ohne `sourceMode` gilt weiter `fieldDate`, während `rowStepHours` und `rowRoundMode` als Aliase erhalten bleiben.
+- Sicherheit: Fehlende Zeitquellen oder ein überschrittenes `maxHours` verschieben und leeren Templates nicht.
+- Tests/Doku: Transfer-Regressionen decken `realtime_since`, `datetime`, `hours`, Limits und Overrides ab; Funktionskopf, README und PostEntry-Beispiel zeigen die Time-Marker-kompatible Konfiguration.
+- Change: Check Versions v1.70 erwartet Tag Cleaner v1.57, `collectAtags_lib` v1.73 und Template Field Transfer v1.04.
+- *Versionen: Check Versions v1.70, Tag Cleaner v1.57, collectAtags_lib v1.73, Template Field Transfer v1.04.*
 
 ### 2026-08-02
 

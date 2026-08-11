@@ -104,7 +104,11 @@ function PostEntry(e, fileOps) {
     sourceField: "Record",
     targetField: "Notiz",
     mode: "append_row",
-    fieldDate: "Einnahmedatum"
+    sourceMode: "realtime_since",
+    startDatetimeField: "Einnahmedatum",
+    stepHours: 0.5,
+    roundMode: "round",
+    maxHours: 15
   });
 
   applyTagCleaner({

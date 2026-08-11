@@ -1,12 +1,12 @@
 /*
 ========================================
-A1 Check Versions v1.69 (sys 2.50)
+A1 Check Versions v1.70 (sys 2.50)
 ========================================
 
 Notes
 - Expects collectAtags_lib v1.73 with complete multi-digit numeric suffix parsing.
 - Expects Tag Cleaner v1.57 with complete multi-digit numeric suffix cleaning.
-- Expects Template Field Transfer v1.03 with normal-tag conversion before cleaning.
+- Expects Template Field Transfer v1.04 with Time Marker-compatible row time sources.
 - Expects Dust Merger v0.17 with negative row offsets clamped at zero.
 - Text output starts with `System vX.XX (ok, X rm, X local)` or a compact config/match/miss summary and ends with a blank line.
 - RUN_LIB_CHECK is a visible top-level switch for the immediate verbose startup check.
@@ -48,7 +48,7 @@ checkAtagLibVersions({
 
 /*
 ========================================
-A1 Check Versions v1.69 (sys 2.50)
+A1 Check Versions v1.70 (sys 2.50)
 ========================================
 */
 
@@ -75,7 +75,7 @@ var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERS
 function getCheckVersionsVersion() {
   return {
     name: "checkVersions",
-    version: "1.69",
+    version: "1.70",
     sysVersion: "2.50",
     path: "core/_checkVersions.js"
   };
@@ -95,7 +95,7 @@ var ATAG_EXPECTED_LIBS = [
 ];
 
 var ATAG_EXPECTED_OPTIONAL_LIBS = [
-  { id: "A1", title: "Check Versions", area: "core", name: "checkVersions", version: "1.69", getter: "getCheckVersionsVersion", path: "core/_checkVersions.js", optional: true },
+  { id: "A1", title: "Check Versions", area: "core", name: "checkVersions", version: "1.70", getter: "getCheckVersionsVersion", path: "core/_checkVersions.js", optional: true },
   { id: "A2", title: "Atag Helpers", area: "core", name: "helpers", version: "1.03", getter: "getHelpersVersion", path: "core/helpers.js", optional: true },
   { id: "A3", title: "Restore Atags", area: "core", name: "restoreAtags", version: "2.10", getter: "getRestoreAtagsVersion", path: "core/restoreAtags.js", optional: true },
   { id: "A4", title: "Tag Cleaner", area: "core", name: "tagCleaner", version: "1.57", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
@@ -108,7 +108,7 @@ var ATAG_EXPECTED_OPTIONAL_LIBS = [
   { id: "B8", title: "Obsidian Linker", area: "6_integration", name: "obsidianLinker", version: "1.23", getter: "getObsidianLinkerVersion", path: "addons/6_integration/obsidianLinker.js", optional: true },
   { id: "B9", title: "Wiki Linker", area: "6_integration", name: "wikiLinker", version: "1.01", getter: "getWikiLinkerVersion", path: "addons/6_integration/wikiLinker.js", optional: true },
   { id: "B10", title: "Dust Merger", area: "2_syncing", name: "dustMerger", version: "0.17", getter: "getDustMergerVersion", path: "addons/2_syncing/dustMerger.js", optional: true },
-  { id: "B11", title: "Template Field Transfer", area: "2_syncing", name: "templateFieldTransfer", version: "1.03", getter: "getTemplateFieldTransferVersion", path: "addons/2_syncing/templateFieldTransfer.js", optional: true },
+  { id: "B11", title: "Template Field Transfer", area: "2_syncing", name: "templateFieldTransfer", version: "1.04", getter: "getTemplateFieldTransferVersion", path: "addons/2_syncing/templateFieldTransfer.js", optional: true },
   { id: "C1", title: "Multi Choice Helpers", area: "z_generell", name: "multiChoiceHelpers", version: "1.02", getter: "getMultiChoiceHelpersVersion", path: "addons/z_generell/multiChoiceHelpers.js", optional: true },
   { id: "C2", title: "Typed Text Fields", area: "z_generell", name: "typedTextFields", version: "1.01", getter: "getTypedTextFieldsVersion", path: "addons/z_generell/typedTextFields.js", optional: true },
   { id: "C3", title: "Hour Guide", area: "z_others", name: "hourGuide", version: "1.31", getter: "getHourGuideVersion", path: "addons/z_others/hourGuide.js", optional: true }
