@@ -1,79 +1,6 @@
 /*
 ========================================
-#2 exportAtags Lib v1.84 (sys 2.50)
-========================================
-
-Notes:
-- negated category children keep their own displayed value; sign applies only to category aggregation
-- Exports: tags, text, md, tree_md, rows_md, rows_html, json
-- tree_md supports Unicode default and ASCII fallback
-- tree_md child values use the same aggregate summaries as md
-- tree_md defaults to compact row value counts and hidden category child lists
-- tree_md shows child values by default
-- tree_md only shows category children that actually occur unless enabled
-- tree_md uses Markdown hard line breaks for desktop rendering
-- tree_md defaults repeated child row values to max unless rowAggregateMode is explicit
-- categoryFilter filters all export types by OR categories
-- tag export skips empty category tags
-- tag export writes spaces as underscores
-- tag export prefixes category tags with @
-- category parents show aggregated numeric child values in text/md/tree exports
-- tree_md category parents default to max_abs for signed fixed children
-- negated category children are marked with subscript minus before the name in category displays
-- category and tree value summaries reuse a per-export value index
-- repeated string aggregation returns early when no repeated string tags exist
-- category and string aggregation share one item clone helper
-- rows_md and rows_html share row table view construction
-- rows_html renders table rows through a shared helper
-- repeated string values aggregate with first, last, or join
-- category aliases with trailing +/- apply that sign after child aggregation
-- cumulative +/- values force sum aggregation in row exports
-- Keep this header ASCII-only for the Memento editor
-
-Examples:
-
-These examples use applyTags() from core/helpers.js.
-When only this remote lib is loaded, call exportAtags() directly or load core/helpers.js after the libs.
-
-applyTags({
-  enabled: true,
-  textFields: ["Alias", "Notiz"],
-  targetField: "Atags",
-  targetFieldType: "tags"
-});
-
-applyTags({
-  enabled: true,
-  textFields: ["Alias", "Notiz"],
-  targetField: "Atag MD",
-  targetFieldType: "md",
-  markdownGroupSeparator: "",
-  includeBlankTags: false
-});
-
-applyTags({
-  enabled: true,
-  textFields: ["Alias", "Notiz"],
-  targetField: "Atag Tree",
-  targetFieldType: "tree_md",
-  categoryFilter: ["self", "help"],
-  includeEmptyCategories: false,
-  treeShowValues: true
-});
-
-applyTags({
-  enabled: true,
-  textFields: ["Alias", "Notiz"],
-  targetField: "Atag Tree ASCII",
-  targetFieldType: "tree_md",
-  treeStyle: "ascii",
-  treeShowValues: false
-});
-*/
-
-/*
-========================================
-#2 exportAtags Lib v1.84 (sys 2.50)
+#2 exportAtags Lib v1.85 (sys 3.00)
 ========================================
 */
 
@@ -81,14 +8,14 @@ applyTags({
 function getExportAtagsLibVersion() {
   return {
     name: "exportAtags_lib",
-    version: "1.84",
-    sysVersion: "2.50",
+    version: "1.85",
+    sysVersion: "3.00",
     path: "core_lib/exportAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("exportAtags_lib", "1.84", "2.50", "core_lib/exportAtags_lib.js");
+  registerAtagLibVersion("exportAtags_lib", "1.85", "3.00", "core_lib/exportAtags_lib.js");
 }
 function atagCategoryAggregateMode(cfg, context) {
   if (cfg && cfg.categoryAggregateMode !== undefined) return cfg.categoryAggregateMode;

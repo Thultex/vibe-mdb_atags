@@ -4,25 +4,35 @@
 
 Ausgangsdatum: 2026-05-20
 
-*Diese Woche (3,0h, 3 Tage, 34 Inhalte):*
+*Diese Woche (1,0h, 1 Tag, 7 Inhalte):*
+Repo-Doku: zentrale Core-/Plugin-Beispiele und kompakte Script-Header; Systemversion 3.00.
+
+*Letzte Woche (3,0h, 3 Tage, 34 Inhalte):*
 Tag-Cleaner/Obsidian-Linker: Aliaslogik, Formatmodus; Changelog: Stats-/Versionen-Regeln.
 
-*Letzte Woche (3,7h, 2 Tage, 61 Inhalte):*
-Core-Umbau: Remote-Libs und Cleaner-Struktur; Parser/Export: Kategorie-Aggregation und Readable-Fixes.
-
-*Dieser Monat (15,2h, 7 Tage, 233 Inhalte):*
-Core/Export: Aggregationen und Tree-Ausgabe; Tag-Cleaner: Alias-/Symbolformen; Addons: Obsidian, Sync, Hour-Guide.
+*Dieser Monat (16,2h, 8 Tage, 240 Inhalte):*
+Core/Export: Aggregationen, Beispiele und kompakte Header; Addons: Obsidian, Sync, Hour-Guide; Systemversion 3.00.
 
 *Letzter Monat (6,3h, 3 Tage, 175 Inhalte):*
 Cleaner/Readable: Tagleisten und Archivierung; Sync/TimeMarker: Addons und Workflows; Repo: Grundstruktur.
 
-*Jahr (21,5h, 10 Tage, 408 Inhalte):*
-Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisierung; Addons: Obsidian/Sync/TimeMarker.
+*Jahr (22,5h, 11 Tage, 415 Inhalte):*
+Core-Libs/Exports: Remote-Einbindung, Aggregationen und zentrale Beispiele; Addons: Obsidian/Sync/TimeMarker.
 
-*Insgesamt (21,5h, 10 Tage, 408 Inhalte):*
-Core-Libs/Exports: Remote-Einbindung und Aggregationen; Tag-Cleaner: Normalisierung; Addons: Obsidian/Sync/TimeMarker.
+*Insgesamt (22,5h, 11 Tage, 415 Inhalte):*
+Core-Libs/Exports: Remote-Einbindung, Aggregationen und zentrale Beispiele; Addons: Obsidian/Sync/TimeMarker.
 
 ## Log
+
+### 2026-08-12 - (ca. 1,0h)
+
+- *Summary: Beispiele aus allen Script-Headern zentralisiert, Header vereinheitlicht und Systemversion auf 3.00 angehoben (#82).*
+- Doku: `examples.md` sammelt kopierbare Aufrufe fuer `core_lib` und `core`; `examples_plugins.md` ordnet Add-on-Beispiele nach den Plugin-Ordnern `1_tagging`, `2_syncing`, `3_workflow`, `6_integration`, `z_generell` und `z_others`.
+- Doku: Das Template-Transfer-Beispiel dokumentiert `sourceMode: "realtime_since"` parallel zum Time Marker samt `startDatetimeField`, `stepHours`, `roundMode` und `maxHours`.
+- Refactor: Alle 20 aktiven Moduldateien enthalten nur noch einen kompakten Header mit Kennung, Modulversion und Systemversion; eingebettete Changelogs, Notizen, Beispiele und doppelte Kopier-Header wurden entfernt.
+- Version: Systemversion auf `sys 3.00` angehoben; Versions-APIs, Registrierungen, Checker, README und statische Versionsmatrix wurden synchronisiert.
+- Versionen: Check Versions v1.71, Atag Helpers v1.04, Restore Atags v2.11, Tag Cleaner v1.58, `collectAtags_lib` v1.74, `exportAtags_lib` v1.85 und `helpers_lib` v2.12.
+- Versionen/Tests: Add-ons wurden jeweils um eine Patch-Version angehoben; `test_exampleDocs.js` sichert kompakte Einzel-Header, zentrale Beispielreihenfolge und den `realtime_since`-Transfer-Aufruf, waehrend `check_versioning.ps1` nun auch Dust Merger prueft.
 
 ### 2026-08-09 - (ca. 0,5h)
 

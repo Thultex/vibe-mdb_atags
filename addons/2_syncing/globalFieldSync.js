@@ -1,56 +1,20 @@
 /*
 ========================================
-B3 Global Field Sync v1.04 (sys 2.50)
-========================================
-
-Changes
-- use the passed entry object's library for syncFieldBack/syncFieldTo/syncFieldAll when available
-- guard entry/lib/field access for early open triggers
-- skip back-sync for empty current values
-- fallback to first non-empty source value within first 20 entries
-- add independent field sync addon
-- sync from first entry to current entry
-- sync from current entry back to first entry
-- bulk sync from first entry to all entries
-- support one field or a field list
-- optional overwrite conflict handling
-
-Usage
-
-syncFieldTo({
-  fields: ["Field1", "Field2"],
-  overwrite: true
-});
-
-syncFieldBack({
-  fields: ["Field1", "Field2"],
-  overwrite: true
-});
-
-syncFieldAll({
-  fields: ["Field1", "Field2"],
-  overwrite: true
-});
-
-*/
-
-/*
-========================================
-B3 Global Field Sync v1.04 (sys 2.50)
+B3 Global Field Sync v1.05 (sys 3.00)
 ========================================
 */
 
 function getGlobalFieldSyncVersion() {
   return {
     name: "globalFieldSync",
-    version: "1.04",
-    sysVersion: "2.50",
+    version: "1.05",
+    sysVersion: "3.00",
     path: "addons/2_syncing/globalFieldSync.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("globalFieldSync", "1.04", "2.50", "addons/2_syncing/globalFieldSync.js", true);
+  registerAtagLibVersion("globalFieldSync", "1.05", "3.00", "addons/2_syncing/globalFieldSync.js", true);
 }
 
 function syncIsArray(val) {

@@ -1,80 +1,20 @@
 /*
 ========================================
-B7 Time Marker v1.41 (sys 2.50)
-========================================
-
-Änderungen
-- `cleanupTimeMarker()` unterstuetzt `fields` fuer mehrere Textfelder.
-- Entfernt alten Alias `cleanupTimeMarkerPlaceholders`.
-- `clearTimeMarkerRows()` entfernt Row-Prefixe oder setzt sie auf den aktuellen Marker zurueck, ohne Template-Inhalte zu interpretieren
-- `mergeSameRowContents` entfernt identische Row-Inhalte getrennt vor `mergeSameRows`
-- `mergeSameRows` bleibt mit `mergeSameRowContents` idempotent und verdoppelt bereits zusammengefasste Segmente nicht erneut
-- Rows mit nur leeren Template-Slots wie `Testing: __` gelten als leer und werden entfernt
-- Merge-Optionen akzeptieren auch Boolean-/String-Varianten aus Memento/Rhino, nicht nur primitives `true`
-- `cleanupTimeMarker({ mergeSameRows: true })` fuehrt gleiche Row-Marker zusammen, z. B. `19: hallo` + `19: spannend` zu `19: hallo; spannend`
-- Cleanup gibt `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
-- `appendTimeMarker()` gibt ebenfalls `true` zurueck, wenn danach Markerzeilen vorhanden sind, sonst `false`
-- `cleanupTimeMarker()` ersetzt `: Text` wie `appendTimeMarker()`, haengt aber keinen leeren neuen Marker an
-- Cleanup sortiert Markerzeilen als Row-Block nach oben und normalen Text darunter
-- Cleanup erhaelt Leerzeilen innerhalb des normalen Fliesstexts
-- Zeilensplit erhaelt leere Zeilen auch in JScript
-- Doppelpunkt-Platzhalter am Zeilenanfang werden beim Einfuegen mit dem aktuellen Marker belegt
-- Bereinigung leerer TimeMarker und Leerzeilen läuft auch beim Abbruch durch `maxHours`
-- bereinigte Leerzeilen werden auch zurückgeschrieben, wenn kein neuer Marker nötig ist
-- Leerzeilen im Zeitblock werden nach Entfernen leerer TimeMarker bereinigt
-- leere bestehende TimeMarker werden beim Setzen eines neuen Markers entfernt
-- Add-on wieder eingebunden
-- optionales Stundenlimit ergänzt
-- Standardlimit auf 30 Stunden gesetzt
-
-Kurzbeispiele
-
-- `test` wird bei aktuellem Marker `2` zu `2: test`
-- `: Text` wird bei aktuellem Marker `12,5` zu `12,5: Text`
-- eine einzelne Zeile `:` wird entfernt
-
-Anwendung vor oder beim Erstellen eines Eintrags
-
-appendTimeMarker({
-  targetTextField: "Notiz",
-  sourceMode: "realtime",
-  stepHours: 0.5,
-  roundMode: "round",
-  insertMode: "time_block_top",
-  maxHours: 30
-});
-
-Anwendung in AfterEntry zum Bereinigen ohne neuen leeren Marker
-
-cleanupTimeMarker({
-  targetTextField: "Notiz",
-});
-
-Vorlagen vor dem Tag-Cleaner von alten Row-Markern befreien
-
-clearTimeMarkerRows({
-  fields: ["Notiz"],
-  mode: "remove"
-});
-*/
-
-/*
-========================================
-B7 Time Marker v1.41 (sys 2.50)
+B7 Time Marker v1.42 (sys 3.00)
 ========================================
 */
 
 function getTimeMarkerVersion() {
   return {
     name: "timeMarker",
-    version: "1.41",
-    sysVersion: "2.50",
+    version: "1.42",
+    sysVersion: "3.00",
     path: "addons/3_workflow/timeMarker.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("timeMarker", "1.41", "2.50", "addons/3_workflow/timeMarker.js", true);
+  registerAtagLibVersion("timeMarker", "1.42", "3.00", "addons/3_workflow/timeMarker.js", true);
 }
 
 function toDateSafe(v) {

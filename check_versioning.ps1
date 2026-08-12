@@ -11,6 +11,7 @@ $moduleFiles = @(
   "addons/1_tagging/tagPairParser.js",
   "addons/2_syncing/globalFieldSync.js",
   "addons/2_syncing/syncLastFromLatest.js",
+  "addons/2_syncing/dustMerger.js",
   "addons/2_syncing/templateFieldTransfer.js",
   "addons/3_workflow/floatingAverage.js",
   "addons/3_workflow/sequenceCounter.js",
@@ -33,6 +34,7 @@ $moduleIds = @{
   "addons/1_tagging/tagPairParser.js" = "B2"
   "addons/2_syncing/globalFieldSync.js" = "B3"
   "addons/2_syncing/syncLastFromLatest.js" = "B4"
+  "addons/2_syncing/dustMerger.js" = "B10"
   "addons/2_syncing/templateFieldTransfer.js" = "B11"
   "addons/3_workflow/floatingAverage.js" = "B5"
   "addons/3_workflow/sequenceCounter.js" = "B6"
@@ -50,7 +52,7 @@ function Get-VersionLine {
     [string]$Path
   )
 
-  $match = [regex]::Match($Content, '(?m)^((?:#|[ABC])\d+) [^\r\n]* v(\d+\.\d+) \(sys (\d+\.\d+)\)$')
+  $match = [regex]::Match($Content, '(?m)^((?:#|[ABC])\d+) [^\r\n]* v(\d+\.\d+) \(sys (\d+\.\d+)\)\r?$')
   if (-not $match.Success) {
     throw "Keine Versionszeile im erwarteten Format gefunden: $Path (erwartet z.B. A1 restoreAtags v1.37 (sys 2.20) oder #1 helpers_lib v2.11 (sys 2.40))"
   }

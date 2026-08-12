@@ -1,66 +1,20 @@
 /*
 ========================================
-B11 Template Field Transfer v1.04 (sys 2.50)
-========================================
-
-Changes
-- support the Time Marker time-source variables for generated transfer rows
-- keep transferred `name:_00` slots as normal `name00` input for the cleaner
-- convert moved template values into normal compact or colon tags
-- generate rows for string_rows and append_row/prepend_row modes
-- move filled template slots between text fields on the same entry
-- reset moved source slots only after the target write succeeds
-- support append, prepend and replace modes with optional row labels
-- delegate general tag completeness checks to collectAtags_lib
-- expose a combined PostEntry helper plus the separate transfer step
-
-Usage
-
-var transfer = moveFilledTemplates({
-  entry: e,
-  sourceField: "Record",
-  targetField: "Notiz",
-  mode: "append_row",
-  sourceMode: "realtime_since",
-  startDatetimeField: "Einnahmedatum",
-  stepHours: 0.5,
-  roundMode: "round",
-  maxHours: 15
-});
-
-var result = applyTags({
-  entryObj: e,
-  textFields: ["Notiz", "Record", "Atag Aliases"],
-  targetField: "tags",
-  targetFieldType: "tags"
-});
-
-trackTagsComplete({
-  entry: e,
-  templateNames: transfer.templateNames,
-  result: result,
-  completeField: "record_complete"
-});
-
-*/
-
-/*
-========================================
-B11 Template Field Transfer v1.04 (sys 2.50)
+B11 Template Field Transfer v1.05 (sys 3.00)
 ========================================
 */
 
 function getTemplateFieldTransferVersion() {
   return {
     name: "templateFieldTransfer",
-    version: "1.04",
-    sysVersion: "2.50",
+    version: "1.05",
+    sysVersion: "3.00",
     path: "addons/2_syncing/templateFieldTransfer.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("templateFieldTransfer", "1.04", "2.50", "addons/2_syncing/templateFieldTransfer.js", true);
+  registerAtagLibVersion("templateFieldTransfer", "1.05", "3.00", "addons/2_syncing/templateFieldTransfer.js", true);
 }
 
 function tftTrim(value) {

@@ -1,54 +1,6 @@
 /*
 ========================================
-A1 Check Versions v1.70 (sys 2.50)
-========================================
-
-Notes
-- Expects collectAtags_lib v1.73 with complete multi-digit numeric suffix parsing.
-- Expects Tag Cleaner v1.57 with complete multi-digit numeric suffix cleaning.
-- Expects Template Field Transfer v1.04 with Time Marker-compatible row time sources.
-- Expects Dust Merger v0.17 with negative row offsets clamped at zero.
-- Text output starts with `System vX.XX (ok, X rm, X local)` or a compact config/match/miss summary and ends with a blank line.
-- RUN_LIB_CHECK is a visible top-level switch for the immediate verbose startup check.
-- Standard report lists only remote core libs, but registered known addons are checked for version mismatches.
-- Reports major version mismatches even when loaded versions are newer.
-- Shared remote-library version registry.
-- Load before optional lib files to collect registered versions.
-- Each lib can still expose its own get...Version function.
-- inputLinker_lib is no longer part of the core lib check.
-- Current libs:
-  - helpers_lib v2.11 (sys 2.50)
-  - collectAtags_lib v1.73 (sys 2.50)
-  - exportAtags_lib v1.84 (sys 2.50)
-
-Local config example
-
-function getLibsVersionsConfig() {
-  return {
-    remote: ["helpers_lib"],
-    local: ["syncLastFromLatest"]
-  };
-}
-
-// If this function exists in a local shared script, A1 uses it automatically.
-// Modules not listed there are not checked and not reported as missing.
-
-Call override example
-
-checkAtagLibVersions({
-  SHOW_CURRENT_CONFIG: true,
-  currentConfig: {
-    remote: ["helpers_lib"],
-    local: ["syncLastFromLatest"]
-  }
-});
-
-========================================
-*/
-
-/*
-========================================
-A1 Check Versions v1.70 (sys 2.50)
+A1 Check Versions v1.71 (sys 3.00)
 ========================================
 */
 
@@ -68,15 +20,15 @@ var SHOW_LOCAL_MISSING = true;
 
 
 // System Data
-var ATAG_SYS_VERSION = "2.50";
+var ATAG_SYS_VERSION = "3.00";
 var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERSIONS : {};
 
 // Version API
 function getCheckVersionsVersion() {
   return {
     name: "checkVersions",
-    version: "1.70",
-    sysVersion: "2.50",
+    version: "1.71",
+    sysVersion: "3.00",
     path: "core/_checkVersions.js"
   };
 }
@@ -89,29 +41,29 @@ function getLibVersionsVersion() {
 
 // Expected Modules
 var ATAG_EXPECTED_LIBS = [
-  { id: "#3", title: "Helpers Lib", area: "core_lib", name: "helpers_lib", version: "2.11", getter: "getHelpersLibVersion", path: "core_lib/helpers_lib.js" },
-  { id: "#1", title: "Collect Atags Lib", area: "core_lib", name: "collectAtags_lib", version: "1.73", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
-  { id: "#2", title: "Export Atags Lib", area: "core_lib", name: "exportAtags_lib", version: "1.84", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" }
+  { id: "#3", title: "Helpers Lib", area: "core_lib", name: "helpers_lib", version: "2.12", getter: "getHelpersLibVersion", path: "core_lib/helpers_lib.js" },
+  { id: "#1", title: "Collect Atags Lib", area: "core_lib", name: "collectAtags_lib", version: "1.74", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
+  { id: "#2", title: "Export Atags Lib", area: "core_lib", name: "exportAtags_lib", version: "1.85", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" }
 ];
 
 var ATAG_EXPECTED_OPTIONAL_LIBS = [
-  { id: "A1", title: "Check Versions", area: "core", name: "checkVersions", version: "1.70", getter: "getCheckVersionsVersion", path: "core/_checkVersions.js", optional: true },
-  { id: "A2", title: "Atag Helpers", area: "core", name: "helpers", version: "1.03", getter: "getHelpersVersion", path: "core/helpers.js", optional: true },
-  { id: "A3", title: "Restore Atags", area: "core", name: "restoreAtags", version: "2.10", getter: "getRestoreAtagsVersion", path: "core/restoreAtags.js", optional: true },
-  { id: "A4", title: "Tag Cleaner", area: "core", name: "tagCleaner", version: "1.57", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
-  { id: "B2", title: "Tag Pair Parser", area: "1_tagging", name: "tagPairParser", version: "1.02", getter: "getTagPairParserVersion", path: "addons/1_tagging/tagPairParser.js", optional: true },
-  { id: "B3", title: "Global Field Sync", area: "2_syncing", name: "globalFieldSync", version: "1.04", getter: "getGlobalFieldSyncVersion", path: "addons/2_syncing/globalFieldSync.js", optional: true },
-  { id: "B4", title: "Sync Last From Latest", area: "2_syncing", name: "syncLastFromLatest", version: "1.07", getter: "getSyncLastFromLatestVersion", path: "addons/2_syncing/syncLastFromLatest.js", optional: true },
-  { id: "B5", title: "Floating Average", area: "3_workflow", name: "floatingAverage", version: "1.01", getter: "getFloatingAverageVersion", path: "addons/3_workflow/floatingAverage.js", optional: true },
-  { id: "B6", title: "Sequence Counter", area: "3_workflow", name: "sequenceCounter", version: "1.06", getter: "getSequenceCounterVersion", path: "addons/3_workflow/sequenceCounter.js", optional: true },
-  { id: "B7", title: "Time Marker", area: "3_workflow", name: "timeMarker", version: "1.41", getter: "getTimeMarkerVersion", path: "addons/3_workflow/timeMarker.js", optional: true },
-  { id: "B8", title: "Obsidian Linker", area: "6_integration", name: "obsidianLinker", version: "1.23", getter: "getObsidianLinkerVersion", path: "addons/6_integration/obsidianLinker.js", optional: true },
-  { id: "B9", title: "Wiki Linker", area: "6_integration", name: "wikiLinker", version: "1.01", getter: "getWikiLinkerVersion", path: "addons/6_integration/wikiLinker.js", optional: true },
-  { id: "B10", title: "Dust Merger", area: "2_syncing", name: "dustMerger", version: "0.17", getter: "getDustMergerVersion", path: "addons/2_syncing/dustMerger.js", optional: true },
-  { id: "B11", title: "Template Field Transfer", area: "2_syncing", name: "templateFieldTransfer", version: "1.04", getter: "getTemplateFieldTransferVersion", path: "addons/2_syncing/templateFieldTransfer.js", optional: true },
-  { id: "C1", title: "Multi Choice Helpers", area: "z_generell", name: "multiChoiceHelpers", version: "1.02", getter: "getMultiChoiceHelpersVersion", path: "addons/z_generell/multiChoiceHelpers.js", optional: true },
-  { id: "C2", title: "Typed Text Fields", area: "z_generell", name: "typedTextFields", version: "1.01", getter: "getTypedTextFieldsVersion", path: "addons/z_generell/typedTextFields.js", optional: true },
-  { id: "C3", title: "Hour Guide", area: "z_others", name: "hourGuide", version: "1.31", getter: "getHourGuideVersion", path: "addons/z_others/hourGuide.js", optional: true }
+  { id: "A1", title: "Check Versions", area: "core", name: "checkVersions", version: "1.71", getter: "getCheckVersionsVersion", path: "core/_checkVersions.js", optional: true },
+  { id: "A2", title: "Atag Helpers", area: "core", name: "helpers", version: "1.04", getter: "getHelpersVersion", path: "core/helpers.js", optional: true },
+  { id: "A3", title: "Restore Atags", area: "core", name: "restoreAtags", version: "2.11", getter: "getRestoreAtagsVersion", path: "core/restoreAtags.js", optional: true },
+  { id: "A4", title: "Tag Cleaner", area: "core", name: "tagCleaner", version: "1.58", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
+  { id: "B2", title: "Tag Pair Parser", area: "1_tagging", name: "tagPairParser", version: "1.03", getter: "getTagPairParserVersion", path: "addons/1_tagging/tagPairParser.js", optional: true },
+  { id: "B3", title: "Global Field Sync", area: "2_syncing", name: "globalFieldSync", version: "1.05", getter: "getGlobalFieldSyncVersion", path: "addons/2_syncing/globalFieldSync.js", optional: true },
+  { id: "B4", title: "Sync Last From Latest", area: "2_syncing", name: "syncLastFromLatest", version: "1.08", getter: "getSyncLastFromLatestVersion", path: "addons/2_syncing/syncLastFromLatest.js", optional: true },
+  { id: "B5", title: "Floating Average", area: "3_workflow", name: "floatingAverage", version: "1.02", getter: "getFloatingAverageVersion", path: "addons/3_workflow/floatingAverage.js", optional: true },
+  { id: "B6", title: "Sequence Counter", area: "3_workflow", name: "sequenceCounter", version: "1.07", getter: "getSequenceCounterVersion", path: "addons/3_workflow/sequenceCounter.js", optional: true },
+  { id: "B7", title: "Time Marker", area: "3_workflow", name: "timeMarker", version: "1.42", getter: "getTimeMarkerVersion", path: "addons/3_workflow/timeMarker.js", optional: true },
+  { id: "B8", title: "Obsidian Linker", area: "6_integration", name: "obsidianLinker", version: "1.24", getter: "getObsidianLinkerVersion", path: "addons/6_integration/obsidianLinker.js", optional: true },
+  { id: "B9", title: "Wiki Linker", area: "6_integration", name: "wikiLinker", version: "1.02", getter: "getWikiLinkerVersion", path: "addons/6_integration/wikiLinker.js", optional: true },
+  { id: "B10", title: "Dust Merger", area: "2_syncing", name: "dustMerger", version: "0.18", getter: "getDustMergerVersion", path: "addons/2_syncing/dustMerger.js", optional: true },
+  { id: "B11", title: "Template Field Transfer", area: "2_syncing", name: "templateFieldTransfer", version: "1.05", getter: "getTemplateFieldTransferVersion", path: "addons/2_syncing/templateFieldTransfer.js", optional: true },
+  { id: "C1", title: "Multi Choice Helpers", area: "z_generell", name: "multiChoiceHelpers", version: "1.03", getter: "getMultiChoiceHelpersVersion", path: "addons/z_generell/multiChoiceHelpers.js", optional: true },
+  { id: "C2", title: "Typed Text Fields", area: "z_generell", name: "typedTextFields", version: "1.02", getter: "getTypedTextFieldsVersion", path: "addons/z_generell/typedTextFields.js", optional: true },
+  { id: "C3", title: "Hour Guide", area: "z_others", name: "hourGuide", version: "1.32", getter: "getHourGuideVersion", path: "addons/z_others/hourGuide.js", optional: true }
 ];
 
 function getExpectedAtagLibs() {

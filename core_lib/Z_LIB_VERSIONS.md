@@ -4,9 +4,9 @@ Aktuelle Library-Dateien und Versionen:
 
 | Name | Version | Sys | Pfad |
 | --- | ---: | ---: | --- |
-| #1 collectAtags_lib | 1.73 | 2.50 | `core_lib/collectAtags_lib.js` |
-| #2 exportAtags_lib | 1.84 | 2.50 | `core_lib/exportAtags_lib.js` |
-| #3 helpers_lib | 2.11 | 2.50 | `core_lib/helpers_lib.js` |
+| #1 collectAtags_lib | 1.74 | 3.00 | `core_lib/collectAtags_lib.js` |
+| #2 exportAtags_lib | 1.85 | 3.00 | `core_lib/exportAtags_lib.js` |
+| #3 helpers_lib | 2.12 | 3.00 | `core_lib/helpers_lib.js` |
 
 ## Checker
 
@@ -14,7 +14,7 @@ Aktuelle Library-Dateien und Versionen:
 
 | Name | Version | Sys | Pfad |
 | --- | ---: | ---: | --- |
-| A1 Check Versions | 1.70 | 2.50 | `core/_checkVersions.js` |
+| A1 Check Versions | 1.71 | 3.00 | `core/_checkVersions.js` |
 
 Optionale Plugins/Addons koennen sich beim Laden per `registerAtagLibVersion(name, version, sysVersion, path, true)` registrieren und in `ATAG_EXPECTED_OPTIONAL_LIBS` einen `getter` besitzen. Mismatch- und Missing-Meldungen ueber fehlende Getter/Module werden getrennt ueber `SHOW_REMOTE_MISSMATCHES`, `SHOW_LOCAL_MISSMATCHES`, `SHOW_REMOTE_MISSING` und `SHOW_LOCAL_MISSING` gesteuert.
 
@@ -24,22 +24,22 @@ Diese Dateien gehoeren funktionell zur Lib-Nutzung, sind aber keine externen Rem
 
 | Name | Version | Sys | Pfad | Zweck |
 | --- | ---: | ---: | --- | --- |
-| A2 helpers | 1.03 | 2.50 | `core/helpers.js` | Memento-Wrapper fuer `applyTags`, `bulkApplyTags` und `bulkExportAtags`; nutzt `core_lib/helpers_lib.js` |
-| A3 restoreAtags | 2.10 | 2.50 | `core/restoreAtags.js` | Restore aus Atag-JSON in Felder |
-| A4 tagCleaner | 1.57 | 2.50 | `core/tagCleaner.js` | Cleaner-/Alias-Memento-Wrapper |
-| B2 tagPairParser | 1.02 | 2.50 | `addons/1_tagging/tagPairParser.js` | Tag-Paare aus Tag-Feldern |
-| B3 globalFieldSync | 1.04 | 2.50 | `addons/2_syncing/globalFieldSync.js` | Feld-Sync innerhalb einer Library |
-| B4 syncLastFromLatest | 1.07 | 2.50 | `addons/2_syncing/syncLastFromLatest.js` | Felder vom neuesten Eintrag uebernehmen |
-| B5 floatingAverage | 1.01 | 2.50 | `addons/3_workflow/floatingAverage.js` | Gleitender Mittelwert |
-| B6 sequenceCounter | 1.06 | 2.50 | `addons/3_workflow/sequenceCounter.js` | Sequenz-/Spree-Zaehler |
-| B7 timeMarker | 1.41 | 2.50 | `addons/3_workflow/timeMarker.js` | Zeitmarker in Textfeldern |
-| B8 obsidianLinker | 1.23 | 2.50 | `addons/6_integration/obsidianLinker.js` | Memento-/Obsidian-Linking |
-| B9 wikiLinker | 1.01 | 2.50 | `addons/6_integration/wikiLinker.js` | Wikipedia-Suchlinks |
-| B10 dustMerger | 0.17 | 2.50 | `addons/2_syncing/dustMerger.js` | Zeitnahes Mergen von Eintraegen |
-| B11 templateFieldTransfer | 1.04 | 2.50 | `addons/2_syncing/templateFieldTransfer.js` | Template-Werte als normale Tags und optionale Rows uebertragen |
-| C1 multiChoiceHelpers | 1.02 | 2.50 | `addons/z_generell/multiChoiceHelpers.js` | Multi-Choice-Helfer |
-| C2 typedTextFields | 1.01 | 2.50 | `addons/z_generell/typedTextFields.js` | Typisierte Textfeld-Sync-Helfer |
-| C3 hourGuide | 1.31 | 2.50 | `addons/z_others/hourGuide.js` | Stundenhilfe-Rendering |
+| A2 helpers | 1.04 | 3.00 | `core/helpers.js` | Memento-Wrapper fuer `applyTags`, `bulkApplyTags` und `bulkExportAtags`; nutzt `core_lib/helpers_lib.js` |
+| A3 restoreAtags | 2.11 | 3.00 | `core/restoreAtags.js` | Restore aus Atag-JSON in Felder |
+| A4 tagCleaner | 1.58 | 3.00 | `core/tagCleaner.js` | Cleaner-/Alias-Memento-Wrapper |
+| B2 tagPairParser | 1.03 | 3.00 | `addons/1_tagging/tagPairParser.js` | Tag-Paare aus Tag-Feldern |
+| B3 globalFieldSync | 1.05 | 3.00 | `addons/2_syncing/globalFieldSync.js` | Feld-Sync innerhalb einer Library |
+| B4 syncLastFromLatest | 1.08 | 3.00 | `addons/2_syncing/syncLastFromLatest.js` | Felder vom neuesten Eintrag uebernehmen |
+| B5 floatingAverage | 1.02 | 3.00 | `addons/3_workflow/floatingAverage.js` | Gleitender Mittelwert |
+| B6 sequenceCounter | 1.07 | 3.00 | `addons/3_workflow/sequenceCounter.js` | Sequenz-/Spree-Zaehler |
+| B7 timeMarker | 1.42 | 3.00 | `addons/3_workflow/timeMarker.js` | Zeitmarker in Textfeldern |
+| B8 obsidianLinker | 1.24 | 3.00 | `addons/6_integration/obsidianLinker.js` | Memento-/Obsidian-Linking |
+| B9 wikiLinker | 1.02 | 3.00 | `addons/6_integration/wikiLinker.js` | Wikipedia-Suchlinks |
+| B10 dustMerger | 0.18 | 3.00 | `addons/2_syncing/dustMerger.js` | Zeitnahes Mergen von Eintraegen |
+| B11 templateFieldTransfer | 1.05 | 3.00 | `addons/2_syncing/templateFieldTransfer.js` | Template-Werte als normale Tags und optionale Rows uebertragen |
+| C1 multiChoiceHelpers | 1.03 | 3.00 | `addons/z_generell/multiChoiceHelpers.js` | Multi-Choice-Helfer |
+| C2 typedTextFields | 1.02 | 3.00 | `addons/z_generell/typedTextFields.js` | Typisierte Textfeld-Sync-Helfer |
+| C3 hourGuide | 1.32 | 3.00 | `addons/z_others/hourGuide.js` | Stundenhilfe-Rendering |
 
 Empfohlene Lade-Reihenfolge:
 

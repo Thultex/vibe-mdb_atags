@@ -1,21 +1,14 @@
 /*
 ========================================
-A2 Atag Helpers v1.03 (sys 2.50)
-========================================
-
-Notes
-- Memento entry/lib wrappers for atag libs.
-- Depends on core_lib/helpers_lib.js.
-- Load after core_lib/helpers_lib.js, collectAtags_lib and exportAtags_lib.
-
+A2 Atag Helpers v1.04 (sys 3.00)
 ========================================
 */
 
 function getHelpersVersion() {
   return {
     name: "helpers",
-    version: "1.03",
-    sysVersion: "2.50",
+    version: "1.04",
+    sysVersion: "3.00",
     path: "core/helpers.js"
   };
 }
@@ -25,7 +18,7 @@ function getHelpersMemVersion() {
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("helpers", "1.03", "2.50", "core/helpers.js", true);
+  registerAtagLibVersion("helpers", "1.04", "3.00", "core/helpers.js", true);
 }
 
 function exportAtagsFromCfg(cfg, entryObj, result) {

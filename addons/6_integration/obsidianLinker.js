@@ -1,77 +1,20 @@
 /*
 ========================================
-B8 Obsidian Linker v1.23 (sys 2.50)
-========================================
-
-Changes
-- add Memento to Obsidian Advanced URI linker
-- separate overwrite link field and Obsidian link field
-- support overwriteHtmlField as the create/overwrite link target
-- support obsidianHtmlField as the formatted Obsidian link target
-- always refresh the create/overwrite link when its field is separate
-- keep Memento id for filepath and frontmatter only
-- format existing Obsidian links without replacing them with overwrite links
-- hide overwrite link once an Obsidian link is connected
-- show connected Obsidian links with direct and Windows helper links
-- write full link texts for Memento link detection
-- omit Windows/Web redirect link unless configured
-- render connected links as Markdown links for testing
-- prefer Markdown field option names while keeping HTML aliases
-- optionally open the generated or connected Obsidian URI
-- broaden Windows open attempts for Memento Desktop Java engines
-- parse Markdown Obsidian links without self-nesting
-- mark opened overwrite links as pending insert
-- keep obsidian-only configs from creating overwrite links
-- write connected Obsidian fields as bare Markdown links
-- allow obsidianMarkdownField-only configs to create/open overwrite links
-- add formatOnly mode for after-entry formatting without creating/opening overwrite links
-- recognize regular Obsidian open/path URIs in addition to Advanced URI links
-- add a post-effect helper that only formats an existing URL and leaves empty fields untouched
-- make frontmatter tags optional and configurable independently from the file path
-- optionally add the target folder as a tag with folderAsTag
-- open existing links before evaluating new-file folder, tags, or content configuration
-- preserve the vault and full URI of existing UID links and ignore trailing wrapper parentheses
-- open an existing link by default in linkObsidianUri while allowing open: false
-
-Usage
-
-linkObsidianUri({
-  contentField: "Text",
-  overwriteMarkdownField: "Obsidian Overwrite Link",
-  obsidianMarkdownField: "Obsidian Link",
-  dateField: "Datum",
-  mementoLinkField: "Memento Link",
-  vault: "ExampleVault",
-  folderPath: "memento/Connector DB",
-  tags: "memento/connector-db",
-  folderAsTag: true,
-  formatOnly: false,
-  open: false
-});
-
-formatObsidianUri({
-  field: "Obsidian Link"
-});
-
-*/
-
-/*
-========================================
-B8 Obsidian Linker v1.23 (sys 2.50)
+B8 Obsidian Linker v1.24 (sys 3.00)
 ========================================
 */
 
 function getObsidianLinkerVersion() {
   return {
     name: "obsidianLinker",
-    version: "1.23",
-    sysVersion: "2.50",
+    version: "1.24",
+    sysVersion: "3.00",
     path: "addons/6_integration/obsidianLinker.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("obsidianLinker", "1.23", "2.50", "addons/6_integration/obsidianLinker.js", true);
+  registerAtagLibVersion("obsidianLinker", "1.24", "3.00", "addons/6_integration/obsidianLinker.js", true);
 }
 
 function obsTrim(s) {

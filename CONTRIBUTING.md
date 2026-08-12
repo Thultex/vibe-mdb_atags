@@ -1,11 +1,12 @@
 # Pflege Und Versionierung
 
-Dieses Repo nutzt zwei Ebenen von Versionsinfo:
+Dieses Repo nutzt drei getrennte Ebenen:
 
 - Dateiversion im Kopf einer Script-Datei
 - Verlaufseintrag in `CHANGELOG.md`
+- kopierbare Aufrufe in `examples.md` und `examples_plugins.md`
 
-Eine funktionale Änderung ist erst sauber dokumentiert, wenn beide Stellen gepflegt wurden.
+Eine funktionale Änderung ist erst sauber dokumentiert, wenn Version, Verlauf und betroffene Beispiele gepflegt wurden.
 
 Die Repo-Struktur ist in Bereiche gegliedert:
 
@@ -26,18 +27,15 @@ Regeln:
 - Wenn ein Test reale Semantik braucht, die Semantik anonymisieren und nur die technische Struktur erhalten.
 - Vor groesseren Doku- oder Testaenderungen kurz mit `rg` nach privaten Begriffen suchen.
 
-## Kurze Versionsinfos Im Dateikopf
+## Kompakte Dateiheader
 
 Jede zentrale Script-Datei beginnt mit einem kurzen Kopfblock, zum Beispiel:
 
 ```js
 /*
 ========================================
-A1 collectAtags v1.22 (sys 2.21)
+A1 Check Versions v1.71 (sys 3.00)
 ========================================
-
-Änderungen
-- Fix ...
 */
 ```
 
@@ -45,103 +43,21 @@ Regeln:
 
 - Die Modulversion wird erhöht, wenn sich Verhalten, Schnittstelle, Logik oder relevante interne Verarbeitung ändert.
 - Reine Textkorrekturen ohne Verhaltensänderung brauchen nicht zwingend einen Versionssprung.
-- Der Block `Änderungen` enthält kurze, konkrete Punkte mit Wirkung.
-- Die Systemversion `sys 2.21` bleibt unverändert, solange sich nur das einzelne Modul ändert.
+- Changelog, Notizen, Usage und Beispiele stehen nie im Dateiheader.
+- Jede Moduldatei hat genau einen Kopfblock; ein zweiter Kopier-Header entfaellt.
+- Die Systemversion bleibt unverändert, solange sich nur das einzelne Modul ändert.
 - Die Kennung vor dem Namen ist Pflicht: `A` fuer Core, `B` fuer Addons, `C` fuer geloeste eigenstaendige Module. Die Nummer folgt der dokumentierten Repo-Reihenfolge.
 - Jedes zentrale Script und jedes optionale Plugin/Add-on stellt eine `get...Version()`-Funktion bereit, z. B. `getDustMergerVersion()`, die `{ name, version, sysVersion, path }` zurückgibt.
 - Jedes optionale Plugin/Add-on registriert sich direkt nach der `get...Version()`-Funktion, wenn `registerAtagLibVersion` verfügbar ist: `registerAtagLibVersion(name, version, sysVersion, path, true)`.
 - Bekannte optionale Plugins/Add-ons werden in `core/_checkVersions.js` mit `getter` in `ATAG_EXPECTED_OPTIONAL_LIBS` geführt. `_checkVersions` ruft diese Getter generisch auf; keine neuen hartcodierten Sonderfälle anlegen.
 
-## Aktuelle Form Der Dateiheader
+## Pflege Von Beispielen
 
-Die Header sollen sich an der aktuellen Repo-Form orientieren und nicht frei neu erfunden werden.
-
-Typische Form im Repo heute:
-
-```js
-/*
-========================================
-A1 collectAtags v1.22 (sys 2.21)
-========================================
-
-Änderungen
-- Verhalten wieder näher am alten Parser
-- normale Wörter werden nicht mehr als Tags erkannt
-
-Anwendung
-
-var result = collectAtags({
-  entryObj: entry(),
-  textFields: ["Alias", "Notiz"]
-});
-
-...
-*/
-```
-
-Weitere reale Beispiele:
-
-```js
-/*
-========================================
-A2 exportAtags v1.33 (sys 2.21)
-========================================
-
-Änderungen
-- nutzt ausgelagerte Helper aus Atag Helpers
-- Export für:
-  - tags
-  - text
-  - md
-  - rows_md
-  - rows_html
-  - json
-*/
-```
-
-```js
-/*
-========================================
-A3 Atag Helpers v1.01 (sys 2.21)
-========================================
-
-Änderungen
-- vollständig: alle vom Exporter benötigten Helper enthalten
-- zentrale Wrapper + Bulk integriert
-
-Anwendung
-
-bulkApplyTags() gibt ein result-Array zurück.
-*/
-```
-
-Pflege-Regeln für diese Headerform:
-
-- Die erste Zeile bleibt ein klassischer Blockkommentar `/*`.
-- Darunter stehen immer Titelzeile, Versionszeile und die schließende Linie aus `=` in derselben Grundform.
-- `========================================`-Linien stehen im Titelblock oben. Wenn der erste Kopfkommentar Beispiele oder Usage-Code enthält, folgt direkt nach dem schließenden `*/` ein zweiter kurzer Kopier-Header mit derselben Modulzeile, damit ab dort ein lauffähiger Script-Block inklusive Header kopiert werden kann.
-- Der erste Kopfkommentar endet nach dem letzten Beispiel direkt mit `*/`; dort keine zusätzliche Abschluss-Trennerzeile setzen.
-- Die Modulbezeichnung im Header muss zum tatsächlichen Dateizweck passen, zum Beispiel `collectAtags`, `exportAtags` oder `Atag Helpers`.
-- Nach der Versionszeile folgt ein Leerblock und dann mindestens der Abschnitt `Änderungen`.
-- Wenn die Datei bereits weitere Blöcke wie `Anwendung`, `Beispiele` oder ähnliche Dokumentationsabschnitte hat, bleiben diese erhalten und werden bei Bedarf mit gepflegt.
-- Neue Änderungen werden im Abschnitt `Änderungen` oben ergänzt, damit die jüngste Änderung zuerst sichtbar ist.
-- Die Punkte im Abschnitt `Änderungen` bleiben kurz, konkret und nutzen die vorhandene Schreibweise der Datei.
-- Beispiele in `Anwendung` oder `Beispiele` werden angepasst, wenn sich Signatur, typische Nutzung oder unterstützte Formen geändert haben.
-- Neue oder geänderte Konfigurationsoptionen werden in den jeweiligen Usage-/Beispielblöcken der betroffenen Datei mit korrigiert, damit kopierbare Beispiele aktuell bleiben.
-- In Script-Dateiheadern keine `//`-Zeilenkommentare innerhalb von `/* ... */` verwenden. Memento kann solche Header beim Kopieren oder Einbinden fehlerhaft auswerten. Beispiele im Blockkommentar als normalen Text oder reine Codezeilen ohne `//` schreiben.
-- Der zweite Kopier-Header enthält keine Beispiele und keine Änderungsliste, nur:
-
-```js
-/*
-========================================
-A4 Tag Cleaner v1.50 (sys 2.50)
-========================================
-*/
-```
-
-- Dateien ohne Beispiele im ersten Kommentar brauchen keinen zweiten Kopier-Header.
-- Wenn ein Header stark gewachsen ist, wird er gekürzt, aber nicht in ein neues freies Format umgebaut.
-- Ziel ist Konsistenz zwischen den Dateien, nicht perfekte Einheitlichkeit auf Kosten der vorhandenen Struktur.
+- Core- und Remote-Lib-Beispiele stehen in `examples.md`, geordnet nach `core_lib` und `core` sowie den Modulkennungen.
+- Add-on-Beispiele stehen in `examples_plugins.md`, geordnet nach Plugin-Ordnern und darin nach Modulkennungen.
+- Neue oder geänderte Konfigurationsoptionen werden in der passenden Beispiel-Datei aktualisiert.
+- Beispiele enthalten keine privaten Daten; die Regeln aus „Datenschutz in Beispielen“ gelten unverändert.
+- Ausfuehrliche Verhaltens- und Versionsaenderungen gehoeren ausschließlich in `CHANGELOG.md`.
 
 ## Versionierung Der Dateien
 

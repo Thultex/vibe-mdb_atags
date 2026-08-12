@@ -1,4 +1,4 @@
-# ATAG System (sys 2.50)
+# ATAG System (sys 3.00)
 
 ## Inhalt
 
@@ -11,21 +11,20 @@
 - [Export](#export)
 - [Aktuelle Funktionsaufrufe](#aktuelle-funktionsaufrufe)
 - [Entry Workflows](ENTRY_WORKFLOWS.md)
+- [Core-Beispiele](examples.md)
+- [Plugin-Beispiele](examples_plugins.md)
 
 ## Pflege & Versionierung
 
-Jede funktionale Änderung wird an zwei Stellen dokumentiert:
-
-- direkt in der geänderten Datei über die kurze Versionsinfo im Kopfblock
-- zusätzlich im `CHANGELOG.md` als Repo-Verlauf
+Jede funktionale Änderung wird im `CHANGELOG.md` als Repo-Verlauf dokumentiert. Die Script-Dateien selbst enthalten nur einen kompakten Kopfblock mit Kennung, Modulversion und Systemversion. Kopierbare Aufrufe stehen zentral in `examples.md` fuer Core-Module und `examples_plugins.md` fuer Add-ons.
 
 Regeln:
 
 - Modulversion pro geänderter Datei anheben
 - Jede Datei hat eine stabile Kennung im Header: `#` fuer Remote-Libs, `A` fuer Core, `B` fuer Addons, `C` fuer geloeste eigenstaendige Module.
 - Die Nummer folgt der alphanumerischen Repo-Reihenfolge im jeweiligen Dateibereich. Remote-Libs: `#1` bis `#3`; Core: `A1` bis `A4`; Addons: `B1` bis `B11`; geloeste generelle Module: `C1` bis `C3`.
-- Kopfblöcke in Moduldateien sehr kurz halten; ausführliche Änderungen gehören in `CHANGELOG.md`
-- In Kopfblöcken vorsichtig mit Quotes, Backticks, langen `Änderungen`-Listen und Sonderzeichen umgehen, weil der Memento-Java-Editor daran hängen bleiben kann
+- Kopfblöcke in Moduldateien enthalten keine Changelogs, Notizen oder Beispiele
+- Beispiele bei geaenderten Signaturen oder Optionen in der passenden zentralen Beispiel-Datei aktualisieren
 - Changelog mit Datum, Versionssprung und Wirkung ergänzen
 
 Details siehe `CONTRIBUTING.md`.

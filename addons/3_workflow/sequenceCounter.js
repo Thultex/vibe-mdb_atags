@@ -1,54 +1,20 @@
 /*
 ========================================
-B6 Sequence Counter v1.06 (sys 2.50)
-========================================
-
-Changes
-- accept entryObj as alias for currentEntry
-- refresh biased spree flags across calculated entries when biasedSpreeCount is explicit
-- mark the first biasedSpreeCount entries of each spree via fieldBiasedSpree
-- replace stale entries item with currentEntry for calculation
-- include currentEntry in calculation if it is missing from entries
-- support entry id functions when matching currentEntry
-- add sequence and spree counter addon
-- sort entries by date and id
-- group adjacent entries by configurable fields
-- support bulk writes and current-entry-only writes
-
-Usage
-
-updateSequenceSpree({
-  entries: lib().entries(),
-  currentEntry: entry(),
-  fieldDate: "Einnahmedatum",
-  groupFields: ["Dosis"],
-  fieldSequence: "Reihe",
-  fieldSpree: "Spree",
-  fieldSequenceMax: "Reihe Max",
-  fieldSpreeMax: "Spree Max",
-  fieldBiasedSpree: "Biased Spree",
-  biasedSpreeCount: 2
-});
-
-*/
-
-/*
-========================================
-B6 Sequence Counter v1.06 (sys 2.50)
+B6 Sequence Counter v1.07 (sys 3.00)
 ========================================
 */
 
 function getSequenceCounterVersion() {
   return {
     name: "sequenceCounter",
-    version: "1.06",
-    sysVersion: "2.50",
+    version: "1.07",
+    sysVersion: "3.00",
     path: "addons/3_workflow/sequenceCounter.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("sequenceCounter", "1.06", "2.50", "addons/3_workflow/sequenceCounter.js", true);
+  registerAtagLibVersion("sequenceCounter", "1.07", "3.00", "addons/3_workflow/sequenceCounter.js", true);
 }
 
 function sequenceTrim(s) {

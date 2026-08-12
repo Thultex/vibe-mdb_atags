@@ -1,61 +1,20 @@
 /*
 ========================================
-B4 Sync Last From Latest v1.07 (sys 2.50)
-========================================
-
-Changes
-- clearTemplateSlots also handles Java/string-like text field values
-- add clearTemplateSlots to empty marker-wrapped template values while carrying templates forward
-- support maxEntries 0 for newest entry and -1 for full date scan
-- use newest library entry when syncLastFromLatest has no fieldDate
-- limit date-field scans by maxEntries/maxScan with default 100
-- default newest-library helper to first lib().entries() item
-- add explicit modified-time newest-entry helper with id fallback
-- parse ISO-like date strings in WSH
-- add latest-entry field sync addon
-- support fields list or target-to-source map
-- skip empty source values
-- optional onlyIfEmpty target protection
-- support map entries with append/prepend mode for string values
-
-Usage
-
-syncLastFromLatest({
-  fieldDate: "Einnahmedatum",
-  fields: ["Dosis", "Wirkstoff"],
-  onlyIfEmpty: true
-});
-
-syncLastFromLatest({
-  fieldDate: "Einnahmedatum",
-  map: {
-    "Dosis": "Dosis",
-    "Wirkstoff": "WS",
-    "RecordAdd": ["Record", "append"]
-  }
-});
-
-var newest = getNewestLibraryEntry();
-if (newest) applyHourGuide({ entryObj: newest });
-*/
-
-/*
-========================================
-B4 Sync Last From Latest v1.07 (sys 2.50)
+B4 Sync Last From Latest v1.08 (sys 3.00)
 ========================================
 */
 
 function getSyncLastFromLatestVersion() {
   return {
     name: "syncLastFromLatest",
-    version: "1.07",
-    sysVersion: "2.50",
+    version: "1.08",
+    sysVersion: "3.00",
     path: "addons/2_syncing/syncLastFromLatest.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("syncLastFromLatest", "1.07", "2.50", "addons/2_syncing/syncLastFromLatest.js", true);
+  registerAtagLibVersion("syncLastFromLatest", "1.08", "3.00", "addons/2_syncing/syncLastFromLatest.js", true);
 }
 
 function slflTrim(s) {

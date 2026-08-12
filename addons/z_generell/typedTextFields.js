@@ -1,44 +1,20 @@
 /*
 ========================================
-C2 Typed Text Fields v1.01 (sys 2.50)
-========================================
-
-Changes
-- add typed text field sync helper
-- convert fields ending in `(t-dd)`, `(t-d)`, `(t-i)`, `(t-r)`, `(t-tag)` or `(t-l)`
-- support current entry, one explicit entry, arrays, selected entries and library-wide bulk calls
-- support clearSource, onlyIfTargetEmpty and dryRun options
-
-Usage
-
-syncTypedTextFields();
-syncTypedTextFields(entry());
-syncTypedTextFields(lib().entries());
-syncTypedTextFields(selectedEntries(), {
-  clearSource: false,
-  onlyIfTargetEmpty: false,
-  dryRun: false
-});
-
-*/
-
-/*
-========================================
-C2 Typed Text Fields v1.01 (sys 2.50)
+C2 Typed Text Fields v1.02 (sys 3.00)
 ========================================
 */
 
 function getTypedTextFieldsVersion() {
   return {
     name: "typedTextFields",
-    version: "1.01",
-    sysVersion: "2.50",
+    version: "1.02",
+    sysVersion: "3.00",
     path: "addons/z_generell/typedTextFields.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("typedTextFields", "1.01", "2.50", "addons/z_generell/typedTextFields.js", true);
+  registerAtagLibVersion("typedTextFields", "1.02", "3.00", "addons/z_generell/typedTextFields.js", true);
 }
 
 function typedTextIsArray(val) {

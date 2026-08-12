@@ -1,81 +1,22 @@
 /*
 ========================================
-B10 Dust Merger v0.17 (sys 2.50)
-========================================
-
-Changes
-- treat negative source rows as transfer-time offsets and clamp them to 0
-- keep target template order when prepending filled template rows
-- transfer successful source merge-log entries into the target merge log
-- default merge window is 28 hours; no_target attempt logs do not count as already merged
-- add optional mergeCountField/statusField and keep debug opt-in
-- skip empty template slots when merging string_rows
-- add cross-midnight target grace and source-side attempt status log
-- forceMergeField appends string_rows even when rows already exist
-- add timestamp, target id and unchanged fields to debug output
-- store latest trash status in source-side merge stop marker
-- add forceMergeField overwrite for intentional re-merge
-- add rowSourceMode realtime_since for row labels relative to target date
-- write a source-side stop marker after successful merge
-- skip entries with source-side stop markers before counting searchLimit
-- use merge-json stop markers instead of trash state for merge exclusion
-- add debugField and skip already merged source entries via merge log
-- parse own merge log without requiring JSON.parse
-- expose trashAttempted when source trashing is requested
-- use entry id as tie-breaker for equal merge dates
-- add optional skipField/blockField checkbox guard on the current entry
-- add first DustMerger sync addon
-- merge a newer current entry into an older nearby entry
-- support string, string_rows, tag, number maps
-- write merge metadata into a JSON/text field
-- trash the merged source entry and open the target entry by default
-
-Usage
-
-dustMerge({
-  fieldDate: "Datum",
-  titleField: "Titel",
-  mergeJsonField: "Merge Json",
-  statusField: "Merge Status",
-  mergeCountField: "Merge Count",
-  searchLimit: 5,
-  mergeWindowHours: 28,
-  rowSourceMode: "realtime",
-  skipField: "Nicht mergen",
-  forceMergeField: "Merge erzwingen",
-  trashMergedEntry: true,
-  openTargetEntry: true,
-  map: [
-    { name: "Notiz", mode: "append", datatype: "string_rows" },
-    { name: "Record", mode: "prepend", datatype: "string_rows" },
-    { name: "Tags", mode: "append", datatype: "tag" }
-  ],
-  blockMap: [
-    { name: "Status" }
-  ]
-});
-
-*/
-
-/*
-========================================
-B10 Dust Merger v0.17 (sys 2.50)
+B10 Dust Merger v0.18 (sys 3.00)
 ========================================
 */
 
-var DUST_MERGER_VERSION = "0.17";
+var DUST_MERGER_VERSION = "0.18";
 
 function getDustMergerVersion() {
   return {
     name: "dustMerger",
     version: DUST_MERGER_VERSION,
-    sysVersion: "2.50",
+    sysVersion: "3.00",
     path: "addons/2_syncing/dustMerger.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("dustMerger", DUST_MERGER_VERSION, "2.50", "addons/2_syncing/dustMerger.js", true);
+  registerAtagLibVersion("dustMerger", DUST_MERGER_VERSION, "3.00", "addons/2_syncing/dustMerger.js", true);
 }
 
 function dmTrim(s) {

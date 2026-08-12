@@ -1,45 +1,20 @@
 /*
 ========================================
-C1 Multi Choice Helpers v1.02 (sys 2.50)
-========================================
-
-Changes
-- add helpers for adding and removing values in multi-choice fields
-- normalize Memento list-like multi-choice values before writing
-- return true only when the field value changed
-- support explicit entryObj for tests and scripted reuse
-
-Usage
-
-multiChoiceAppend({
-  field: "typ",
-  value: "Tag"
-});
-
-multiChoiceRemove({
-  field: "typ",
-  value: "Tag"
-});
-
-*/
-
-/*
-========================================
-C1 Multi Choice Helpers v1.02 (sys 2.50)
+C1 Multi Choice Helpers v1.03 (sys 3.00)
 ========================================
 */
 
 function getMultiChoiceHelpersVersion() {
   return {
     name: "multiChoiceHelpers",
-    version: "1.02",
-    sysVersion: "2.50",
+    version: "1.03",
+    sysVersion: "3.00",
     path: "addons/z_generell/multiChoiceHelpers.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("multiChoiceHelpers", "1.02", "2.50", "addons/z_generell/multiChoiceHelpers.js", true);
+  registerAtagLibVersion("multiChoiceHelpers", "1.03", "3.00", "addons/z_generell/multiChoiceHelpers.js", true);
 }
 
 function multiChoiceIsArray(val) {

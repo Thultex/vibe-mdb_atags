@@ -1,103 +1,20 @@
 /*
 ========================================
-C3 Hour Guide v1.31 (sys 2.50)
-========================================
-
-Changes
-- support explicit entry/source entry input and empty-hour fallback to first block
-- restore anonymized default guide content row
-- restore original Stundenhilfe content and visual style from issue #20
-- treat guide section headers as content, not fixed API names
-- use German built-in guide contents and cleaner phase header
-- render separator as the original-looking light line
-- remove line-comment markers from header examples
-- keep JSON format free of renderer punctuation
-- render arrows and separators closer to the original guide style
-- force sans-serif HTML output and log missing fields
-- guard missing fields in Memento triggers
-- support JSON/shared plan fields with flexible sections
-- render configurable section names and rich HTML rows
-- add time-window guide output for Memento HTML fields
-- configurable source field, target field and cutoff
-- return empty text for invalid or late hour values
-
-Usage / Nutzbeispiele
-
-Beispiel 1: Eingebaute Vorgabe nutzen
-
-applyHourGuide({
-  sourceHoursField: "hours since dose",
-  targetField: "Hour Guide",
-  maxHours: 16
-});
-
-Beispiel 2: Vorgabe aus einem synchronisierten/shared JSON-Feld lesen
-
-applyHourGuide({
-  sourceHoursField: "hours since dose",
-  targetField: "Hour Guide",
-  planField: "Hour Guide JSON",
-  maxHours: 16
-});
-
-Beispiel 3: Vorgabe direkt im Trigger hinterlegen
-
-applyHourGuide({
-  sourceHoursField: "hours since dose",
-  targetField: "Hour Guide",
-  plan: {
-    maxHours: 16,
-    blocks: [
-      {
-        label: "Startphase · 0.4–1 h",
-        from: 0.4,
-        to: 1,
-        sections: [
-          { title: "Energie", rows: [["Stabil", "ruhig bleiben"]] },
-          { title: "Fokus", rows: [{ title: "Einstieg", text: "5-Min-Entry" }] }
-        ]
-      }
-    ]
-  }
-});
-
-JSON-Feld "Hour Guide JSON" fuer Beispiel 2:
-JSON enthaelt nur Inhalt/Struktur. Dreieckspfeil, Linien und
-Zwischenstriche werden beim Rendern automatisch ergaenzt.
-
-{
-  "maxHours": 16,
-  "blocks": [
-    {
-      "label": "Startphase · 0.4–1 h",
-      "from": 0.4,
-      "to": 1,
-      "sections": [
-        {"title": "Energie", "rows": [["Stabil", "ruhig bleiben"]]},
-        {"title": "Fokus", "rows": [{"title": "Einstieg", "text": "5-Min-Entry"}]}
-      ]
-    }
-  ]
-}
-*/
-
-/*
-========================================
-C3 Hour Guide v1.31 (sys 2.50)
+C3 Hour Guide v1.32 (sys 3.00)
 ========================================
 */
 
 function getHourGuideVersion() {
   return {
     name: "hourGuide",
-    version: "1.31",
-    sysVersion: "2.50",
+    version: "1.32",
+    sysVersion: "3.00",
     path: "addons/z_others/hourGuide.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("hourGuide", "1.31", "2.50", "addons/z_others/hourGuide.js", true);
+  registerAtagLibVersion("hourGuide", "1.32", "3.00", "addons/z_others/hourGuide.js", true);
 }
 
 function hourGuideToNumber(val) {

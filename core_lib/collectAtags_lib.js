@@ -1,78 +1,20 @@
 /*
 ========================================
-#1 collectAtags Lib v1.73 (sys 2.50)
-========================================
-
-Changes
-- parse complete multi-digit suffixes such as `tag400` as one numeric value
-- expose the collector alias resolution and canonicalize completeness requirements once
-- strip complete trailing alias display-marker runs from short names such as `tst--`
-- write incomplete tag names in required order to the default field `Noch Fehlend`
-- add trackTagsComplete for required tags, direct value maps and optional template names
-- parse open template slot values like `tag:_2` or `tag:_-1,4` without keeping the marker
-- allow umlaut-only direct category children like `@@@Kat::` followed by `@@ö`
-- direct category blocks treat `@@/Negative:` as child `Negative` with negative category sign
-- category aliases can use `@@@Category::` to collect direct alias lines below as fixed children
-- support positive/negative alias headers, e.g. `@@Gut/Schlecht(G): -Bad`
-- slot values allow spacing after colon, e.g. `tag: _inhalt_`
-- parse template slot values `_inhalt_` as string values and ignore empty `_`/`__`
-- parse quoted hash values after normal tag names, e.g. frage#"wer ist der coolste"
-- multiAliasTargets defaults to true for one alias token mapping to multiple tags
-- parse cumulative +/-, explicit null 00 and zero-decimal forms from issue #38
-- ignore template tag values `_` in `tag:_`, `tag:: _` and `tag:__`
-- alias brackets define categories, e.g. `@@Tag (T)[self, help]: alias`
-- category aliases can use `@@@self (sf)`
-- category aliases can define fixed children, e.g. `@@@help: ActivityA, ActivityB`
-- exclusive readable tag lines parse only tag lines and ignore body tags
-- category aliases can invert fixed child values, e.g. `@@@body: -MetricF, MetricG`
-- exclude name checks use a per-run lookup map
-- local trim helper reduces repeated whitespace-normalization code
-- category tags are emitted as list tags containing their occurring member tags
-- parsed items keep their categories in `cats`
-- alias map is built without an adjacent joinedText var for safer editor copying
-- skip alias declaration lines during normal parsing
-- add compact, explicit, and inverted text tag syntaxes
-- parse bare tags in readable tag lines
-- simple tag suffix `x` is parsed as an empty explicit tag
-- alias entries can carry fixed values, e.g. `@@SymptomA (SA): sa, SymptomAlias1`
-- superscript value suffixes like `emo²` and `tag⁻⁰³` are parsed in normal text
-- alias definitions can declare a short tag, e.g. `@@SymptomA (sa): SymptomA`
-- readable tag lines like `| MetricF-2 Gutn` with superscript values are parsed in row context
-- global readable tag lines like `|| tag: 1 info: "text"` are parsed without row context
-- alias declarations can omit the alias list, e.g. `@@Wirkung (Wk)`
-- parsed items keep alias short display names for exports
-- quoted hash tags can carry values, e.g. `"tag name"#4,1`
-- precompute quote state per parsed line and expose small quote helpers for text rewrites
-- alias definitions allow a trailing dot on the base tag and preserve it for export, e.g. `@@tag.: ...`
-- keep parser behavior close to the old version
-- explicit tags only for simple tag detection
-- alias replacement only in real tag contexts
-- category aliases can carry a trailing +/- sign, e.g. `@@@emo-: -aua`
-- alias headers can declare an emoji alias after the short name, e.g. `@@Emotion (emo, :)`
-- alias header display markers `*`, `-` and `+` are ignored for parsing short aliases
-- inverse aliases supported for numeric values
-- decimal values still supported
-- row system stays active
-
-*/
-
-/*
-========================================
-#1 collectAtags Lib v1.73 (sys 2.50)
+#1 collectAtags Lib v1.74 (sys 3.00)
 ========================================
 */
 
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.73",
-    sysVersion: "2.50",
+    version: "1.74",
+    sysVersion: "3.00",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.73", "2.50", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.74", "3.00", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");

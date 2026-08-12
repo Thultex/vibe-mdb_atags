@@ -1,36 +1,23 @@
 /*
 ========================================
-#3 Atag Helpers Lib v2.11 (sys 2.50)
-========================================
-
-Changes
-- remote/library-safe helper module
-- expose own library version function
-- Memento entry/lib wrappers removed from this lib file
-- aggregate helper supports min, max, max_abs, min_abs, add, avg, median, first, last and amount
-- shared helpers for collect/export scripts
-- editor-safe WSH JScript syntax
-- JSON value maps keep repeated tag values as arrays
-- markdown sorting treats category tags as their own group before blanks
-- compute min/max/max_abs/min_abs aggregates without sorting
-
+#3 Atag Helpers Lib v2.12 (sys 3.00)
 ========================================
 */
 
 // ===== SYSTEM =====
-var ATAG_SYS_VERSION = "2.50";
+var ATAG_SYS_VERSION = "3.00";
 
 function getHelpersLibVersion() {
   return {
     name: "helpers_lib",
-    version: "2.11",
+    version: "2.12",
     sysVersion: ATAG_SYS_VERSION,
     path: "core_lib/helpers_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("helpers_lib", "2.11", ATAG_SYS_VERSION, "core_lib/helpers_lib.js");
+  registerAtagLibVersion("helpers_lib", "2.12", ATAG_SYS_VERSION, "core_lib/helpers_lib.js");
 }
 
 // ===== BASIC =====

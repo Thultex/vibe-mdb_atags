@@ -1,40 +1,20 @@
 /*
 ========================================
-B9 Wiki Linker v1.01 (sys 2.50)
-========================================
-
-Changes
-- add Wikipedia search link helper
-- configurable source title and target field
-- default to German Wikipedia search
-
-Usage
-
-applyWikiLinker({
-  sourceTitleField: "Titel",
-  targetField: "Wikipedia",
-  language: "de"
-});
-
-*/
-
-/*
-========================================
-B9 Wiki Linker v1.01 (sys 2.50)
+B9 Wiki Linker v1.02 (sys 3.00)
 ========================================
 */
 
 function getWikiLinkerVersion() {
   return {
     name: "wikiLinker",
-    version: "1.01",
-    sysVersion: "2.50",
+    version: "1.02",
+    sysVersion: "3.00",
     path: "addons/6_integration/wikiLinker.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("wikiLinker", "1.01", "2.50", "addons/6_integration/wikiLinker.js", true);
+  registerAtagLibVersion("wikiLinker", "1.02", "3.00", "addons/6_integration/wikiLinker.js", true);
 }
 
 function wikiLinkerTrim(s) {

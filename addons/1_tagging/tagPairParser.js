@@ -1,46 +1,20 @@
 /*
 ========================================
-B2 Tag Pair Parser v1.02 (sys 2.50)
-========================================
-
-Änderungen
-- Add-on für 2-Tag-Paare im Tag-Feld ergänzt
-- ohne direkten Eingriff in applyTags() / bulkApplyTags()
-- ergänzt Werte als name#wert im Textfeld
-- schreibt einfache Ganzzahl-Paare kompakt, z. B. `springen, 3` -> `springen3` und `springen, -3` -> `springen-3`
-- entfernt den zweiten Wert-Tag optional aus dem Tag-Feld
-
-Anwendung
-
-applyTagPairParser({
-  tagField: "Tags",
-  targetTextField: "Notiz"
-});
-
-bulkApplyTagPairParser({
-  tagField: "Tags",
-  targetTextField: "Notiz"
-});
-
-*/
-
-/*
-========================================
-B2 Tag Pair Parser v1.02 (sys 2.50)
+B2 Tag Pair Parser v1.03 (sys 3.00)
 ========================================
 */
 
 function getTagPairParserVersion() {
   return {
     name: "tagPairParser",
-    version: "1.02",
-    sysVersion: "2.50",
+    version: "1.03",
+    sysVersion: "3.00",
     path: "addons/1_tagging/tagPairParser.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("tagPairParser", "1.02", "2.50", "addons/1_tagging/tagPairParser.js", true);
+  registerAtagLibVersion("tagPairParser", "1.03", "3.00", "addons/1_tagging/tagPairParser.js", true);
 }
 
 function trimTagPairValue(val) {

@@ -1,60 +1,20 @@
 /*
 ========================================
-A4 Tag Cleaner v1.57 (sys 2.50)
-========================================
-
-Notes
-- Keeps complete multi-digit suffixes together, so `tag400` is value 400 instead of `tag4` plus null `00`.
-- Removes complete trailing display-marker runs from alias short names such as `tst--`.
-- Converts every numeric null suffix `00` to the valueless superscript tag suffix `x`.
-- remove unused legacy wrappers; keep documented cleaner entrypoints.
-- core tag cleaner module.
-- Details live in README.md and CHANGELOG.md.
-- Supports cumulative +/-, 00/null and zero-decimal tag forms.
-- Exclusive tag bars keep body text unchanged.
-- Can display known aliases as long/short names with compact emoji suffixes.
-- Alias headers can control cleaner display with `*`, `-` and `+`.
-- Alias headers can convert emoji/symbol-only tokens back to long/short names.
-- Display options can override alias header defaults, including emoji prefix/suffix.
-- Reads the passive Alias field by default for alias display definitions.
-- Provides lean template slot clearing + compaction helpers for new entries.
-
-Example: clean the default note field "Notiz" and passively read "Alias"
-cleanTags();
-
-Example: clean a custom field with options
-cleanTags({
-  fields: ["Notiz"],
-  aliasTextFields: ["Alias"],
-  tagBarPosition: "time_top",
-  tagBarSpacing: "blank",
-  formatValues: "keep"
-});
-
-Example: only clear template tags after creating a new entry
-cleanTemplateTags({
-  fields: ["Notiz"]
-});
-
-*/
-
-/*
-========================================
-A4 Tag Cleaner v1.57 (sys 2.50)
+A4 Tag Cleaner v1.58 (sys 3.00)
 ========================================
 */
 
 function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
-    version: "1.57",
-    sysVersion: "2.50",
+    version: "1.58",
+    sysVersion: "3.00",
     path: "core/tagCleaner.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("tagCleaner", "1.57", "2.50", "core/tagCleaner.js", true);
+  registerAtagLibVersion("tagCleaner", "1.58", "3.00", "core/tagCleaner.js", true);
 }
 
 function splitTagCleanerLines(text) {

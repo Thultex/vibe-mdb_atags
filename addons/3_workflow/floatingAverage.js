@@ -1,47 +1,20 @@
 /*
 ========================================
-B5 Floating Average v1.01 (sys 2.50)
-========================================
-
-Changes
-- add floating average addon
-- sort entries by date and id
-- group adjacent entries by configurable fields
-- support bulk writes and current-entry-only writes
-
-Usage
-
-updateAverage({
-  entries: lib().entries(),
-  currentEntry: entry(),
-  fieldDate: "Einnahmedatum",
-  groupFields: ["Dosis"],
-  fieldValue: "Ausgabewert GW+AT",
-  fieldResult: "Ausgabewert Mittel",
-  ignoreFields: ["Unausgefuellt"],
-  avgCount: 3,
-  skipFirst: 2
-});
-
-*/
-
-/*
-========================================
-B5 Floating Average v1.01 (sys 2.50)
+B5 Floating Average v1.02 (sys 3.00)
 ========================================
 */
 
 function getFloatingAverageVersion() {
   return {
     name: "floatingAverage",
-    version: "1.01",
-    sysVersion: "2.50",
+    version: "1.02",
+    sysVersion: "3.00",
     path: "addons/3_workflow/floatingAverage.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("floatingAverage", "1.01", "2.50", "addons/3_workflow/floatingAverage.js", true);
+  registerAtagLibVersion("floatingAverage", "1.02", "3.00", "addons/3_workflow/floatingAverage.js", true);
 }
 
 function floatingTrim(s) {

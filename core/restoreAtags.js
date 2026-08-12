@@ -1,76 +1,20 @@
 /*
 ========================================
-A3 restoreAtags v2.10 (sys 2.50)
-========================================
-
-Notes:
-- JSON restore into fields
-- default suffixes: _ and _l
-- supports entry groups and direct maps
-- supports currentEntry like sequenceCounter
-- supports entryObj as currentEntry fallback when entries are provided
-- valueMode: avg, first, last, median, min, max
-- aggregate text like "2 [3, 1]" or "12 - [41, 6, 5]" is treated as repeated values
-- Rhino/Java-listartige JSON-Arrays werden wie normale Arrays behandelt
-- avg/min/max/median ignorieren nicht-numerische Zwischenwerte in gemischten Listen
-- optional debugField writes restore diagnostics
-- debugLog/logDebug mirrors diagnostics to log()
-- auto restore skips targets missing from lib().fields()
-- bulkRestoreAtags is a legacy wrapper
-- alias brackets are reserved for categories, not restore mappings
-- mapped and auto restore share one target-write helper
-- category child lists in JSON can be restored as aggregated parent values
-
-Examples:
-
-restoreAtags({
-  sourceField: "Atag Json"
-});
-
-restoreAtags({
-  sourceField: "Atag Json",
-  entryObj: entry()
-});
-
-restoreAtags({
-  sourceField: "Atag Json",
-  entries: lib().entries(),
-  currentEntry: entry()
-});
-
-restoreAtags({
-  sourceField: "Atag Json",
-  entries: lib().entries(),
-  entryObj: entry()
-});
-
-restoreAtags({
-  sourceField: "Atag Json",
-  map: {
-    MetricA: "MetricA_"
-  },
-  mode: "exclusive"
-});
-
-*/
-
-/*
-========================================
-A3 restoreAtags v2.10 (sys 2.50)
+A3 restoreAtags v2.11 (sys 3.00)
 ========================================
 */
 
 function getRestoreAtagsVersion() {
   return {
     name: "restoreAtags",
-    version: "2.10",
-    sysVersion: "2.50",
+    version: "2.11",
+    sysVersion: "3.00",
     path: "core/restoreAtags.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("restoreAtags", "2.10", "2.50", "core/restoreAtags.js", true);
+  registerAtagLibVersion("restoreAtags", "2.11", "3.00", "core/restoreAtags.js", true);
 }
 
 // ===== HELPERS =====
@@ -778,7 +722,7 @@ function restoreAtagsForEntry(entryObj, cfg, clearMappedFields) {
   if (!entryObj) return;
 
   if (cfg.debugField) cfg._debugLines = [];
-  restoreDebugPush(cfg, "restoreAtags v2.10");
+  restoreDebugPush(cfg, "restoreAtags v2.11");
   restoreDebugPush(cfg, "sourceField: " + cfg.sourceField);
   restoreFieldNameMap(cfg);
   restoreDebugPush(cfg, "known fields: " + (cfg._fieldNameCount == null ? "unknown" : String(cfg._fieldNameCount)));
