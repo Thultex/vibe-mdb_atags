@@ -4,25 +4,33 @@
 
 Ausgangsdatum: 2026-05-20
 
-*Diese Woche (1,0h, 1 Tag, 7 Inhalte):*
-Repo-Doku: zentrale Core-/Plugin-Beispiele und kompakte Script-Header; Systemversion 3.00.
+*Diese Woche (1,3h, 1 Tag, 12 Inhalte):*
+Repo-Doku: zentrale Beispiele und kompakte Header; Versionscheck: stille fehlende Config; Systemversion 3.00.
 
 *Letzte Woche (3,0h, 3 Tage, 34 Inhalte):*
 Tag-Cleaner/Obsidian-Linker: Aliaslogik, Formatmodus; Changelog: Stats-/Versionen-Regeln.
 
-*Dieser Monat (16,2h, 8 Tage, 240 Inhalte):*
-Core/Export: Aggregationen, Beispiele und kompakte Header; Addons: Obsidian, Sync, Hour-Guide; Systemversion 3.00.
+*Dieser Monat (16,5h, 8 Tage, 245 Inhalte):*
+Core/Export: Aggregationen, Beispiele und Versionscheck; Addons: Obsidian, Sync, Hour-Guide; Systemversion 3.00.
 
 *Letzter Monat (6,3h, 3 Tage, 175 Inhalte):*
 Cleaner/Readable: Tagleisten und Archivierung; Sync/TimeMarker: Addons und Workflows; Repo: Grundstruktur.
 
-*Jahr (22,5h, 11 Tage, 415 Inhalte):*
-Core-Libs/Exports: Remote-Einbindung, Aggregationen und zentrale Beispiele; Addons: Obsidian/Sync/TimeMarker.
+*Jahr (22,8h, 11 Tage, 420 Inhalte):*
+Core-Libs/Exports: Remote-Einbindung, Aggregationen, Beispiele und Versionscheck; Addons: Obsidian/Sync/TimeMarker.
 
-*Insgesamt (22,5h, 11 Tage, 415 Inhalte):*
-Core-Libs/Exports: Remote-Einbindung, Aggregationen und zentrale Beispiele; Addons: Obsidian/Sync/TimeMarker.
+*Insgesamt (22,8h, 11 Tage, 420 Inhalte):*
+Core-Libs/Exports: Remote-Einbindung, Aggregationen, Beispiele und Versionscheck; Addons: Obsidian/Sync/TimeMarker.
 
 ## Log
+
+### 2026-08-12 - (ca. 0,3h)
+
+- *Summary: Fehlende erwartete Versions-Config bleibt standardmaessig vollstaendig still (#83).*
+- Feature: Check Versions v1.72 ergaenzt `SKIP_NO_CONFIG = true`; fehlt bei aktivem `GET_CURRENT_CONFIG` die lokale Config, schreibt der Auto-Run weder Summary noch weitere Log-Nachricht.
+- Kompatibilitaet: `skipNoConfig: false` und `SKIP_NO_CONFIG: false` stellen pro Aufruf die bisherige `config - no config!`-Ausgabe wieder her.
+- API: Ergebnisobjekte kennzeichnen den Zustand ueber `configMissing` und `skippedNoConfig`; Textaufrufe liefern beim stillen Skip einen leeren String.
+- Tests/Doku: Versionstests decken Auto-Run, Text-Skip und beide Override-Schreibweisen ab; README und `examples.md` dokumentieren den neuen Standard und die Diagnoseoption.
 
 ### 2026-08-12 - (ca. 1,0h)
 

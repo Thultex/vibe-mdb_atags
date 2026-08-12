@@ -1,12 +1,13 @@
 /*
 ========================================
-A1 Check Versions v1.71 (sys 3.00)
+A1 Check Versions v1.72 (sys 3.00)
 ========================================
 */
 
 // Live Config
 var RUN_LIB_CHECK = true;
 var GET_CURRENT_CONFIG = true;
+var SKIP_NO_CONFIG = true;
 var SHOW_CURRENT_CONFIG = false;
 
 var SHOW_REMOTE_VERSIONS = true;
@@ -27,7 +28,7 @@ var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERS
 function getCheckVersionsVersion() {
   return {
     name: "checkVersions",
-    version: "1.71",
+    version: "1.72",
     sysVersion: "3.00",
     path: "core/_checkVersions.js"
   };
@@ -47,7 +48,7 @@ var ATAG_EXPECTED_LIBS = [
 ];
 
 var ATAG_EXPECTED_OPTIONAL_LIBS = [
-  { id: "A1", title: "Check Versions", area: "core", name: "checkVersions", version: "1.71", getter: "getCheckVersionsVersion", path: "core/_checkVersions.js", optional: true },
+  { id: "A1", title: "Check Versions", area: "core", name: "checkVersions", version: "1.72", getter: "getCheckVersionsVersion", path: "core/_checkVersions.js", optional: true },
   { id: "A2", title: "Atag Helpers", area: "core", name: "helpers", version: "1.04", getter: "getHelpersVersion", path: "core/helpers.js", optional: true },
   { id: "A3", title: "Restore Atags", area: "core", name: "restoreAtags", version: "2.11", getter: "getRestoreAtagsVersion", path: "core/restoreAtags.js", optional: true },
   { id: "A4", title: "Tag Cleaner", area: "core", name: "tagCleaner", version: "1.58", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
@@ -259,6 +260,7 @@ function atagOptionValue(cfg, name, globalValue, globalName) {
 function atagCheckOptions(cfg) {
   return {
     getCurrentConfig: atagOptionValue(cfg, "getCurrentConfig", GET_CURRENT_CONFIG, "GET_CURRENT_CONFIG"),
+    skipNoConfig: atagOptionValue(cfg, "skipNoConfig", SKIP_NO_CONFIG, "SKIP_NO_CONFIG"),
     showCurrentConfig: atagOptionValue(cfg, "showCurrentConfig", SHOW_CURRENT_CONFIG, "SHOW_CURRENT_CONFIG"),
     showRemoteVersions: atagOptionValue(cfg, "showRemoteVersions", SHOW_REMOTE_VERSIONS, "SHOW_REMOTE_VERSIONS"),
     showLocalVersions: atagOptionValue(cfg, "showLocalVersions", SHOW_LOCAL_VERSIONS, "SHOW_LOCAL_VERSIONS"),
@@ -614,6 +616,9 @@ function checkAtagLibVersions(cfg) {
   result.localLoadedCount = localLoadedItems.length;
   result.local = localLoadedItems;
   result.localMissing = localMissing;
+  result.configMissing = configMissing;
+  result.skippedNoConfig = configMissing && options.skipNoConfig;
+  result.text = "";
   if (!options.showRemoteMissing) result.missing = [];
   shownLibVersionMismatch = options.showRemoteMissmatches ? libVersionMismatch : [];
   shownLocalVersionMismatch = options.showLocalMissmatches ? localVersionMismatch : [];
@@ -626,7 +631,7 @@ function checkAtagLibVersions(cfg) {
   sortAtagVersionList(result.libs);
   sortAtagVersionList(result.local);
 
-  if (asText || verbose) {
+  if ((asText || verbose) && !result.skippedNoConfig) {
     var lines = [];
     var configText = "";
     var reportText;
@@ -672,6 +677,8 @@ function checkAtagLibVersions(cfg) {
     }
     if (asText) return fullText;
   }
+
+  if (asText && result.skippedNoConfig) return "";
 
   return result;
 }

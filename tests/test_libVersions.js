@@ -17,11 +17,11 @@ function read(relPath) {
 }
 
 eval(read("core\\_checkVersions.js"));
-assertTrue("autorun-plugin-mismatch-summary", _logs.join("\n").indexOf("System v3.00 (config/match/miss, 1 local, 15 missing - no config!)") >= 0);
-assertTrue("autorun-plugin-mismatch-visible", _logs.join("\n").indexOf("VERSION LOCAL: tagCleaner expected sys 3.00 got sys 2.40") >= 0);
+assertEquals("autorun-skips-message-without-config", _logs.length, 0);
 assertEquals("checker-overrides-old-global-sys", ATAG_SYS_VERSION, "3.00");
 assertEquals("default-run-lib-check", RUN_LIB_CHECK, true);
 assertEquals("default-get-current-config", GET_CURRENT_CONFIG, true);
+assertEquals("default-skip-no-config", SKIP_NO_CONFIG, true);
 assertEquals("default-show-current-config", SHOW_CURRENT_CONFIG, false);
 assertEquals("default-show-remote-versions", SHOW_REMOTE_VERSIONS, true);
 assertEquals("default-show-local-versions", SHOW_LOCAL_VERSIONS, false);
@@ -29,6 +29,17 @@ assertEquals("default-show-remote-missmatches", SHOW_REMOTE_MISSMATCHES, true);
 assertEquals("default-show-local-missmatches", SHOW_LOCAL_MISSMATCHES, true);
 assertEquals("default-show-remote-missing", SHOW_REMOTE_MISSING, true);
 assertEquals("default-show-local-missing", SHOW_LOCAL_MISSING, true);
+var skippedNoConfigResult = checkAtagLibVersions({});
+assertEquals("object-result-marks-missing-config", skippedNoConfigResult.configMissing, true);
+assertEquals("object-result-marks-skipped-config", skippedNoConfigResult.skippedNoConfig, true);
+var logsBeforeExplicitSkip = _logs.length;
+checkAtagLibVersions({ verbose: true });
+assertEquals("explicit-verbose-skip-writes-no-log", _logs.length, logsBeforeExplicitSkip);
+assertEquals("as-text-skips-without-config", checkAtagLibVersions({ asText: true }), "");
+var forcedNoConfigText = checkAtagLibVersions({ asText: true, skipNoConfig: false });
+assertTrue("camelcase-skip-override-restores-message", forcedNoConfigText.indexOf("no config!") >= 0);
+var forcedUppercaseNoConfigText = checkAtagLibVersions({ asText: true, SKIP_NO_CONFIG: false });
+assertTrue("uppercase-skip-override-restores-message", forcedUppercaseNoConfigText.indexOf("no config!") >= 0);
 GET_CURRENT_CONFIG = false;
 SHOW_LOCAL_VERSIONS = true;
 ATAG_LIB_VERSIONS = {};
@@ -70,7 +81,7 @@ function log(msg) {
   _logs.push(String(msg));
 }
 
-assertEquals("checkVersions-own-version", getCheckVersionsVersion().version, "1.71");
+assertEquals("checkVersions-own-version", getCheckVersionsVersion().version, "1.72");
 assertEquals("helpers-lib-own-version", getHelpersLibVersion().version, "2.12");
 assertEquals("helpers-lib-sys-version", getHelpersLibVersion().sysVersion, "3.00");
 assertEquals("collect-lib-own-version", getCollectAtagsLibVersion().version, "1.74");
@@ -169,11 +180,11 @@ assertTrue("getter-config-local-visible", getterScopedConfigText.indexOf("    lo
 
 getLibsVersionsConfig = undefined;
 
-var noConfigText = checkAtagLibVersions({ checkAccess: true, asText: true, getCurrentConfig: true, showCurrentConfig: false });
+var noConfigText = checkAtagLibVersions({ checkAccess: true, asText: true, getCurrentConfig: true, skipNoConfig: false, showCurrentConfig: false });
 assertTrue("no-config-summary", noConfigText.indexOf("System v3.00 (config - no config!)") === 0);
 var savedGetCurrentConfigFlag = GET_CURRENT_CONFIG;
 GET_CURRENT_CONFIG = true;
-var noGlobalConfigText = checkAtagLibVersions({ checkAccess: true, asText: true, showCurrentConfig: false });
+var noGlobalConfigText = checkAtagLibVersions({ checkAccess: true, asText: true, SKIP_NO_CONFIG: false, showCurrentConfig: false });
 assertTrue("no-global-config-summary", noGlobalConfigText.indexOf("System v3.00 (config - no config!)") === 0);
 GET_CURRENT_CONFIG = savedGetCurrentConfigFlag;
 

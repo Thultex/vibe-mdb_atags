@@ -124,6 +124,16 @@ checkAtagLibVersions({
 });
 ```
 
+Ohne lokale Config schreibt der Checker standardmaessig keine Nachricht. Fuer eine ausdrueckliche Diagnose kann die bisherige Ausgabe pro Aufruf aktiviert werden:
+
+```js
+checkAtagLibVersions({
+  checkAccess: true,
+  verbose: true,
+  skipNoConfig: false
+});
+```
+
 ### A2 `helpers.js`
 
 Collector und Export in einem Entry-Aufruf:
