@@ -29,18 +29,39 @@ function assertOrdered(text, labels, fileName) {
 function assertFunctionExample(text, functionName, fileName) {
   var anchorName = String(functionName).toLowerCase();
   var anchor = '<a id="' + anchorName + '"></a>';
+  var heading = '#### Funktion: `' + functionName + '()`';
   var anchorIndex = text.indexOf(anchor);
   var nextAnchorIndex;
   var section;
+  var headingIndex;
+  var afterHeading;
 
   assertTrue(fileName + " overview links " + functionName, text.indexOf('](#' + anchorName + ')') >= 0);
   assertTrue(fileName + " anchors " + functionName, anchorIndex >= 0);
-  assertTrue(fileName + " heads " + functionName, text.indexOf('#### `' + functionName + '()`', anchorIndex) >= 0);
+  assertTrue(fileName + " heads " + functionName, text.indexOf(heading, anchorIndex) >= 0);
 
   nextAnchorIndex = text.indexOf('<a id="', anchorIndex + anchor.length);
   section = text.substring(anchorIndex, nextAnchorIndex >= 0 ? nextAnchorIndex : text.length);
+  headingIndex = section.indexOf(heading);
+  afterHeading = section.substring(headingIndex + heading.length).replace(/^\s+/, "");
+  assertTrue(fileName + " starts " + functionName + " with purpose quote", /^>\s+[^\r\n]+\./.test(afterHeading));
   assertTrue(fileName + " calls " + functionName, section.indexOf(functionName + "(") >= 0);
   assertTrue(fileName + " explains parameters for " + functionName, section.indexOf("Parameter") >= 0);
+  assertTrue(fileName + " has no purpose label for " + functionName, section.indexOf("Kurzbeschreibung:") < 0);
+}
+
+function assertModulePurposeQuote(text, moduleHeading, fileName) {
+  var headingIndex = text.indexOf(moduleHeading);
+  var afterHeading;
+
+  assertTrue(fileName + " contains module " + moduleHeading, headingIndex >= 0);
+  afterHeading = text.substring(headingIndex + moduleHeading.length).replace(/^\s+/, "");
+  assertTrue(fileName + " starts module " + moduleHeading + " with purpose quote", /^>\s+[^\r\n]+\./.test(afterHeading));
+}
+
+function assertUsesGermanUmlauts(text, fileName) {
+  var replacementWords = /\b(?:fuer|oeffentlichen|aufgefuehrt|muessen|benoetigte|uebersicht|prueft|pruefen|vollstaendigkeit|unvollstaendige|gewaehlten|ausgewaehlte|zurueck|zusaetzlich|rueckgabe|fuehrt|eintraege|unveraendert|vollstaendigen|auszufuehren|anfuegen|behaelt|gefuellte|uebersprungen|zugehoerige|geaenderten|aenderungszeit|waehlt|aelteren|zusammenfuehrt|oeffnen|oeffnet|unabhaengige|maximalzaehler|fuegt|ueberspringt|schuetzt|uebertragung|sprachabhaengige|angefuegt)\b/i;
+  assertTrue(fileName + " uses real German umlauts", !replacementWords.test(text));
 }
 
 var modules = [
@@ -88,8 +109,41 @@ for (i = 0; i < modules.length; i++) {
 
 var coreExamples = read("examples.md");
 assertOrdered(coreExamples, ["## `core_lib`", "### #1", "### #2", "### #3", "## `core`", "### A1", "### A2", "### A3", "### A4"], "examples.md");
+assertUsesGermanUmlauts(coreExamples, "examples.md");
 assertTrue("examples.md contains collector example", coreExamples.indexOf("collectAtags({") >= 0);
 assertTrue("examples.md contains cleaner example", coreExamples.indexOf("cleanTags({") >= 0);
+assertTrue("examples.md links shared option values", coreExamples.indexOf("](#gemeinsame-optionswerte)") >= 0);
+assertTrue("examples.md contains aggregation table", coreExamples.indexOf("| Wert | Unterstützte Aliase | Wirkung | Beispielergebnis |") >= 0);
+
+var aggregationModes = [
+  "min",
+  "max",
+  "max_abs",
+  "min_abs",
+  "max_add_abs",
+  "sum",
+  "avg",
+  "median",
+  "first",
+  "last",
+  "amount"
+];
+for (i = 0; i < aggregationModes.length; i++) {
+  assertTrue(
+    "examples.md lists aggregation mode " + aggregationModes[i],
+    coreExamples.indexOf("| `" + aggregationModes[i] + "` |") >= 0
+  );
+}
+assertTrue("examples.md lists add aggregation alias", coreExamples.indexOf("| `sum` | `add` |") >= 0);
+assertTrue("examples.md lists count aggregation alias", coreExamples.indexOf("| `amount` | `count` |") >= 0);
+
+var exportTargetTypes = ["tags", "text", "md", "tree_md", "rows_md", "rows_html", "json"];
+for (i = 0; i < exportTargetTypes.length; i++) {
+  assertTrue(
+    "examples.md lists export target type " + exportTargetTypes[i],
+    coreExamples.indexOf("| `" + exportTargetTypes[i] + "` |") >= 0
+  );
+}
 
 var aggregationExampleOptions = [
   "valueMode:",
@@ -132,11 +186,29 @@ for (i = 0; i < corePublicFunctions.length; i++) {
   assertFunctionExample(coreExamples, corePublicFunctions[i], "examples.md");
 }
 
+var coreModules = [
+  '### #1 `collectAtags_lib.js`',
+  '### #2 `exportAtags_lib.js`',
+  '### #3 `helpers_lib.js`',
+  '### A1 `_checkVersions.js`',
+  '### A2 `helpers.js`',
+  '### A3 `restoreAtags.js`',
+  '### A4 `tagCleaner.js`'
+];
+for (i = 0; i < coreModules.length; i++) {
+  assertModulePurposeQuote(coreExamples, coreModules[i], "examples.md");
+}
+
 var pluginExamples = read("examples_plugins.md");
 assertOrdered(pluginExamples, ["## `1_tagging`", "## `2_syncing`", "## `3_workflow`", "## `6_integration`", "## `z_generell`", "## `z_others`"], "examples_plugins.md");
+assertUsesGermanUmlauts(pluginExamples, "examples_plugins.md");
 assertTrue("plugin examples contain template transfer", pluginExamples.indexOf("moveFilledTemplates({") >= 0);
 assertTrue("template transfer example uses since mode", pluginExamples.indexOf('sourceMode: "realtime_since"') >= 0);
 assertTrue("template transfer example uses datetime field", pluginExamples.indexOf('startDatetimeField: "Einnahmedatum"') >= 0);
+assertTrue("plugin examples link shared option values", pluginExamples.indexOf("](#gemeinsame-optionswerte)") >= 0);
+assertTrue("plugin examples list all source modes", /`sourceMode`:[^\r\n]*`realtime`[^\r\n]*`realtime_since`[^\r\n]*`datetime`[^\r\n]*`hours`/.test(pluginExamples));
+assertTrue("plugin examples list all round modes", /`roundMode`:[^\r\n]*`round`[^\r\n]*`floor`[^\r\n]*`ceil`/.test(pluginExamples));
+assertTrue("plugin examples list all insert modes", /`insertMode`:[^\r\n]*`append`[^\r\n]*`prepend`[^\r\n]*`time_block_top`/.test(pluginExamples));
 
 var pluginPublicFunctions = [
   "applyTagPairParser",
@@ -167,6 +239,25 @@ var pluginPublicFunctions = [
 ];
 for (i = 0; i < pluginPublicFunctions.length; i++) {
   assertFunctionExample(pluginExamples, pluginPublicFunctions[i], "examples_plugins.md");
+}
+
+var pluginModules = [
+  '### B2 `tagPairParser.js`',
+  '### B3 `globalFieldSync.js`',
+  '### B4 `syncLastFromLatest.js`',
+  '### B10 `dustMerger.js`',
+  '### B11 `templateFieldTransfer.js`',
+  '### B5 `floatingAverage.js`',
+  '### B6 `sequenceCounter.js`',
+  '### B7 `timeMarker.js`',
+  '### B8 `obsidianLinker.js`',
+  '### B9 `wikiLinker.js`',
+  '### C1 `multiChoiceHelpers.js`',
+  '### C2 `typedTextFields.js`',
+  '### C3 `hourGuide.js`'
+];
+for (i = 0; i < pluginModules.length; i++) {
+  assertModulePurposeQuote(pluginExamples, pluginModules[i], "examples_plugins.md");
 }
 
 WScript.Echo("OK: module headers and centralized examples");

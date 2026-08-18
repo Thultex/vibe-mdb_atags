@@ -16,18 +16,21 @@
 
 ## Pflege & Versionierung
 
-Jede funktionale Änderung wird im `CHANGELOG.md` als Repo-Verlauf dokumentiert. Die Script-Dateien selbst enthalten nur einen kompakten Kopfblock mit Kennung, Modulversion und Systemversion. Kopierbare Aufrufe stehen zentral in `examples.md` fuer Core-Module und `examples_plugins.md` fuer Add-ons.
+Jede funktionale Änderung wird im `CHANGELOG.md` als Repo-Verlauf dokumentiert. Die Script-Dateien selbst enthalten nur einen kompakten Kopfblock mit Kennung, Modulversion und Systemversion. Kopierbare Aufrufe stehen zentral in `examples.md` für Core-Module und `examples_plugins.md` für Add-ons.
 
 Regeln:
 
 - Modulversion pro geänderter Datei anheben
-- Jede Datei hat eine stabile Kennung im Header: `#` fuer Remote-Libs, `A` fuer Core, `B` fuer Addons, `C` fuer geloeste eigenstaendige Module.
-- Die Nummer folgt der alphanumerischen Repo-Reihenfolge im jeweiligen Dateibereich. Remote-Libs: `#1` bis `#3`; Core: `A1` bis `A4`; Addons: `B1` bis `B11`; geloeste generelle Module: `C1` bis `C3`.
+- Jede Datei hat eine stabile Kennung im Header: `#` für Remote-Libs, `A` für Core, `B` für Add-ons, `C` für gelöste eigenständige Module.
+- Die Nummer folgt der alphanumerischen Repo-Reihenfolge im jeweiligen Dateibereich. Remote-Libs: `#1` bis `#3`; Core: `A1` bis `A4`; Add-ons: `B1` bis `B11`; gelöste generelle Module: `C1` bis `C3`.
 - Kopfblöcke in Moduldateien enthalten keine Changelogs, Notizen oder Beispiele
-- Beispiele bei geaenderten Signaturen oder Optionen in der passenden zentralen Beispiel-Datei aktualisieren
+- Bei Änderungen an öffentlicher API, Verhalten, Defaults oder Konfigurationsoptionen wird der zugehörige Funktionsabschnitt in der passenden Example-Datei im selben Change aktualisiert.
+- Jeder Modulabschnitt und jede Funktion beginnt mit einer Zweckbeschreibung als Blockquote; jede Funktion besitzt außerdem einen internen Link, einen kopierbaren Aufruf und kurze Parametererklärungen.
+- Feste Parameterwerte werden vollständig genannt; umfangreiche gemeinsame Wertemengen stehen zentral als Tabelle, kleinere direkt als übersichtliche Liste.
+- Deutsche Dokumentation verwendet echte Umlaute und `ß`; Ersatzschreibweisen mit `ae`, `oe` oder `ue` werden nicht verwendet.
 - Changelog mit Datum, Versionssprung und Wirkung ergänzen
 
-Details siehe `CONTRIBUTING.md`.
+Die verbindliche Example-Struktur und der Abschluss-Check stehen in `CONTRIBUTING.md`.
 
 Die aktuellen Memento-Entry-Trigger und die parse-relevante Reihenfolge stehen in `ENTRY_WORKFLOWS.md`.
 
@@ -994,7 +997,7 @@ Vor Detailangaben mit Namen oder Einzelwerten steht ` - `, z. B. `kaufen: 22,2 -
 
 ## Aktuelle Funktionsaufrufe
 
-Die vollstaendige, intern verlinkte Funktionsuebersicht mit je einem Aufruf und kurzen Parametererklaerungen liegt in [`examples.md`](examples.md) und [`examples_plugins.md`](examples_plugins.md). Die folgenden README-Beispiele bleiben als kompakter Einstieg erhalten. Script-Kopfkommentare bleiben kurz, damit der Memento-Java-Editor nicht am Syntax-Highlighting haengen bleibt.
+Die vollständige, intern verlinkte Funktionsübersicht mit je einem Aufruf, einer hervorgehobenen Zweckbeschreibung und kurzen Parametererklärungen liegt in [`examples.md`](examples.md) und [`examples_plugins.md`](examples_plugins.md). Die folgenden README-Beispiele bleiben als kompakter Einstieg erhalten. Script-Kopfkommentare bleiben kurz, damit der Memento-Java-Editor nicht am Syntax-Highlighting hängen bleibt.
 
 **Basis-Export in Tags**
 

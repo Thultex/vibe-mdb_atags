@@ -1,6 +1,6 @@
 # Core-Beispiele
 
-Kopierbare Beispiele fuer die oeffentlichen Trigger- und Script-Funktionen in `core_lib/` und `core/`. Interne Parser-, Format- und Versions-Getter sind keine Benutzer-API und werden deshalb nicht einzeln aufgefuehrt. Feldnamen muessen an die eigene Memento-Library angepasst werden.
+Kopierbare Beispiele für die öffentlichen Trigger- und Script-Funktionen in `core_lib/` und `core/`. Interne Parser-, Format- und Versions-Getter sind keine Benutzer-API und werden deshalb nicht einzeln aufgeführt. Feldnamen müssen an die eigene Memento-Library angepasst werden.
 
 Empfohlene Ladefolge:
 
@@ -8,9 +8,9 @@ Empfohlene Ladefolge:
 2. `core_lib/helpers_lib.js`
 3. `core_lib/collectAtags_lib.js`
 4. `core_lib/exportAtags_lib.js`
-5. benoetigte Module aus `core/`
+5. benötigte Module aus `core/`
 
-## Uebersicht
+## Übersicht
 
 - `core_lib/collectAtags_lib.js`: [collectAtags()](#collectatags), [trackTagsComplete()](#tracktagscomplete)
 - `core_lib/exportAtags_lib.js`: [exportAtags()](#exportatags)
@@ -19,14 +19,57 @@ Empfohlene Ladefolge:
 - `core/helpers.js`: [applyTags()](#applytags), [bulkApplyTags()](#bulkapplytags), [bulkExportAtags()](#bulkexportatags)
 - `core/restoreAtags.js`: [restoreAtags()](#restoreatags), [bulkRestoreAtags()](#bulkrestoreatags)
 - `core/tagCleaner.js`: [cleanTags()](#cleantags), [cleanTemplateTags()](#cleantemplatetags)
+- [Gemeinsame Optionswerte](#gemeinsame-optionswerte)
 - [Plugin-Beispiele](examples_plugins.md)
+
+## Gemeinsame Optionswerte
+
+### Aggregationsmodi
+
+Die folgenden Werte gelten zentral für `mode`, `valueMode`, `rowAggregateMode`, `categoryRowAggregateMode`, `categoryChildAggregateMode`, `categoryChildValueMode`, `categoryAggregateMode` und `categoryValueMode`. Das Beispielergebnis verwendet `[-7, -2, 5, 1]`.
+
+| Wert | Unterstützte Aliase | Wirkung | Beispielergebnis |
+|---|---|---|---:|
+| `min` | – | kleinster Zahlenwert | `-7` |
+| `max` | – | größter Zahlenwert | `5` |
+| `max_abs` | `maxabs` | Wert mit dem größten Betrag; bei Gleichstand der größere Wert | `-7` |
+| `min_abs` | `minabs` | Wert mit dem kleinsten Betrag; bei Gleichstand der größere Wert | `1` |
+| `max_add_abs` | `maxaddabs` | größter nicht negativer plus kleinster negativer Wert; bei nur einer Polarität deren stärkster Wert | `-2` |
+| `sum` | `add` | Summe aller Werte | `-3` |
+| `avg` | – | arithmetischer Mittelwert | `-0,75` |
+| `median` | – | Median der sortierten Werte | `-0,5` |
+| `first` | – | erster Wert in Eingabereihenfolge | `-7` |
+| `last` | – | letzter Wert in Eingabereihenfolge | `1` |
+| `amount` | `count` | Anzahl der Werte | `4` |
+
+### Export-Zieltypen
+
+| `targetFieldType` | Ausgabe |
+|---|---|
+| `tags` | Memento-Tagfeld mit Parser- und Metatags |
+| `text` | einfache Textzeilen |
+| `md` | gruppierte Markdown-Ausgabe |
+| `tree_md` | hierarchischer Markdown-Baum |
+| `rows_md` | Row-Tabelle als Markdown |
+| `rows_html` | Row-Tabelle als HTML |
+| `json` | Werteobjekt als JSON |
+
+Kleinere gemeinsame Wertemengen werden vollständig als Liste angegeben:
+
+- `row_display_values` / `rowDisplayValues`: `none`, `count`, `all`.
+- `cat_display_values` / `categoryDisplayValues`: `none`, `count`, `names`, `all`.
+- `treeStyle`: `unicode`, `ascii`.
 
 ## `core_lib`
 
 ### #1 `collectAtags_lib.js`
 
+> Sammelt und bewertet Atags aus Memento-Textfeldern und stellt darauf aufbauendes Vollständigkeits-Tracking bereit.
+
 <a id="collectatags"></a>
-#### `collectAtags()`
+#### Funktion: `collectAtags()`
+
+> Sammelt Atags, Aliasdefinitionen und Row-Werte aus den angegebenen Textfeldern in einem wiederverwendbaren Ergebnisobjekt.
 
 ```js
 var result = collectAtags({
@@ -40,12 +83,14 @@ var result = collectAtags({
 Parameter:
 
 - `entryObj`: Eintrag, dessen Textfelder gelesen werden; Standard ist der aktuelle Eintrag.
-- `textFields`: Quellfelder fuer Aliasdefinitionen, Tags und Row-Werte.
+- `textFields`: Quellfelder für Aliasdefinitionen, Tags und Row-Werte.
 - `excludeNames`: Tagnamen, die nicht in das Ergebnis aufgenommen werden.
 - `multiAliasTargets`: erlaubt einem Alias mehrere kanonische Ziele.
 
 <a id="tracktagscomplete"></a>
-#### `trackTagsComplete()`
+#### Funktion: `trackTagsComplete()`
+
+> Prüft erforderliche Tags und Template-Namen auf vorhandene Werte und schreibt Vollständigkeit sowie fehlende Namen in Felder.
 
 ```js
 var completion = trackTagsComplete({
@@ -64,14 +109,18 @@ Parameter:
 - `entry`: Eintrag, in den Status und fehlende Namen geschrieben werden.
 - `result`: Ergebnis von `collectAtags()` oder `applyTags()`.
 - `requiredTags` / `templateNames`: erwartete normale Tags und Template-Slots.
-- `completeField`: Bool-/Statusfeld fuer das Gesamtergebnis.
-- `missingField`: Textfeld fuer unvollstaendige Namen; `""` deaktiviert die Ausgabe.
+- `completeField`: Bool-/Statusfeld für das Gesamtergebnis.
+- `missingField`: Textfeld für unvollständige Namen; `""` deaktiviert die Ausgabe.
 - `enabled`: schaltet das Tracking pro Aufruf ein oder aus.
 
 ### #2 `exportAtags_lib.js`
 
+> Exportiert Collector-Ergebnisse in Memento-Felder und vereinheitlicht Markdown-, Tree-, Tabellen-, Tag- und JSON-Ausgaben.
+
 <a id="exportatags"></a>
-#### `exportAtags()`
+#### Funktion: `exportAtags()`
+
+> Schreibt ein Collector-Ergebnis als Tags, Text, Markdown, Tree, Row-Tabelle oder JSON in ein Zielfeld.
 
 Markdown mit allen kanonischen Aggregationsoptionen:
 
@@ -119,21 +168,25 @@ Parameter:
 
 - `entryObj`, `result`: Zieleintrag und bereits gesammeltes Collector-Ergebnis.
 - `targetField`: Feld, in das der Export geschrieben wird.
-- `targetFieldType`: `tags`, `text`, `md`, `tree_md`, `rows_md`, `rows_html` oder `json`.
-- `rowAggregateMode` / `rowAggregateDecimals`: Rechenmodus und Rundung wiederholter Row-Werte.
-- `categoryRowAggregateMode` / `categoryChildAggregateMode`: Aggregation je Kategorie-Kind.
-- `categoryAggregateMode` / `categoryValueMode`: Parent-Aggregation; MD-Standard `avg`, Tree-Standard `max_add_abs`.
+- `targetFieldType`: Ausgabeformat aus der zentralen Tabelle [Export-Zieltypen](#export-zieltypen).
+- `rowAggregateMode` / `rowAggregateDecimals`: Rechenmodus aus der Tabelle [Aggregationsmodi](#aggregationsmodi) und Rundung wiederholter Row-Werte.
+- `categoryRowAggregateMode` / `categoryChildAggregateMode`: Aggregation je Kategorie-Kind; mögliche Werte stehen unter [Aggregationsmodi](#aggregationsmodi).
+- `categoryAggregateMode` / `categoryValueMode`: Parent-Aggregation aus derselben Tabelle; MD-Standard `avg`, Tree-Standard `max_add_abs`.
 - `categoryAggregateDecimals`: Rundung der Kategorieausgabe.
 - `row_display_values` / `rowDisplayValues`: Detailanzeige `none`, `count` oder `all`.
 - `cat_display_values` / `categoryDisplayValues`: Kategorie-Details `none`, `count`, `names` oder `all`.
-- `categoryFilter`: exportiert nur die gewaehlten Kategorien und deren Kinder.
+- `categoryFilter`: exportiert nur die gewählten Kategorien und deren Kinder.
 - `includeEmptyCategories`, `includeBlankTags`, `treeShowValues`: Sichtbarkeit leerer Kategorien, leerer Tags und Tree-Werte.
 - `markdownGroupSeparator`, `treeStyle`: Markdown-Gruppentrenner und Tree-Zeichenstil (`unicode` oder `ascii`).
 
 ### #3 `helpers_lib.js`
 
+> Enthält gemeinsam genutzte Sortier-, Formatierungs-, JSON- und Aggregationsfunktionen für Collector und Exporter.
+
 <a id="computeaggregate"></a>
-#### `computeAggregate()`
+#### Funktion: `computeAggregate()`
+
+> Berechnet aus einer Zahlenliste einen einzelnen Wert nach dem gewählten Aggregationsmodus.
 
 ```js
 var value = computeAggregate([-7, -2, 5, 1], "max_add_abs"); // -2
@@ -142,14 +195,18 @@ var value = computeAggregate([-7, -2, 5, 1], "max_add_abs"); // -2
 Parameter:
 
 - `values`: Array numerischer Werte.
-- `mode`: `min`, `max`, `max_abs`, `min_abs`, `max_add_abs`, `add`, `sum`, `avg`, `median`, `first`, `last` oder `amount`.
+- `mode`: Aggregationsmodus mit Wirkung, Aliasen und Beispielen aus der zentralen Tabelle [Aggregationsmodi](#aggregationsmodi).
 
 ## `core`
 
 ### A1 `_checkVersions.js`
 
+> Registriert und prüft Core-, Add-on- und Plugin-Versionen gegen die erwartete Systemkonfiguration.
+
 <a id="getlibsversionsconfig"></a>
-#### `getLibsVersionsConfig()`
+#### Funktion: `getLibsVersionsConfig()`
+
+> Liefert dem Versionschecker die in der aktuellen Memento-Konfiguration erwarteten Remote- und lokalen Module.
 
 Dieser Callback wird in der eigenen Memento-Konfiguration bereitgestellt:
 
@@ -162,14 +219,16 @@ function getLibsVersionsConfig() {
 }
 ```
 
-Parameter/Rueckgabe:
+Parameter/Rückgabe:
 
 - Die Funktion hat keine Parameter.
 - `remote`: erwartete Remote-Core-Libraries.
 - `local`: erwartete lokale Core- und Add-on-Module.
 
 <a id="checklibversions"></a>
-#### `checkLibVersions()`
+#### Funktion: `checkLibVersions()`
+
+> Liest die zur Laufzeit registrierten Library-Versionen und meldet fehlende ausgewählte Libraries.
 
 ```js
 var loaded = checkLibVersions({
@@ -183,14 +242,16 @@ var loaded = checkLibVersions({
 
 Parameter:
 
-- `names` / `libs`: zu pruefende registrierte Libraries; ohne Angabe werden alle geladenen verwendet.
+- `names` / `libs`: zu prüfende registrierte Libraries; ohne Angabe werden alle geladenen verwendet.
 - `optionalNames`: fehlende Namen, die nicht als Pflichtfehler gelten.
 - `requireAll`: meldet fehlende Pflichtnamen.
-- `asText`: gibt Text statt Ergebnisobjekt zurueck.
-- `verbose`: schreibt die Textdarstellung zusaetzlich ins Log.
+- `asText`: gibt Text statt Ergebnisobjekt zurück.
+- `verbose`: schreibt die Textdarstellung zusätzlich ins Log.
 
 <a id="checkataglibversions"></a>
-#### `checkAtagLibVersions()`
+#### Funktion: `checkAtagLibVersions()`
+
+> Vergleicht geladene Core- und Add-on-Versionen mit der erwarteten Versionsmatrix und kann zusätzlich ihre Aufrufbarkeit prüfen.
 
 ```js
 var checked = checkAtagLibVersions({
@@ -208,17 +269,21 @@ var checked = checkAtagLibVersions({
 Parameter:
 
 - `names` / `libs`: Auswahl aus erwarteten Remote- und lokalen Modulen.
-- `checkAccess`: prueft zusaetzlich, ob der jeweilige Versions-Getter aufrufbar ist.
+- `checkAccess`: prüft zusätzlich, ob der jeweilige Versions-Getter aufrufbar ist.
 - `requireAll`: behandelt fehlende Pflichtmodule als Fehler.
 - `allVersions`: nimmt auch optionale/lokale Versionen in die Ausgabe auf.
-- `SHOW_CURRENT_CONFIG`: zeigt die aufgeloeste lokale Auswahl.
+- `SHOW_CURRENT_CONFIG`: zeigt die aufgelöste lokale Auswahl.
 - `skipNoConfig`: `true` bleibt bei fehlender Config still; `false` aktiviert die Diagnose.
-- `asText`, `verbose`: Text-Rueckgabe bzw. Log-Ausgabe.
+- `asText`, `verbose`: Text-Rückgabe bzw. Log-Ausgabe.
 
 ### A2 `helpers.js`
 
+> Verbindet Collector und Exporter zu komfortablen Einzel- und Bulk-Aufrufen für Memento-Scripte.
+
 <a id="applytags"></a>
-#### `applyTags()`
+#### Funktion: `applyTags()`
+
+> Führt für einen Eintrag Collector und Export in einem gemeinsamen Aufruf aus.
 
 ```js
 var result = applyTags({
@@ -238,12 +303,14 @@ Parameter:
 
 - `enabled`: deaktiviert Collector und Export, wenn `false`.
 - `entryObj`, `textFields`, `excludeNames`: Collector-Ziel und Quellen.
-- `targetField`, `targetFieldType`: Ziel und Format fuer `exportAtags()`.
-- Aggregations- und Anzeigeoptionen werden unveraendert an den Export weitergereicht.
+- `targetField`, `targetFieldType`: Ziel und Format für `exportAtags()`.
+- Aggregations- und Anzeigeoptionen werden unverändert an den Export weitergereicht.
 - `result`: kann optional ein schon vorhandenes Collector-Ergebnis ersetzen.
 
 <a id="bulkapplytags"></a>
-#### `bulkApplyTags()`
+#### Funktion: `bulkApplyTags()`
+
+> Führt Collector und Export für alle Einträge der aktuellen Library aus.
 
 ```js
 var results = bulkApplyTags({
@@ -257,13 +324,15 @@ var results = bulkApplyTags({
 
 Parameter:
 
-- Verarbeitet alle Eintraege aus `lib().entries()`.
+- Verarbeitet alle Einträge aus `lib().entries()`.
 - `textFields`, `targetField`, `targetFieldType`: Collector- und Exportkonfiguration je Eintrag.
-- `collectResults`: gibt die Collector-Ergebnisse als Array zurueck.
+- `collectResults`: gibt die Collector-Ergebnisse als Array zurück.
 - `result`: darf auch eine Funktion oder ein Ergebnisarray pro Eintrag sein.
 
 <a id="bulkexportatags"></a>
-#### `bulkExportAtags()`
+#### Funktion: `bulkExportAtags()`
+
+> Bietet den Bulk-Export als kompatiblen Namen für `bulkApplyTags()` an.
 
 ```js
 bulkExportAtags({
@@ -277,14 +346,18 @@ bulkExportAtags({
 
 Parameter:
 
-- Ist der kompatible Export-Name fuer `bulkApplyTags()` und verarbeitet ebenfalls `lib().entries()`.
+- Ist der kompatible Export-Name für `bulkApplyTags()` und verarbeitet ebenfalls `lib().entries()`.
 - `result`: Ergebnisobjekt, Array oder Callback `(entryObj, index, allEntries)`.
 - `targetField`, `targetFieldType`: Exportziel und Ausgabeformat.
 
 ### A3 `restoreAtags.js`
 
+> Stellt exportierte Atag-JSON-Werte einschließlich Kategorie-Aggregationen wieder in normalen Memento-Feldern her.
+
 <a id="restoreatags"></a>
-#### `restoreAtags()`
+#### Funktion: `restoreAtags()`
+
+> Stellt Werte aus einem Atag-JSON per Mapping oder Feldsuffix wieder in Memento-Feldern her.
 
 ```js
 restoreAtags({
@@ -305,7 +378,7 @@ restoreAtags({
 });
 ```
 
-Alias-Optionen fuer dieselbe Kategorie-Aggregation:
+Alias-Optionen für dieselbe Kategorie-Aggregation:
 
 ```js
 restoreAtags({
@@ -323,15 +396,17 @@ Parameter:
 - `sourceField`: JSON-Quellfeld.
 - `map`: Zuordnung von JSON-Namen zu Zielfeldern; ohne Map greift der Suffix-Auto-Restore.
 - `mode`, `additional`: exklusive Map oder Map plus Auto-Restore.
-- `valueMode`: Aggregation normaler wiederholter JSON-Werte.
-- `categoryRowAggregateMode` / `categoryChildValueMode` / `categoryChildAggregateMode` / `rowAggregateMode`: Aggregation je Kategorie-Kind.
-- `categoryAggregateMode` / `categoryValueMode`: Parent-Aggregation; Standard `max_add_abs`.
-- `suffix`, `listSuffix`: Zielfeldsuffixe fuer Zahlen/Text bzw. Listen.
+- `valueMode`: Aggregation normaler wiederholter JSON-Werte; alle Werte stehen unter [Aggregationsmodi](#aggregationsmodi).
+- `categoryRowAggregateMode` / `categoryChildValueMode` / `categoryChildAggregateMode` / `rowAggregateMode`: Aggregation je Kategorie-Kind aus derselben Tabelle.
+- `categoryAggregateMode` / `categoryValueMode`: Parent-Aggregation aus derselben Tabelle; Standard `max_add_abs`.
+- `suffix`, `listSuffix`: Zielfeldsuffixe für Zahlen/Text bzw. Listen.
 - `clearMappedFields`: leert gemappte Ziele vor dem Schreiben.
 - `debugField`, `debugLog`: Diagnose in Feld und Log.
 
 <a id="bulkrestoreatags"></a>
-#### `bulkRestoreAtags()`
+#### Funktion: `bulkRestoreAtags()`
+
+> Ruft den Restore für eine Entry-Gruppe auf und reicht alle Restore-Optionen weiter.
 
 ```js
 bulkRestoreAtags({
@@ -346,16 +421,20 @@ bulkRestoreAtags({
 
 Parameter:
 
-- Kompatibler Gruppen-Wrapper fuer `restoreAtags()`.
+- Kompatibler Gruppen-Wrapper für `restoreAtags()`.
 - `entries`: Array, Java-Liste oder Gruppenquelle.
 - `currentEntry`: ersetzt eine stale Instanz desselben Eintrags.
-- `limit`: maximale Zahl verarbeiteter Eintraege.
-- Alle weiteren Restore-Optionen werden unveraendert uebernommen.
+- `limit`: maximale Zahl verarbeiteter Einträge.
+- Alle weiteren Restore-Optionen werden unverändert übernommen.
 
 ### A4 `tagCleaner.js`
 
+> Bereinigt, normalisiert und sortiert Atag-Text sowie Template-Slots vor oder nach der weiteren Verarbeitung.
+
 <a id="cleantags"></a>
-#### `cleanTags()`
+#### Funktion: `cleanTags()`
+
+> Normalisiert Atag-Text, Werte, Aliase und Tagleisten in einem oder mehreren Textfeldern.
 
 ```js
 cleanTags({
@@ -374,14 +453,16 @@ cleanTags({
 Parameter:
 
 - `entryObj`: Zieleintrag; Standard ist `entry()`.
-- `fields`: mehrere Felder; alternativ `textField` fuer ein Feld.
+- `fields`: mehrere Felder; alternativ `textField` für ein Feld.
 - `aliasTextFields`, `tagFields`: Alias- und Memento-Tagquellen.
 - `tagBarPosition`, `tagBarSpacing`: Position und Abstand der erzeugten Tagleiste.
 - `formatValues`: Wertformatierung wie `keep`, `min` oder `max`.
 - `enabled`: deaktiviert die Bereinigung bei `false`.
 
 <a id="cleantemplatetags"></a>
-#### `cleanTemplateTags()`
+#### Funktion: `cleanTemplateTags()`
+
+> Bereitet Template-Slots für einen neuen Eintrag vor, ohne den vollständigen Tag-Cleaner auszuführen.
 
 ```js
 cleanTemplateTags({
@@ -394,5 +475,5 @@ cleanTemplateTags({
 Parameter:
 
 - `entryObj`: Zieleintrag.
-- `fields`: Textfelder, deren Template-Slots fuer einen neuen Eintrag vorbereitet werden.
+- `fields`: Textfelder, deren Template-Slots für einen neuen Eintrag vorbereitet werden.
 - `enabled`: deaktiviert die Vorbereitung bei `false`.

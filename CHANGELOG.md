@@ -4,39 +4,39 @@
 
 Ausgangsdatum: 2026-05-20
 
-*Diese Woche (0,9h, 1 Tag, 9 Inhalte):*
+*Diese Woche (1,4h, 1 Tag, 9 Inhalte):*
 Restore: eintragsbezogene Bulk-Felder und Tree-kompatible Kategorie-Aggregation; Export: gemeinsame Aggregationslogik und Kategorie-Polung im JSON.
 
 *Letzte Woche (1,3h, 1 Tag, 12 Inhalte):*
 Repo-Doku: zentrale Beispiele und kompakte Header; Versionscheck: stille fehlende Config; Systemversion 3.00.
 
-*Dieser Monat (17,4h, 9 Tage, 254 Inhalte):*
+*Dieser Monat (17,9h, 9 Tage, 254 Inhalte):*
 Core/Export: Aggregationen, Beispiele und Versionscheck; Addons: Obsidian, Sync, Hour-Guide; Systemversion 3.00.
 
 *Letzter Monat (6,3h, 3 Tage, 175 Inhalte):*
 Cleaner/Readable: Tagleisten und Archivierung; Sync/TimeMarker: Addons und Workflows; Repo: Grundstruktur.
 
-*Jahr (23,7h, 12 Tage, 429 Inhalte):*
+*Jahr (24,2h, 12 Tage, 429 Inhalte):*
 Core-Libs/Exports: Remote-Einbindung, Aggregationen, Beispiele und Versionscheck; Addons: Obsidian/Sync/TimeMarker.
 
-*Insgesamt (23,7h, 12 Tage, 429 Inhalte):*
+*Insgesamt (24,2h, 12 Tage, 429 Inhalte):*
 Core-Libs/Exports: Remote-Einbindung, Aggregationen, Beispiele und Versionscheck; Addons: Obsidian/Sync/TimeMarker.
 
 ## Log
 
-### 2026-08-18 - (ca. 0,6h)
+### 2026-08-18 - (ca. 1,1h)
 
 - *Summary: Tree und Restore verwenden `max_add_abs`; alle Aggregationsbereiche teilen dieselben Rechenmodi.*
-- Feature: Helpers Lib v2.13 ergaenzt `max_add_abs`: groesster positiver plus betraglich groesster negativer Wert unter Beibehaltung der Vorzeichen; normale MD-Row-Werte, Row-Tabellen, Kategorien und Restore nutzen dieselben Aggregationsmodi.
+- Feature: Helpers Lib v2.13 ergänzt `max_add_abs`: größter positiver plus betragsmäßig größter negativer Wert unter Beibehaltung der Vorzeichen; normale MD-Row-Werte, Row-Tabellen, Kategorien und Restore nutzen dieselben Aggregationsmodi.
 - Change: Export Atags Lib v1.86 ersetzt den bisherigen Tree-Parent-Standard `max_abs` durch `max_add_abs`; `md`/`text` behalten `avg`, Row-Werte ihren bisherigen Standard.
-- Fix: JSON-Kategorie-Arrays erhalten die effektive Kinderpolung als `-`-Praefix; Restore Atags v2.13 liest diese Polung und nutzt fuer Kategorien standardmaessig wie der Tree `max` je Kind und `max_add_abs` fuer den Parent.
-- Tests/Doku/Versionen: Regressionen decken beide Polaritaeten, reine Vorzeichenmengen, MD, Tree, JSON und Restore ab; `examples.md` und `examples_plugins.md` besitzen interne Funktionslinks sowie fuer jede oeffentliche Funktion einen Aufruf und eine kurze Parametererklaerung; der Doku-Test sichert API-, Link- und Aggregationsoptions-Abdeckung, Check Versions steigt auf v1.74.
+- Fix: JSON-Kategorie-Arrays erhalten die effektive Kinderpolung als `-`-Präfix; Restore Atags v2.13 liest diese Polung und nutzt für Kategorien standardmäßig wie der Tree `max` je Kind und `max_add_abs` für den Parent.
+- Tests/Doku/Versionen: Regressionen decken beide Polaritäten, reine Vorzeichenmengen, MD, Tree, JSON und Restore ab; `examples.md` und `examples_plugins.md` besitzen interne Funktionslinks, klar beschriftete Funktionsüberschriften sowie Zweck-Blockquotes, Aufrufe und Parametererklärungen für jede öffentliche Funktion. Gemeinsame Aggregationswerte stehen vollständig in einer zentralen Tabelle, kleinere Wertemengen in übersichtlichen Listen. `CONTRIBUTING.md` schreibt diese Pflege bei Codeänderungen verbindlich fest; der Doku-Test sichert API-, Link-, Modul-, Überschriften-, Optionswert- und Umlaut-Abdeckung. Check Versions steigt auf v1.74.
 
 ### 2026-08-18 - (ca. 0,3h)
 
 - *Summary: Restore erkennt vorhandene Zielfelder wie `Kopfschmerz_` auch beim Aufruf mit einem expliziten Bulk-Eintrag.*
-- Fix: Restore Atags v2.12 liest die Feldliste zuerst aus `cfg.library`/`cfg.lib` oder der Library des jeweils uebergebenen Eintrags; globales `lib()` dient nur noch als Fallback.
-- Robustheit: Felddefinitionen werden ueber `getName`, `name` oder `title` aufgeloest, und der Feldnamen-Cache wird im Bulk fuer jeden Eintrag neu aufgebaut.
+- Fix: Restore Atags v2.12 liest die Feldliste zuerst aus `cfg.library`/`cfg.lib` oder der Library des jeweils übergebenen Eintrags; globales `lib()` dient nur noch als Fallback.
+- Robustheit: Felddefinitionen werden über `getName`, `name` oder `title` aufgelöst, und der Feldnamen-Cache wird im Bulk für jeden Eintrag neu aufgebaut.
 - Tests/Versionen/Doku: Regressionen sichern abweichende globale und eintragsbezogene Libraries sowie gemischte Eintrags-Libraries; Check Versions v1.73 und die Versionsmatrix wurden angepasst.
 
 ### 2026-08-12 - (ca. 0,3h)
