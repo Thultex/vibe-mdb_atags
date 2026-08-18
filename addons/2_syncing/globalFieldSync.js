@@ -1,20 +1,20 @@
 /*
 ========================================
-B3 Global Field Sync v1.05 (sys 3.00)
+B3 Global Field Sync v1.06 (sys 3.00)
 ========================================
 */
 
 function getGlobalFieldSyncVersion() {
   return {
     name: "globalFieldSync",
-    version: "1.05",
+    version: "1.06",
     sysVersion: "3.00",
     path: "addons/2_syncing/globalFieldSync.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("globalFieldSync", "1.05", "3.00", "addons/2_syncing/globalFieldSync.js", true);
+  registerAtagLibVersion("globalFieldSync", "1.06", "3.00", "addons/2_syncing/globalFieldSync.js", true);
 }
 
 function syncIsArray(val) {
@@ -250,14 +250,16 @@ function syncFieldsBetweenEntries(cfg) {
 function syncFieldTo(cfg) {
   cfg = cfg || {};
 
-  var currentEntry = cfg.entryObj || safeSyncEntry();
+  if (cfg.enabled === false) return { updated: [], skipped: [], conflicts: [] };
+
+  var currentEntry = cfg.entryObj || cfg.entry || safeSyncEntry();
   var firstEntry = getFirstSyncEntry(cfg, currentEntry);
   var all = getSyncEntries(cfg, currentEntry);
 
   return syncFieldsBetweenEntries({
     sourceEntry: firstEntry,
     targetEntry: currentEntry,
-    fields: cfg.fields,
+    fields: cfg.fields != null ? cfg.fields : cfg.field,
     overwrite: cfg.overwrite,
     fallbackEntries: all,
     fallbackLimit: 20
@@ -267,13 +269,15 @@ function syncFieldTo(cfg) {
 function syncFieldBack(cfg) {
   cfg = cfg || {};
 
-  var currentEntry = cfg.entryObj || safeSyncEntry();
+  if (cfg.enabled === false) return { updated: [], skipped: [], conflicts: [] };
+
+  var currentEntry = cfg.entryObj || cfg.entry || safeSyncEntry();
   var firstEntry = getFirstSyncEntry(cfg, currentEntry);
 
   return syncFieldsBetweenEntries({
     sourceEntry: currentEntry,
     targetEntry: firstEntry,
-    fields: cfg.fields,
+    fields: cfg.fields != null ? cfg.fields : cfg.field,
     overwrite: cfg.overwrite,
     skipEmptySource: true
   });
@@ -282,9 +286,12 @@ function syncFieldBack(cfg) {
 function syncFieldAll(cfg) {
   cfg = cfg || {};
 
-  var firstEntry = getFirstSyncEntry(cfg, cfg.entryObj || null);
-  var all = getSyncEntries(cfg, cfg.entryObj || null);
-  var fields = normalizeSyncFields(cfg.fields);
+  if (cfg.enabled === false) return [];
+
+  var currentEntry = cfg.entryObj || cfg.entry || null;
+  var firstEntry = getFirstSyncEntry(cfg, currentEntry);
+  var all = getSyncEntries(cfg, currentEntry);
+  var fields = normalizeSyncFields(cfg.fields != null ? cfg.fields : cfg.field);
   var overwrite = cfg.overwrite === true;
   var out = [];
 

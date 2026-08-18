@@ -125,6 +125,9 @@ Wenn ein Memento-Entry-Script `applyTags()`, `bulkApplyTags()` oder `bulkExportA
   - `applyTagCleaner()` als optionaler Memento-Wrapper
 
 **Tagging Add-ons**
+
+Alle schreibenden Add-on-Funktionen akzeptieren `entry: e` als einheitlichen Alias für `entryObj` beziehungsweise `currentEntry`. Mit `enabled: false` werden sie ohne Feldzugriff oder Nachaktion übersprungen. Mehrfeld-Funktionen akzeptieren neben `fields` auch `field` mit einem Feldnamen oder einer Liste; eindeutig benannte einzelne Schreibfelder wie `tagField` und `targetField` bleiben unverändert.
+
 - `B2` `addons/1_tagging/tagPairParser.js` (Parser-Preprocessing)
   - `applyTagPairParser()`
   - `bulkApplyTagPairParser()`

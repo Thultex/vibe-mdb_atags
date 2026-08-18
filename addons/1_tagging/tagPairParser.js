@@ -1,20 +1,20 @@
 /*
 ========================================
-B2 Tag Pair Parser v1.03 (sys 3.00)
+B2 Tag Pair Parser v1.04 (sys 3.00)
 ========================================
 */
 
 function getTagPairParserVersion() {
   return {
     name: "tagPairParser",
-    version: "1.03",
+    version: "1.04",
     sysVersion: "3.00",
     path: "addons/1_tagging/tagPairParser.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("tagPairParser", "1.03", "3.00", "addons/1_tagging/tagPairParser.js", true);
+  registerAtagLibVersion("tagPairParser", "1.04", "3.00", "addons/1_tagging/tagPairParser.js", true);
 }
 
 function trimTagPairValue(val) {
@@ -157,7 +157,8 @@ function appendTagPairTextValue(entryObj, targetTextField, lines, appendMode) {
 function applyTagPairParser(cfg) {
   cfg = cfg || {};
 
-  var entryObj = cfg.entryObj || entry();
+  if (cfg.enabled === false) return { tags: [], textAdds: [] };
+  var entryObj = cfg.entryObj || cfg.entry || entry();
   if (!entryObj) return { tags: [], textAdds: [] };
 
   var tagField = cfg.tagField;
@@ -212,6 +213,9 @@ function applyTagPairParser(cfg) {
 }
 
 function bulkApplyTagPairParser(cfg) {
+  cfg = cfg || {};
+  if (cfg.enabled === false) return [];
+
   var all = lib().entries();
   var results = [];
 

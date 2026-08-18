@@ -59,6 +59,18 @@ function assertModulePurposeQuote(text, moduleHeading, fileName) {
   assertTrue(fileName + " starts module " + moduleHeading + " with purpose quote", /^>\s+[^\r\n]+\./.test(afterHeading));
 }
 
+function assertFunctionConfigOption(text, functionName, optionText, fileName) {
+  var anchor = '<a id="' + String(functionName).toLowerCase() + '"></a>';
+  var start = text.indexOf(anchor);
+  var end;
+  var section;
+
+  assertTrue(fileName + " anchors " + functionName + " for config check", start >= 0);
+  end = text.indexOf('<a id="', start + anchor.length);
+  section = text.substring(start, end >= 0 ? end : text.length);
+  assertTrue(fileName + " documents " + optionText + " for " + functionName, section.indexOf(optionText) >= 0);
+}
+
 function assertUsesGermanUmlauts(text, fileName) {
   var replacementWords = /\b(?:fuer|oeffentlichen|aufgefuehrt|muessen|benoetigte|uebersicht|prueft|pruefen|vollstaendigkeit|unvollstaendige|gewaehlten|ausgewaehlte|zurueck|zusaetzlich|rueckgabe|fuehrt|eintraege|unveraendert|vollstaendigen|auszufuehren|anfuegen|behaelt|gefuellte|uebersprungen|zugehoerige|geaenderten|aenderungszeit|waehlt|aelteren|zusammenfuehrt|oeffnen|oeffnet|unabhaengige|maximalzaehler|fuegt|ueberspringt|schuetzt|uebertragung|sprachabhaengige|angefuegt)\b/i;
   assertTrue(fileName + " uses real German umlauts", !replacementWords.test(text));
@@ -209,6 +221,9 @@ assertTrue("plugin examples link shared option values", pluginExamples.indexOf("
 assertTrue("plugin examples list all source modes", /`sourceMode`:[^\r\n]*`realtime`[^\r\n]*`realtime_since`[^\r\n]*`datetime`[^\r\n]*`hours`/.test(pluginExamples));
 assertTrue("plugin examples list all round modes", /`roundMode`:[^\r\n]*`round`[^\r\n]*`floor`[^\r\n]*`ceil`/.test(pluginExamples));
 assertTrue("plugin examples list all insert modes", /`insertMode`:[^\r\n]*`append`[^\r\n]*`prepend`[^\r\n]*`time_block_top`/.test(pluginExamples));
+assertTrue("plugin examples explain common entry option", pluginExamples.indexOf("### Gemeinsame Aufrufsteuerung") >= 0 && pluginExamples.indexOf("`entryObj`") >= 0);
+assertTrue("plugin examples explain enabled option", pluginExamples.indexOf("`enabled`: `true`") >= 0);
+assertTrue("plugin examples show field array alias", pluginExamples.indexOf('field: ["Field1", "Field2"]') >= 0);
 
 var pluginPublicFunctions = [
   "applyTagPairParser",
@@ -239,6 +254,35 @@ var pluginPublicFunctions = [
 ];
 for (i = 0; i < pluginPublicFunctions.length; i++) {
   assertFunctionExample(pluginExamples, pluginPublicFunctions[i], "examples_plugins.md");
+}
+
+var pluginConfigFunctions = [
+  "applyTagPairParser",
+  "bulkApplyTagPairParser",
+  "syncFieldTo",
+  "syncFieldBack",
+  "syncFieldAll",
+  "syncLastFromLatest",
+  "dustMerge",
+  "dustMerger",
+  "getTemplateFieldNames",
+  "moveFilledTemplates",
+  "moveAndTrackTemplates",
+  "updateAverage",
+  "updateSequenceSpree",
+  "appendTimeMarker",
+  "cleanupTimeMarker",
+  "clearTimeMarkerRows",
+  "linkObsidianUri",
+  "formatObsidianUri",
+  "applyWikiLinker",
+  "multiChoiceAppend",
+  "multiChoiceRemove",
+  "syncTypedTextFields",
+  "applyHourGuide"
+];
+for (i = 0; i < pluginConfigFunctions.length; i++) {
+  assertFunctionConfigOption(pluginExamples, pluginConfigFunctions[i], "enabled: true", "examples_plugins.md");
 }
 
 var pluginModules = [

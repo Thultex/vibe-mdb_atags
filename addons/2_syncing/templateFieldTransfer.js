@@ -1,20 +1,20 @@
 /*
 ========================================
-B11 Template Field Transfer v1.05 (sys 3.00)
+B11 Template Field Transfer v1.06 (sys 3.00)
 ========================================
 */
 
 function getTemplateFieldTransferVersion() {
   return {
     name: "templateFieldTransfer",
-    version: "1.05",
+    version: "1.06",
     sysVersion: "3.00",
     path: "addons/2_syncing/templateFieldTransfer.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("templateFieldTransfer", "1.05", "3.00", "addons/2_syncing/templateFieldTransfer.js", true);
+  registerAtagLibVersion("templateFieldTransfer", "1.06", "3.00", "addons/2_syncing/templateFieldTransfer.js", true);
 }
 
 function tftTrim(value) {
@@ -390,6 +390,7 @@ function tftMergeTargetText(targetText, movedLines, cfg) {
 
 function getTemplateFieldNames(cfg) {
   cfg = cfg || {};
+  if (cfg.enabled === false) return [];
   var entryObj = tftResolveEntry(cfg);
   var sourceField = cfg.sourceField || "Record";
   var sourceText = cfg.sourceText != null ? cfg.sourceText : tftSafeField(entryObj, sourceField);
@@ -398,7 +399,7 @@ function getTemplateFieldNames(cfg) {
 
 function moveFilledTemplates(cfg) {
   cfg = cfg || {};
-  var entryObj = tftResolveEntry(cfg);
+  var entryObj;
   var sourceField = cfg.sourceField || "Record";
   var targetField = cfg.targetField || "Notiz";
   var sourceValue;
@@ -419,6 +420,7 @@ function moveFilledTemplates(cfg) {
   };
 
   if (!result.enabled) return result;
+  entryObj = tftResolveEntry(cfg);
   if (!entryObj) {
     result.errors.push("Entry fehlt");
     return result;
@@ -478,6 +480,19 @@ function moveAndTrackTemplates(cfg) {
   var trackCfg = {};
   var key;
   var completion;
+
+  if (!transfer.enabled) {
+    return {
+      transfer: transfer,
+      completion: null,
+      moved: [],
+      templateNames: [],
+      incompleteTags: [],
+      complete: false,
+      changed: false,
+      errors: []
+    };
+  }
 
   for (key in cfg) {
     if (Object.prototype.hasOwnProperty.call(cfg, key)) trackCfg[key] = cfg[key];

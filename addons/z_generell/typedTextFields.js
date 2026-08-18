@@ -1,20 +1,20 @@
 /*
 ========================================
-C2 Typed Text Fields v1.02 (sys 3.00)
+C2 Typed Text Fields v1.03 (sys 3.00)
 ========================================
 */
 
 function getTypedTextFieldsVersion() {
   return {
     name: "typedTextFields",
-    version: "1.02",
+    version: "1.03",
     sysVersion: "3.00",
     path: "addons/z_generell/typedTextFields.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("typedTextFields", "1.02", "3.00", "addons/z_generell/typedTextFields.js", true);
+  registerAtagLibVersion("typedTextFields", "1.03", "3.00", "addons/z_generell/typedTextFields.js", true);
 }
 
 function typedTextIsArray(val) {
@@ -71,6 +71,19 @@ function typedTextToArray(val) {
 function typedTextNormalizeEntries(entriesOrEntry) {
   if (typeof entriesOrEntry === "undefined" || entriesOrEntry === null) return [entry()];
   return typedTextToArray(entriesOrEntry);
+}
+
+function typedTextIsConfigObject(val) {
+  if (!val || typeof val !== "object" || typedTextIsArray(val)) return false;
+  if (typeof val.field === "function" || typeof val.set === "function") return false;
+  return Object.prototype.hasOwnProperty.call(val, "entry") ||
+    Object.prototype.hasOwnProperty.call(val, "entryObj") ||
+    Object.prototype.hasOwnProperty.call(val, "currentEntry") ||
+    Object.prototype.hasOwnProperty.call(val, "entries") ||
+    Object.prototype.hasOwnProperty.call(val, "enabled") ||
+    Object.prototype.hasOwnProperty.call(val, "clearSource") ||
+    Object.prototype.hasOwnProperty.call(val, "onlyIfTargetEmpty") ||
+    Object.prototype.hasOwnProperty.call(val, "dryRun");
 }
 
 function typedTextFieldNames() {
@@ -317,13 +330,21 @@ function typedTextValuesEquivalent(a, b) {
 }
 
 function syncTypedTextFields(entriesOrEntry, options) {
+  if (arguments.length < 2 && typedTextIsConfigObject(entriesOrEntry)) {
+    options = entriesOrEntry;
+    entriesOrEntry = options.entries || options.entryObj || options.currentEntry || options.entry || null;
+  }
   options = options || {};
+
+  if (entriesOrEntry == null) {
+    entriesOrEntry = options.entries || options.entryObj || options.currentEntry || options.entry || null;
+  }
 
   var clearSource = !!options.clearSource;
   var onlyIfTargetEmpty = !!options.onlyIfTargetEmpty;
   var dryRun = !!options.dryRun;
-  var entries = typedTextNormalizeEntries(entriesOrEntry);
-  var fieldNames = typedTextFieldNames();
+  var entries;
+  var fieldNames;
   var result = {
     entriesProcessed: 0,
     pairsFound: 0,
@@ -343,6 +364,10 @@ function syncTypedTextFields(entriesOrEntry, options) {
   var raw;
   var targetCurrent;
   var converted;
+
+  if (options.enabled === false) return result;
+  entries = typedTextNormalizeEntries(entriesOrEntry);
+  fieldNames = typedTextFieldNames();
 
   for (eIndex = 0; eIndex < entries.length; eIndex++) {
     e = entries[eIndex];

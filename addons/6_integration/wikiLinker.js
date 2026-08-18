@@ -1,20 +1,20 @@
 /*
 ========================================
-B9 Wiki Linker v1.02 (sys 3.00)
+B9 Wiki Linker v1.03 (sys 3.00)
 ========================================
 */
 
 function getWikiLinkerVersion() {
   return {
     name: "wikiLinker",
-    version: "1.02",
+    version: "1.03",
     sysVersion: "3.00",
     path: "addons/6_integration/wikiLinker.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("wikiLinker", "1.02", "3.00", "addons/6_integration/wikiLinker.js", true);
+  registerAtagLibVersion("wikiLinker", "1.03", "3.00", "addons/6_integration/wikiLinker.js", true);
 }
 
 function wikiLinkerTrim(s) {
@@ -36,7 +36,8 @@ function makeWikiSearchUrl(title, cfg) {
 function applyWikiLinker(cfg) {
   cfg = cfg || {};
 
-  var e = cfg.entryObj || entry();
+  if (cfg.enabled === false) return "";
+  var e = cfg.entryObj || cfg.entry || entry();
   var sourceTitleField = cfg.sourceTitleField || cfg.titleField || "Titel";
   var targetField = cfg.targetField || "Wikipedia";
   var url;

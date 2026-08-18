@@ -1,20 +1,20 @@
 /*
 ========================================
-B5 Floating Average v1.02 (sys 3.00)
+B5 Floating Average v1.03 (sys 3.00)
 ========================================
 */
 
 function getFloatingAverageVersion() {
   return {
     name: "floatingAverage",
-    version: "1.02",
+    version: "1.03",
     sysVersion: "3.00",
     path: "addons/3_workflow/floatingAverage.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("floatingAverage", "1.02", "3.00", "addons/3_workflow/floatingAverage.js", true);
+  registerAtagLibVersion("floatingAverage", "1.03", "3.00", "addons/3_workflow/floatingAverage.js", true);
 }
 
 function floatingTrim(s) {
@@ -193,7 +193,7 @@ function updateAverage(cfg) {
   cfg = cfg || {};
 
   var entries = cfg.entries || [];
-  var currentEntry = cfg.currentEntry || null;
+  var currentEntry = cfg.currentEntry || cfg.entryObj || cfg.entry || null;
   var fieldDate = cfg.fieldDate;
   var groupFields = cfg.groupFields || [];
   var fieldValue = cfg.fieldValue;
@@ -218,6 +218,7 @@ function updateAverage(cfg) {
   var k;
   var value;
 
+  if (cfg.enabled === false) return result;
   if (isNaN(avgCount) || avgCount < 1) avgCount = 3;
   if (isNaN(skipFirst) || skipFirst < 0) skipFirst = 0;
 

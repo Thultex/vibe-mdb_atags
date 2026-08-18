@@ -1,20 +1,20 @@
 /*
 ========================================
-C1 Multi Choice Helpers v1.03 (sys 3.00)
+C1 Multi Choice Helpers v1.04 (sys 3.00)
 ========================================
 */
 
 function getMultiChoiceHelpersVersion() {
   return {
     name: "multiChoiceHelpers",
-    version: "1.03",
+    version: "1.04",
     sysVersion: "3.00",
     path: "addons/z_generell/multiChoiceHelpers.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("multiChoiceHelpers", "1.03", "3.00", "addons/z_generell/multiChoiceHelpers.js", true);
+  registerAtagLibVersion("multiChoiceHelpers", "1.04", "3.00", "addons/z_generell/multiChoiceHelpers.js", true);
 }
 
 function multiChoiceIsArray(val) {
@@ -81,12 +81,14 @@ function multiChoiceContains(arr, value) {
 
 function resolveMultiChoiceEntry(cfg) {
   if (cfg && cfg.entryObj) return cfg.entryObj;
+  if (cfg && cfg.entry) return cfg.entry;
   return entry();
 }
 
 function multiChoiceAppend(cfg) {
   cfg = cfg || {};
 
+  if (cfg.enabled === false) return false;
   var e = resolveMultiChoiceEntry(cfg);
   var field = cfg.field;
   var value = cfg.value;
@@ -106,6 +108,7 @@ function multiChoiceAppend(cfg) {
 function multiChoiceRemove(cfg) {
   cfg = cfg || {};
 
+  if (cfg.enabled === false) return false;
   var e = resolveMultiChoiceEntry(cfg);
   var field = cfg.field;
   var value = cfg.value;

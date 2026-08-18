@@ -1,20 +1,20 @@
 /*
 ========================================
-B7 Time Marker v1.42 (sys 3.00)
+B7 Time Marker v1.43 (sys 3.00)
 ========================================
 */
 
 function getTimeMarkerVersion() {
   return {
     name: "timeMarker",
-    version: "1.42",
+    version: "1.43",
     sysVersion: "3.00",
     path: "addons/3_workflow/timeMarker.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("timeMarker", "1.42", "3.00", "addons/3_workflow/timeMarker.js", true);
+  registerAtagLibVersion("timeMarker", "1.43", "3.00", "addons/3_workflow/timeMarker.js", true);
 }
 
 function toDateSafe(v) {
@@ -520,9 +520,10 @@ function clearTimeMarkerRowsText(text, cfg) {
 function clearTimeMarkerRows(cfg) {
   cfg = cfg || {};
 
-  var e = cfg.entryObj || entry();
+  if (cfg.enabled === false) return false;
+  var e = cfg.entryObj || cfg.entry || entry();
   var targetTextField = resolveTimeMarkerTextField(cfg);
-  var fields = cfg.fields;
+  var fields = cfg.fields != null ? cfg.fields : cfg.field;
   var text;
   var rawHours;
   var newText;
@@ -538,7 +539,7 @@ function clearTimeMarkerRows(cfg) {
       if (!fields[i]) continue;
       fieldCfg = {};
       for (key in cfg) {
-        if (cfg.hasOwnProperty(key) && key !== "fields" && key !== "targetTextField" && key !== "textField") {
+        if (cfg.hasOwnProperty(key) && key !== "fields" && key !== "field" && key !== "targetTextField" && key !== "textField") {
           fieldCfg[key] = cfg[key];
         }
       }
@@ -649,7 +650,8 @@ function insertSimple(text, newLine, insertMode) {
 function appendTimeMarker(cfg) {
   cfg = cfg || {};
 
-  var e = cfg.entryObj || entry();
+  if (cfg.enabled === false) return false;
+  var e = cfg.entryObj || cfg.entry || entry();
   var targetTextField = resolveTimeMarkerTextField(cfg);
   if (!e || !targetTextField) return false;
 
@@ -703,9 +705,10 @@ function appendTimeMarker(cfg) {
 function cleanupTimeMarker(cfg) {
   cfg = cfg || {};
 
-  var e = cfg.entryObj || entry();
+  if (cfg.enabled === false) return false;
+  var e = cfg.entryObj || cfg.entry || entry();
   var targetTextField = resolveTimeMarkerTextField(cfg);
-  var fields = cfg.fields;
+  var fields = cfg.fields != null ? cfg.fields : cfg.field;
   var results;
   var i;
   var fieldCfg;
@@ -718,7 +721,7 @@ function cleanupTimeMarker(cfg) {
       if (!fields[i]) continue;
       fieldCfg = {};
       for (key in cfg) {
-        if (cfg.hasOwnProperty(key) && key !== "fields" && key !== "targetTextField" && key !== "textField") {
+        if (cfg.hasOwnProperty(key) && key !== "fields" && key !== "field" && key !== "targetTextField" && key !== "textField") {
           fieldCfg[key] = cfg[key];
         }
       }

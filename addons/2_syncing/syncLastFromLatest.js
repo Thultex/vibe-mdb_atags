@@ -1,20 +1,20 @@
 /*
 ========================================
-B4 Sync Last From Latest v1.08 (sys 3.00)
+B4 Sync Last From Latest v1.09 (sys 3.00)
 ========================================
 */
 
 function getSyncLastFromLatestVersion() {
   return {
     name: "syncLastFromLatest",
-    version: "1.08",
+    version: "1.09",
     sysVersion: "3.00",
     path: "addons/2_syncing/syncLastFromLatest.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("syncLastFromLatest", "1.08", "3.00", "addons/2_syncing/syncLastFromLatest.js", true);
+  registerAtagLibVersion("syncLastFromLatest", "1.09", "3.00", "addons/2_syncing/syncLastFromLatest.js", true);
 }
 
 function slflTrim(s) {
@@ -373,7 +373,11 @@ function slflCopyField(sourceEntry, targetEntry, sourceField, targetField, onlyI
 function syncLastFromLatest(cfg) {
   cfg = cfg || {};
 
-  var currentEntry = cfg.entryObj || entry();
+  if (cfg.enabled === false) {
+    return { sourceEntry: null, updated: [], skipped: [] };
+  }
+
+  var currentEntry = cfg.entryObj || cfg.currentEntry || cfg.entry || entry();
   var entries = cfg.entries || lib().entries();
   var fieldDate = cfg.fieldDate || cfg.dateField || null;
   var maxEntries = cfg.maxEntries != null ? cfg.maxEntries : cfg.maxScan;
@@ -402,7 +406,7 @@ function syncLastFromLatest(cfg) {
     return result;
   }
 
-  fields = slflNormalizeFields(cfg.fields);
+  fields = slflNormalizeFields(cfg.fields != null ? cfg.fields : cfg.field);
   for (i = 0; i < fields.length; i++) {
     slflCopyField(latestEntry, currentEntry, fields[i], fields[i], onlyIfEmpty, result, cfg, null);
   }

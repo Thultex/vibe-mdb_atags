@@ -1,20 +1,20 @@
 /*
 ========================================
-B8 Obsidian Linker v1.24 (sys 3.00)
+B8 Obsidian Linker v1.25 (sys 3.00)
 ========================================
 */
 
 function getObsidianLinkerVersion() {
   return {
     name: "obsidianLinker",
-    version: "1.24",
+    version: "1.25",
     sysVersion: "3.00",
     path: "addons/6_integration/obsidianLinker.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("obsidianLinker", "1.24", "3.00", "addons/6_integration/obsidianLinker.js", true);
+  registerAtagLibVersion("obsidianLinker", "1.25", "3.00", "addons/6_integration/obsidianLinker.js", true);
 }
 
 function obsTrim(s) {
@@ -369,7 +369,11 @@ function obsBuildOverwriteUri(cfg, e, l) {
 function linkObsidianUri(cfg) {
   cfg = cfg || {};
 
-  var e = cfg.entryObj || entry();
+  if (cfg.enabled === false) {
+    return { overwriteUri: "", obsidianUri: "", mode: "disabled", openResult: { attempted: false, ok: false, method: "disabled", error: "" } };
+  }
+
+  var e = cfg.entryObj || cfg.entry || entry();
   var formatOnly = obsFormatOnly(cfg);
   var l = null;
   var vault = cfg.vault || "ExampleVault";

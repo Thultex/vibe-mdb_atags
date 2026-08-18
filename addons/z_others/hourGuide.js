@@ -1,20 +1,20 @@
 /*
 ========================================
-C3 Hour Guide v1.32 (sys 3.00)
+C3 Hour Guide v1.33 (sys 3.00)
 ========================================
 */
 
 function getHourGuideVersion() {
   return {
     name: "hourGuide",
-    version: "1.32",
+    version: "1.33",
     sysVersion: "3.00",
     path: "addons/z_others/hourGuide.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("hourGuide", "1.32", "3.00", "addons/z_others/hourGuide.js", true);
+  registerAtagLibVersion("hourGuide", "1.33", "3.00", "addons/z_others/hourGuide.js", true);
 }
 
 function hourGuideToNumber(val) {
@@ -434,6 +434,7 @@ function makeHourGuideHtml(hours, cfg) {
 function applyHourGuide(cfg) {
   cfg = cfg || {};
 
+  if (cfg.enabled === false) return "";
   var e = cfg.entryObj || cfg.currentEntry || cfg.targetEntry || cfg.entry || hourGuideEntry();
   var sourceEntry = cfg.sourceEntry || cfg.hoursEntry || e;
   var sourceField = cfg.sourceHoursField || cfg.hoursField || "hours since dose";

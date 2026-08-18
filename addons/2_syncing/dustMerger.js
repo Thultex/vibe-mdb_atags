@@ -1,10 +1,10 @@
 /*
 ========================================
-B10 Dust Merger v0.18 (sys 3.00)
+B10 Dust Merger v0.19 (sys 3.00)
 ========================================
 */
 
-var DUST_MERGER_VERSION = "0.18";
+var DUST_MERGER_VERSION = "0.19";
 
 function getDustMergerVersion() {
   return {
@@ -1062,11 +1062,11 @@ function dmForceMergeEnabled(entryObj, cfg) {
 function dustMerge(cfg) {
   cfg = cfg || {};
 
-  var currentEntry = cfg.entryObj || dmSafeEntry();
+  var currentEntry = cfg.entryObj || cfg.currentEntry || cfg.entry || (cfg.enabled === false ? null : dmSafeEntry());
   var fieldDate = cfg.fieldDate || "Datum";
   var currentDate = dmToDate(dmSafeField(currentEntry, fieldDate));
-  var libraryObj = cfg.libraryObj || cfg.libObj || dmSafeLib(currentEntry);
-  var entries = cfg.entries ? dmToArray(cfg.entries) : dmSafeEntries(libraryObj);
+  var libraryObj = cfg.enabled === false ? null : (cfg.libraryObj || cfg.libObj || dmSafeLib(currentEntry));
+  var entries = cfg.enabled === false ? [] : (cfg.entries ? dmToArray(cfg.entries) : dmSafeEntries(libraryObj));
   var forceMerge;
   var targetEntry;
   var map = dmNormalizeMap(cfg.map || cfg.processMap);
@@ -1091,6 +1091,7 @@ function dustMerge(cfg) {
   var item;
   var changed;
 
+  if (cfg.enabled === false) return result;
   if (!currentEntry) {
     result.errors.push("Aktueller Eintrag fehlt");
     dmWriteDebug(currentEntry, cfg, result, "missing_source");

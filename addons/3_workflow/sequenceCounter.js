@@ -1,20 +1,20 @@
 /*
 ========================================
-B6 Sequence Counter v1.07 (sys 3.00)
+B6 Sequence Counter v1.08 (sys 3.00)
 ========================================
 */
 
 function getSequenceCounterVersion() {
   return {
     name: "sequenceCounter",
-    version: "1.07",
+    version: "1.08",
     sysVersion: "3.00",
     path: "addons/3_workflow/sequenceCounter.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("sequenceCounter", "1.07", "3.00", "addons/3_workflow/sequenceCounter.js", true);
+  registerAtagLibVersion("sequenceCounter", "1.08", "3.00", "addons/3_workflow/sequenceCounter.js", true);
 }
 
 function sequenceTrim(s) {
@@ -241,7 +241,7 @@ function updateSequenceSpree(cfg) {
   cfg = cfg || {};
 
   var entries = cfg.entries || [];
-  var currentEntry = cfg.currentEntry || cfg.entryObj || null;
+  var currentEntry = cfg.currentEntry || cfg.entryObj || cfg.entry || null;
   var fieldDate = cfg.fieldDate;
   var groupFields = cfg.groupFields || [];
   var fieldSequence = cfg.fieldSequence || "";
@@ -264,6 +264,7 @@ function updateSequenceSpree(cfg) {
   var row;
   var e;
 
+  if (cfg.enabled === false) return result;
   if (currentEntry) calcEntries = sequenceEntriesWithCurrent(entries, currentEntry);
 
   if (!calcEntries || !calcEntries.length || !fieldDate) return result;

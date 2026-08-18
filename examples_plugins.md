@@ -18,6 +18,14 @@ Kopierbare Beispiele für die öffentlichen Trigger- und Script-Funktionen in `a
 
 ## Gemeinsame Optionswerte
 
+### Gemeinsame Aufrufsteuerung
+
+- `entry`: expliziter aktueller Eintrag für einzelne Operationen; `entryObj` und bei Workflow-Funktionen `currentEntry` bleiben als Aliase kompatibel.
+- `enabled`: `true` führt die Operation aus; `false` beendet sie ohne Feldzugriff, Änderung oder andere Nachaktion.
+- `fields`: Liste mehrerer Felder; Mehrfeld-Funktionen akzeptieren zusätzlich `field` als Alias für einen einzelnen Feldnamen oder eine Liste. Funktionen mit eindeutigem einzelnen Schreibfeld behalten ihre spezifischen Namen wie `tagField` oder `targetField`.
+
+Die gemeinsamen Optionen werden hier zentral erklärt. Die Parameterabschnitte der Funktionen ergänzen die jeweils funktionsspezifischen Angaben.
+
 ### Gemeinsame Zeitoptionen
 
 - `sourceMode`: `realtime` nutzt die aktuelle Tageszeit; `realtime_since` berechnet Stunden seit `startDatetimeField`; `datetime` liest die Tageszeit aus `sourceDatetimeField`; `hours` liest eine Zahl aus `sourceHoursField`.
@@ -38,7 +46,8 @@ Kopierbare Beispiele für die öffentlichen Trigger- und Script-Funktionen in `a
 
 ```js
 var parsedPairs = applyTagPairParser({
-  entryObj: entry(),
+  enabled: true,
+  entry: entry(),
   tagField: "Tags",
   targetTextField: "Notiz",
   appendMode: "newline",
@@ -48,7 +57,7 @@ var parsedPairs = applyTagPairParser({
 
 Parameter:
 
-- `entryObj`: zu bearbeitender Eintrag; Standard ist `entry()`.
+- `entry` / `entryObj`: zu bearbeitender Eintrag; Standard ist `entry()`.
 - `tagField`: Memento-Tagfeld mit Name-/Wert-Paaren.
 - `targetTextField`: Textfeld für die umgewandelten Atags.
 - `appendMode`: steuert das Anfügen an vorhandenen Text.
@@ -61,6 +70,7 @@ Parameter:
 
 ```js
 var pairResults = bulkApplyTagPairParser({
+  enabled: true,
   tagField: "Tags",
   targetTextField: "Notiz",
   appendMode: "newline",
@@ -86,16 +96,17 @@ Parameter:
 
 ```js
 syncFieldTo({
-  entryObj: entry(),
-  fields: ["Field1", "Field2"],
+  enabled: true,
+  entry: entry(),
+  field: ["Field1", "Field2"],
   overwrite: true
 });
 ```
 
 Parameter:
 
-- `entryObj`: aktueller Zieleintrag.
-- `fields`: Felder, die vom ersten Library-Eintrag gelesen werden.
+- `entry` / `entryObj`: aktueller Zieleintrag.
+- `fields` / `field`: Felder, die vom ersten Library-Eintrag gelesen werden.
 - `overwrite`: erlaubt das Ersetzen bereits gefüllter Zielwerte.
 
 <a id="syncfieldback"></a>
@@ -105,7 +116,8 @@ Parameter:
 
 ```js
 syncFieldBack({
-  entryObj: entry(),
+  enabled: true,
+  entry: entry(),
   fields: ["Field1", "Field2"],
   overwrite: true
 });
@@ -113,7 +125,7 @@ syncFieldBack({
 
 Parameter:
 
-- `entryObj`: Quelleintrag.
+- `entry` / `entryObj`: Quelleintrag.
 - `fields`: Felder, die in den ersten Library-Eintrag zurückgeschrieben werden.
 - `overwrite`: erlaubt das Ersetzen vorhandener Werte; leere Quellen werden übersprungen.
 
@@ -124,7 +136,8 @@ Parameter:
 
 ```js
 var syncResults = syncFieldAll({
-  entryObj: entry(),
+  enabled: true,
+  entry: entry(),
   fields: ["Field1", "Field2"],
   overwrite: true
 });
@@ -132,7 +145,7 @@ var syncResults = syncFieldAll({
 
 Parameter:
 
-- `entryObj`: liefert bei Bedarf die zugehörige Library.
+- `entry` / `entryObj`: liefert bei Bedarf die zugehörige Library.
 - `fields`: Felder, die vom ersten Eintrag an alle Einträge verteilt werden.
 - `overwrite`: ersetzt bereits gefüllte Ziele.
 
@@ -183,7 +196,8 @@ Parameter:
 
 ```js
 var latestSync = syncLastFromLatest({
-  entryObj: entry(),
+  enabled: true,
+  entry: entry(),
   entries: lib().entries(),
   fieldDate: "Einnahmedatum",
   map: {
@@ -200,7 +214,7 @@ var latestSync = syncLastFromLatest({
 
 Parameter:
 
-- `entryObj`, `entries`: Ziel und Kandidatenliste.
+- `entry` / `entryObj` / `currentEntry`, `entries`: Ziel und Kandidatenliste.
 - `fieldDate`: wählt den letzten anderen Eintrag nach Datum; ohne Feld gilt die Library-Reihenfolge.
 - `fields`: gleiche Feldnamen kopieren; `map` ordnet Ziel zu Quelle und optional `append`/`prepend` zu.
 - `onlyIfEmpty`: schreibt nur in leere Ziele.
@@ -219,7 +233,8 @@ Parameter:
 
 ```js
 var mergeResult = dustMerge({
-  entryObj: entry(),
+  enabled: true,
+  entry: entry(),
   entries: lib().entries(),
   fieldDate: "Datum",
   titleField: "Titel",
@@ -249,7 +264,7 @@ var mergeResult = dustMerge({
 
 Parameter:
 
-- `entryObj`, `entries`, `fieldDate`: Quelle, Kandidaten und Datumsfeld.
+- `entry` / `entryObj` / `currentEntry`, `entries`, `fieldDate`: Quelle, Kandidaten und Datumsfeld.
 - `searchLimit`, `mergeWindowHours`, `dayStartHour`: Such- und Zeitfenster.
 - `map`: Felder mit Merge-Modus und Datentyp.
 - `blockMap`: Felder, deren Konflikt einen Merge verhindert.
@@ -265,6 +280,7 @@ Parameter:
 
 ```js
 var legacyMergeResult = dustMerger({
+  enabled: true,
   fieldDate: "Datum",
   map: [
     { name: "Notiz", mode: "append", datatype: "string" }
@@ -288,6 +304,7 @@ Parameter:
 
 ```js
 var templateNames = getTemplateFieldNames({
+  enabled: true,
   entry: entry(),
   sourceField: "Record",
   templateSlotMarker: "_"
@@ -308,6 +325,7 @@ Parameter:
 
 ```js
 var transfer = moveFilledTemplates({
+  enabled: true,
   entry: entry(),
   sourceField: "Record",
   targetField: "Notiz",
@@ -339,6 +357,7 @@ Parameter:
 
 ```js
 var transferStatus = moveAndTrackTemplates({
+  enabled: true,
   entry: entry(),
   sourceField: "Record",
   targetField: "Notiz",
@@ -375,8 +394,9 @@ Parameter:
 
 ```js
 var averageResult = updateAverage({
+  enabled: true,
   entries: lib().entries(),
-  currentEntry: entry(),
+  entry: entry(),
   fieldDate: "Einnahmedatum",
   groupFields: ["Dosis"],
   fieldValue: "Ausgabewert GW+AT",
@@ -390,7 +410,7 @@ var averageResult = updateAverage({
 
 Parameter:
 
-- `entries`, `currentEntry`, `fieldDate`: Datenbasis, Live-Eintrag und Sortierdatum.
+- `entries`, `entry` / `currentEntry` / `entryObj`, `fieldDate`: Datenbasis, Live-Eintrag und Sortierdatum.
 - `groupFields`: trennt unabhängige Durchschnittsgruppen.
 - `fieldValue`, `fieldResult`: Quellwert und Zielfeld.
 - `ignoreFields`: Einträge mit gesetztem Ignore-Feld auslassen.
@@ -407,8 +427,9 @@ Parameter:
 
 ```js
 var sequenceResult = updateSequenceSpree({
+  enabled: true,
   entries: lib().entries(),
-  currentEntry: entry(),
+  entry: entry(),
   fieldDate: "Einnahmedatum",
   groupFields: ["Dosis"],
   fieldSequence: "Reihe",
@@ -422,7 +443,7 @@ var sequenceResult = updateSequenceSpree({
 
 Parameter:
 
-- `entries`, `currentEntry`, `fieldDate`, `groupFields`: Datenbasis und Gruppierung.
+- `entries`, `entry` / `currentEntry` / `entryObj`, `fieldDate`, `groupFields`: Datenbasis und Gruppierung.
 - `fieldSequence`, `fieldSpree`: aktuelle Sequenz- und Spree-Ziele.
 - `fieldSequenceMax`, `fieldSpreeMax`: bisherige Maximalwerte.
 - `fieldBiasedSpree`, `biasedSpreeCount`: markierte Spree und erlaubte Unterbrechungen.
@@ -438,7 +459,8 @@ Parameter:
 
 ```js
 appendTimeMarker({
-  entryObj: entry(),
+  enabled: true,
+  entry: entry(),
   targetTextField: "Notiz",
   sourceMode: "realtime_since",
   startDatetimeField: "Einnahmedatum",
@@ -451,7 +473,7 @@ appendTimeMarker({
 
 Parameter:
 
-- `entryObj`, `targetTextField`: Zieleintrag und Textfeld.
+- `entry` / `entryObj`, `targetTextField`: Zieleintrag und Textfeld.
 - `sourceMode`: Zeitquelle aus der vollständigen Liste [Gemeinsame Zeitoptionen](#gemeinsame-zeitoptionen).
 - `startDatetimeField`: Ausgangszeit für `realtime_since`.
 - `stepHours`, `roundMode`: Raster und Rundung; mögliche Rundungswerte stehen in der gemeinsamen Liste.
@@ -465,7 +487,8 @@ Parameter:
 
 ```js
 cleanupTimeMarker({
-  entryObj: entry(),
+  enabled: true,
+  entry: entry(),
   fields: ["Notiz"],
   mergeSameRows: true,
   sameRowSeparator: " ",
@@ -480,7 +503,7 @@ cleanupTimeMarker({
 
 Parameter:
 
-- `entryObj`, `fields`: Eintrag und zu bereinigende Textfelder.
+- `entry` / `entryObj`, `fields` / `field`: Eintrag und zu bereinigende Textfelder.
 - `mergeSameRows`: führt identische Zeitlabels zusammen.
 - `sameRowSeparator`, `mergeSameRowContents`: Trenner und Duplikatbehandlung.
 - Zeitoptionen entsprechen `appendTimeMarker()`; Cleanup fügt keinen leeren Marker an.
@@ -492,7 +515,8 @@ Parameter:
 
 ```js
 clearTimeMarkerRows({
-  entryObj: entry(),
+  enabled: true,
+  entry: entry(),
   fields: ["Notiz", "Record"],
   mode: "remove"
 });
@@ -500,7 +524,7 @@ clearTimeMarkerRows({
 
 Parameter:
 
-- `entryObj`, `fields`: Eintrag und Textfelder.
+- `entry` / `entryObj`, `fields` / `field`: Eintrag und Textfelder.
 - `mode`: steuert, ob alte Row-Marker entfernt oder deren Inhalt erhalten wird.
 
 ## `6_integration`
@@ -516,7 +540,8 @@ Parameter:
 
 ```js
 var obsidianResult = linkObsidianUri({
-  entryObj: entry(),
+  enabled: true,
+  entry: entry(),
   contentField: "Text",
   overwriteMarkdownField: "Obsidian Overwrite Link",
   obsidianMarkdownField: "Obsidian Link",
@@ -533,7 +558,7 @@ var obsidianResult = linkObsidianUri({
 
 Parameter:
 
-- `entryObj`, `contentField`, `dateField`: Quelleintrag, Inhalt und Datum.
+- `entry` / `entryObj`, `contentField`, `dateField`: Quelleintrag, Inhalt und Datum.
 - `overwriteMarkdownField`, `obsidianMarkdownField`, `mementoLinkField`: Link-Zielfelder.
 - `vault`, `folderPath`: Obsidian-Vault und Zielordner.
 - `tags`, `folderAsTag`: Frontmatter-/Ordner-Tags.
@@ -547,14 +572,15 @@ Parameter:
 
 ```js
 formatObsidianUri({
-  entryObj: entry(),
+  enabled: true,
+  entry: entry(),
   field: "Obsidian Link"
 });
 ```
 
 Parameter:
 
-- `entryObj`: Eintrag mit dem Linkfeld.
+- `entry` / `entryObj`: Eintrag mit dem Linkfeld.
 - `field`: Feld, dessen URI/Markdown-Darstellung normalisiert wird.
 
 ### B9 `wikiLinker.js`
@@ -568,7 +594,8 @@ Parameter:
 
 ```js
 var wikiUrl = applyWikiLinker({
-  entryObj: entry(),
+  enabled: true,
+  entry: entry(),
   sourceTitleField: "Titel",
   targetField: "Wikipedia",
   language: "de",
@@ -578,7 +605,7 @@ var wikiUrl = applyWikiLinker({
 
 Parameter:
 
-- `entryObj`: Zieleintrag.
+- `entry` / `entryObj`: Zieleintrag.
 - `sourceTitleField`: Feld mit dem Suchbegriff.
 - `targetField`: Feld für die Wikipedia-Such-URL.
 - `language`: Sprachsubdomain, z. B. `de` oder `en`.
@@ -597,7 +624,8 @@ Parameter:
 
 ```js
 var appended = multiChoiceAppend({
-  entryObj: entry(),
+  enabled: true,
+  entry: entry(),
   field: "Typ",
   value: "Tag"
 });
@@ -605,7 +633,7 @@ var appended = multiChoiceAppend({
 
 Parameter:
 
-- `entryObj`: Zieleintrag.
+- `entry` / `entryObj`: Zieleintrag.
 - `field`: Multi-Choice-Feld.
 - `value`: Wert, der ohne Duplikat angefügt wird.
 
@@ -616,7 +644,8 @@ Parameter:
 
 ```js
 var removed = multiChoiceRemove({
-  entryObj: entry(),
+  enabled: true,
+  entry: entry(),
   field: "Typ",
   value: "Tag"
 });
@@ -624,7 +653,7 @@ var removed = multiChoiceRemove({
 
 Parameter:
 
-- `entryObj`: Zieleintrag.
+- `entry` / `entryObj`: Zieleintrag.
 - `field`: Multi-Choice-Feld.
 - `value`: zu entfernender exakter Wert.
 
@@ -638,7 +667,9 @@ Parameter:
 > Konvertiert und synchronisiert typisierte Text-Hilfsfelder mit ihren eigentlichen Zielfeldern.
 
 ```js
-var typedSync = syncTypedTextFields(lib().entries(), {
+var typedSync = syncTypedTextFields({
+  enabled: true,
+  entry: entry(),
   clearSource: false,
   onlyIfTargetEmpty: false,
   dryRun: false
@@ -647,7 +678,7 @@ var typedSync = syncTypedTextFields(lib().entries(), {
 
 Parameter:
 
-- Erster Parameter: einzelner Eintrag, Entry-Liste oder ohne Angabe der aktuelle Eintrag.
+- `entry` / `entryObj` / `currentEntry`: einzelner Eintrag im Config-Aufruf; alternativ kann weiterhin ein Eintrag oder eine Entry-Liste als erster Positionsparameter übergeben werden.
 - `clearSource`: leert das typisierte Text-Quellfeld nach erfolgreicher Übertragung.
 - `onlyIfTargetEmpty`: schützt bereits gefüllte Zielfelder.
 - `dryRun`: prüft und protokolliert ohne zu schreiben.
@@ -665,7 +696,8 @@ Parameter:
 
 ```js
 var guideResult = applyHourGuide({
-  entryObj: entry(),
+  enabled: true,
+  entry: entry(),
   sourceHoursField: "hours since dose",
   targetField: "Hour Guide",
   planField: "Hour Guide JSON",
@@ -676,7 +708,7 @@ var guideResult = applyHourGuide({
 
 Parameter:
 
-- `entryObj`: Eintrag mit Stundenquelle und Ziel.
+- `entry` / `entryObj` / `currentEntry`: Eintrag mit Stundenquelle und Ziel.
 - `sourceHoursField`: numerische Stunden seit dem Start.
 - `targetField`: HTML-/Textziel für den passenden Guide-Block.
 - `planField`: optionales JSON-Feld mit eigener Guide-Konfiguration.
