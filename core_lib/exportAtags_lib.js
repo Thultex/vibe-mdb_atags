@@ -1,6 +1,6 @@
 /*
 ========================================
-#2 exportAtags Lib v1.86 (sys 3.00)
+#2 exportAtags Lib v1.87 (sys 3.00)
 ========================================
 */
 
@@ -8,14 +8,14 @@
 function getExportAtagsLibVersion() {
   return {
     name: "exportAtags_lib",
-    version: "1.86",
+    version: "1.87",
     sysVersion: "3.00",
     path: "core_lib/exportAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("exportAtags_lib", "1.86", "3.00", "core_lib/exportAtags_lib.js");
+  registerAtagLibVersion("exportAtags_lib", "1.87", "3.00", "core_lib/exportAtags_lib.js");
 }
 function atagCategoryAggregateMode(cfg, context) {
   if (cfg && cfg.categoryAggregateMode !== undefined) return cfg.categoryAggregateMode;
@@ -102,6 +102,51 @@ function atagCategoryDetailPrefix(displayMode, context) {
 
 function atagCategoryChildNamePrefix(sign) {
   return sign === -1 ? "\u208B" : "";
+}
+
+function atagCommentsVisible(cfg) {
+  return !(cfg && cfg.showComments === false);
+}
+
+function atagCategoryCommentsVisible(cfg) {
+  return !!(cfg && cfg.showCommentsCategory === true);
+}
+
+function atagItemCommentList(item) {
+  if (item && isArrayValue(item.comments)) return item.comments;
+  return [item && item.comment ? String(item.comment) : ""];
+}
+
+function formatAtagCommentList(comments, visible) {
+  var out = [];
+  var hasComment = false;
+  var i;
+  var comment;
+
+  if (!visible) return "";
+  for (i = 0; i < (comments || []).length; i++) {
+    comment = comments[i] == null ? "" : String(comments[i]).replace(/^\s+|\s+$/g, "");
+    out.push(comment);
+    if (comment) hasComment = true;
+  }
+  return hasComment ? " (" + out.join(",") + ")" : "";
+}
+
+function collectAtagCategoryComments(childNames, valueIndex) {
+  var out = [];
+  var i;
+  var j;
+  var list;
+  var comments;
+
+  for (i = 0; i < (childNames || []).length; i++) {
+    list = atagValueIndexList(valueIndex, childNames[i]) || [];
+    for (j = 0; j < list.length; j++) {
+      comments = atagItemCommentList(list[j]);
+      out = out.concat(comments);
+    }
+  }
+  return out;
 }
 
 function formatAtagCategoryChildDetail(name, sign, value, decimals, hasDecimal) {
@@ -216,6 +261,10 @@ function formatAtagCategorySummary(item, items, cfg, context, valueIndex) {
   var i;
   var agg;
   var displayMode = atagCategoryDisplayValuesMode(cfg, context || "default");
+  var commentSuffix = formatAtagCommentList(
+    collectAtagCategoryComments(children, valueIndex || buildAtagValueIndex(items)),
+    atagCategoryCommentsVisible(cfg)
+  );
 
   for (i = 0; i < values.length; i++) {
     nums.push(values[i].value);
@@ -232,16 +281,16 @@ function formatAtagCategorySummary(item, items, cfg, context, valueIndex) {
       if (displayMode === "count") text += atagCategoryDetailPrefix(displayMode, context) + names.length + "]";
       else if (displayMode === "names") text += atagCategoryDetailPrefix(displayMode, context) + names.join(", ") + "]";
       else if (displayMode === "all") text += atagCategoryDetailPrefix(displayMode, context) + detailParts.join(", ") + "]";
-      return text;
+      return text + commentSuffix;
     }
   }
 
   if (children.length) {
-    if (displayMode === "none") return "";
-    if (displayMode === "count") return "[" + children.length + "]";
-    return children.join(", ");
+    if (displayMode === "none") return commentSuffix.replace(/^\s+/, "");
+    if (displayMode === "count") return "[" + children.length + "]" + commentSuffix;
+    return children.join(", ") + commentSuffix;
   }
-  return item && item.attrText != null ? item.attrText : "";
+  return (item && item.attrText != null ? item.attrText : "") + commentSuffix;
 }
 
 function collectAtagValueSummary(itemName, items, cfg, context, valueMultiplier, valueIndex) {
@@ -259,6 +308,7 @@ function collectAtagValueSummary(itemName, items, cfg, context, valueMultiplier,
   var num;
   var agg;
   var list;
+  var comments = [];
 
   if (!valueIndex) valueIndex = buildAtagValueIndex(items);
   list = atagValueIndexList(valueIndex, itemName) || [];
@@ -270,6 +320,7 @@ function collectAtagValueSummary(itemName, items, cfg, context, valueMultiplier,
     if (num == null) continue;
     num *= multiplier;
     vals.push(num);
+    comments.push(it.comment ? String(it.comment) : "");
     parts.push(formatTagNumberLocale(num, decimals, itemHasDecimalValue(it)));
     if (itemHasDecimalValue(it)) hasDecimal = true;
     if (it.cumulative === true) cumulative = true;
@@ -280,14 +331,14 @@ function collectAtagValueSummary(itemName, items, cfg, context, valueMultiplier,
     agg = computeAggregate(vals, mode);
     if (agg == null) return null;
     return {
-      text: formatTagNumberLocale(agg, decimals, hasDecimal) + (parts.length > 1 && displayMode === "count" ? atagValueDetailPrefix(displayMode, context) + parts.length + "]" : "") + (parts.length > 1 && displayMode === "all" ? atagValueDetailPrefix(displayMode, context) + parts.join(", ") + "]" : ""),
+      text: formatTagNumberLocale(agg, decimals, hasDecimal) + (parts.length > 1 && displayMode === "count" ? atagValueDetailPrefix(displayMode, context) + parts.length + "]" : "") + (parts.length > 1 && displayMode === "all" ? atagValueDetailPrefix(displayMode, context) + parts.join(", ") + "]" : "") + formatAtagCommentList(comments, atagCommentsVisible(cfg)),
       item: firstItem
     };
   }
 
   if (firstItem && firstItem.attrText != null && firstItem.attrText !== "") {
     return {
-      text: String(formatMarkdownValue("", firstItem.attrText, firstItem.rawText)).replace(/^:\s*/, ""),
+      text: String(formatMarkdownValue("", firstItem.attrText, firstItem.rawText)).replace(/^:\s*/, "") + formatAtagCommentList(atagItemCommentList(firstItem), atagCommentsVisible(cfg)),
       item: firstItem
     };
   }
@@ -361,13 +412,15 @@ function aggregateAtagRepeatedStringItems(items, cfg) {
     if (!groups[key]) {
       groups[key] = {
         items: [],
-        parts: []
+        parts: [],
+        comments: []
       };
     }
     if (groups[key].items.length > 0) hasRepeated = true;
     groups[key].items.push(it);
     parts = atagStringParts(it);
     groups[key].parts = groups[key].parts.concat(parts);
+    groups[key].comments = groups[key].comments.concat(atagItemCommentList(it));
   }
 
   if (!hasRepeated) return items;
@@ -398,6 +451,9 @@ function aggregateAtagRepeatedStringItems(items, cfg) {
       clone.rawText = clone.attrText;
     }
 
+    clone.comments = group.comments;
+    delete clone.comment;
+
     out.push(clone);
   }
 
@@ -410,8 +466,8 @@ function buildAtagTextLines(items, cfg) {
   for (var i = 0; i < items.length; i++) {
     var it = categorySummaryItem(items[i], items, cfg, "text", valueIndex);
     if (!includeAtagTextItem(it, cfg)) continue;
-    if (it.attrText != null && it.attrText !== "") lines.push(it.name + ": " + it.attrText);
-    else lines.push(it.name);
+    if (it.attrText != null && it.attrText !== "") lines.push(it.name + ": " + it.attrText + formatAtagCommentList(atagItemCommentList(it), atagCommentsVisible(cfg)));
+    else lines.push(it.name + formatAtagCommentList(atagItemCommentList(it), atagCommentsVisible(cfg)));
   }
   return lines;
 }
@@ -503,6 +559,7 @@ function buildAtagNormalMarkdown(items, cfg) {
   var rowFirstItem = {};
   var rowHasDecimal = {};
   var rowCumulative = {};
+  var rowComments = {};
   var valueIndex = buildAtagValueIndex(items);
   var separatorSourceCount = 0;
   var aggMode = cfg && cfg.rowAggregateMode !== undefined ? cfg.rowAggregateMode : "avg";
@@ -531,18 +588,19 @@ function buildAtagNormalMarkdown(items, cfg) {
     if (!includeAtagTextItem(it, cfg)) continue;
 
     if (it.rowValue == null) {
-      addOutput(it, formatMarkdownValue(label, it.attrText, it.rawText));
+      addOutput(it, formatMarkdownValue(label, it.attrText, it.rawText) + formatAtagCommentList(atagItemCommentList(it), atagCommentsVisible(cfg)));
       continue;
     }
 
     var num = toNumberIfPossible(it.attrValue);
     if (num == null) {
-      addOutput(it, formatMarkdownValue(label, it.attrText, it.rawText));
+      addOutput(it, formatMarkdownValue(label, it.attrText, it.rawText) + formatAtagCommentList(atagItemCommentList(it), atagCommentsVisible(cfg)));
       continue;
     }
 
     if (!rowMap[it.name]) {
       rowMap[it.name] = [];
+      rowComments[it.name] = [];
       rowFirstItem[it.name] = it;
     }
 
@@ -554,6 +612,7 @@ function buildAtagNormalMarkdown(items, cfg) {
     }
 
     rowMap[it.name].push(num);
+    rowComments[it.name].push(it.comment ? String(it.comment) : "");
   }
 
   for (var name in rowMap) {
@@ -578,6 +637,7 @@ function buildAtagNormalMarkdown(items, cfg) {
       if (listParts.length > 1) {
         line += atagMarkdownDetailPrefix("md") + listParts.join(", ") + "]";
       }
+      line += formatAtagCommentList(rowComments[name], atagCommentsVisible(cfg));
 
       addOutput({
         name: firstItem.name,
@@ -589,9 +649,9 @@ function buildAtagNormalMarkdown(items, cfg) {
       }, line);
     } else {
       if (listParts.length === 1) {
-        addOutput(firstItem, rowLabel + ": " + listParts[0]);
+        addOutput(firstItem, rowLabel + ": " + listParts[0] + formatAtagCommentList(rowComments[name], atagCommentsVisible(cfg)));
       } else if (listParts.length > 1) {
-        addOutput(firstItem, rowLabel + atagMarkdownDetailPrefix("md") + listParts.join(", ") + "]");
+        addOutput(firstItem, rowLabel + atagMarkdownDetailPrefix("md") + listParts.join(", ") + "]" + formatAtagCommentList(rowComments[name], atagCommentsVisible(cfg)));
       }
     }
   }

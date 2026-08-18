@@ -71,7 +71,9 @@ function applyTags(cfg) {
     markdownLabelNames: cfg.markdownLabelNames,
     includeBlankTags: cfg.includeBlankTags,
     markdownGroupSeparators: cfg.markdownGroupSeparators,
-    markdownGroupSeparator: cfg.markdownGroupSeparator
+    markdownGroupSeparator: cfg.markdownGroupSeparator,
+    showComments: cfg.showComments,
+    showCommentsCategory: cfg.showCommentsCategory
   });
 
   return result;
@@ -113,6 +115,12 @@ function item(name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, dis
   }
   if (cumulative) out.cumulative = true;
   if (categoryChildSigns) out.categoryChildSigns = categoryChildSigns;
+  return out;
+}
+
+function commentedItem(name, attrText, attrValue, rawText, comment, rowValue, cats, kind) {
+  var out = item(name, attrText, attrValue, rawText, rowValue, null, rowValue == null ? null : String(rowValue), name, cats || [], kind || null);
+  if (comment) out.comment = comment;
   return out;
 }
 
@@ -1386,6 +1394,75 @@ assertEqual(
   "json-repeated-values",
   entryObj.field("Json"),
   "{\"emo\":[1,3],\"info\":\"a, b\"}"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      commentedItem("emo", "+1", 1, "+1", "", null),
+      commentedItem("emo", "+3", 3, "+3", "Info", null),
+      commentedItem("note", "a", "a", "a", "", null),
+      commentedItem("note", "b", "b", "b", "Text", null)
+    ]
+  },
+  targetField: "Json",
+  targetFieldType: "json"
+});
+assertEqual(
+  "json-comments-sparse-and-positioned",
+  entryObj.field("Json"),
+  "{\"emo\":[1,3],\"note\":\"a, b\",\"_atagComments\":{\"emo\":[{\"index\":1,\"text\":\"Info\"}],\"note\":[{\"index\":1,\"text\":\"Text\"}]}}"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      commentedItem("emo", "+1", 1, "+1", "", 1),
+      commentedItem("emo", "+2", 2, "+2", "", 2),
+      commentedItem("emo", "+3", 3, "+3", "", 3),
+      commentedItem("emo", "+4", 4, "+4", "Info", 4)
+    ]
+  },
+  targetField: "MD",
+  targetFieldType: "md"
+});
+assertEqual("md-comments-keep-empty-position", entryObj.field("MD"), "emo: 2,5 - [1, 2, 3, 4] (,,,Info)");
+
+entryObj = makeEntry({});
+var commentTreeItems = [
+  commentedItem("Alpha", "+1", 1, "+1", "", null, ["Emotion"]),
+  commentedItem("Alpha", "+2", 2, "+2", "Info", null, ["Emotion"]),
+  commentedItem("Beta", "-3", -3, "-3", "Negativ", null, ["Emotion"])
+];
+exportAtags({
+  entryObj: entryObj,
+  result: { items: commentTreeItems },
+  targetField: "Tree",
+  targetFieldType: "tree_md"
+});
+assertEqual(
+  "tree-comments-child-default-category-hidden",
+  entryObj.field("Tree"),
+  "Emotion -1  \n\u251c\u2500\u2500 Alpha 2 [2] (,Info)  \n\u2514\u2500\u2500 Beta -3 (Negativ)"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: { items: commentTreeItems },
+  targetField: "Tree",
+  targetFieldType: "tree_md",
+  showComments: false,
+  showCommentsCategory: true
+});
+assertEqual(
+  "tree-comments-child-hidden-category-shown",
+  entryObj.field("Tree"),
+  "Emotion -1 (,Info,Negativ)  \n\u251c\u2500\u2500 Alpha 2 [2]  \n\u2514\u2500\u2500 Beta -3"
 );
 
 entryObj = makeEntry({ MD: "keep" });

@@ -527,11 +527,44 @@ function testTrackTagsCompleteRecognizesLoggedAliasNames() {
   assertArray("track-alias-incomplete", tracked.incompleteTags, ["\u00F6ffnen"]);
 }
 
+function testTagCommentsCoverAllCompactValueForms() {
+  var result = collectAtags({
+    entryObj: makeEntry({
+      Note: "emo#3#hash emo2(direct) mood\u00B2(super) note\"sfas\"(text) row-2(negative)"
+    }),
+    textFields: ["Note"]
+  });
+  var expected = {
+    "emo|3": "hash",
+    "emo|2": "direct",
+    "mood|2": "super",
+    "note|sfas": "text",
+    "row|-2": "negative"
+  };
+  var found = {};
+  var i;
+  var key;
+
+  for (i = 0; i < result.items.length; i++) {
+    key = result.items[i].name + "|" + String(result.items[i].attrValue);
+    if (expected.hasOwnProperty(key)) found[key] = result.items[i].comment || "";
+  }
+  for (key in expected) {
+    if (!expected.hasOwnProperty(key)) continue;
+    if (found[key] !== expected[key]) {
+      var dump = [];
+      for (i = 0; i < result.items.length; i++) dump.push(result.items[i].name + "|" + String(result.items[i].attrValue) + "|" + String(result.items[i].comment));
+      fail("comment-form-" + key + ": expected '" + expected[key] + "' but got '" + found[key] + "' :: " + dump.join(";"));
+    }
+  }
+}
+
 testTrackTagsCompleteUsesCollectorValuesAndTemplates();
 testTrackTagsCompleteAcceptsDirectValueMap();
 testTrackTagsCompleteCanCollectAndUseMappedTagNames();
 testTrackTagsCompleteCanCombineTemplatesAndFilledMap();
 testTrackTagsCompleteWritesDefaultMissingFieldInOrderAndClearsIt();
 testTrackTagsCompleteRecognizesLoggedAliasNames();
+testTagCommentsCoverAllCompactValueForms();
 
 print("OK");

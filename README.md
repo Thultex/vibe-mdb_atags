@@ -843,6 +843,10 @@ inhalt(:tag)
 'tag name'#
 frage#'wer ist der coolste im land'
 frage#"wer ist der coolste im land"
+emo#3#info
+emo2(info)
+emo²(info)
+emo"sfas"(info)
 
 alias:
 @@emo: Emotion
@@ -854,6 +858,12 @@ rows:
 5h: emo3
 2,5: focus+1
 ```
+
+Kommentare schließen ohne Leerzeichen direkt an den Tagwert an. Klammerkommentare funktionieren mit allen vorhandenen Wertformen, etwa `emo2(info)`, `emo²(info)`, `emo-2(info)` und `emo"sfas"(info)`. Die kompakte Hashform `emo#3#info` wird vom Cleaner zu `emo³(info)` normalisiert. Ein Leerzeichen wie in `emo² (info)` trennt den Kommentar absichtlich vom Tag.
+
+Normale Markdown-Tags und Tree-Kinder zeigen Kommentare standardmäßig über `showComments: true`. Mit `showComments: false` werden sie ausgeblendet. Kategorie-Parents blenden die zusammengeführten Kinderkommentare standardmäßig aus; `showCommentsCategory: true` aktiviert sie. Fehlende frühere Kommentare bleiben positionsgenau als leere Kommastellen sichtbar, beispielsweise `(,,,Info)`.
+
+Der JSON-Export speichert Kommentare nur bei tatsächlichem Inhalt in `_atagComments`. Die kompakten Einträge enthalten `index` und `text`, sodass leere Positionen keinen JSON-Platz benötigen und Restore die Metadaten nicht als normales Tag-Zielfeld behandelt.
 
 **Row-System**
 

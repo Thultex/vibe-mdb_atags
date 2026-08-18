@@ -1,20 +1,20 @@
 /*
 ========================================
-A4 Tag Cleaner v1.58 (sys 3.00)
+A4 Tag Cleaner v1.59 (sys 3.00)
 ========================================
 */
 
 function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
-    version: "1.58",
+    version: "1.59",
     sysVersion: "3.00",
     path: "core/tagCleaner.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("tagCleaner", "1.58", "3.00", "core/tagCleaner.js", true);
+  registerAtagLibVersion("tagCleaner", "1.59", "3.00", "core/tagCleaner.js", true);
 }
 
 function splitTagCleanerLines(text) {
@@ -552,9 +552,36 @@ function cleanTagCleanerToken(token, bareAsHash, positiveSignMode) {
   var s = trimAtagLibString(token);
   var mode = normalizeTagCleanerFormatValueMode(positiveSignMode);
   var m;
+  var hashCommentPos;
+  var cleanBase;
+  var comment;
 
   if (!s) return "";
   if (s === "_") return "";
+
+  // Kommentare müssen direkt am Tag bzw. Wert stehen: emo2(info), emo#2#info.
+  m = s.match(/^(.*\S)\(([^()]*)\)$/);
+  if (m) {
+    cleanBase = cleanTagCleanerToken(m[1], bareAsHash, positiveSignMode);
+    comment = trimAtagLibString(m[2]);
+    return cleanBase && comment ? cleanBase + "(" + comment + ")" : cleanBase;
+  }
+
+  hashCommentPos = s.lastIndexOf("#");
+  if (
+    hashCommentPos > 0 &&
+    (
+      s.substring(0, hashCommentPos).indexOf("#") >= 0 ||
+      /^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*(?:'[^']*'|"[^"]*")#/.test(s)
+    )
+  ) {
+    cleanBase = cleanTagCleanerToken(s.substring(0, hashCommentPos), bareAsHash, positiveSignMode);
+    comment = trimAtagLibString(s.substring(hashCommentPos + 1));
+    return cleanBase && comment ? cleanBase + "(" + comment + ")" : cleanBase;
+  }
+
+  m = s.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)(?:'([^']*)'|"([^"]*)")$/);
+  if (m) return m[1] + ":" + normalizeTagCleanerStringValue(m[3] || m[2] || "");
   m = s.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#$/);
   if (m) return m[1] + tagCleanerTagSuffix();
   m = s.match(/^#([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)$/);
@@ -576,7 +603,12 @@ function cleanTagCleanerToken(token, bareAsHash, positiveSignMode) {
     return m[1] + ":" + normalizeTagCleanerStringValue(m[2]);
   }
   m = s.match(/^([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#(.+)$/);
-  if (m) return m[1] + ":" + normalizeTagCleanerStringValue(m[2]);
+  if (m) {
+    if (isTagCleanerNumberValue(normalizeTagCleanerStringValue(m[2]))) {
+      return m[1] + tagCleanerSuperscript(normalizeTagCleanerStringValue(m[2]), positiveSignMode);
+    }
+    return m[1] + ":" + normalizeTagCleanerStringValue(m[2]);
+  }
   if (/#/.test(s) || /:/.test(s)) return s;
   if (mode === "none") {
     if (bareAsHash && /^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*$/.test(s)) return s + tagCleanerTagSuffix();
@@ -656,6 +688,7 @@ function splitTagCleanerBarTokens(text) {
   var inSingle = false;
   var inDouble = false;
   var inTemplateSlot = false;
+  var commentDepth = 0;
   var i;
   var ch;
   var isSeparator;
@@ -682,8 +715,13 @@ function splitTagCleanerBarTokens(text) {
       }
     }
 
+    if (!inSingle && !inDouble && !inTemplateSlot) {
+      if (ch === "(") commentDepth++;
+      else if (ch === ")" && commentDepth > 0) commentDepth--;
+    }
+
     isSeparator = /\s/.test(ch) || (ch === "," && !(/\d/.test(s.charAt(i - 1)) && /\d/.test(s.charAt(i + 1))));
-    if (isSeparator && !inSingle && !inDouble && !inTemplateSlot) {
+    if (isSeparator && !inSingle && !inDouble && !inTemplateSlot && commentDepth === 0) {
       if (token) out.push(token);
       token = "";
     } else {
@@ -838,8 +876,39 @@ function normalizeTagCleanerDoubleColonSpacingInLine(line) {
   return out.join("");
 }
 
+function normalizeTagCleanerCommentsInLine(line, positiveSignMode) {
+  var s = String(line || "");
+  var state = buildAtagLibQuoteState(s);
+  var supers = tagCleanerSuperscriptChars();
+  var rx = new RegExp(
+    "(^|[\\s,;.!?()\\[\\]{}])(" +
+      "[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\\-]*#(?:'[^']*'|\"[^\"]*\"|[^#\\s()]+)#[^\\s,;.!?()\\[\\]{}]+" +
+      "|[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\\-]*(?:'[^']*'|\"[^\"]*\"|[+\\-]?\\d+(?:[.,]\\d+)?|[" + supers + "]+)\\([^)]*\\)" +
+    ")",
+    "g"
+  );
+  var out = [];
+  var last = 0;
+  var m;
+  var start;
+
+  while ((m = rx.exec(s)) !== null) {
+    start = m.index + String(m[1] || "").length;
+    if (!isInsideAtagLibQuoteState(state, start)) {
+      out.push(s.substring(last, start));
+      out.push(cleanTagCleanerToken(m[2] || "", false, positiveSignMode));
+      last = rx.lastIndex;
+    }
+    if (m[0] === "") rx.lastIndex++;
+  }
+
+  out.push(s.substring(last));
+  return out.join("");
+}
+
 function cleanTagCleanerInlineLine(line, positiveSignMode, displayMap, cfg) {
   var s = String(line || "");
+  s = normalizeTagCleanerCommentsInLine(s, positiveSignMode);
   s = normalizeTagCleanerIssue50SuffixesInLine(s, positiveSignMode);
   s = cleanTagCleanerSimpleHashTagsInLine(s);
   if (normalizeTagCleanerFormatValueMode(positiveSignMode) === "none") return s;

@@ -177,6 +177,11 @@ for (i = 0; i < aggregationExampleOptions.length; i++) {
 assertTrue("markdown example shows avg category default", coreExamples.indexOf('categoryAggregateMode: "avg"') >= 0);
 assertTrue("tree example shows max_add_abs category default", coreExamples.indexOf('categoryValueMode: "max_add_abs"') >= 0);
 assertTrue("restore example shows max_add_abs category default", coreExamples.indexOf('categoryAggregateMode: "max_add_abs"') >= 0);
+assertTrue("export example shows normal comment default", coreExamples.indexOf("showComments: true") >= 0);
+assertTrue("export example shows category comment default", coreExamples.indexOf("showCommentsCategory: false") >= 0);
+assertTrue("examples document sparse comment JSON", coreExamples.indexOf("`_atagComments`") >= 0 && coreExamples.indexOf("`index`") >= 0);
+assertTrue("examples document hash comments", coreExamples.indexOf("emo#3#info") >= 0);
+assertTrue("examples document compact text comments", coreExamples.indexOf('emo"sfas"(info)') >= 0);
 
 var corePublicFunctions = [
   "collectAtags",

@@ -945,6 +945,20 @@ function testBulkRestoreRebuildsFieldMapForEachEntryLibrary() {
   assertEqual("bulk-second-entry-library-field", second.field("Kopfschmerz_"), 3);
 }
 
+function testAutoRestoreSkipsCommentMetadata() {
+  var entryObj = makeStrictEntry({
+    Json: "{\"emo\":[1,3],\"_atagComments\":{\"emo\":[{\"index\":1,\"text\":\"Info\"}]}}",
+    emo_: null
+  });
+
+  restoreAtags({
+    entryObj: entryObj,
+    sourceField: "Json"
+  });
+
+  assertEqual("comment-metadata-value-restored", entryObj.field("emo_"), 2);
+}
+
 testDirectMapIsExclusiveByDefault();
 testMappingsCanRunAdditionalAutoRestore();
 testAutoRestoreUsesUnderscoreSuffixByDefault();
@@ -984,5 +998,6 @@ testDebugLogReportsRestoreSteps();
 testAutoRestoreSkipsMissingTargetsWhenFieldListIsKnown();
 testAutoRestoreUsesPassedEntryLibraryInsteadOfGlobalLibrary();
 testBulkRestoreRebuildsFieldMapForEachEntryLibrary();
+testAutoRestoreSkipsCommentMetadata();
 
 WScript.Echo("OK");

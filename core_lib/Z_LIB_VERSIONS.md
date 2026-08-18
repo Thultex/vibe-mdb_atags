@@ -4,9 +4,9 @@ Aktuelle Library-Dateien und Versionen:
 
 | Name | Version | Sys | Pfad |
 | --- | ---: | ---: | --- |
-| #1 collectAtags_lib | 1.74 | 3.00 | `core_lib/collectAtags_lib.js` |
-| #2 exportAtags_lib | 1.86 | 3.00 | `core_lib/exportAtags_lib.js` |
-| #3 helpers_lib | 2.13 | 3.00 | `core_lib/helpers_lib.js` |
+| #1 collectAtags_lib | 1.75 | 3.00 | `core_lib/collectAtags_lib.js` |
+| #2 exportAtags_lib | 1.87 | 3.00 | `core_lib/exportAtags_lib.js` |
+| #3 helpers_lib | 2.14 | 3.00 | `core_lib/helpers_lib.js` |
 
 ## Checker
 
@@ -14,7 +14,7 @@ Aktuelle Library-Dateien und Versionen:
 
 | Name | Version | Sys | Pfad |
 | --- | ---: | ---: | --- |
-| A1 Check Versions | 1.75 | 3.00 | `core/_checkVersions.js` |
+| A1 Check Versions | 1.76 | 3.00 | `core/_checkVersions.js` |
 
 Optionale Plugins/Addons koennen sich beim Laden per `registerAtagLibVersion(name, version, sysVersion, path, true)` registrieren und in `ATAG_EXPECTED_OPTIONAL_LIBS` einen `getter` besitzen. Mismatch- und Missing-Meldungen ueber fehlende Getter/Module werden getrennt ueber `SHOW_REMOTE_MISSMATCHES`, `SHOW_LOCAL_MISSMATCHES`, `SHOW_REMOTE_MISSING` und `SHOW_LOCAL_MISSING` gesteuert.
 
@@ -24,9 +24,9 @@ Diese Dateien gehoeren funktionell zur Lib-Nutzung, sind aber keine externen Rem
 
 | Name | Version | Sys | Pfad | Zweck |
 | --- | ---: | ---: | --- | --- |
-| A2 helpers | 1.04 | 3.00 | `core/helpers.js` | Memento-Wrapper fuer `applyTags`, `bulkApplyTags` und `bulkExportAtags`; nutzt `core_lib/helpers_lib.js` |
-| A3 restoreAtags | 2.13 | 3.00 | `core/restoreAtags.js` | Restore aus Atag-JSON in Felder |
-| A4 tagCleaner | 1.58 | 3.00 | `core/tagCleaner.js` | Cleaner-/Alias-Memento-Wrapper |
+| A2 helpers | 1.05 | 3.00 | `core/helpers.js` | Memento-Wrapper fuer `applyTags`, `bulkApplyTags` und `bulkExportAtags`; nutzt `core_lib/helpers_lib.js` |
+| A3 restoreAtags | 2.14 | 3.00 | `core/restoreAtags.js` | Restore aus Atag-JSON in Felder |
+| A4 tagCleaner | 1.59 | 3.00 | `core/tagCleaner.js` | Cleaner-/Alias-Memento-Wrapper |
 | B2 tagPairParser | 1.04 | 3.00 | `addons/1_tagging/tagPairParser.js` | Tag-Paare aus Tag-Feldern |
 | B3 globalFieldSync | 1.06 | 3.00 | `addons/2_syncing/globalFieldSync.js` | Feld-Sync innerhalb einer Library |
 | B4 syncLastFromLatest | 1.09 | 3.00 | `addons/2_syncing/syncLastFromLatest.js` | Felder vom neuesten Eintrag übernehmen |

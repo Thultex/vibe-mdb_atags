@@ -1,20 +1,20 @@
 /*
 ========================================
-#1 collectAtags Lib v1.74 (sys 3.00)
+#1 collectAtags Lib v1.75 (sys 3.00)
 ========================================
 */
 
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.74",
+    version: "1.75",
     sysVersion: "3.00",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.74", "3.00", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.75", "3.00", "core_lib/collectAtags_lib.js");
 }
 function buildAtagQuoteState(str) {
   var s = String(str || "");
@@ -221,12 +221,38 @@ function collectAtags(cfg) {
     };
   }
 
-  function addItem(items, seen, name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, displayName, cats, kind, cumulative, categoryChildSigns) {
+  function normalizeAtagComment(raw) {
+    var comment = raw == null ? "" : String(raw);
+    return comment.replace(/^\s+|\s+$/g, "");
+  }
+
+  function readAdjacentAtagComment(text, endIndex) {
+    var s = String(text || "");
+    var end;
+    var comment;
+
+    if (s.charAt(endIndex) === "(") {
+      end = s.indexOf(")", endIndex + 1);
+      if (end < 0) return "";
+      return normalizeAtagComment(s.substring(endIndex + 1, end));
+    }
+
+    if (s.charAt(endIndex) === "#") {
+      comment = s.substring(endIndex + 1).match(/^[^\s,;.!?()\[\]{}]+/);
+      return comment ? normalizeAtagComment(comment[0]) : "";
+    }
+
+    return "";
+  }
+
+  function addItem(items, seen, name, attrText, attrValue, rawText, rowValue, rowUnit, rowRaw, displayName, cats, kind, cumulative, categoryChildSigns, comment) {
     var item;
+    comment = normalizeAtagComment(comment);
     var key = String(name).toLowerCase() +
       "|" + String(attrText) +
       "|" + String(rowValue) +
-      "|" + String(rowUnit);
+      "|" + String(rowUnit) +
+      "|" + comment;
 
     if (seen[key]) return;
     seen[key] = true;
@@ -253,6 +279,7 @@ function collectAtags(cfg) {
     }
     if (cumulative) item.cumulative = true;
     if (categoryChildSigns) item.categoryChildSigns = categoryChildSigns;
+    if (comment) item.comment = comment;
 
     items.push(item);
   }
@@ -823,7 +850,7 @@ function collectAtags(cfg) {
     return out;
   }
 
-  function addResolvedTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw, skipTemplates) {
+  function addResolvedTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw, skipTemplates, comment) {
     var aliases = resolveAliases(name, aliasMap);
     var ai;
     var aliasInfo;
@@ -858,20 +885,22 @@ function collectAtags(cfg) {
         norm.attrText, norm.attrValue, effectiveRaw,
         rowValue, rowUnit, rowRaw,
         aliasInfo.shortName || resolvedName,
-        aliasInfo.cats || []
+        aliasInfo.cats || [],
+        null, false, null,
+        comment
       );
     }
   }
 
-  function addReadableTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw) {
-    addResolvedTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw, false);
+  function addReadableTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw, comment) {
+    addResolvedTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw, false, comment);
   }
 
-  function addParsedTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw) {
+  function addParsedTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw, comment) {
     var cleanName = normalizeTagName(name);
 
     if (!cleanName || /^\d+$/.test(cleanName)) return;
-    addResolvedTagValue(cleanName, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw, true);
+    addResolvedTagValue(cleanName, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw, true, comment);
   }
 
   function resolveAtagEmojiDisplayToken(token, aliasMap) {
@@ -900,7 +929,7 @@ function collectAtags(cfg) {
   function addReadableTagLineItems(tagText, items, seen, aliasMap, rowValue, rowUnit, rowRaw) {
     var s = String(tagText || "");
     var used = [];
-    var rxColon = /(^|\s+)([^\s:|][^:\s|]*)\s*:\s*(?:"([^"]*)"|([^\s]+))/g;
+    var rxColon = /(^|\s+)([^\s:|][^:\s|]*)\s*:\s*(?:"([^"]*)"|([^\s()]+))/g;
     var rxSuper = /([^\s:|]+?)([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B\u207F]+)(?=$|[\s,;.!?()\[\]{}]+)/g;
     var m;
     var name;
@@ -944,7 +973,7 @@ function collectAtags(cfg) {
     while ((m = rxColon.exec(s)) !== null) {
       name = normalizeEmojiDisplayTagName(m[2] || "");
       raw = m[3] != null && m[3] !== "" ? m[3] : (m[4] || "");
-      addReadableTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw);
+      addReadableTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw, readAdjacentAtagComment(s, rxColon.lastIndex));
       mark(m.index, m.index + String(m[0]).length);
       if (m[0] === "") rxColon.lastIndex++;
     }
@@ -983,7 +1012,7 @@ function collectAtags(cfg) {
 
       name = normalizeEmojiDisplayTagName(m[1] || "");
       raw = decodeReadableSuperscript(m[2] || "");
-      addReadableTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw);
+      addReadableTagValue(name, raw, items, seen, aliasMap, rowValue, rowUnit, rowRaw, readAdjacentAtagComment(s, rxSuper.lastIndex));
       mark(m.index, m.index + String(m[0]).length);
       if (m[0] === "") rxSuper.lastIndex++;
     }
@@ -996,7 +1025,7 @@ function collectAtags(cfg) {
       }
 
       name = normalizeEmojiDisplayTagName(m[2] || "");
-      addReadableTagValue(name, "", items, seen, aliasMap, rowValue, rowUnit, rowRaw);
+      addReadableTagValue(name, "", items, seen, aliasMap, rowValue, rowUnit, rowRaw, readAdjacentAtagComment(s, rxCleanerSimple.lastIndex));
       mark(m.index, m.index + String(m[0]).length);
       if (m[0] === "") rxCleanerSimple.lastIndex++;
     }
@@ -1254,7 +1283,23 @@ function collectAtags(cfg) {
           rawQuotedAttr,
           items, seen, aliasMap,
           currentRowValue, currentRowUnit, currentRowRaw,
-          false
+          false,
+          readAdjacentAtagComment(parseLine, rxQuotedTag.lastIndex)
+        );
+      }
+
+      // compact quoted text value: emo"text"(comment) / emo'text'#comment
+      var rxCompactQuotedValue = /(^|[\s,;.!?()\[\]{}\n\r])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)(?:'([^']*)'|"([^"]*)")/g;
+      var mcq;
+      while ((mcq = rxCompactQuotedValue.exec(parseLine)) !== null) {
+        if (isInsideAtagQuoteState(quoteState, mcq.index + String(mcq[1] || "").length)) continue;
+        addResolvedTagValue(
+          mcq[2] || "",
+          mcq[4] || mcq[3] || "",
+          items, seen, aliasMap,
+          currentRowValue, currentRowUnit, currentRowRaw,
+          false,
+          readAdjacentAtagComment(parseLine, rxCompactQuotedValue.lastIndex)
         );
       }
 
@@ -1281,7 +1326,7 @@ function collectAtags(cfg) {
       var mslot;
       while ((mslot = rxColonSlotValue.exec(parseLine)) !== null) {
         if (isInsideAtagQuoteState(quoteState, mslot.index)) continue;
-        addParsedTagValue(mslot[2] || "", mslot[3] || "", items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw);
+        addParsedTagValue(mslot[2] || "", mslot[3] || "", items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw, readAdjacentAtagComment(parseLine, rxColonSlotValue.lastIndex));
       }
 
       // colon: gfk: 1,4 / tag:inhalt / tag:: inhalt
@@ -1294,14 +1339,14 @@ function collectAtags(cfg) {
 
         if (!name1) continue;
         if (isInsideAtagQuoteState(quoteState, m1.index)) continue;
-        addParsedTagValue(name1, raw1, items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw);
+        addParsedTagValue(name1, raw1, items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw, readAdjacentAtagComment(parseLine, rxColon.lastIndex));
       }
 
       var rxColonSpacedValue = /(^|[\s\n\r\/])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*:\s*(?:"([^"]*)"|([+\-]?\d+(?:[.,]\d+)?|\++|-+))(?=$|[\s,;.!?()\[\]{}])/g;
       while ((m1 = rxColonSpacedValue.exec(parseLine)) !== null) {
         raw1 = m1[3] != null && m1[3] !== "" ? m1[3] : (m1[4] || "");
         if (isInsideAtagQuoteState(quoteState, m1.index)) continue;
-        addParsedTagValue(m1[2] || "", raw1, items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw);
+        addParsedTagValue(m1[2] || "", raw1, items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw, readAdjacentAtagComment(parseLine, rxColonSpacedValue.lastIndex));
       }
 
       var rxColonExplicit = /(^|[\s\n\r\/])#?([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)\s*::\s*(?:"([^"]*)"|(_[^_\r\n]+_)|((?!_)[^\r\n,;.!?()\[\]{}]+))/g;
@@ -1309,7 +1354,7 @@ function collectAtags(cfg) {
         raw1 = m1[3] != null && m1[3] !== "" ? m1[3] : (m1[4] != null && m1[4] !== "" ? m1[4] : (m1[5] || ""));
         raw1 = trimAtagString(raw1);
         if (isInsideAtagQuoteState(quoteState, m1.index)) continue;
-        addParsedTagValue(m1[2] || "", raw1, items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw);
+        addParsedTagValue(m1[2] || "", raw1, items, seen, aliasMap, currentRowValue, currentRowUnit, currentRowRaw, readAdjacentAtagComment(parseLine, rxColonExplicit.lastIndex));
       }
 
       // explicit tag with quoted hash value: frage#'text value' / frage#"text value"
@@ -1327,12 +1372,13 @@ function collectAtags(cfg) {
           rawHQ,
           items, seen, aliasMap,
           currentRowValue, currentRowUnit, currentRowRaw,
-          false
+          false,
+          readAdjacentAtagComment(parseLine, rxHashQuotedValue.lastIndex)
         );
       }
 
       // explicit tag with hash and value: test#string / test#5,
-      var rxHashValue = /(^|[\s\n\r\/])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#(_[^_\r\n]+_|[^\s]+)/g;
+      var rxHashValue = /(^|[\s\n\r\/])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#(_[^_\r\n]+_|[^\s#;.!?()\[\]{}]+)/g;
       var mh;
       while ((mh = rxHashValue.exec(parseLine)) !== null) {
         var nameH = mh[2];
@@ -1349,7 +1395,8 @@ function collectAtags(cfg) {
           rawH,
           items, seen, aliasMap,
           currentRowValue, currentRowUnit, currentRowRaw,
-          true
+          true,
+          readAdjacentAtagComment(parseLine, rxHashValue.lastIndex)
         );
       }
 
@@ -1405,7 +1452,8 @@ function collectAtags(cfg) {
           rawN,
           items, seen, aliasMap,
           currentRowValue, currentRowUnit, currentRowRaw,
-          false
+          false,
+          readAdjacentAtagComment(parseLine, rxNum.lastIndex)
         );
       }
 
@@ -1424,7 +1472,8 @@ function collectAtags(cfg) {
           rawEmojiSup,
           items, seen, aliasMap,
           currentRowValue, currentRowUnit, currentRowRaw,
-          false
+          false,
+          readAdjacentAtagComment(parseLine, rxEmojiSupNum.lastIndex)
         );
       }
 
@@ -1442,7 +1491,8 @@ function collectAtags(cfg) {
           rawSup,
           items, seen, aliasMap,
           currentRowValue, currentRowUnit, currentRowRaw,
-          false
+          false,
+          readAdjacentAtagComment(parseLine, rxSupNum.lastIndex)
         );
       }
 
@@ -1476,7 +1526,8 @@ function collectAtags(cfg) {
           "",
           items, seen, aliasMap,
           currentRowValue, currentRowUnit, currentRowRaw,
-          false
+          false,
+          readAdjacentAtagComment(parseLine, rxCleanerSimpleTag.lastIndex)
         );
       }
 

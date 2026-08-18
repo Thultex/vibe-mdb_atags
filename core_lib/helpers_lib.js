@@ -1,6 +1,6 @@
 /*
 ========================================
-#3 Atag Helpers Lib v2.13 (sys 3.00)
+#3 Atag Helpers Lib v2.14 (sys 3.00)
 ========================================
 */
 
@@ -10,14 +10,14 @@ var ATAG_SYS_VERSION = "3.00";
 function getHelpersLibVersion() {
   return {
     name: "helpers_lib",
-    version: "2.13",
+    version: "2.14",
     sysVersion: ATAG_SYS_VERSION,
     path: "core_lib/helpers_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("helpers_lib", "2.13", ATAG_SYS_VERSION, "core_lib/helpers_lib.js");
+  registerAtagLibVersion("helpers_lib", "2.14", ATAG_SYS_VERSION, "core_lib/helpers_lib.js");
 }
 
 // ===== BASIC =====
@@ -228,21 +228,44 @@ function subtractTagLists(src, rem) {
 // ===== VALUE =====
 function buildValueMap(items) {
   var map = {};
+  var commentMap = {};
+  var positions = {};
+  var hasComments = false;
   var i;
+  var j;
   var it;
   var val;
+  var key;
+  var comments;
+  var comment;
+  var position;
 
   for (i = 0; i < items.length; i++) {
     it = items[i];
     val = normalizeValueMapItemValue(it.attrValue, it);
+    key = String(it.name);
 
-    if (map.hasOwnProperty(it.name)) {
-      if (!isArrayValue(map[it.name])) map[it.name] = [map[it.name]];
-      map[it.name].push(val);
+    if (map.hasOwnProperty(key)) {
+      if (!isArrayValue(map[key])) map[key] = [map[key]];
+      map[key].push(val);
     } else {
-      map[it.name] = val;
+      map[key] = val;
     }
+
+    comments = isArrayValue(it.comments) ? it.comments : [it.comment || ""];
+    position = positions[key] || 0;
+    for (j = 0; j < comments.length; j++) {
+      comment = comments[j] == null ? "" : trimAtagLibString(comments[j]);
+      if (comment) {
+        if (!commentMap[key]) commentMap[key] = [];
+        commentMap[key].push({ index: position + j, text: comment });
+        hasComments = true;
+      }
+    }
+    positions[key] = position + comments.length;
   }
+
+  if (hasComments) map._atagComments = commentMap;
 
   return map;
 }
@@ -289,6 +312,8 @@ function escapeJsonString(s) {
 }
 
 function stringifyJsonValue(val) {
+  var objectParts;
+  var key;
   if (val == null) return "null";
   if (isArrayValue(val)) {
     var parts = [];
@@ -296,6 +321,14 @@ function stringifyJsonValue(val) {
     return "[" + parts.join(",") + "]";
   }
   if (typeof val === "number" || typeof val === "boolean") return String(val);
+  if (typeof val === "object") {
+    objectParts = [];
+    for (key in val) {
+      if (!val.hasOwnProperty(key)) continue;
+      objectParts.push("\"" + escapeJsonString(key) + "\":" + stringifyJsonValue(val[key]));
+    }
+    return "{" + objectParts.join(",") + "}";
+  }
   return "\"" + escapeJsonString(val) + "\"";
 }
 

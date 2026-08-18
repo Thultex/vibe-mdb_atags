@@ -4,35 +4,39 @@
 
 Ausgangsdatum: 2026-05-20
 
-*Diese Woche (2,1h, 1 Tag, 11 Inhalte):*
+*Diese Woche (3,1h, 1 Tag, 16 Inhalte):*
 Add-ons: einheitliche `entry`-/`enabled`-Steuerung; Restore: eintragsbezogene Bulk-Felder und Tree-kompatible Kategorie-Aggregation; Export: gemeinsame Aggregationslogik.
 
 *Letzte Woche (1,3h, 1 Tag, 12 Inhalte):*
 Repo-Doku: zentrale Beispiele und kompakte Header; Versionscheck: stille fehlende Config; Systemversion 3.00.
 
-*Dieser Monat (18,6h, 9 Tage, 256 Inhalte):*
+*Dieser Monat (19,6h, 9 Tage, 261 Inhalte):*
 Core/Export: Aggregationen, Beispiele und Versionscheck; Add-ons: gemeinsame Aufrufsteuerung, Obsidian, Sync und Hour-Guide; Systemversion 3.00.
 
 *Letzter Monat (6,3h, 3 Tage, 175 Inhalte):*
 Cleaner/Readable: Tagleisten und Archivierung; Sync/TimeMarker: Addons und Workflows; Repo: Grundstruktur.
 
-*Jahr (24,9h, 12 Tage, 431 Inhalte):*
+*Jahr (25,9h, 12 Tage, 436 Inhalte):*
 Core-Libs/Exports: Remote-Einbindung, Aggregationen, Beispiele und Versionscheck; Add-ons: Aufrufsteuerung, Obsidian/Sync/TimeMarker.
 
-*Insgesamt (24,9h, 12 Tage, 431 Inhalte):*
+*Insgesamt (25,9h, 12 Tage, 436 Inhalte):*
 Core-Libs/Exports: Remote-Einbindung, Aggregationen, Beispiele und Versionscheck; Add-ons: Aufrufsteuerung, Obsidian/Sync/TimeMarker.
 
 ## Log
 
-### 2026-08-18 - (ca. 1,8h)
+### 2026-08-18 - (ca. 2,8h)
 
-- *Summary: Add-ons teilen `entry`/`enabled`; Tree und Restore verwenden `max_add_abs`, alle Aggregationsbereiche dieselben Rechenmodi.*
+- *Summary: Add-ons teilen `entry`/`enabled`; Tag-Kommentare bleiben durch Parser, Cleaner, Anzeigen, JSON und Restore erhalten; alle Aggregationsbereiche verwenden dieselben Rechenmodi.*
 - Feature: Alle 13 Add-on-Module akzeptieren bei schreibenden Operationen `entry` als Alias und `enabled: false` als seiteneffektfreien Skip; Mehrfeld-Sync und Time Marker unterstützen zusätzlich `field` als Alias von `fields` (#76).
 - Tests/Doku: Ein gemeinsamer Kompatibilitätstest prüft `entry`, `enabled` und Feldlisten über alle Add-ons; zentrale Beispiele zeigen die Optionen bei jeder betroffenen Funktion und erklären sie einmal übergeordnet.
 - Feature: Helpers Lib v2.13 ergänzt `max_add_abs`: größter positiver plus betragsmäßig größter negativer Wert unter Beibehaltung der Vorzeichen; normale MD-Row-Werte, Row-Tabellen, Kategorien und Restore nutzen dieselben Aggregationsmodi.
 - Change: Export Atags Lib v1.86 ersetzt den bisherigen Tree-Parent-Standard `max_abs` durch `max_add_abs`; `md`/`text` behalten `avg`, Row-Werte ihren bisherigen Standard.
 - Fix: JSON-Kategorie-Arrays erhalten die effektive Kinderpolung als `-`-Präfix; Restore Atags v2.13 liest diese Polung und nutzt für Kategorien standardmäßig wie der Tree `max` je Kind und `max_add_abs` für den Parent.
-- Tests/Doku/Versionen: Regressionen decken beide Polaritäten, reine Vorzeichenmengen, MD, Tree, JSON und Restore ab; `examples.md` und `examples_plugins.md` besitzen interne Funktionslinks, klar beschriftete Funktionsüberschriften sowie Zweck-Blockquotes, Aufrufe und Parametererklärungen für jede öffentliche Funktion. Gemeinsame Aggregationswerte stehen vollständig in einer zentralen Tabelle, kleinere Wertemengen in übersichtlichen Listen. `CONTRIBUTING.md` schreibt diese Pflege bei Codeänderungen verbindlich fest; der Doku-Test sichert API-, Link-, Modul-, Überschriften-, Optionswert- und Umlaut-Abdeckung. Check Versions steigt durch #76 auf v1.75.
+- Feature: Collector und Tag Cleaner unterstützen Kommentare ohne Zwischenraum an allen kompakten Wertformen, darunter `emo#3#info`, `emo2(info)`, `emo²(info)`, negative Werte und `emo"text"(info)` (#84).
+- Feature: Markdown und Tree-Kinder zeigen positionsgenaue Kommentare standardmäßig über `showComments`; Kategorie-Parents bleiben standardmäßig still und werden mit `showCommentsCategory: true` aktiviert.
+- Feature: JSON speichert ausschließlich vorhandene Kommentare kompakt unter `_atagComments` mit Wertindex; Restore überspringt diese Metadaten beim Auto-Restore, ohne sie als Tag-Feld zu behandeln.
+- Tests/Doku: Regressionen decken Eingabeformen, Cleaner, führende Leerpositionen, Tree-Defaults, JSON-Metadaten und Restore ab; `examples.md` und README erklären beide Anzeigeoptionen und das JSON-Format.
+- *Versionen: Check Versions v1.76, Atag Helpers v1.05, Restore Atags v2.14, Tag Cleaner v1.59, `collectAtags_lib` v1.75, `exportAtags_lib` v1.87, `helpers_lib` v2.14.*
 
 ### 2026-08-18 - (ca. 0,3h)
 

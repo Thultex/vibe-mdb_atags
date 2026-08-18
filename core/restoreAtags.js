@@ -1,20 +1,20 @@
 /*
 ========================================
-A3 restoreAtags v2.13 (sys 3.00)
+A3 restoreAtags v2.14 (sys 3.00)
 ========================================
 */
 
 function getRestoreAtagsVersion() {
   return {
     name: "restoreAtags",
-    version: "2.13",
+    version: "2.14",
     sysVersion: "3.00",
     path: "core/restoreAtags.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("restoreAtags", "2.13", "3.00", "core/restoreAtags.js", true);
+  registerAtagLibVersion("restoreAtags", "2.14", "3.00", "core/restoreAtags.js", true);
 }
 
 // ===== HELPERS =====
@@ -772,6 +772,8 @@ function restoreAutoAtags(entryObj, obj, cfg) {
 
   for (key in obj) {
     try {
+      // Optionale Kommentar-Metadaten bleiben im JSON erhalten, sind aber kein Tag-Feld.
+      if (key === "_atagComments") continue;
       val = selectRestoreObjectValue(obj, key, cfg.valueMode, cfg.force_type, cfg);
       if (val == null) continue;
 
@@ -835,7 +837,7 @@ function restoreAtagsForEntry(entryObj, cfg, clearMappedFields) {
   if (!entryObj) return;
 
   if (cfg.debugField) cfg._debugLines = [];
-  restoreDebugPush(cfg, "restoreAtags v2.13");
+  restoreDebugPush(cfg, "restoreAtags v2.14");
   restoreDebugPush(cfg, "sourceField: " + cfg.sourceField);
   cfg._fieldNameMap = undefined;
   cfg._fieldNameCount = undefined;

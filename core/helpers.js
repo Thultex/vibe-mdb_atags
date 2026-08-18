@@ -1,13 +1,13 @@
 /*
 ========================================
-A2 Atag Helpers v1.04 (sys 3.00)
+A2 Atag Helpers v1.05 (sys 3.00)
 ========================================
 */
 
 function getHelpersVersion() {
   return {
     name: "helpers",
-    version: "1.04",
+    version: "1.05",
     sysVersion: "3.00",
     path: "core/helpers.js"
   };
@@ -18,7 +18,7 @@ function getHelpersMemVersion() {
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("helpers", "1.04", "3.00", "core/helpers.js", true);
+  registerAtagLibVersion("helpers", "1.05", "3.00", "core/helpers.js", true);
 }
 
 function exportAtagsFromCfg(cfg, entryObj, result) {
@@ -51,7 +51,9 @@ function exportAtagsFromCfg(cfg, entryObj, result) {
     markdownLabelNames: cfg.markdownLabelNames,
     includeBlankTags: cfg.includeBlankTags,
     markdownGroupSeparators: cfg.markdownGroupSeparators,
-    markdownGroupSeparator: cfg.markdownGroupSeparator
+    markdownGroupSeparator: cfg.markdownGroupSeparator,
+    showComments: cfg.showComments,
+    showCommentsCategory: cfg.showCommentsCategory
   });
 }
 

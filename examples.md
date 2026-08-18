@@ -137,6 +137,8 @@ exportAtags({
   categoryAggregateDecimals: 1,
   row_display_values: "all",
   cat_display_values: "names",
+  showComments: true,
+  showCommentsCategory: false,
   markdownGroupSeparator: "",
   includeBlankTags: false
 });
@@ -160,7 +162,9 @@ exportAtags({
   categoryFilter: ["self", "help"],
   includeEmptyCategories: false,
   treeStyle: "unicode",
-  treeShowValues: true
+  treeShowValues: true,
+  showComments: true,
+  showCommentsCategory: false
 });
 ```
 
@@ -177,7 +181,11 @@ Parameter:
 - `cat_display_values` / `categoryDisplayValues`: Kategorie-Details `none`, `count`, `names` oder `all`.
 - `categoryFilter`: exportiert nur die gewählten Kategorien und deren Kinder.
 - `includeEmptyCategories`, `includeBlankTags`, `treeShowValues`: Sichtbarkeit leerer Kategorien, leerer Tags und Tree-Werte.
+- `showComments`: zeigt Kommentare bei normalen Tags und Tree-Kindern; Standard ist `true`.
+- `showCommentsCategory`: zeigt am Tree-/Kategorie-Parent alle positionsgenau zusammengeführten Kinderkommentare; Standard ist `false`.
 - `markdownGroupSeparator`, `treeStyle`: Markdown-Gruppentrenner und Tree-Zeichenstil (`unicode` oder `ascii`).
+
+Kommentare werden im JSON nur dann unter `_atagComments` gespeichert, wenn mindestens ein Kommentar vorhanden ist. Jeder Eintrag enthält mit `index` seine ursprüngliche Wertposition; leere Kommentare benötigen dadurch keinen Platz. Restore ignoriert `_atagComments` als technisches Metadatenobjekt und stellt die eigentlichen Tagwerte unverändert wieder her.
 
 ### #3 `helpers_lib.js`
 
@@ -295,7 +303,9 @@ var result = applyTags({
   targetFieldType: "md",
   rowAggregateMode: "avg",
   categoryRowAggregateMode: "max",
-  categoryAggregateMode: "avg"
+  categoryAggregateMode: "avg",
+  showComments: true,
+  showCommentsCategory: false
 });
 ```
 
@@ -305,6 +315,7 @@ Parameter:
 - `entryObj`, `textFields`, `excludeNames`: Collector-Ziel und Quellen.
 - `targetField`, `targetFieldType`: Ziel und Format für `exportAtags()`.
 - Aggregations- und Anzeigeoptionen werden unverändert an den Export weitergereicht.
+- `showComments`, `showCommentsCategory`: Kommentar-Anzeige für normale Tags/Tree-Kinder beziehungsweise Kategorie-Parents.
 - `result`: kann optional ein schon vorhandenes Collector-Ergebnis ersetzen.
 
 <a id="bulkapplytags"></a>
@@ -402,6 +413,7 @@ Parameter:
 - `suffix`, `listSuffix`: Zielfeldsuffixe für Zahlen/Text bzw. Listen.
 - `clearMappedFields`: leert gemappte Ziele vor dem Schreiben.
 - `debugField`, `debugLog`: Diagnose in Feld und Log.
+- `_atagComments` im Quell-JSON ist optionale Kommentar-Metadatenstruktur und wird beim Auto-Restore nicht als Zielfeld behandelt.
 
 <a id="bulkrestoreatags"></a>
 #### Funktion: `bulkRestoreAtags()`
@@ -458,6 +470,18 @@ Parameter:
 - `tagBarPosition`, `tagBarSpacing`: Position und Abstand der erzeugten Tagleiste.
 - `formatValues`: Wertformatierung wie `keep`, `min` oder `max`.
 - `enabled`: deaktiviert die Bereinigung bei `false`.
+
+Kommentar-Eingaben müssen ohne Leerzeichen direkt an Wert oder Tag anschließen. Alle vorhandenen Zahlen-, Superscript-, Hash- und Textwertformen werden unterstützt:
+
+```text
+emo#3#info
+emo2(info)
+emo²(info)
+emo"sfas"(info)
+emo-2(info)
+```
+
+Der Cleaner normalisiert sie beispielsweise zu `emo³(info)`, `emo²(info)`, `emo:sfas(info)` und `emo⁻²(info)`. Innerhalb des Kommentars sind Leerzeichen erlaubt; `emo² (info)` ist absichtlich keine Kommentarform.
 
 <a id="cleantemplatetags"></a>
 #### Funktion: `cleanTemplateTags()`
