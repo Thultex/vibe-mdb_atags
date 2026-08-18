@@ -4,27 +4,27 @@
 
 Ausgangsdatum: 2026-05-20
 
-*Diese Woche (3,1h, 1 Tag, 16 Inhalte):*
+*Diese Woche (3,3h, 1 Tag, 18 Inhalte):*
 Add-ons: einheitliche `entry`-/`enabled`-Steuerung; Restore: eintragsbezogene Bulk-Felder und Tree-kompatible Kategorie-Aggregation; Export: gemeinsame Aggregationslogik.
 
 *Letzte Woche (1,3h, 1 Tag, 12 Inhalte):*
 Repo-Doku: zentrale Beispiele und kompakte Header; Versionscheck: stille fehlende Config; Systemversion 3.00.
 
-*Dieser Monat (19,6h, 9 Tage, 261 Inhalte):*
+*Dieser Monat (19,8h, 9 Tage, 263 Inhalte):*
 Core/Export: Aggregationen, Beispiele und Versionscheck; Add-ons: gemeinsame Aufrufsteuerung, Obsidian, Sync und Hour-Guide; Systemversion 3.00.
 
 *Letzter Monat (6,3h, 3 Tage, 175 Inhalte):*
 Cleaner/Readable: Tagleisten und Archivierung; Sync/TimeMarker: Addons und Workflows; Repo: Grundstruktur.
 
-*Jahr (25,9h, 12 Tage, 436 Inhalte):*
+*Jahr (26,1h, 12 Tage, 438 Inhalte):*
 Core-Libs/Exports: Remote-Einbindung, Aggregationen, Beispiele und Versionscheck; Add-ons: Aufrufsteuerung, Obsidian/Sync/TimeMarker.
 
-*Insgesamt (25,9h, 12 Tage, 436 Inhalte):*
+*Insgesamt (26,1h, 12 Tage, 438 Inhalte):*
 Core-Libs/Exports: Remote-Einbindung, Aggregationen, Beispiele und Versionscheck; Add-ons: Aufrufsteuerung, Obsidian/Sync/TimeMarker.
 
 ## Log
 
-### 2026-08-18 - (ca. 2,8h)
+### 2026-08-18 - (ca. 3,0h)
 
 - *Summary: Add-ons teilen `entry`/`enabled`; Tag-Kommentare bleiben durch Parser, Cleaner, Anzeigen, JSON und Restore erhalten; alle Aggregationsbereiche verwenden dieselben Rechenmodi.*
 - Feature: Alle 13 Add-on-Module akzeptieren bei schreibenden Operationen `entry` als Alias und `enabled: false` als seiteneffektfreien Skip; Mehrfeld-Sync und Time Marker unterstützen zusätzlich `field` als Alias von `fields` (#76).
@@ -35,8 +35,11 @@ Core-Libs/Exports: Remote-Einbindung, Aggregationen, Beispiele und Versionscheck
 - Feature: Collector und Tag Cleaner unterstützen Kommentare ohne Zwischenraum an allen kompakten Wertformen, darunter `emo#3#info`, `emo2(info)`, `emo²(info)`, negative Werte und `emo"text"(info)` (#84).
 - Feature: Markdown und Tree-Kinder zeigen positionsgenaue Kommentare standardmäßig über `showComments`; Kategorie-Parents bleiben standardmäßig still und werden mit `showCommentsCategory: true` aktiviert.
 - Feature: JSON speichert ausschließlich vorhandene Kommentare kompakt unter `_atagComments` mit Wertindex; Restore überspringt diese Metadaten beim Auto-Restore, ohne sie als Tag-Feld zu behandeln.
+- Fix: Die vorhandene Quote-State-Logik schützt angrenzende Kommentarbereiche vor weiteren Cleaner- und Collector-Durchläufen; `ED2(p1)` bleibt `ED²(p1)` und erzeugt kein zusätzliches `p`-Tag.
+- Change: Tree-Anzahlen verwenden die eindeutige Kurzform `{2}`; im Atag-MD trennt `→` das Aggregat von Rohwertlisten wie `1 → [2, 0]`.
+- Change: Kommentare sind im Tree bei Kindern und Parents standardmäßig ausgeblendet; `showComments` beziehungsweise `showCommentsCategory` aktivieren sie explizit.
 - Tests/Doku: Regressionen decken Eingabeformen, Cleaner, führende Leerpositionen, Tree-Defaults, JSON-Metadaten und Restore ab; `examples.md` und README erklären beide Anzeigeoptionen und das JSON-Format.
-- *Versionen: Check Versions v1.76, Atag Helpers v1.05, Restore Atags v2.14, Tag Cleaner v1.59, `collectAtags_lib` v1.75, `exportAtags_lib` v1.87, `helpers_lib` v2.14.*
+- *Versionen: Check Versions v1.77, Atag Helpers v1.05, Restore Atags v2.14, Tag Cleaner v1.60, `collectAtags_lib` v1.76, `exportAtags_lib` v1.88, `helpers_lib` v2.14.*
 
 ### 2026-08-18 - (ca. 0,3h)
 

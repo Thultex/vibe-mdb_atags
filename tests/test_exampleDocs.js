@@ -182,6 +182,9 @@ assertTrue("export example shows category comment default", coreExamples.indexOf
 assertTrue("examples document sparse comment JSON", coreExamples.indexOf("`_atagComments`") >= 0 && coreExamples.indexOf("`index`") >= 0);
 assertTrue("examples document hash comments", coreExamples.indexOf("emo#3#info") >= 0);
 assertTrue("examples document compact text comments", coreExamples.indexOf('emo"sfas"(info)') >= 0);
+assertTrue("examples document literal comment content", coreExamples.indexOf("ED²(p1)") >= 0 && coreExamples.indexOf("ED²(p¹)") >= 0);
+assertTrue("examples document tree count braces", coreExamples.indexOf("`{2}`") >= 0);
+assertTrue("examples document markdown aggregate separator", coreExamples.indexOf("1 → [2, 0]") >= 0);
 
 var corePublicFunctions = [
   "collectAtags",

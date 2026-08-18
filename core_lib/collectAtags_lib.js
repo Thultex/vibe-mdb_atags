@@ -1,21 +1,22 @@
 /*
 ========================================
-#1 collectAtags Lib v1.75 (sys 3.00)
+#1 collectAtags Lib v1.76 (sys 3.00)
 ========================================
 */
 
 function getCollectAtagsLibVersion() {
   return {
     name: "collectAtags_lib",
-    version: "1.75",
+    version: "1.76",
     sysVersion: "3.00",
     path: "core_lib/collectAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("collectAtags_lib", "1.75", "3.00", "core_lib/collectAtags_lib.js");
+  registerAtagLibVersion("collectAtags_lib", "1.76", "3.00", "core_lib/collectAtags_lib.js");
 }
+
 function buildAtagQuoteState(str) {
   var s = String(str || "");
   var state = [];
@@ -35,6 +36,26 @@ function buildAtagQuoteState(str) {
   }
 
   return state;
+}
+
+function protectAdjacentAtagComments(str, state) {
+  var s = String(str || "");
+  var out = state || [];
+  var i;
+  var j;
+  var end;
+
+  for (i = 1; i < s.length; i++) {
+    if (s.charAt(i) !== "(") continue;
+    if (/\s/.test(s.charAt(i - 1))) continue;
+    if (s.charAt(i + 1) === ":") continue;
+    end = s.indexOf(")", i + 1);
+    if (end < 0) continue;
+    for (j = i; j <= end; j++) out[j] = true;
+    i = end;
+  }
+
+  return out;
 }
 
 function splitAtagLines(text) {
@@ -936,6 +957,11 @@ function collectAtags(cfg) {
     var raw;
 
     function mark(start, end) {
+      var commentEnd;
+      if (s.charAt(end) === "(") {
+        commentEnd = s.indexOf(")", end + 1);
+        if (commentEnd >= 0) end = commentEnd + 1;
+      }
       used.push({ start: start, end: end });
     }
 
@@ -1266,7 +1292,7 @@ function collectAtags(cfg) {
         lastRowRaw = currentRowRaw;
       }
 
-      quoteState = buildAtagQuoteState(parseLine);
+      quoteState = protectAdjacentAtagComments(parseLine, buildAtagQuoteState(parseLine));
 
       // quoted tag: 'Four Tops'# / "Four Tops"#4,1 / 'Four Tops'#'text value'
       var rxQuotedTag = /(^|[\s,;.!?()\[\]{}\n\r])(?:'([^']+)'|"([^"]+)")#(?:'([^']*)'|"([^"]*)"|([^\s;.!?()\[\]{}]*))?/g;

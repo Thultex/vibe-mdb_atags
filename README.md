@@ -859,9 +859,9 @@ rows:
 2,5: focus+1
 ```
 
-Kommentare schließen ohne Leerzeichen direkt an den Tagwert an. Klammerkommentare funktionieren mit allen vorhandenen Wertformen, etwa `emo2(info)`, `emo²(info)`, `emo-2(info)` und `emo"sfas"(info)`. Die kompakte Hashform `emo#3#info` wird vom Cleaner zu `emo³(info)` normalisiert. Ein Leerzeichen wie in `emo² (info)` trennt den Kommentar absichtlich vom Tag.
+Kommentare schließen ohne Leerzeichen direkt an den Tagwert an. Klammerkommentare funktionieren mit allen vorhandenen Wertformen, etwa `emo2(info)`, `emo²(info)`, `emo-2(info)` und `emo"sfas"(info)`. Die kompakte Hashform `emo#3#info` wird vom Cleaner zu `emo³(info)` normalisiert. Kommentarinhalt bleibt literal und wird nicht erneut als Tag gelesen: `ED2(p1)` wird zu `ED²(p1)`, nicht zu `ED²(p¹)`. Ein Leerzeichen wie in `emo² (info)` trennt den Kommentar absichtlich vom Tag.
 
-Normale Markdown-Tags und Tree-Kinder zeigen Kommentare standardmäßig über `showComments: true`. Mit `showComments: false` werden sie ausgeblendet. Kategorie-Parents blenden die zusammengeführten Kinderkommentare standardmäßig aus; `showCommentsCategory: true` aktiviert sie. Fehlende frühere Kommentare bleiben positionsgenau als leere Kommastellen sichtbar, beispielsweise `(,,,Info)`.
+Normale Markdown-Tags zeigen Kommentare standardmäßig. Im Tree sind Kommentare sowohl bei Kindern als auch bei Kategorie-Parents standardmäßig ausgeblendet; `showComments: true` aktiviert die Kinder und `showCommentsCategory: true` die Parents. Vorhandene Kommentare werden als `(p1, p2)` getrennt; bei einer leeren Position entfällt das Leerzeichen, beispielsweise `(,p2)` oder `(,,,Info)`.
 
 Der JSON-Export speichert Kommentare nur bei tatsächlichem Inhalt in `_atagComments`. Die kompakten Einträge enthalten `index` und `text`, sodass leere Positionen keinen JSON-Platz benötigen und Restore die Metadaten nicht als normales Tag-Zielfeld behandelt.
 
@@ -969,7 +969,7 @@ sf
 Beispiele:
 
 - Einzelwert: `emo: 1,0`
-- Mehrfach: `emo: 2,0 - [3,0, 1,0]`
+- Mehrfach: `emo: 2,0 → [3,0, 1,0]`
 
 **Rows-Tabelle**
 
@@ -1006,7 +1006,7 @@ Kategorie-Aggregationen laufen immer zweistufig: Zuerst werden mehrfach vorkomme
 
 Row-, Markdown-Kategorie-, Tree- und Restore-Aggregationen verwenden dieselben Modusnamen und Rechenregeln; nur ihre Standards unterscheiden sich. `rowAggregateMode` fuer Tabellen bleibt `avg`. `categoryRowAggregateMode`/`categoryChildAggregateMode` und `categoryAggregateMode`/`categoryValueMode` koennen `min`, `max`, `max_abs`, `min_abs`, `max_add_abs`, `add`, `sum`, `avg`, `median`, `first`, `last` oder `amount` nutzen. Der JSON-Export erhaelt die effektive Polung negativer Kategorie-Kinder als Praefix, z. B. `{"Body":["-SymptomA","BodySafe"],"SymptomA":3,"BodySafe":2}`; Restore berechnet daraus mit den Standards `-1`.
 
-Vor Detailangaben mit Namen oder Einzelwerten steht ` - `, z. B. `kaufen: 22,2 - [pc, garten]`; bei `cat_display_values: "all"` werden negierte Kinder als `₋SymptomA: -2` angezeigt. Die kurze Count-Form bleibt ohne Strich, z. B. `SymptomA 1,7 [3]`. Im `tree_md` steht am Parent standardmaessig nur der Wert, weil die Unterpunkte direkt darunter sichtbar sind. Unterpunkte im `tree_md` nutzen dieselbe Wert-Zusammenfassung wie `md`; mehrfach vorkommende Row-Werte werden im Tree standardmaessig gekuerzt als Anzahl angezeigt, waehrend `md`/`text` standardmaessig alle Einzelwerte zeigen. Tree-Defaults sind `cat_display_values: "none"` und `row_display_values: "count"`; fuer andere Exporte gelten `cat_display_values: "names"` und `row_display_values: "all"`.
+Im Atag-MD trennt ` → ` das Aggregat eindeutig von Namen oder Einzelwerten, z. B. `kaufen: 22,2 → [pc, garten]` oder `EmoDys: 1 → [2, 0]`; bei `cat_display_values: "all"` werden negierte Kinder als `₋SymptomA: -2` angezeigt. Die kurze Tree-Count-Form verwendet geschweifte Klammern, z. B. `SymptomA 1,7 {3}`. Im `tree_md` steht am Parent standardmäßig nur der Wert, weil die Unterpunkte direkt darunter sichtbar sind. Unterpunkte im `tree_md` nutzen dieselbe Wert-Zusammenfassung wie `md`; mehrfach vorkommende Row-Werte werden im Tree standardmäßig gekürzt als Anzahl angezeigt, während `md`/`text` standardmäßig alle Einzelwerte zeigen. Tree-Defaults sind `cat_display_values: "none"` und `row_display_values: "count"`; für andere Exporte gelten `cat_display_values: "names"` und `row_display_values: "all"`.
 
 ## Aktuelle Funktionsaufrufe
 

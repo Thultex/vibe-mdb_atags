@@ -41,6 +41,21 @@ assertEquals(
 );
 
 assertEquals(
+  "tag-comment-content-stays-literal",
+  makeTagCleanerText("ED2(p1)"),
+  "ED\u00B2(p1)"
+);
+
+assertEquals(
+  "tag-comment-content-stays-literal-with-alias",
+  makeTagCleanerTextWithOptions("ED2(p1)", {
+    aliasText: "@@EmoDys (ED):",
+    cleanerTagText: "long"
+  }),
+  "EmoDys\u00B2(p1)"
+);
+
+assertEquals(
   "inline-issue38-values",
   makeTagCleanerText("tag+ tag- tag++ tag-- tag++2 tag--3 tag++++ tag---- tag00 tag0 tag02 tag003 tag0,2 tag-02 tag-0,2"),
   "tag\u207A tag\u207B tag\u207A\u207A tag\u207B\u207B tag\u207A\u207A\u00B2 tag\u207B\u207B\u00B3 tag\u207A\u207A\u2074 tag\u207B\u207B\u2074 tag\u02E3 tag\u2070 tag\u2070\u00B2 tag\u2070\u2070\u00B3 tag\u2070\u00B2 tag\u207B\u2070\u00B2 tag\u207B\u2070\u00B2"

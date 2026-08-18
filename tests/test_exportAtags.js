@@ -174,7 +174,7 @@ exportAtags({
 assertEqual(
   "md-row-values-support-max-add-abs",
   entryObj.field("MD"),
-  "MetricA: -2 - [1, 5, -2, -7]"
+  "MetricA: -2 → [1, 5, -2, -7]"
 );
 
 var maxAddRowView = buildAtagRowTableView([
@@ -355,7 +355,7 @@ assertEqual(
   entryObj.field("MD"),
   "BodySafe: +2  \n" +
   "SymptomA: +3  \n" +
-  "Body: -1 - [BodySafe, SymptomA]"
+  "Body: -1 → [BodySafe, SymptomA]"
 );
 
 entryObj = makeEntry({ Note: "@@@K\u00F6rper: -Kieferspannung, -Kopfschmerz, -Nackenschmerz\n1: Kieferspannung1\n2: Kieferspannung1\n3: Kieferspannung1\nKopfschmerz2 Nackenschmerz2" });
@@ -369,7 +369,7 @@ assertEqual(
   "tree-category-negative-children-display-own-sign",
   entryObj.field("Tree"),
   "K\u00F6rper -2  \n" +
-  "\u251c\u2500\u2500 \u208BKieferspannung 1 [3]  \n" +
+  "\u251c\u2500\u2500 \u208BKieferspannung 1 {3}  \n" +
   "\u251c\u2500\u2500 \u208BKopfschmerz 2  \n" +
   "\u2514\u2500\u2500 \u208BNackenschmerz 2"
 );
@@ -388,7 +388,7 @@ assertEqual(
   entryObj.field("MD"),
   "BodySafe: +1  \n" +
   "SymptomA: +2  \n" +
-  "Body: -2 - [BodySafe: 1, \u208BSymptomA: 2]"
+  "Body: -2 → [BodySafe: 1, \u208BSymptomA: 2]"
 );
 
 entryObj = makeEntry({ Note: "@@SymptomA (SA):  sa\n@@@Body: -SymptomA\n| sa\u00B2" });
@@ -622,7 +622,7 @@ assertEqual(
   "garten: +20  \n" +
   "pc: +10  \n" +
   "pc: +30  \n" +
-  "kaufen: 27 - [pc, garten]"
+  "kaufen: 27 → [pc, garten]"
 );
 
 entryObj = makeEntry({});
@@ -730,7 +730,7 @@ assertEqual(
   entryObj.field("Tree"),
   "category_metric 2  \n" +
   "\u251c\u2500\u2500 MetricE 2  \n" +
-  "\u251c\u2500\u2500 SymptomA 2 [2]  \n" +
+  "\u251c\u2500\u2500 SymptomA 2 {2}  \n" +
   "\u2514\u2500\u2500 SymptomB 2"
 );
 
@@ -755,7 +755,7 @@ assertEqual(
   entryObj.field("Tree"),
   "category_metric 3  \n" +
   "\u251c\u2500\u2500 MetricE 2  \n" +
-  "\u251c\u2500\u2500 SymptomA 3 [2]  \n" +
+  "\u251c\u2500\u2500 SymptomA 3 {2}  \n" +
   "\u2514\u2500\u2500 SymptomB 2"
 );
 
@@ -928,7 +928,7 @@ assertEqual(
   "apply-md-skips-missing-alias-children",
   entryObj.field("MD"),
   "ActivityA: +1  \n" +
-  "help: 1 - [ActivityA]"
+  "help: 1 → [ActivityA]"
 );
 
 entryObj = makeEntry({ Note: "@@@help: ActivityA, ActivityB\nActivityA1" });
@@ -976,7 +976,7 @@ assertEqual(
   "apply-md-direct-negative-child-no-slash-name",
   entryObj.field("MD"),
   "Inhaltnegativ: +2  \n" +
-  "Kategorie: -2 - [\u208BInhaltnegativ: 2]"
+  "Kategorie: -2 → [\u208BInhaltnegativ: 2]"
 );
 
 entryObj = makeEntry({ Note: "@@@Kategorie::\n@@/Inhaltnegativ:\nInhaltnegativ2" });
@@ -1044,7 +1044,7 @@ assertEqual(
   entryObj.field("MD"),
   "ActivityA: +2  \n" +
   "ActivityB: laut  \n" +
-  "help: 2 - [ActivityA]"
+  "help: 2 → [ActivityA]"
 );
 
 entryObj = makeEntry({});
@@ -1179,7 +1179,7 @@ exportAtags({
 assertEqual(
   "md-include-blank-tags-opt-in",
   entryObj.field("MD"),
-  "LongRowName: 2,5 - [3, 2]  \n" +
+  "LongRowName: 2,5 → [3, 2]  \n" +
   "textname: abc  \n" +
   "blankname"
 );
@@ -1203,7 +1203,7 @@ exportAtags({
 assertEqual(
   "md-group-separators-count-original-tags",
   entryObj.field("MD"),
-  "Score: 2,5 - [1, 2, 3, 4]\n\n" +
+  "Score: 2,5 → [1, 2, 3, 4]\n\n" +
   "Texttag: abc"
 );
 
@@ -1223,7 +1223,7 @@ exportAtags({
 assertEqual(
   "md-short-labels-explicit",
   entryObj.field("MD"),
-  "lr: 2,5 - [3, 2]"
+  "lr: 2,5 → [3, 2]"
 );
 
 entryObj = makeEntry({});
@@ -1242,7 +1242,7 @@ exportAtags({
 assertEqual(
   "md-cumulative-forces-sum",
   entryObj.field("MD"),
-  "Pulse: 2 - [1, 1]"
+  "Pulse: 2 → [1, 1]"
 );
 
 entryObj = makeEntry({});
@@ -1430,7 +1430,17 @@ exportAtags({
   targetField: "MD",
   targetFieldType: "md"
 });
-assertEqual("md-comments-keep-empty-position", entryObj.field("MD"), "emo: 2,5 - [1, 2, 3, 4] (,,,Info)");
+assertEqual("md-comments-keep-empty-position", entryObj.field("MD"), "emo: 2,5 → [1, 2, 3, 4] (,,,Info)");
+
+entryObj = makeEntry({ Note: "@@EmoDys (ED):\n2: ED2(p1)\n4: ED0(p2)" });
+var literalCommentResult = collectAtags({ entryObj: entryObj, textFields: ["Note"] });
+exportAtags({
+  entryObj: entryObj,
+  result: literalCommentResult,
+  targetField: "MD",
+  targetFieldType: "md"
+});
+assertEqual("md-comment-content-stays-literal", entryObj.field("MD"), "EmoDys: 1 → [2, 0] (p1, p2)");
 
 entryObj = makeEntry({});
 var commentTreeItems = [
@@ -1447,7 +1457,21 @@ exportAtags({
 assertEqual(
   "tree-comments-child-default-category-hidden",
   entryObj.field("Tree"),
-  "Emotion -1  \n\u251c\u2500\u2500 Alpha 2 [2] (,Info)  \n\u2514\u2500\u2500 Beta -3 (Negativ)"
+  "Emotion -1  \n\u251c\u2500\u2500 Alpha 2 {2}  \n\u2514\u2500\u2500 Beta -3"
+);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: { items: commentTreeItems },
+  targetField: "Tree",
+  targetFieldType: "tree_md",
+  showComments: true
+});
+assertEqual(
+  "tree-comments-child-explicit-category-hidden",
+  entryObj.field("Tree"),
+  "Emotion -1  \n\u251c\u2500\u2500 Alpha 2 {2} (,Info)  \n\u2514\u2500\u2500 Beta -3 (Negativ)"
 );
 
 entryObj = makeEntry({});
@@ -1462,7 +1486,7 @@ exportAtags({
 assertEqual(
   "tree-comments-child-hidden-category-shown",
   entryObj.field("Tree"),
-  "Emotion -1 (,Info,Negativ)  \n\u251c\u2500\u2500 Alpha 2 [2]  \n\u2514\u2500\u2500 Beta -3"
+  "Emotion -1 (,Info, Negativ)  \n\u251c\u2500\u2500 Alpha 2 {2}  \n\u2514\u2500\u2500 Beta -3"
 );
 
 entryObj = makeEntry({ MD: "keep" });

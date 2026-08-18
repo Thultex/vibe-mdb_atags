@@ -1,6 +1,6 @@
 /*
 ========================================
-A1 Check Versions v1.76 (sys 3.00)
+A1 Check Versions v1.77 (sys 3.00)
 ========================================
 */
 
@@ -28,7 +28,7 @@ var ATAG_LIB_VERSIONS = typeof ATAG_LIB_VERSIONS !== "undefined" ? ATAG_LIB_VERS
 function getCheckVersionsVersion() {
   return {
     name: "checkVersions",
-    version: "1.76",
+    version: "1.77",
     sysVersion: "3.00",
     path: "core/_checkVersions.js"
   };
@@ -43,15 +43,15 @@ function getLibVersionsVersion() {
 // Expected Modules
 var ATAG_EXPECTED_LIBS = [
   { id: "#3", title: "Helpers Lib", area: "core_lib", name: "helpers_lib", version: "2.14", getter: "getHelpersLibVersion", path: "core_lib/helpers_lib.js" },
-  { id: "#1", title: "Collect Atags Lib", area: "core_lib", name: "collectAtags_lib", version: "1.75", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
-  { id: "#2", title: "Export Atags Lib", area: "core_lib", name: "exportAtags_lib", version: "1.87", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" }
+  { id: "#1", title: "Collect Atags Lib", area: "core_lib", name: "collectAtags_lib", version: "1.76", getter: "getCollectAtagsLibVersion", path: "core_lib/collectAtags_lib.js" },
+  { id: "#2", title: "Export Atags Lib", area: "core_lib", name: "exportAtags_lib", version: "1.88", getter: "getExportAtagsLibVersion", path: "core_lib/exportAtags_lib.js" }
 ];
 
 var ATAG_EXPECTED_OPTIONAL_LIBS = [
-  { id: "A1", title: "Check Versions", area: "core", name: "checkVersions", version: "1.76", getter: "getCheckVersionsVersion", path: "core/_checkVersions.js", optional: true },
+  { id: "A1", title: "Check Versions", area: "core", name: "checkVersions", version: "1.77", getter: "getCheckVersionsVersion", path: "core/_checkVersions.js", optional: true },
   { id: "A2", title: "Atag Helpers", area: "core", name: "helpers", version: "1.05", getter: "getHelpersVersion", path: "core/helpers.js", optional: true },
   { id: "A3", title: "Restore Atags", area: "core", name: "restoreAtags", version: "2.14", getter: "getRestoreAtagsVersion", path: "core/restoreAtags.js", optional: true },
-  { id: "A4", title: "Tag Cleaner", area: "core", name: "tagCleaner", version: "1.59", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
+  { id: "A4", title: "Tag Cleaner", area: "core", name: "tagCleaner", version: "1.60", getter: "getTagCleanerVersion", path: "core/tagCleaner.js", optional: true },
   { id: "B2", title: "Tag Pair Parser", area: "1_tagging", name: "tagPairParser", version: "1.04", getter: "getTagPairParserVersion", path: "addons/1_tagging/tagPairParser.js", optional: true },
   { id: "B3", title: "Global Field Sync", area: "2_syncing", name: "globalFieldSync", version: "1.06", getter: "getGlobalFieldSyncVersion", path: "addons/2_syncing/globalFieldSync.js", optional: true },
   { id: "B4", title: "Sync Last From Latest", area: "2_syncing", name: "syncLastFromLatest", version: "1.09", getter: "getSyncLastFromLatestVersion", path: "addons/2_syncing/syncLastFromLatest.js", optional: true },

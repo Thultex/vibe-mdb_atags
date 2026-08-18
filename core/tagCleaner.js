@@ -1,20 +1,20 @@
 /*
 ========================================
-A4 Tag Cleaner v1.59 (sys 3.00)
+A4 Tag Cleaner v1.60 (sys 3.00)
 ========================================
 */
 
 function getTagCleanerVersion() {
   return {
     name: "tagCleaner",
-    version: "1.59",
+    version: "1.60",
     sysVersion: "3.00",
     path: "core/tagCleaner.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("tagCleaner", "1.59", "3.00", "core/tagCleaner.js", true);
+  registerAtagLibVersion("tagCleaner", "1.60", "3.00", "core/tagCleaner.js", true);
 }
 
 function splitTagCleanerLines(text) {
@@ -218,6 +218,26 @@ function tagCleanerSuperscriptChars() {
   return "\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B" + tagCleanerTagSuffix();
 }
 
+function buildTagCleanerParseState(str) {
+  var s = String(str || "");
+  var state = buildAtagLibQuoteState(s);
+  var i;
+  var j;
+  var end;
+
+  for (i = 1; i < s.length; i++) {
+    if (s.charAt(i) !== "(") continue;
+    if (/\s/.test(s.charAt(i - 1))) continue;
+    if (s.charAt(i + 1) === ":") continue;
+    end = s.indexOf(")", i + 1);
+    if (end < 0) continue;
+    for (j = i; j <= end; j++) state[j] = true;
+    i = end;
+  }
+
+  return state;
+}
+
 function isTagCleanerAliasNameToken(raw) {
   return /^[A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*$/.test(String(raw || ""));
 }
@@ -400,6 +420,7 @@ function applyTagCleanerEmojiDisplayInLine(line, displayMap, cfg) {
   var emoji;
   var escaped;
   var rx;
+  var state;
 
   if (!displayMap || !tagCleanerDisplayRequested(cfg, displayMap)) return s;
 
@@ -410,7 +431,9 @@ function applyTagCleanerEmojiDisplayInLine(line, displayMap, cfg) {
     if (!emoji || String(key) !== emoji.toLowerCase()) continue;
     escaped = emoji.replace(/([\\^$.*+?()[\]{}|])/g, "\\$1");
     rx = new RegExp("(^|[\\s,;.!(\\)\\[\\]{}])(" + escaped + ")([\\u2070\\u00B9\\u00B2\\u00B3\\u2074\\u2075\\u2076\\u2077\\u2078\\u2079\\u207A\\u207B\\u02E3]*)(?=$|[\\s,;.!(\\)\\[\\]{}])", "g");
-    out = out.replace(rx, function(all, prefix, emojiToken, suffix) {
+    state = buildTagCleanerParseState(out);
+    out = out.replace(rx, function(all, prefix, emojiToken, suffix, offset) {
+      if (isInsideAtagLibQuoteState(state, offset + String(prefix || "").length)) return all;
       return prefix + formatTagCleanerDisplayName(emojiToken, displayMap, cfg) + (suffix || "");
     });
   }
@@ -420,10 +443,13 @@ function applyTagCleanerEmojiDisplayInLine(line, displayMap, cfg) {
 
 function applyTagCleanerDisplayInLine(line, displayMap, cfg) {
   var s = String(line || "");
+  var state;
   if (!displayMap || !tagCleanerDisplayRequested(cfg, displayMap)) return s;
+  state = buildTagCleanerParseState(s);
   s = s.replace(
     /(^|[\s,;.!?()\[\]{}])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B\u02E3]+)(?=$|[\s,;.!?()\[\]{}])/g,
-    function(all, prefix, name, suffix) {
+    function(all, prefix, name, suffix, offset) {
+      if (isInsideAtagLibQuoteState(state, offset + String(prefix || "").length)) return all;
       return prefix + formatTagCleanerDisplayName(name, displayMap, cfg) + suffix;
     }
   );
@@ -524,7 +550,7 @@ function normalizeTagCleanerMixedSuffix(name, suffix, positiveSignMode) {
 
 function normalizeTagCleanerIssue50SuffixesInLine(line, positiveSignMode) {
   var s = String(line || "");
-  var state = buildAtagLibQuoteState(s);
+  var state = buildTagCleanerParseState(s);
   var rx = /(^|[\s,;.!?()\[\]{}])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*?)(\u02E3([+\-]?\d+(?:[.,]\d+)?|00|0\d+)|([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B]+)([0-9]+|x|#))(?=$|[\s,;.!?()\[\]{}])/g;
   var out = [];
   var last = 0;
@@ -801,7 +827,7 @@ function extractTagCleanerMarkedTagsFromLine(line) {
 
 function cleanTagCleanerSimpleHashTagsInLine(line) {
   var s = String(line || "");
-  var state = buildAtagLibQuoteState(s);
+  var state = buildTagCleanerParseState(s);
   var rx = /(^|[\s,;.!?()\[\]{}])(?:#([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)(?=$|[\s,;.!?()\[\]{}])|([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)#(?=$|[\s,;.!?()\[\]{}]))/g;
   var out = [];
   var last = 0;
@@ -830,7 +856,7 @@ function cleanTagCleanerSimpleHashTagsInLine(line) {
 
 function normalizeStandaloneTagCleanerSuperscriptsInLine(line) {
   var s = String(line || "");
-  var state = buildAtagLibQuoteState(s);
+  var state = buildTagCleanerParseState(s);
   var rx = /(^|[\s,;.!?()\[\]{}])([\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B]+)(?=$|[\s,;.!?()\[\]{}])/g;
   var out = [];
   var last = 0;
@@ -854,7 +880,7 @@ function normalizeStandaloneTagCleanerSuperscriptsInLine(line) {
 
 function normalizeTagCleanerDoubleColonSpacingInLine(line) {
   var s = String(line || "");
-  var state = buildAtagLibQuoteState(s);
+  var state = buildTagCleanerParseState(s);
   var rx = /(^|[\s,;.!?()\[\]{}])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)::\s*("[^"]*"|'[^']*'|[^\s,;.!?()\[\]{}]+)/g;
   var out = [];
   var last = 0;
@@ -913,7 +939,7 @@ function cleanTagCleanerInlineLine(line, positiveSignMode, displayMap, cfg) {
   s = cleanTagCleanerSimpleHashTagsInLine(s);
   if (normalizeTagCleanerFormatValueMode(positiveSignMode) === "none") return s;
 
-  var state = buildAtagLibQuoteState(s);
+  var state = buildTagCleanerParseState(s);
   var rx = /(^|[\s,;.!?()\[\]{}])([A-Za-zÄÖÜäöüß_][A-Za-zÄÖÜäöüß0-9_\-]*)(\+{2,}\d*|-{2,}\d*|[+\-]?\d+(?:[.,]\d+)?|\++|-+|[+\-][\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079]+|[\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079\u207A\u207B\u02E30-9]+)(?=$|[\s,;.!?()\[\]{}])/g;
   var out = [];
   var last = 0;

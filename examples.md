@@ -56,7 +56,7 @@ Die folgenden Werte gelten zentral für `mode`, `valueMode`, `rowAggregateMode`,
 
 Kleinere gemeinsame Wertemengen werden vollständig als Liste angegeben:
 
-- `row_display_values` / `rowDisplayValues`: `none`, `count`, `all`.
+- `row_display_values` / `rowDisplayValues`: `none`, `count`, `all`; im Tree erscheint `count` eindeutig als `{2}`, während `all` die Rohwerte in eckigen Klammern zeigt. Im Atag-MD trennt `→` das Aggregat von der Rohwertliste, beispielsweise `1 → [2, 0]`.
 - `cat_display_values` / `categoryDisplayValues`: `none`, `count`, `names`, `all`.
 - `treeStyle`: `unicode`, `ascii`.
 
@@ -181,7 +181,7 @@ Parameter:
 - `cat_display_values` / `categoryDisplayValues`: Kategorie-Details `none`, `count`, `names` oder `all`.
 - `categoryFilter`: exportiert nur die gewählten Kategorien und deren Kinder.
 - `includeEmptyCategories`, `includeBlankTags`, `treeShowValues`: Sichtbarkeit leerer Kategorien, leerer Tags und Tree-Werte.
-- `showComments`: zeigt Kommentare bei normalen Tags und Tree-Kindern; Standard ist `true`.
+- `showComments`: zeigt Kommentare bei normalen Tags und Tree-Kindern; Standard ist `true` im normalen Atag-MD und `false` im Tree.
 - `showCommentsCategory`: zeigt am Tree-/Kategorie-Parent alle positionsgenau zusammengeführten Kinderkommentare; Standard ist `false`.
 - `markdownGroupSeparator`, `treeStyle`: Markdown-Gruppentrenner und Tree-Zeichenstil (`unicode` oder `ascii`).
 
@@ -481,7 +481,7 @@ emo"sfas"(info)
 emo-2(info)
 ```
 
-Der Cleaner normalisiert sie beispielsweise zu `emo³(info)`, `emo²(info)`, `emo:sfas(info)` und `emo⁻²(info)`. Innerhalb des Kommentars sind Leerzeichen erlaubt; `emo² (info)` ist absichtlich keine Kommentarform.
+Der Cleaner normalisiert sie beispielsweise zu `emo³(info)`, `emo²(info)`, `emo:sfas(info)` und `emo⁻²(info)`. Innerhalb des Kommentars sind Leerzeichen erlaubt und sein Inhalt bleibt literal: `ED2(p1)` wird zu `ED²(p1)`, nicht zu `ED²(p¹)`. Kommentarinhalt wird außerdem nicht als zusätzliches Tag gesammelt. Bei der Ausgabe trennt `, ` zwei vorhandene Kommentare wie in `(p1, p2)`; bei einer leeren Position entfällt nur dieses Leerzeichen, beispielsweise `(,p2)`. `emo² (info)` ist absichtlich keine Kommentarform.
 
 <a id="cleantemplatetags"></a>
 #### Funktion: `cleanTemplateTags()`

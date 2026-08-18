@@ -559,6 +559,18 @@ function testTagCommentsCoverAllCompactValueForms() {
   }
 }
 
+function testCommentContentIsNotCollectedAsSecondTag() {
+  var result = collectAtags({
+    entryObj: makeEntry({ Note: "ED2(p1)" }),
+    textFields: ["Note"]
+  });
+
+  if (result.items.length !== 1) fail("comment-content-created-extra-tag: " + result.items.length);
+  if (result.items[0].name !== "ED") fail("comment-tag-name: " + result.items[0].name);
+  if (result.items[0].attrValue !== 2) fail("comment-tag-value: " + result.items[0].attrValue);
+  if (result.items[0].comment !== "p1") fail("comment-tag-comment: " + result.items[0].comment);
+}
+
 testTrackTagsCompleteUsesCollectorValuesAndTemplates();
 testTrackTagsCompleteAcceptsDirectValueMap();
 testTrackTagsCompleteCanCollectAndUseMappedTagNames();
@@ -566,5 +578,6 @@ testTrackTagsCompleteCanCombineTemplatesAndFilledMap();
 testTrackTagsCompleteWritesDefaultMissingFieldInOrderAndClearsIt();
 testTrackTagsCompleteRecognizesLoggedAliasNames();
 testTagCommentsCoverAllCompactValueForms();
+testCommentContentIsNotCollectedAsSecondTag();
 
 print("OK");
