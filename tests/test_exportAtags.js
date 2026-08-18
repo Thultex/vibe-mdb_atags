@@ -144,6 +144,41 @@ var shortRowItems = [
 
 var entryObj;
 
+assertEqual("aggregate-max-add-abs-mixed", computeAggregate([1, 5, -2, -7], "max_add_abs"), -2);
+assertEqual("aggregate-max-add-abs-positive-only", computeAggregate([1, 5, 3], "max_add_abs"), 5);
+assertEqual("aggregate-max-add-abs-negative-only", computeAggregate([-1, -5, -3], "max_add_abs"), -5);
+
+entryObj = makeEntry({});
+exportAtags({
+  entryObj: entryObj,
+  result: {
+    items: [
+      item("MetricA", "+1", 1, "+1", 1, null, "1"),
+      item("MetricA", "+5", 5, "+5", 2, null, "2"),
+      item("MetricA", "-2", -2, "-2", 3, null, "3"),
+      item("MetricA", "-7", -7, "-7", 4, null, "4")
+    ]
+  },
+  targetField: "MD",
+  targetFieldType: "md",
+  rowAggregateMode: "max_add_abs"
+});
+assertEqual(
+  "md-row-values-support-max-add-abs",
+  entryObj.field("MD"),
+  "MetricA: -2 - [1, 5, -2, -7]"
+);
+
+var maxAddRowView = buildAtagRowTableView([
+  item("MetricA", "+1", 1, "+1", 1, null, "1"),
+  item("MetricA", "+5", 5, "+5", 2, null, "2"),
+  item("MetricA", "-2", -2, "-2", 3, null, "3"),
+  item("MetricA", "-7", -7, "-7", 4, null, "4")
+], {
+  rowAggregateMode: "max_add_abs"
+});
+assertArray("rows-view-max-add-abs", maxAddRowView.aggregateRow, ["max_add_abs", "-2"]);
+
 entryObj = makeEntry({ Tags: ["foreign"] });
 exportAtags({
   entryObj: entryObj,
@@ -252,7 +287,7 @@ applyTags({
   targetFieldType: "tree_md"
 });
 assertEqual(
-  "tree-category-default-max-abs-negative-long-child-with-superscript-alias",
+  "tree-category-default-max-add-abs-negative-long-child-with-superscript-alias",
   entryObj.field("Tree"),
   "Body -2  \n" +
   "\u2514\u2500\u2500 \u208BSymptomA 2"
@@ -266,11 +301,53 @@ applyTags({
   targetFieldType: "tree_md"
 });
 assertEqual(
-  "tree-category-default-max-abs",
+  "tree-category-default-max-add-abs",
   entryObj.field("Tree"),
-  "Body -2  \n" +
+  "Body -1  \n" +
   "\u251c\u2500\u2500 BodySafe 1  \n" +
   "\u2514\u2500\u2500 \u208BSymptomA 2"
+);
+
+entryObj = makeEntry({ Note: "@@@Body: -SymptomA, BodySafe\nSymptomA\u00B2 BodySafe1" });
+applyTags({
+  entryObj: entryObj,
+  textFields: ["Note"],
+  targetField: "Json",
+  targetFieldType: "json"
+});
+assertEqual(
+  "json-category-preserves-effective-child-signs",
+  entryObj.field("Json"),
+  "{\"Body\":[\"BodySafe\",\"-SymptomA\"],\"BodySafe\":1,\"SymptomA\":2}"
+);
+
+entryObj = makeEntry({ Note: "@@@emo-: -aua\naua+2" });
+applyTags({
+  entryObj: entryObj,
+  textFields: ["Note"],
+  targetField: "Json",
+  targetFieldType: "json"
+});
+assertEqual(
+  "json-category-preserves-effective-double-negative-as-positive",
+  entryObj.field("Json"),
+  "{\"aua\":2,\"emo\":[\"aua\"]}"
+);
+
+entryObj = makeEntry({ Note: "@@@Body: -SymptomA, BodySafe\nSymptomA\u00B3 BodySafe2" });
+applyTags({
+  entryObj: entryObj,
+  textFields: ["Note"],
+  targetField: "MD",
+  targetFieldType: "md",
+  categoryAggregateMode: "max_add_abs"
+});
+assertEqual(
+  "md-category-supports-max-add-abs-like-row-aggregation",
+  entryObj.field("MD"),
+  "BodySafe: +2  \n" +
+  "SymptomA: +3  \n" +
+  "Body: -1 - [BodySafe, SymptomA]"
 );
 
 entryObj = makeEntry({ Note: "@@@K\u00F6rper: -Kieferspannung, -Kopfschmerz, -Nackenschmerz\n1: Kieferspannung1\n2: Kieferspannung1\n3: Kieferspannung1\nKopfschmerz2 Nackenschmerz2" });

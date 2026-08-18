@@ -81,14 +81,15 @@ function log(msg) {
   _logs.push(String(msg));
 }
 
-assertEquals("checkVersions-own-version", getCheckVersionsVersion().version, "1.72");
-assertEquals("helpers-lib-own-version", getHelpersLibVersion().version, "2.12");
+assertEquals("checkVersions-own-version", getCheckVersionsVersion().version, "1.74");
+assertEquals("helpers-lib-own-version", getHelpersLibVersion().version, "2.13");
 assertEquals("helpers-lib-sys-version", getHelpersLibVersion().sysVersion, "3.00");
 assertEquals("collect-lib-own-version", getCollectAtagsLibVersion().version, "1.74");
-assertEquals("export-lib-own-version", getExportAtagsLibVersion().version, "1.85");
+assertEquals("export-lib-own-version", getExportAtagsLibVersion().version, "1.86");
 assertEquals("tag-cleaner-own-version", getTagCleanerVersion().version, "1.58");
 assertEquals("helpers-own-version", getHelpersVersion().version, "1.04");
 assertEquals("helpers-mem-compat-version", getHelpersMemVersion().version, "1.04");
+assertEquals("restore-atags-own-version", getRestoreAtagsVersion().version, "2.13");
 assertEquals("dust-merger-own-version", getDustMergerVersion().version, "0.18");
 assertEquals("dust-merger-registered-version", ATAG_LIB_VERSIONS.dustMerger.version, "0.18");
 assertEquals("template-transfer-own-version", getTemplateFieldTransferVersion().version, "1.05");
@@ -101,7 +102,7 @@ var result = checkAtagLibVersions({
 });
 
 assertTrue("all-loaded", result.ok);
-assertEquals("export-lib-map-version", result.map.exportAtags_lib.version, "1.85");
+assertEquals("export-lib-map-version", result.map.exportAtags_lib.version, "1.86");
 assertEquals("collect-lib-map-version", result.map.collectAtags_lib.version, "1.74");
 
 var dustGetterResult = checkAtagLibVersions({ names: ["dustMerger"], checkAccess: true, requireAll: false, asText: false });
@@ -119,7 +120,7 @@ assertEquals("registered-optional-helpers", nonLib.map.helpers.version, "1.04");
 
 var textResult = checkAtagLibVersions({ checkAccess: true, asText: true });
 assertTrue("text-result-starts-with-summary", textResult.indexOf("System v3.00 (ok, 3 rm, 17 local)") === 0);
-assertTrue("text-result-has-export", textResult.indexOf("exportAtags_lib v1.85") !== -1);
+assertTrue("text-result-has-export", textResult.indexOf("exportAtags_lib v1.86") !== -1);
 assertTrue("text-result-has-collect", textResult.indexOf("collectAtags_lib v1.74") !== -1);
 assertTrue("text-result-has-local-tag-cleaner", textResult.indexOf("LOCAL tagCleaner v1.58") !== -1);
 assertTrue("text-result-has-local-dust-merger", textResult.indexOf("LOCAL dustMerger v0.18") !== -1);
@@ -416,7 +417,7 @@ assertEquals("optional-plugin-current-no-mismatch", optionalPluginCurrent.versio
 ATAG_LIB_VERSIONS = savedRegistry;
 
 var allVersionsText = checkAtagLibVersions({ checkAccess: true, requireAll: false, allVersions: true, asText: true });
-assertTrue("all-versions-text-has-helpers", allVersionsText.indexOf("helpers_lib v2.12") !== -1);
+assertTrue("all-versions-text-has-helpers", allVersionsText.indexOf("helpers_lib v2.13") !== -1);
 assertTrue("all-versions-text-has-collect", allVersionsText.indexOf("collectAtags_lib v1.74") !== -1);
 
 checkAtagLibVersions({ checkAccess: true, verbose: true });

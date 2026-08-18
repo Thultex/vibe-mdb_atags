@@ -1,20 +1,20 @@
 /*
 ========================================
-A3 restoreAtags v2.11 (sys 3.00)
+A3 restoreAtags v2.13 (sys 3.00)
 ========================================
 */
 
 function getRestoreAtagsVersion() {
   return {
     name: "restoreAtags",
-    version: "2.11",
+    version: "2.13",
     sysVersion: "3.00",
     path: "core/restoreAtags.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("restoreAtags", "2.11", "3.00", "core/restoreAtags.js", true);
+  registerAtagLibVersion("restoreAtags", "2.13", "3.00", "core/restoreAtags.js", true);
 }
 
 // ===== HELPERS =====
@@ -134,8 +134,102 @@ function restoreToArray(val) {
   return [val];
 }
 
-function restoreFieldNameMap(cfg) {
+function restoreEntryLibrary(entryObj) {
+  var libraryObj;
+
+  if (!entryObj) return null;
+
+  try {
+    if (typeof entryObj.lib === "function") {
+      libraryObj = entryObj.lib();
+      if (libraryObj) return libraryObj;
+    }
+  } catch (e0) {}
+
+  try {
+    if (entryObj.lib && typeof entryObj.lib !== "function") return entryObj.lib;
+  } catch (e1) {}
+
+  try {
+    if (typeof entryObj.library === "function") {
+      libraryObj = entryObj.library();
+      if (libraryObj) return libraryObj;
+    }
+  } catch (e2) {}
+
+  try {
+    if (entryObj.library && typeof entryObj.library !== "function") return entryObj.library;
+  } catch (e3) {}
+
+  return null;
+}
+
+function restoreConfigLibrary(cfg, entryObj) {
+  var libraryObj = cfg && (cfg.library || cfg.lib) ? (cfg.library || cfg.lib) : null;
+
+  if (libraryObj) return libraryObj;
+  libraryObj = restoreEntryLibrary(entryObj);
+  if (libraryObj) return libraryObj;
+
+  try {
+    if (typeof lib === "function") return lib();
+  } catch (e) {}
+
+  return null;
+}
+
+function restoreLibraryFields(libraryObj) {
+  if (!libraryObj) return null;
+
+  if (typeof libraryObj === "function") {
+    try {
+      libraryObj = libraryObj();
+    } catch (eLibrary) {
+      return null;
+    }
+  }
+
+  try {
+    if (typeof libraryObj.fields === "function") return libraryObj.fields();
+  } catch (e0) {}
+
+  try {
+    if (libraryObj.fields) return libraryObj.fields;
+  } catch (e1) {}
+
+  return null;
+}
+
+function restoreFieldDefinitionName(field) {
+  if (field == null) return "";
+  if (isRestoreString(field)) return String(field);
+
+  try {
+    if (typeof field.getName === "function") return String(field.getName());
+  } catch (eGetName) {}
+
+  try {
+    if (typeof field.name === "function") return String(field.name());
+  } catch (e0) {}
+
+  try {
+    if (field.name != null) return String(field.name);
+  } catch (e1) {}
+
+  try {
+    if (typeof field.title === "function") return String(field.title());
+  } catch (e2) {}
+
+  try {
+    if (field.title != null) return String(field.title);
+  } catch (e3) {}
+
+  return String(field);
+}
+
+function restoreFieldNameMap(cfg, entryObj) {
   var fields;
+  var libraryObj;
   var map = {};
   var i;
   var name;
@@ -143,12 +237,9 @@ function restoreFieldNameMap(cfg) {
   if (cfg._fieldNameMap !== undefined) return cfg._fieldNameMap;
 
   fields = cfg.targetFields || cfg.fieldNames || null;
-  if (!fields && typeof lib === "function") {
-    try {
-      fields = lib().fields();
-    } catch (e) {
-      fields = null;
-    }
+  if (!fields) {
+    libraryObj = restoreConfigLibrary(cfg, entryObj);
+    fields = restoreLibraryFields(libraryObj);
   }
 
   if (!fields) {
@@ -159,7 +250,8 @@ function restoreFieldNameMap(cfg) {
 
   fields = restoreToArray(fields);
   for (i = 0; i < fields.length; i++) {
-    name = String(fields[i]);
+    name = restoreFieldDefinitionName(fields[i]);
+    if (!name) continue;
     map[name.toLowerCase()] = true;
   }
 
@@ -168,8 +260,8 @@ function restoreFieldNameMap(cfg) {
   return map;
 }
 
-function restoreTargetExists(cfg, targetField) {
-  var map = restoreFieldNameMap(cfg);
+function restoreTargetExists(cfg, targetField, entryObj) {
+  var map = restoreFieldNameMap(cfg, entryObj);
   if (!map) return true;
   return !!map[String(targetField || "").toLowerCase()];
 }
@@ -271,7 +363,7 @@ function writeValueByType(entryObj, targetField, val, force_type) {
 }
 
 function restoreWriteTarget(entryObj, targetField, val, forceType, cfg, okMessage, errorMessage, skipMessage) {
-  if (!restoreTargetExists(cfg, targetField)) {
+  if (!restoreTargetExists(cfg, targetField, entryObj)) {
     restoreDebugPush(cfg, skipMessage);
     return false;
   }
@@ -292,7 +384,6 @@ function selectRestoreValue(val, valueMode, force_type) {
   var nums;
   var i;
   var n;
-  var mid;
   var agg;
 
   if (!isRestoreArray(val) && force_type !== "list") {
@@ -321,29 +412,7 @@ function selectRestoreValue(val, valueMode, force_type) {
   }
 
   if (!nums.length) return values[0];
-
-  if (mode === "median") {
-    nums.sort(function(a, b) { return a - b; });
-    mid = Math.floor(nums.length / 2);
-    if (nums.length % 2) return nums[mid];
-    return (nums[mid - 1] + nums[mid]) / 2;
-  }
-
-  if (mode === "min") {
-    n = nums[0];
-    for (i = 1; i < nums.length; i++) if (nums[i] < n) n = nums[i];
-    return n;
-  }
-
-  if (mode === "max") {
-    n = nums[0];
-    for (i = 1; i < nums.length; i++) if (nums[i] > n) n = nums[i];
-    return n;
-  }
-
-  n = 0;
-  for (i = 0; i < nums.length; i++) n += nums[i];
-  return n / nums.length;
+  return computeRestoreAggregate(nums, mode);
 }
 
 function computeRestoreAggregate(values, mode) {
@@ -354,6 +423,8 @@ function computeRestoreAggregate(values, mode) {
   var d;
   var sorted;
   var mid;
+  var maxPositive;
+  var minNegative;
 
   if (!values || !values.length) return null;
   if (m === "add") m = "sum";
@@ -378,6 +449,17 @@ function computeRestoreAggregate(values, mode) {
     }
     return best;
   }
+  if (m === "max_add_abs" || m === "maxaddabs") {
+    maxPositive = null;
+    minNegative = null;
+    for (i = 0; i < values.length; i++) {
+      if (values[i] >= 0 && (maxPositive == null || values[i] > maxPositive)) maxPositive = values[i];
+      if (values[i] < 0 && (minNegative == null || values[i] < minNegative)) minNegative = values[i];
+    }
+    if (maxPositive != null && minNegative != null) return maxPositive + minNegative;
+    if (maxPositive != null) return maxPositive;
+    return minNegative;
+  }
   if (m === "min_abs" || m === "minabs") {
     best = values[0];
     for (i = 1; i < values.length; i++) {
@@ -394,10 +476,14 @@ function computeRestoreAggregate(values, mode) {
     return (sorted[mid - 1] + sorted[mid]) / 2;
   }
 
-  sum = 0;
-  for (i = 0; i < values.length; i++) sum += values[i];
-  if (m === "sum") return sum;
-  return sum / values.length;
+  if (m === "sum" || m === "avg") {
+    sum = 0;
+    for (i = 0; i < values.length; i++) sum += values[i];
+    if (m === "sum") return sum;
+    return sum / values.length;
+  }
+
+  return null;
 }
 
 function selectRestoreObjectValue(obj, key, valueMode, force_type, cfg) {
@@ -409,6 +495,7 @@ function selectRestoreObjectValue(obj, key, valueMode, force_type, cfg) {
   var i;
   var child;
   var childVal;
+  var childInfo;
   var n;
 
   if (force_type !== "list" && isRestoreListLike(raw) && !isRestoreString(raw)) {
@@ -416,16 +503,17 @@ function selectRestoreObjectValue(obj, key, valueMode, force_type, cfg) {
     childMode = cfg && cfg.categoryChildValueMode != null ? cfg.categoryChildValueMode :
       (cfg && cfg.categoryRowAggregateMode != null ? cfg.categoryRowAggregateMode :
         (cfg && cfg.categoryChildAggregateMode != null ? cfg.categoryChildAggregateMode :
-          (cfg && cfg.rowAggregateMode != null ? cfg.rowAggregateMode : valueMode)));
+          (cfg && cfg.rowAggregateMode != null ? cfg.rowAggregateMode : "max")));
     parentMode = cfg && cfg.categoryAggregateMode != null ? cfg.categoryAggregateMode :
-      (cfg && cfg.categoryValueMode != null ? cfg.categoryValueMode : "avg");
+      (cfg && cfg.categoryValueMode != null ? cfg.categoryValueMode : "max_add_abs");
 
     for (i = 0; i < children.length; i++) {
-      child = normalizeRestoreTagName(children[i]);
+      childInfo = restoreCategoryChildInfo(children[i]);
+      child = childInfo.name;
       if (!child || !obj || !obj.hasOwnProperty(child)) continue;
       childVal = selectRestoreValue(obj[child], childMode, null);
       n = toRestoreNumber(childVal);
-      if (n != null) nums.push(n);
+      if (n != null) nums.push(n * childInfo.sign);
     }
 
     if (nums.length) return computeRestoreAggregate(nums, parentMode);
@@ -497,6 +585,31 @@ function normalizeRestoreTagName(rawName) {
   s = s.replace(/\s+/g, "_");
   s = s.replace(/^_+|_+$/g, "");
   return s;
+}
+
+function restoreCategoryChildInfo(rawChild) {
+  var rawName = rawChild;
+  var sign = 1;
+  var s;
+
+  if (rawChild && typeof rawChild === "object" && !isRestoreString(rawChild)) {
+    rawName = rawChild.name != null ? rawChild.name :
+      (rawChild.tagName != null ? rawChild.tagName : rawChild.tag);
+    if (rawChild.sign === -1 || rawChild.polarity === -1 || rawChild.negative === true) sign = -1;
+  }
+
+  s = trimRestoreString(rawName);
+  if (/^[-\u208B]/.test(s)) {
+    sign *= -1;
+    s = s.substring(1);
+  } else if (/^\+/.test(s)) {
+    s = s.substring(1);
+  }
+
+  return {
+    name: normalizeRestoreTagName(s),
+    sign: sign
+  };
 }
 
 function trimRestoreString(val) {
@@ -615,7 +728,7 @@ function restoreMappedAtags(entryObj, obj, mappings, clearFirst, valueMode, cfg)
 
   if (clearFirst) {
     for (i = 0; i < mappings.length; i++) {
-      if (!restoreTargetExists(cfg, mappings[i].targetField)) {
+      if (!restoreTargetExists(cfg, mappings[i].targetField, entryObj)) {
         restoreDebugPush(cfg, "clear skip missing target: " + mappings[i].targetField);
         continue;
       }
@@ -722,9 +835,11 @@ function restoreAtagsForEntry(entryObj, cfg, clearMappedFields) {
   if (!entryObj) return;
 
   if (cfg.debugField) cfg._debugLines = [];
-  restoreDebugPush(cfg, "restoreAtags v2.11");
+  restoreDebugPush(cfg, "restoreAtags v2.13");
   restoreDebugPush(cfg, "sourceField: " + cfg.sourceField);
-  restoreFieldNameMap(cfg);
+  cfg._fieldNameMap = undefined;
+  cfg._fieldNameCount = undefined;
+  restoreFieldNameMap(cfg, entryObj);
   restoreDebugPush(cfg, "known fields: " + (cfg._fieldNameCount == null ? "unknown" : String(cfg._fieldNameCount)));
   restoreDebugPush(cfg, "clearMappedFields: " + String(clearMappedFields));
 

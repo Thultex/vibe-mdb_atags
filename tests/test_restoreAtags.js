@@ -494,6 +494,17 @@ function testSelectRestoreValueIgnoresStringsForNumericModes() {
   assertEqual("mixed-list-first-keeps-position", selectRestoreValue(value, "first", null), 41);
 }
 
+function testRestoreValueModesMatchSharedAggregationModes() {
+  var values = [1, 5, -2, -7];
+
+  assertEqual("restore-array-sum", selectRestoreValue(values, "sum", null), -3);
+  assertEqual("restore-array-add-alias", selectRestoreValue(values, "add", null), -3);
+  assertEqual("restore-array-max-abs", selectRestoreValue(values, "max_abs", null), -7);
+  assertEqual("restore-array-min-abs", selectRestoreValue(values, "min_abs", null), 1);
+  assertEqual("restore-array-max-add-abs", selectRestoreValue(values, "max_add_abs", null), -2);
+  assertEqual("restore-array-amount", selectRestoreValue(values, "amount", null), 4);
+}
+
 function testAutoRestoreAveragesAggregateTextByDefault() {
   var entryObj = makeEntry({
     "Atag Json": "{\"MetricA\":\"2 [3, 1]\"}"
@@ -565,9 +576,41 @@ function testAutoRestoreCategoryChildListAsAggregateValue() {
     targetFields: ["help_", "ActivityA_", "ActivityB_"]
   });
 
-  assertEqual("restore-category-child-list-auto-aggregate", entryObj.field("help_"), 3);
+  assertEqual("restore-category-child-list-auto-aggregate", entryObj.field("help_"), 4);
   assertEqual("restore-category-child-list-auto-child-a", entryObj.field("ActivityA_"), 2);
   assertEqual("restore-category-child-list-auto-child-b", entryObj.field("ActivityB_"), 4);
+}
+
+function testRestoreCategoryUsesTreeDefaultsAndSignedChildren() {
+  var entryObj = makeEntry({
+    "Atag Json": "{\"Body\":[\"-SymptomA\",\"BodySafe\"],\"SymptomA\":[1,3],\"BodySafe\":[2,4]}"
+  });
+
+  restoreAtags({
+    entryObj: entryObj,
+    sourceField: "Atag Json",
+    map: {
+      Body: "BodyScore"
+    }
+  });
+
+  assertEqual("restore-category-default-child-max-and-parent-max-add-abs", entryObj.field("BodyScore"), 1);
+}
+
+function testRestoreCategoryMaxAddAbsSupportsBothPolarities() {
+  var entryObj = makeEntry({
+    "Atag Json": "{\"Body\":[\"-SymptomA\",\"BodySafe\",\"BodyExtra\"],\"SymptomA\":7,\"BodySafe\":5,\"BodyExtra\":2}"
+  });
+
+  restoreAtags({
+    entryObj: entryObj,
+    sourceField: "Atag Json",
+    map: {
+      Body: "BodyScore"
+    }
+  });
+
+  assertEqual("restore-category-max-add-abs-largest-positive-plus-largest-negative", entryObj.field("BodyScore"), -2);
 }
 
 function testRestoreCategoryChildListUsesRowLikeAggregationOptions() {
@@ -805,6 +848,103 @@ function testAutoRestoreSkipsMissingTargetsWhenFieldListIsKnown() {
   }
 }
 
+function testAutoRestoreUsesPassedEntryLibraryInsteadOfGlobalLibrary() {
+  var entryObj = makeStrictEntry({
+    "Atag Json": "{\"Kopfschmerz\":2}",
+    "Kopfschmerz_": null,
+    Debug: ""
+  });
+  var entryLibrary = {
+    fields: function() {
+      return [
+        { name: function() { return "Atag Json"; } },
+        { getName: function() { return "Kopfschmerz_"; } },
+        { name: function() { return "Debug"; } }
+      ];
+    }
+  };
+  var oldLib = typeof lib === "undefined" ? null : lib;
+  var hadLib = typeof lib !== "undefined";
+  var globalCalls = 0;
+
+  entryObj.lib = function() {
+    return entryLibrary;
+  };
+  lib = function() {
+    globalCalls++;
+    return {
+      fields: function() {
+        return ["Atag Json", "Other_", "Debug"];
+      }
+    };
+  };
+
+  restoreAtags({
+    entryObj: entryObj,
+    sourceField: "Atag Json",
+    debugField: "Debug"
+  });
+
+  if (hadLib) lib = oldLib;
+  else lib = undefined;
+
+  assertEqual("entry-library-target-restored", entryObj.field("Kopfschmerz_"), 2);
+  assertEqual("entry-library-wins-over-global", globalCalls, 0);
+  if (String(entryObj.field("Debug")).indexOf("auto ok: Kopfschmerz -> Kopfschmerz_ = 2") < 0) {
+    fail("entry-library-debug-missing-auto-ok: " + entryObj.field("Debug"));
+  }
+}
+
+function testBulkRestoreRebuildsFieldMapForEachEntryLibrary() {
+  var first = makeStrictEntry({
+    "Atag Json": "{\"MetricA\":1}",
+    "MetricA_": null
+  });
+  var second = makeStrictEntry({
+    "Atag Json": "{\"Kopfschmerz\":3}",
+    "Kopfschmerz_": null
+  });
+  var oldLib = typeof lib === "undefined" ? null : lib;
+  var hadLib = typeof lib !== "undefined";
+
+  first.lib = {
+    fields: function() {
+      return [
+        { name: "Atag Json" },
+        { name: "MetricA_" }
+      ];
+    }
+  };
+  second.library = function() {
+    return {
+      fields: function() {
+        return [
+          { title: function() { return "Atag Json"; } },
+          { title: function() { return "Kopfschmerz_"; } }
+        ];
+      }
+    };
+  };
+  lib = function() {
+    return {
+      fields: function() {
+        return ["Atag Json", "Wrong_"];
+      }
+    };
+  };
+
+  restoreAtags({
+    entries: [first, second],
+    sourceField: "Atag Json"
+  });
+
+  if (hadLib) lib = oldLib;
+  else lib = undefined;
+
+  assertEqual("bulk-first-entry-library-field", first.field("MetricA_"), 1);
+  assertEqual("bulk-second-entry-library-field", second.field("Kopfschmerz_"), 3);
+}
+
 testDirectMapIsExclusiveByDefault();
 testMappingsCanRunAdditionalAutoRestore();
 testAutoRestoreUsesUnderscoreSuffixByDefault();
@@ -823,12 +963,15 @@ testArrayValueModesDefaultAvgAndConfigurable();
 testAutoRestoreAveragesRepeatedJsonArrayByDefault();
 testSelectRestoreValueAveragesJavaListLikeArrayByDefault();
 testSelectRestoreValueIgnoresStringsForNumericModes();
+testRestoreValueModesMatchSharedAggregationModes();
 testAutoRestoreAveragesAggregateTextByDefault();
 testAutoRestoreAveragesDisplayAggregateTextByDefault();
 testRestoreCategoryAggregateJsonValue();
 testRestoreCategoryChildListAsAggregateValue();
 testAutoRestoreCategoryChildListAsAggregateValue();
 testRestoreCategoryChildListUsesRowLikeAggregationOptions();
+testRestoreCategoryUsesTreeDefaultsAndSignedChildren();
+testRestoreCategoryMaxAddAbsSupportsBothPolarities();
 testRestoreCategoryChildListCanStayList();
 testAggregateTextValueModesAreConfigurable();
 testMappingValueModeOverridesGlobalMode();
@@ -839,5 +982,7 @@ testAutoRestoreContinuesAfterMissingTargetField();
 testDebugFieldReportsRestoreSteps();
 testDebugLogReportsRestoreSteps();
 testAutoRestoreSkipsMissingTargetsWhenFieldListIsKnown();
+testAutoRestoreUsesPassedEntryLibraryInsteadOfGlobalLibrary();
+testBulkRestoreRebuildsFieldMapForEachEntryLibrary();
 
 WScript.Echo("OK");

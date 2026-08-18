@@ -1,6 +1,6 @@
 /*
 ========================================
-#3 Atag Helpers Lib v2.12 (sys 3.00)
+#3 Atag Helpers Lib v2.13 (sys 3.00)
 ========================================
 */
 
@@ -10,14 +10,14 @@ var ATAG_SYS_VERSION = "3.00";
 function getHelpersLibVersion() {
   return {
     name: "helpers_lib",
-    version: "2.12",
+    version: "2.13",
     sysVersion: ATAG_SYS_VERSION,
     path: "core_lib/helpers_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("helpers_lib", "2.12", ATAG_SYS_VERSION, "core_lib/helpers_lib.js");
+  registerAtagLibVersion("helpers_lib", "2.13", ATAG_SYS_VERSION, "core_lib/helpers_lib.js");
 }
 
 // ===== BASIC =====
@@ -248,8 +248,33 @@ function buildValueMap(items) {
 }
 
 function normalizeValueMapItemValue(val, item) {
+  var out;
+  var childSigns;
+  var categorySign;
+  var i;
+  var child;
+  var childKey;
+  var childSign;
+
   if (val == null) return null;
-  if (item && (item.isCategory === true || item.kind === "category" || item.type === "category")) return val;
+  if (item && (item.isCategory === true || item.kind === "category" || item.type === "category")) {
+    if (!isArrayValue(val)) return val;
+
+    childSigns = item.categoryChildSigns || {};
+    categorySign = item.categorySign === -1 ? -1 : 1;
+    out = [];
+
+    for (i = 0; i < val.length; i++) {
+      child = trimAtagLibString(val[i]);
+      if (!child) continue;
+      childKey = child.toLowerCase();
+      childSign = childSigns[childKey] === -1 ? -1 : 1;
+      childSign *= categorySign;
+      out.push((childSign === -1 ? "-" : "") + child);
+    }
+
+    return out;
+  }
   if (isArrayValue(val)) return val.join(",");
   return val;
 }
@@ -411,6 +436,8 @@ function computeAggregate(values, mode) {
   var m = String(mode == null ? "avg" : mode).toLowerCase();
   var best;
   var d;
+  var maxPositive;
+  var minNegative;
 
   if (!values.length) return null;
 
@@ -435,6 +462,17 @@ function computeAggregate(values, mode) {
       if (d > 0 || (d === 0 && values[i] > best)) best = values[i];
     }
     return best;
+  }
+  if (m === "max_add_abs" || m === "maxaddabs") {
+    maxPositive = null;
+    minNegative = null;
+    for (i = 0; i < values.length; i++) {
+      if (values[i] >= 0 && (maxPositive == null || values[i] > maxPositive)) maxPositive = values[i];
+      if (values[i] < 0 && (minNegative == null || values[i] < minNegative)) minNegative = values[i];
+    }
+    if (maxPositive != null && minNegative != null) return maxPositive + minNegative;
+    if (maxPositive != null) return maxPositive;
+    return minNegative;
   }
   if (m === "min_abs" || m === "minabs") {
     best = values[0];

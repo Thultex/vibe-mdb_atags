@@ -563,17 +563,20 @@ Die Restore-Funktionen sind das dritte Add-on/Utility im Stack und werden aus hi
 - `restoreAtags()` für Einzel-, Auto- oder Gruppen-Restore aus einem JSON-Feld
 - ohne `entryObj`, `currentEntry`, `entries`, `entryGroup` oder `group` arbeitet `restoreAtags()` auf dem aktuellen Eintrag
 - direkte Zuordnungen per `map`, `fields` oder `mappings`, z. B. `"emo - Emotion"`
-- Kategorie-Listen im JSON koennen direkt als aggregierte Parent-Werte wiederhergestellt werden, z. B. `{"help":["ActivityA"],"ActivityA":2}` mit `map: { help: "HelpScore" }` schreibt `2`
+- Kategorie-Listen im JSON koennen direkt als aggregierte Parent-Werte wiederhergestellt werden, z. B. `{"help":["ActivityA"],"ActivityA":2}` mit `map: { help: "HelpScore" }` schreibt `2`; negative Kinder stehen mit Praefix im Array, z. B. `"Body":["-SymptomA","BodySafe"]`
+- Restore verwendet fuer Kategorie-Listen dieselben zweistufigen Standards wie `tree_md`: zuerst je Kind `categoryRowAggregateMode: "max"`, danach fuer den Parent `categoryAggregateMode: "max_add_abs"`; ein bereits numerischer Kategorie-Wert im JSON wird unveraendert uebernommen
+- `max_add_abs` addiert den groessten positiven und den betraglich groessten negativen Wert unter Beibehaltung der Vorzeichen, z. B. `[-7, -2, 5, 1] -> -2`; gibt es nur eine Polaritaet, bleibt deren staerkster Wert
 - Alias-Zeilen werden nicht als Restore-Feldzuordnung gelesen; Restore-Ziele laufen ueber `map`, `fields` oder `mappings`
 - direkte Zuordnungen sind standardmaessig exklusiv; mit `additional: true` laeuft danach zusaetzlich der Suffix-Auto-Restore
 - fuer Gruppen kann `restoreAtags()` `entries`, `entryGroup` oder `group` nehmen; Gruppen koennen ein Array oder ein Objekt mit `.entries()` sein
 - Java-Listen wie `lib().entries()` werden fuer Gruppen automatisch entpackt (`length`, `size()/get()` oder `iterator()`)
 - `currentEntry: entry()` oder `entryObj: entry()` verhaelt sich wie beim Sequence-Counter: ersetzt stale Library-Eintraege, ergaenzt fehlende aktuelle Eintraege und schreibt nur den aktuellen Eintrag
 - bei Gruppen werden gemappte Felder vor dem Schreiben geleert; bei Einzel-Entry nur mit `clearMappedFields: true`
-- mehrere Werte in einem JSON-Array, Memento/Rhino-listartigen Array oder Aggregat-Text wie `2 [3, 1]` oder `12 - [41, 6, 5, 4, 4]` werden standardmaessig per `valueMode: "avg"` gemittelt; bei gemischten Listen ignorieren `avg`, `median`, `min` und `max` nicht-numerische Zwischenwerte, waehrend `first` und `last` positionsbasiert bleiben
+- mehrere Werte in einem JSON-Array, Memento/Rhino-listartigen Array oder Aggregat-Text wie `2 [3, 1]` oder `12 - [41, 6, 5, 4, 4]` werden standardmaessig per `valueMode: "avg"` gemittelt; `valueMode` verwendet dieselben Modi wie Row- und Kategorie-Aggregationen (`min`, `max`, `max_abs`, `min_abs`, `max_add_abs`, `add`, `sum`, `avg`, `median`, `first`, `last`, `amount`); numerische Modi ignorieren nicht-numerische Zwischenwerte, waehrend `first` und `last` positionsbasiert bleiben
 - Standard-Suffixe fuer den Auto-Restore sind `_` und `_l` fuer Listen; `suffix: ""` schreibt direkt in gleichnamige Felder
 - `debugField: "Feldname"` schreibt Diagnosezeilen in ein Textfeld; `debugLog: true` spiegelt sie zusaetzlich nach `log()`
-- Auto-Restore nutzt vorhandene Feldnamen aus `lib().fields()` und ueberspringt fehlende Ziele vor dem Schreiben; alternativ kann `targetFields` explizit gesetzt werden
+- Auto-Restore nutzt vorhandene Feldnamen aus der Library des uebergebenen `entryObj`/Gruppeneintrags und ueberspringt fehlende Ziele vor dem Schreiben; `cfg.library`/`cfg.lib`, globales `lib()` und explizite `targetFields` bleiben als Alternativen bzw. Fallbacks erhalten
+- Felddefinitionen aus `library.fields()` duerfen Strings oder Objekte mit `getName`, `name` bzw. `title` sein; im Bulk wird die Feldliste fuer jeden Eintrag neu ermittelt
 - unterstützt `force_type: null | "text" | "list"`
 
 ```js
@@ -589,10 +592,10 @@ restoreAtags({
 restoreAtags({
   sourceField: "Atag Json",
   map: {
-    help: "HelpScore"
+    Body: "BodyScore"
   },
   categoryRowAggregateMode: "max",
-  categoryAggregateMode: "avg"
+  categoryAggregateMode: "max_add_abs"
 });
 
 restoreAtags({
@@ -983,11 +986,15 @@ Optionen:
 
 Mehrfach vorkommende Textwerte werden in `text`, `md`, `tree_md` und `json` standardmaessig per `join` zusammengefuehrt, z. B. `prot: Bechler` + `prot: Enda` zu `prot: Bechler, Enda`. Wenn `rowAggregateMode` oder `stringAggregateMode` auf `first` oder `last` steht, gilt diese Auswahl auch fuer Textwerte.
 
-Kategorie-Parents zeigen standardmaessig den Mittelwert ihrer numerischen Unterpunkte. Dabei wird zuerst je Unterpunkt aggregiert, fuer Kategorien standardmaessig mit `max`, danach werden diese Unterpunkt-Ergebnisse im Parent standardmaessig mit `avg` aggregiert. Im `tree_md` ist der Parent-Standard `max_abs`, damit negierte Kategorie-Kinder nach Betrag gewertet werden und ihr Vorzeichen behalten. Vor Detailangaben mit Namen oder Einzelwerten steht ` - `, z. B. `kaufen: 22,2 - [pc, garten]`; bei `cat_display_values: "all"` werden negierte Kinder als `₋SymptomA: -2` angezeigt. Die kurze Count-Form bleibt ohne Strich, z. B. `SymptomA 1,7 [3]`. Im `tree_md` steht am Parent standardmaessig nur der Wert, weil die Unterpunkte direkt darunter sichtbar sind. Unterpunkte im `tree_md` nutzen dieselbe Wert-Zusammenfassung wie `md`; mehrfach vorkommende Row-Werte werden im Tree standardmaessig gekuerzt als Anzahl angezeigt, waehrend `md`/`text` standardmaessig alle Einzelwerte zeigen. Tree-Defaults sind `cat_display_values: "none"` und `row_display_values: "count"`; fuer andere Exporte gelten `cat_display_values: "names"` und `row_display_values: "all"`. `rowAggregateMode` fuer Tabellen bleibt standardmaessig `avg`; `categoryRowAggregateMode`/`categoryChildAggregateMode` und `categoryAggregateMode`/`categoryValueMode` koennen `min`, `max`, `max_abs`, `min_abs`, `add`, `sum`, `avg`, `median`, `first`, `last` oder `amount` nutzen.
+Kategorie-Aggregationen laufen immer zweistufig: Zuerst werden mehrfach vorkommende Werte je Kind aggregiert, standardmaessig mit `categoryRowAggregateMode: "max"`; danach werden die Kind-Ergebnisse zum Parent zusammengefasst. Normale `text`-/`md`-Parents verwenden dafuer standardmaessig `categoryAggregateMode: "avg"`, `tree_md` und Restore dagegen `max_add_abs`. Dieser Modus addiert den groessten positiven und den betraglich groessten negativen Wert mit ihren Vorzeichen, z. B. `[-7, -2, 5, 1] -> -2`; bei nur positiven bzw. nur negativen Werten bleibt der staerkste Wert dieser Polaritaet. Damit wirken positive und negative Kategorie-Kinder gemeinsam, statt dass nur der groesste Absolutwert gewinnt.
+
+Row-, Markdown-Kategorie-, Tree- und Restore-Aggregationen verwenden dieselben Modusnamen und Rechenregeln; nur ihre Standards unterscheiden sich. `rowAggregateMode` fuer Tabellen bleibt `avg`. `categoryRowAggregateMode`/`categoryChildAggregateMode` und `categoryAggregateMode`/`categoryValueMode` koennen `min`, `max`, `max_abs`, `min_abs`, `max_add_abs`, `add`, `sum`, `avg`, `median`, `first`, `last` oder `amount` nutzen. Der JSON-Export erhaelt die effektive Polung negativer Kategorie-Kinder als Praefix, z. B. `{"Body":["-SymptomA","BodySafe"],"SymptomA":3,"BodySafe":2}`; Restore berechnet daraus mit den Standards `-1`.
+
+Vor Detailangaben mit Namen oder Einzelwerten steht ` - `, z. B. `kaufen: 22,2 - [pc, garten]`; bei `cat_display_values: "all"` werden negierte Kinder als `₋SymptomA: -2` angezeigt. Die kurze Count-Form bleibt ohne Strich, z. B. `SymptomA 1,7 [3]`. Im `tree_md` steht am Parent standardmaessig nur der Wert, weil die Unterpunkte direkt darunter sichtbar sind. Unterpunkte im `tree_md` nutzen dieselbe Wert-Zusammenfassung wie `md`; mehrfach vorkommende Row-Werte werden im Tree standardmaessig gekuerzt als Anzahl angezeigt, waehrend `md`/`text` standardmaessig alle Einzelwerte zeigen. Tree-Defaults sind `cat_display_values: "none"` und `row_display_values: "count"`; fuer andere Exporte gelten `cat_display_values: "names"` und `row_display_values: "all"`.
 
 ## Aktuelle Funktionsaufrufe
 
-Ausführliche Beispiele liegen hier in der README, nicht in den Script-Kopfkommentaren. Die Script-Kommentare bleiben kurz, damit der Memento-Java-Editor nicht am Syntax-Highlighting hängen bleibt.
+Die vollstaendige, intern verlinkte Funktionsuebersicht mit je einem Aufruf und kurzen Parametererklaerungen liegt in [`examples.md`](examples.md) und [`examples_plugins.md`](examples_plugins.md). Die folgenden README-Beispiele bleiben als kompakter Einstieg erhalten. Script-Kopfkommentare bleiben kurz, damit der Memento-Java-Editor nicht am Syntax-Highlighting haengen bleibt.
 
 **Basis-Export in Tags**
 
@@ -1095,6 +1102,11 @@ exportAtags({
   result: result,
   targetField: "Atag MD",
   targetFieldType: "md",
+  rowAggregateMode: "avg",
+  rowAggregateDecimals: 1,
+  categoryRowAggregateMode: "max",
+  categoryAggregateMode: "avg",
+  categoryAggregateDecimals: 1,
   markdownGroupSeparator: "",
   includeBlankTags: false
 });
@@ -1104,6 +1116,11 @@ exportAtags({
   result: result,
   targetField: "Atag Tree",
   targetFieldType: "tree_md",
+  rowAggregateMode: "max",
+  rowAggregateDecimals: 1,
+  categoryChildAggregateMode: "max",
+  categoryValueMode: "max_add_abs",
+  categoryAggregateDecimals: 1,
   includeEmptyCategories: false,
   categoryFilter: ["self", "help"]
 });

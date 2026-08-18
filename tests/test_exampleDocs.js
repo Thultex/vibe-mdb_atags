@@ -26,6 +26,23 @@ function assertOrdered(text, labels, fileName) {
   }
 }
 
+function assertFunctionExample(text, functionName, fileName) {
+  var anchorName = String(functionName).toLowerCase();
+  var anchor = '<a id="' + anchorName + '"></a>';
+  var anchorIndex = text.indexOf(anchor);
+  var nextAnchorIndex;
+  var section;
+
+  assertTrue(fileName + " overview links " + functionName, text.indexOf('](#' + anchorName + ')') >= 0);
+  assertTrue(fileName + " anchors " + functionName, anchorIndex >= 0);
+  assertTrue(fileName + " heads " + functionName, text.indexOf('#### `' + functionName + '()`', anchorIndex) >= 0);
+
+  nextAnchorIndex = text.indexOf('<a id="', anchorIndex + anchor.length);
+  section = text.substring(anchorIndex, nextAnchorIndex >= 0 ? nextAnchorIndex : text.length);
+  assertTrue(fileName + " calls " + functionName, section.indexOf(functionName + "(") >= 0);
+  assertTrue(fileName + " explains parameters for " + functionName, section.indexOf("Parameter") >= 0);
+}
+
 var modules = [
   ["core\\_checkVersions.js", "A1"],
   ["core\\helpers.js", "A2"],
@@ -74,10 +91,82 @@ assertOrdered(coreExamples, ["## `core_lib`", "### #1", "### #2", "### #3", "## 
 assertTrue("examples.md contains collector example", coreExamples.indexOf("collectAtags({") >= 0);
 assertTrue("examples.md contains cleaner example", coreExamples.indexOf("cleanTags({") >= 0);
 
+var aggregationExampleOptions = [
+  "valueMode:",
+  "rowAggregateMode:",
+  "rowAggregateDecimals:",
+  "categoryRowAggregateMode:",
+  "categoryChildAggregateMode:",
+  "categoryChildValueMode:",
+  "categoryAggregateMode:",
+  "categoryValueMode:",
+  "categoryAggregateDecimals:"
+];
+for (i = 0; i < aggregationExampleOptions.length; i++) {
+  assertTrue(
+    "examples.md contains aggregation option " + aggregationExampleOptions[i],
+    coreExamples.indexOf(aggregationExampleOptions[i]) >= 0
+  );
+}
+assertTrue("markdown example shows avg category default", coreExamples.indexOf('categoryAggregateMode: "avg"') >= 0);
+assertTrue("tree example shows max_add_abs category default", coreExamples.indexOf('categoryValueMode: "max_add_abs"') >= 0);
+assertTrue("restore example shows max_add_abs category default", coreExamples.indexOf('categoryAggregateMode: "max_add_abs"') >= 0);
+
+var corePublicFunctions = [
+  "collectAtags",
+  "trackTagsComplete",
+  "exportAtags",
+  "computeAggregate",
+  "getLibsVersionsConfig",
+  "checkLibVersions",
+  "checkAtagLibVersions",
+  "applyTags",
+  "bulkApplyTags",
+  "bulkExportAtags",
+  "restoreAtags",
+  "bulkRestoreAtags",
+  "cleanTags",
+  "cleanTemplateTags"
+];
+for (i = 0; i < corePublicFunctions.length; i++) {
+  assertFunctionExample(coreExamples, corePublicFunctions[i], "examples.md");
+}
+
 var pluginExamples = read("examples_plugins.md");
 assertOrdered(pluginExamples, ["## `1_tagging`", "## `2_syncing`", "## `3_workflow`", "## `6_integration`", "## `z_generell`", "## `z_others`"], "examples_plugins.md");
 assertTrue("plugin examples contain template transfer", pluginExamples.indexOf("moveFilledTemplates({") >= 0);
 assertTrue("template transfer example uses since mode", pluginExamples.indexOf('sourceMode: "realtime_since"') >= 0);
 assertTrue("template transfer example uses datetime field", pluginExamples.indexOf('startDatetimeField: "Einnahmedatum"') >= 0);
+
+var pluginPublicFunctions = [
+  "applyTagPairParser",
+  "bulkApplyTagPairParser",
+  "syncFieldTo",
+  "syncFieldBack",
+  "syncFieldAll",
+  "findNewestEntry",
+  "getNewestLibraryEntry",
+  "syncLastFromLatest",
+  "dustMerge",
+  "dustMerger",
+  "getTemplateFieldNames",
+  "moveFilledTemplates",
+  "moveAndTrackTemplates",
+  "updateAverage",
+  "updateSequenceSpree",
+  "appendTimeMarker",
+  "cleanupTimeMarker",
+  "clearTimeMarkerRows",
+  "linkObsidianUri",
+  "formatObsidianUri",
+  "applyWikiLinker",
+  "multiChoiceAppend",
+  "multiChoiceRemove",
+  "syncTypedTextFields",
+  "applyHourGuide"
+];
+for (i = 0; i < pluginPublicFunctions.length; i++) {
+  assertFunctionExample(pluginExamples, pluginPublicFunctions[i], "examples_plugins.md");
+}
 
 WScript.Echo("OK: module headers and centralized examples");

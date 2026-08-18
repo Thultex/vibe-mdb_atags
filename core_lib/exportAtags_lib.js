@@ -1,6 +1,6 @@
 /*
 ========================================
-#2 exportAtags Lib v1.85 (sys 3.00)
+#2 exportAtags Lib v1.86 (sys 3.00)
 ========================================
 */
 
@@ -8,19 +8,19 @@
 function getExportAtagsLibVersion() {
   return {
     name: "exportAtags_lib",
-    version: "1.85",
+    version: "1.86",
     sysVersion: "3.00",
     path: "core_lib/exportAtags_lib.js"
   };
 }
 
 if (typeof registerAtagLibVersion === "function") {
-  registerAtagLibVersion("exportAtags_lib", "1.85", "3.00", "core_lib/exportAtags_lib.js");
+  registerAtagLibVersion("exportAtags_lib", "1.86", "3.00", "core_lib/exportAtags_lib.js");
 }
 function atagCategoryAggregateMode(cfg, context) {
   if (cfg && cfg.categoryAggregateMode !== undefined) return cfg.categoryAggregateMode;
   if (cfg && cfg.categoryValueMode !== undefined) return cfg.categoryValueMode;
-  if (context === "tree") return "max_abs";
+  if (context === "tree") return "max_add_abs";
   return "avg";
 }
 
@@ -458,12 +458,14 @@ function collectAtagRowTableData(items) {
       tagAgg[it.name] = {
         sum: 0,
         count: 0,
-        cumulative: false
+        cumulative: false,
+        values: []
       };
     }
 
     tagAgg[it.name].sum += num;
     tagAgg[it.name].count += 1;
+    tagAgg[it.name].values.push(num);
     if (it.cumulative === true) tagAgg[it.name].cumulative = true;
     rows[rowIndexMap[rowKey]].values[it.name] = num;
   }
@@ -566,9 +568,10 @@ function buildAtagNormalMarkdown(items, cfg) {
       listParts.push(formatTagNumberLocale(vals[k], decimals, !!rowHasDecimal[name]));
     }
 
-    if (aggMode === "avg" || aggMode === "sum") {
-      var effectiveAggMode = rowCumulative[name] ? "sum" : aggMode;
-      var agg = computeAggregate(vals, effectiveAggMode);
+    var effectiveAggMode = rowCumulative[name] ? "sum" : aggMode;
+    var agg = computeAggregate(vals, effectiveAggMode);
+
+    if (agg != null) {
       var aggText = formatTagNumberLocale(agg, decimals, !!rowHasDecimal[name]);
       var line = rowLabel + ": " + aggText;
 
@@ -653,6 +656,8 @@ function buildAtagRowTableView(items, cfg) {
   var tk;
   var aggInfo;
   var agg;
+  var hasAggregate = false;
+  var effectiveMode;
 
   if (!rows.length || !tagOrder.length) return null;
 
@@ -674,18 +679,20 @@ function buildAtagRowTableView(items, cfg) {
     bodyRows.push(cells);
   }
 
-  if (mode === "avg" || mode === "sum") {
-    aggregateRow = [mode];
+  aggregateRow = [String(mode).toLowerCase()];
 
-    for (tk = 0; tk < tagOrder.length; tk++) {
-      aggInfo = tagAgg[tagOrder[tk]];
-      agg = null;
-      if (aggInfo && aggInfo.count) {
-        agg = (mode === "sum" || aggInfo.cumulative === true) ? aggInfo.sum : (aggInfo.sum / aggInfo.count);
-      }
-      aggregateRow.push(agg == null ? "" : formatTagNumberLocale(agg, decimals, !!tagHasDecimal[tagOrder[tk]]));
+  for (tk = 0; tk < tagOrder.length; tk++) {
+    aggInfo = tagAgg[tagOrder[tk]];
+    agg = null;
+    if (aggInfo && aggInfo.count) {
+      effectiveMode = aggInfo.cumulative === true ? "sum" : mode;
+      agg = computeAggregate(aggInfo.values || [], effectiveMode);
     }
+    if (agg != null) hasAggregate = true;
+    aggregateRow.push(agg == null ? "" : formatTagNumberLocale(agg, decimals, !!tagHasDecimal[tagOrder[tk]]));
   }
+
+  if (!hasAggregate) aggregateRow = null;
 
   return {
     header: header,
